@@ -1,7 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 
-// import { string } from "rollup-plugin-string";
+import { string } from "rollup-plugin-string";
 import babel from 'rollup-plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
@@ -39,13 +39,13 @@ export default [
 				},
 			}),
 
-			// string({
-			// 	// Required to be specified
-			// 	include: "**/*.html",
-			//
-			// 	// Undefined by default
-			// 	exclude: ["**/index.html"]
-			// }),
+			string({
+				// Required to be specified
+				include: "**/*.html",
+
+				// Undefined by default
+				exclude: ["**/index.html"]
+			}),
 			babel({
 				exclude: 'node_modules/**' // only transpile our source code
 			}),
