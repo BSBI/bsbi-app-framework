@@ -163,7 +163,7 @@ export class ImageField extends FormField {
         filePickerField.type = 'file';
         filePickerField.className = "custom-file-input";
         filePickerField.id = this.#inputId;
-        filePickerField.accept = "image/png, image/jpeg";
+        filePickerField.accept = ".jpeg, .jpg, image/png, image/jpeg";
         filePickerField.multiple = true;
 
         if (this.placeholder) {
