@@ -30,17 +30,19 @@ if (!Promise.prototype.finally) {
 // logs will still point to your original source modules
 console.log('if you have sourcemaps enabled in your devtools, click on main.js:5 -->');
 
-// Register the ServiceWorker limiting its action to those URL starting
-// by `controlled`. The scope is not a path but a prefix. First, it is
-// converted into an absolute URL, then used to determine if a page is
-// controlled by testing it is a prefix of the request URL.
-navigator.serviceWorker.register('/app/serviceworker.js', {
-    // scope: './controlled'
-});
+if (navigator.serviceWorker) {
+    // Register the ServiceWorker limiting its action to those URL starting
+    // by `controlled`. The scope is not a path but a prefix. First, it is
+    // converted into an absolute URL, then used to determine if a page is
+    // controlled by testing it is a prefix of the request URL.
+    navigator.serviceWorker.register('/app/serviceworker.js', {
+        // scope: './controlled'
+    });
 
-navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload(true);
-});
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload(true);
+    });
+}
 
 const app = new ExampleApp;
 

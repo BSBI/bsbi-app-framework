@@ -2,7 +2,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 
 import { string } from "rollup-plugin-string";
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
 
@@ -47,7 +47,8 @@ export default [
 				exclude: ["**/index.html"]
 			}),
 			babel({
-				exclude: 'node_modules/**' // only transpile our source code
+				exclude: 'node_modules/**', // only transpile our source code
+				babelHelpers: 'runtime' // building library rather than app
 			}),
 			commonjs(), // converts npm packages to ES modules
 			production && terser() // minify, but only in production

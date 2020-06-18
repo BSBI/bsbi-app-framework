@@ -103,7 +103,12 @@ export class DateField extends FormField {
         const inputField = container.appendChild(document.createElement('input'));
         inputField.className = "form-control";
         inputField.id = this.#inputId;
-        inputField.type = this._inputType;
+
+        try { // this is needed for compatibility with IE11
+            inputField.type = this._inputType;
+        } catch (e) {
+            console.log(`Failed to set type '${this._inputType}'`);
+        }
 
         if (this.placeholder) {
             inputField.placeholder = this.placeholder;

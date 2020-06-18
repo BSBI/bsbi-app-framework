@@ -108,7 +108,12 @@ export class InputField extends FormField {
         const inputField = container.appendChild(document.createElement('input'));
         inputField.className = "form-control";
         inputField.id = this.#inputId;
-        inputField.type = this._inputType;
+
+        try { // this is needed for compatibility with IE11
+            inputField.type = this._inputType;
+        } catch (e) {
+            console.log(`Failed to set type '${this._inputType}'`);
+        }
 
         if (this.placeholder) {
             inputField.placeholder = this.placeholder;
@@ -160,9 +165,9 @@ export class InputField extends FormField {
 
     inputChangeHandler (event) {
         event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
-        
+
         console.log('got input field change event');
-        
+
         this.value = FormField.cleanRawString(document.getElementById(this.#inputId).value);
         this.fireEvent(FormField.EVENT_CHANGE);
     }
