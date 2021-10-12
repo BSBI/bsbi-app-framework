@@ -41,7 +41,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/japonicus/bsbi-app-framework.git"
+    "url": "git://github.com/BSBI/bsbi-app-framework.git"
   },
   "license": "SEE LICENSE IN readme"
 }

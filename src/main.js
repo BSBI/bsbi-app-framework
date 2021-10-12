@@ -46,7 +46,7 @@ if (navigator.serviceWorker) {
 
 const app = new ExampleApp;
 
-app.router = new PatchedNavigo('https://gardenwildflowerhunt.org/app/');
+app.router = new PatchedNavigo('https://example.com/app/');
 
 app.containerId = 'appcontainer';
 app.setLayout(new GardenFlowerLayout());
