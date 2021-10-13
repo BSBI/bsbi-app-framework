@@ -26,9 +26,10 @@ export default [
 			file: 'dist/bsbiappframework.js',
 			format: 'es', // 'cjs'
 			sourcemap: true,
-			name: 'bsbiappframework'
+			name: 'bsbiappframework',
+			globals: { BsbiDb: 'BsbiDb', jquery: '$' },
 		},
-		// external: ['BsbiDb', 'jquery'],
+		external: ['BsbiDb', 'jquery'],
 
 		plugins: [
 			resolve(), // tells Rollup how to find files in node_modules
