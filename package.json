@@ -28,7 +28,8 @@
     "rollup-plugin-string": "^3.0.0",
     "rollup-plugin-terser": "^6.1.0",
     "serve": "^11.3.2",
-    "spserver": "^0.3.0"
+    "spserver": "^0.3.0",
+    "npm": "^8.0.0"
   },
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
@@ -37,8 +38,7 @@
     "british-isles-gridrefs": "github:japonicus/js-british-isles-gridrefs",
     "core-js": "^3.18.2",
     "localforage": "^1.10.0",
-    "navigo": "^7.1.2",
-    "npm": "^8.0.0"
+    "navigo": "^7.1.2"
   },
   "scripts": {
     "build": "rollup -c",
