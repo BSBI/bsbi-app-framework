@@ -34,6 +34,7 @@ export default [
 		plugins: [
 			resolve(), // tells Rollup how to find files in node_modules
 			replace({
+				preventAssignment: true,
 				values: {
 					VERSION: version,
 					// ENVIRONMENT: JSON.stringify('development')
