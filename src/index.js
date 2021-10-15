@@ -6,7 +6,7 @@ export {SurveyPickerController} from './controllers/SurveyPickerController';
 export {App} from './framework/App';
 export {EventHarness} from './framework/EventHarness';
 
-export {Model} from './models/Model';
+export {Model, UUID_REGEX} from './models/Model';
 export {Occurrence} from './models/Occurrence';
 export {OccurrenceImage} from './models/OccurrenceImage';
 export {Survey} from './models/Survey';

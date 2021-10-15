@@ -23,7 +23,7 @@ export class Taxon {
      *
      * @type {Object.<string, RawTaxon>}
      */
-    static rawTaxa = BsbiDb.TaxonNames;
+    static rawTaxa; // = BsbiDb.TaxonNames;
 
     /**
      * @type {string}
