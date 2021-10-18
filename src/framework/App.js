@@ -9,7 +9,6 @@ import {InternalAppError} from "../utils/exceptions/InternalAppError";
 import {Occurrence} from "../models/Occurrence";
 import localforage from "localforage";
 import {OccurrenceImage} from "../models/OccurrenceImage";
-import {ExampleApp} from "./ExampleApp";
 
 export class App extends EventHarness {
     /**
@@ -316,7 +315,7 @@ export class App extends EventHarness {
             formData.append(`surveyId[${n++}]`, key);
         }
 
-        return fetch(ExampleApp.LOAD_SURVEYS_ENDPOINT, {
+        return fetch(App.LOAD_SURVEYS_ENDPOINT, {
             method: 'POST',
             body: formData
         }).then(response => {
@@ -578,7 +577,7 @@ export class App extends EventHarness {
 
         this.addOccurrence(occurrence);
 
-        this.fireEvent(ExampleApp.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
+        this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
         return occurrence;
     }

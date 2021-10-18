@@ -3,9 +3,6 @@
 // currently based around the 'Cache and update' recipe along with many modifications
 // see https://serviceworke.rs
 
-
-//import {VERSION} from "rollup";
-
 import {BSBIServiceWorker} from "./BSBIServiceWorker";
 import {ExampleApp} from "../framework/ExampleApp";
 
