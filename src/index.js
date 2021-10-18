@@ -1,10 +1,3 @@
-import {
-    DELETE_IMAGE_MODAL_ID,
-    EVENT_DELETE_IMAGE,
-    IMAGE_MODAL_DELETE_BUTTON_ID,
-    IMAGE_MODAL_ID
-} from "./views/formfields/ImageField";
-
 export {AppController} from './controllers/AppController';
 export {MainController} from './controllers/MainController';
 export {StaticContentController} from './controllers/StaticContentController';
