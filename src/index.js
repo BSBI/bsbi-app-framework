@@ -1,3 +1,10 @@
+import {
+    DELETE_IMAGE_MODAL_ID,
+    EVENT_DELETE_IMAGE,
+    IMAGE_MODAL_DELETE_BUTTON_ID,
+    IMAGE_MODAL_ID
+} from "./views/formfields/ImageField";
+
 export {AppController} from './controllers/AppController';
 export {MainController} from './controllers/MainController';
 export {StaticContentController} from './controllers/StaticContentController';
@@ -25,7 +32,7 @@ export {TaxaLoadedHook} from './utils/TaxaLoadedHook';
 
 export {DateField} from './views/formfields/DateField';
 export {FormField} from './views/formfields/FormField';
-export {ImageField} from './views/formfields/ImageField';
+export {ImageField, IMAGE_MODAL_ID, IMAGE_MODAL_DELETE_BUTTON_ID, DELETE_IMAGE_MODAL_ID, EVENT_DELETE_IMAGE} from './views/formfields/ImageField';
 export {InputField} from './views/formfields/InputField';
 export {OptionsField} from './views/formfields/OptionsField';
 export {SelectField} from './views/formfields/SelectField';
