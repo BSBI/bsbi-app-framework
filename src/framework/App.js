@@ -9,6 +9,7 @@ import {InternalAppError} from "../utils/exceptions/InternalAppError";
 import {Occurrence} from "../models/Occurrence";
 import localforage from "localforage";
 import {OccurrenceImage} from "../models/OccurrenceImage";
+import {ExampleApp} from "./ExampleApp";
 
 export class App extends EventHarness {
     /**

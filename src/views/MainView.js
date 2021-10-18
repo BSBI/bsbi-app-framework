@@ -268,6 +268,7 @@ export class MainView extends Page {
      * @param {HTMLElement} editorContainer
      */
     refreshOccurrenceFooterControls(editorContainer) {
+        let nextSection;
         const buttonContainer = editorContainer.appendChild(document.createElement('div'));
 
         const backButton = buttonContainer.appendChild(document.createElement('button'));
@@ -292,7 +293,7 @@ export class MainView extends Page {
             finishButton.setAttribute('data-buttonaction', 'finish');
         } else {
             const nextFormIndex = 1;
-            const nextSection = SurveyForm.sections[nextFormIndex];
+            nextSection = SurveyForm.sections[nextFormIndex];
 
             const nextButton = buttonContainer.appendChild(document.createElement('button'));
             nextButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3';
