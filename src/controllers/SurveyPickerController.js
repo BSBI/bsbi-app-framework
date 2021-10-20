@@ -7,6 +7,10 @@ import {UUID_REGEX} from "../models/Model";
 import {Layout} from "../views/layout/Layout";
 import {App} from "../framework/App";
 
+/**
+ * @external $
+ */
+
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
 

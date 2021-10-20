@@ -6,6 +6,10 @@ export const IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
 export const DELETE_IMAGE_MODAL_ID = 'deleteimagemodal';
 export const EVENT_DELETE_IMAGE = 'deleteimage';
 
+/**
+ * @external $
+ */
+
 export class ImageField extends FormField {
 
     /**

@@ -14,7 +14,7 @@ export class PatchedNavigo extends Navigo {
         this._findLinks().forEach((link) => {
             if (!link.hasListenerAttached) {
                 link.addEventListener('click', (e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.target.tagName.toLowerCase() == 'a') {
+                    if ((e.ctrlKey || e.metaKey) && e.target.tagName.toLowerCase() === 'a') {
                         return false;
                     }
 

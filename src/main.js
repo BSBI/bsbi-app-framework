@@ -10,7 +10,7 @@ import {PatchedNavigo} from "./utils/PatchedNavigo";
 import localforage from 'localforage';
 import {SurveyPickerController} from "./controllers/SurveyPickerController";
 import {SurveyPickerView} from "./views/SurveyPickerView";
-import {GardenFlowerLayout} from "./views/layout/GardenFlowerLayout";
+import {ExampleAppLayout} from "./views/layout/ExampleAppLayout";
 import {TaxaLoadedHook} from "./utils/TaxaLoadedHook";
 import './theme.scss';
 
@@ -49,7 +49,7 @@ const app = new ExampleApp;
 app.router = new PatchedNavigo('https://example.com/app/');
 
 app.containerId = 'appcontainer';
-app.setLayout(new GardenFlowerLayout());
+app.setLayout(new ExampleAppLayout());
 
 app.registerController(new StaticContentController(new HelpView, '/help'));
 app.registerController(new MainController(new MainView));

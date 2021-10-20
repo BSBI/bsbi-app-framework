@@ -4,6 +4,10 @@
 
 import {Taxon} from '../../models/Taxon';
 
+/**
+ * @external BsbiDb
+ */
+
 export class TaxonSearch {
 
     /**

@@ -46,7 +46,7 @@ export class AppController {
      * registers the default route from this.route
      * or alternatively is overridden in a child class
      *
-     * @param {Navigo} router
+     * @param {PatchedNavigo} router
      */
     registerRoute(router) {
         if (null === this.route) {

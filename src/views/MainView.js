@@ -31,6 +31,10 @@ const OCCURRENCE_LIST_CONTAINER_ID = 'occurrencelistcontainer';
 //SurveyForm.registerSection(GardenFlowerSurveyFormAboutSection);
 //SurveyForm.registerSection(GardenFlowerSurveyFormGardenSection);
 
+/**
+ * @external $
+ */
+
 export class MainView extends Page {
 
     /**

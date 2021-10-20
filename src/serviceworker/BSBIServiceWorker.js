@@ -29,7 +29,7 @@ export class BSBIServiceWorker {
      *  interceptUrlMatches : RegExp,
      *  ignoreUrlMatches : RegExp,
      *  indexUrl : string,
-     *  urlCacheSet : Array.<string>
+     *  urlCacheSet : Array.<string>,
      *  version : string
      * }} configuration
      */
@@ -365,7 +365,7 @@ export class BSBIServiceWorker {
      * @returns {Promise<Response | Promise<Response>>}
      */
     fromCache(request) {
-        // @todo need to serve index.html in place of all navigo-served pages
+        // @todo need to serve index.html in place of all Navigo-served pages
         // (an issue if someone returns to a bookmarked page within the app)
 
         console.log('attempting fromCache response');

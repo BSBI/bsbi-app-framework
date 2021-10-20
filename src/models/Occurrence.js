@@ -141,7 +141,7 @@ export class Occurrence extends Model {
 
     /**
      *
-     * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean, created: number, modified: number, projectId: number, surveyId: string}} descriptor
+     * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);

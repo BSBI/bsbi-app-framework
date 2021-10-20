@@ -188,4 +188,11 @@ export class Form extends EventHarness {
             this.conditionallyValidateForm();
         }
     }
+
+    /**
+     * @abstract
+     */
+    updateModelFromContent() {
+
+    }
 }

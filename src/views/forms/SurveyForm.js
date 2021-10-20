@@ -11,7 +11,7 @@ export class SurveyForm extends Form {
 
     /**
      *
-     * @type {{string, typeof SurveyFormSection}}
+     * @type {Object.<string, typeof SurveyFormSection>}
      */
     static sectionsByKey = {};
 

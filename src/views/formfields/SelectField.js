@@ -216,7 +216,7 @@ export class SelectField extends FormField {
      */
     inputChangeHandler (event) {
         event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
-        
+
         // console.log('got options change event');
         // console.log(event);
 
@@ -252,7 +252,7 @@ export class SelectField extends FormField {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : typeof OptionsField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
+     * @param {{field : typeof SelectField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */

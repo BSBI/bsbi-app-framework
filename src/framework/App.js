@@ -12,7 +12,7 @@ import {OccurrenceImage} from "../models/OccurrenceImage";
 
 export class App extends EventHarness {
     /**
-     * @type {Navigo}
+     * @type {PatchedNavigo}
      */
     #router;
 

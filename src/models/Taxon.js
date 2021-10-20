@@ -2,6 +2,10 @@
 import {TaxonError} from "../utils/exceptions/TaxonError";
 import {escapeHTML} from "../utils/escapeHTML";
 
+/**
+ * @external BsbiDb
+ */
+
 export class Taxon {
     /**
      * @typedef RawTaxon

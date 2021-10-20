@@ -9,12 +9,12 @@ import {ExampleApp} from "../framework/ExampleApp";
 const serviceWorker = new BSBIServiceWorker();
 serviceWorker.initialise({
     forageName : ExampleApp.forageName,
-    postPassThroughWhitelist : /^https:\/\/gardenwildflowerhunt\.org\/loadsurveys.php/,
-    postImageUrlMatch : /^https:\/\/gardenwildflowerhunt\.org\/saveimage.php/,
-    getImageUrlMatch : /^https:\/\/gardenwildflowerhunt\.org\/image\.php/,
-    interceptUrlMatches : /(?:^https:\/\/gardenwildflowerhunt\.org\/app\/|^https:\/\/gardenwildflowerhunt\.org\/app$)/,
-    ignoreUrlMatches : /(?:^https:\/\/gardenwildflowerhunt\.org\/app\/app\.js|^https:\/\/gardenwildflowerhunt\.org\/app\/serviceworker\.js|^https:\/\/gardenwildflowerhunt\.org\/app\/manifest\.webmanifest|^https:\/\/gardenwildflowerhunt\.org\/app\/index\.html)/,
-    indexUrl : 'https://gardenwildflowerhunt.org/app/index.html',
+    postPassThroughWhitelist : /^https:\/\/example\.org\/loadsurveys.php/,
+    postImageUrlMatch : /^https:\/\/example\.org\/saveimage.php/,
+    getImageUrlMatch : /^https:\/\/example\.org\/image\.php/,
+    interceptUrlMatches : /(?:^https:\/\/example\.org\/app\/|^https:\/\/example\.org\/app$)/,
+    ignoreUrlMatches : /(?:^https:\/\/example\.org\/app\/app\.js|^https:\/\/example\.org\/app\/serviceworker\.js|^https:\/\/example\.org\/app\/manifest\.webmanifest|^https:\/\/example\.org\/app\/index\.html)/,
+    indexUrl : 'https://example.org/app/index.html',
     urlCacheSet : [
         './index.html',
         './manifest.webmanifest',

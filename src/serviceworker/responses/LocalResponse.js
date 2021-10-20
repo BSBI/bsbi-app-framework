@@ -56,4 +56,14 @@ export class LocalResponse {
     localKey () {
         throw new Error(`LocalKey must be implemented in a subclass for ${this.toSaveLocally.type}`);
     }
+
+    /**
+     * called to build the response to the post that is returned to the client
+     * in the absence of the remote server
+     *
+     * @returns {this}
+     * @abstract
+     */
+    populateClientResponse() {
+    }
 }

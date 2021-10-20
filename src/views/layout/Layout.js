@@ -57,10 +57,22 @@ export class Layout extends EventHarness {
         // register event handlers once the content is likely to be in the DOM
         setTimeout(() => {
             document.getElementById(`${Layout.NEW_SURVEY_MODAL_ID}confirmed`).addEventListener('click', (event) => {
-                this.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
+                event.stopPropagation();
+                event.preventDefault();
+
+                if (event.detail < 2) {
+                    // only if not a double click
+                    this.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
+                }
             });
             document.getElementById(`${Layout.RESET_MODAL_ID}confirmed`).addEventListener('click', (event) => {
-                this.app.fireEvent(App.EVENT_RESET_SURVEYS);
+                event.stopPropagation();
+                event.preventDefault();
+
+                if (event.detail < 2) {
+                    // only if not a double click
+                    this.app.fireEvent(App.EVENT_RESET_SURVEYS);
+                }
             });
         }, 100);
     }
