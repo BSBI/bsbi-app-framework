@@ -8195,7 +8195,7 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : typeof FormField, summary : {}}} property properties of the form descriptor
+     * @param {{field : FormField, summary : {}}} property properties of the form descriptor
      * @param {{}} attributes attributes of the model object
      * @returns {string}
      */
@@ -12335,7 +12335,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1634733723-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637687537-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -19207,7 +19207,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : typeof TextGeorefField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
+     * @param {{field : TextGeorefField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
@@ -19286,6 +19286,9 @@ var OccurrenceForm = /*#__PURE__*/function (_Form) {
     key: "formElement",
     get: function get() {
       var _arguments = arguments;
+      console.log({
+        test_constructor: this.constructor
+      });
 
       var el = _get(_getPrototypeOf(OccurrenceForm.prototype), "formElement", this);
 
@@ -19346,7 +19349,7 @@ var OccurrenceForm = /*#__PURE__*/function (_Form) {
   }, {
     key: "initialiseFormFields",
     value: function initialiseFormFields() {
-      var properties = OccurrenceForm.properties;
+      var properties = this.getFormSectionProperties();
       this.fields = {};
 
       for (var key in properties) {

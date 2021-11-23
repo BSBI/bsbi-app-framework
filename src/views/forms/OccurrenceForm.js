@@ -49,6 +49,8 @@ export class OccurrenceForm extends Form {
      * @returns {HTMLElement}
      */
     get formElement() {
+        console.log({test_constructor : this.constructor})
+
         let el = super.formElement;
 
         if (!this._formFieldsBuilt) {
@@ -103,7 +105,7 @@ export class OccurrenceForm extends Form {
      *
      */
     initialiseFormFields() {
-        const properties = OccurrenceForm.properties;
+        const properties = this.getFormSectionProperties();
 
         this.fields = {};
 

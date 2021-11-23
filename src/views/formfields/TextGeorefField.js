@@ -232,7 +232,7 @@ export class TextGeorefField extends FormField {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : typeof TextGeorefField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
+     * @param {{field : TextGeorefField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
