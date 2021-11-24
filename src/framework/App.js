@@ -505,9 +505,6 @@ export class App extends EventHarness {
             storedObjectKeys.survey[0] = targetSurveyId;
         }
 
-        console.log('pre-seek keys');
-        console.log(storedObjectKeys);
-
         return this.seekKeys(storedObjectKeys).then((storedObjectKeys) => {
             if (storedObjectKeys.survey.length) {
                 return this.refreshFromServer(storedObjectKeys.survey).finally(() => {

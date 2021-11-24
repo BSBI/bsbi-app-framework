@@ -9,5 +9,5 @@ export class ExampleApp extends App {
      */
     projectId = PROJECT_ID_FAKE_EXAMPLE;
 
-    static forageName = 'Garden Wildflower Hunt App';
+    static forageName = 'Example App';
 }

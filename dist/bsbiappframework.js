@@ -7748,7 +7748,7 @@ var Model = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "retrieveFromLocal",
     value: function retrieveFromLocal(id, modelObject) {
-      return localforage.getItem("".concat(modelObject.TYPE, ".").concat(id)).then(function (descriptor) {
+      return localforage$1.exports.getItem("".concat(modelObject.TYPE, ".").concat(id)).then(function (descriptor) {
         if (descriptor) {
           modelObject.id = id;
 
@@ -11175,8 +11175,6 @@ var App = /*#__PURE__*/function (_EventHarness) {
         storedObjectKeys.survey[0] = targetSurveyId;
       }
 
-      console.log('pre-seek keys');
-      console.log(storedObjectKeys);
       return this.seekKeys(storedObjectKeys).then(function (storedObjectKeys) {
         if (storedObjectKeys.survey.length) {
           return _this7.refreshFromServer(storedObjectKeys.survey).finally(function () {
@@ -12335,7 +12333,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637687537-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637758446-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
