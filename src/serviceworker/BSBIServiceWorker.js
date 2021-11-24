@@ -52,6 +52,7 @@ export class BSBIServiceWorker {
         const GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
         const SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
         const SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
+        const SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
         const INDEX_URL = configuration.indexUrl;
 
         this.URL_CACHE_SET = configuration.urlCacheSet;
@@ -145,6 +146,9 @@ export class BSBIServiceWorker {
                 } else if (evt.request.url.match(GET_IMAGE_URL_MATCH)) {
                     console.log(`request is for an image '${evt.request.url}'`);
                     this.handleImageFetch(evt);
+                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.text(evt.request.url)) {
+                    // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
+                    evt.respondWith(fetch(evt.request));
                 } else {
                     console.log(`request is for non-image '${evt.request.url}'`);
                     // You can use `respondWith()` to answer immediately, without waiting for the

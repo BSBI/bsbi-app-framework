@@ -12333,12 +12333,13 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637759751-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637765655-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
       var SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
       var SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
+      var SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
       var INDEX_URL = configuration.indexUrl;
       this.URL_CACHE_SET = configuration.urlCacheSet;
       localforage.config({
@@ -12418,6 +12419,9 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
             console.log("request is for an image '".concat(evt.request.url, "'"));
 
             _this.handleImageFetch(evt);
+          } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.text(evt.request.url)) {
+            // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
+            evt.respondWith(fetch(evt.request));
           } else {
             console.log("request is for non-image '".concat(evt.request.url, "'")); // You can use `respondWith()` to answer immediately, without waiting for the
             // network response to reach the service worker...
