@@ -146,7 +146,7 @@ export class BSBIServiceWorker {
                 } else if (evt.request.url.match(GET_IMAGE_URL_MATCH)) {
                     console.log(`request is for an image '${evt.request.url}'`);
                     this.handleImageFetch(evt);
-                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.text(evt.request.url)) {
+                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
                     // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
                     evt.respondWith(fetch(evt.request));
                 } else {
