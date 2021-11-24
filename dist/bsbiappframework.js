@@ -12333,7 +12333,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637766575-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637768365-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -12389,19 +12389,24 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       self.addEventListener('fetch',
       /** @param {FetchEvent} evt */
       function (evt) {
-        console.log("The service worker is serving: '".concat(evt.request.url, "'"));
+        //console.log(`The service worker is serving: '${evt.request.url}'`);
         evt.preventDefault();
 
         if (evt.request.method === 'POST') {
-          console.log("Got a post request");
-
-          if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
+          //console.log(`Got a post request`);
+          //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
+          if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
             console.log("Passing through whitelisted post request for: ".concat(evt.request.url));
             evt.respondWith(fetch(evt.request));
           } else {
-            if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
+            //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
+            if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
+              console.log("Got an image post request: '".concat(evt.request.url, "'"));
+
               _this.handle_image_post(evt);
             } else {
+              console.log("Got post request: '".concat(evt.request.url, "'"));
+
               _this.handle_post(evt);
             }
           }
@@ -12411,7 +12416,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
           // console.log(`about to test url '${evt.request.url}'`);
           if (SERVICE_WORKER_INTERCEPT_URL_MATCHES.test(evt.request.url) && !SERVICE_WORKER_IGNORE_URL_MATCHES.test(evt.request.url)) {
             // serving single page app instead
-            console.log('redirecting to the root of the SPA');
+            console.log("redirecting to the root of the SPA for '".concat(evt.request.url, "'"));
             var spaRequest = new Request(INDEX_URL);
             evt.respondWith(_this.fromCache(spaRequest));
             evt.waitUntil(_this.update(spaRequest));

@@ -112,20 +112,24 @@ export class BSBIServiceWorker {
         // On fetch, use cache but update the entry with the latest contents
         // from the server.
         self.addEventListener('fetch', /** @param {FetchEvent} evt */ (evt) => {
-            console.log(`The service worker is serving: '${evt.request.url}'`);
+            //console.log(`The service worker is serving: '${evt.request.url}'`);
 
             evt.preventDefault();
 
             if (evt.request.method === 'POST') {
-                console.log(`Got a post request`);
+                //console.log(`Got a post request`);
 
-                if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
+                //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
+                if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
                     console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else {
-                    if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
+                    //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
+                    if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
+                        console.log(`Got an image post request: '${evt.request.url}'`);
                         this.handle_image_post(evt);
                     } else {
+                        console.log(`Got post request: '${evt.request.url}'`);
                         this.handle_post(evt);
                     }
                 }
@@ -139,7 +143,7 @@ export class BSBIServiceWorker {
                     !SERVICE_WORKER_IGNORE_URL_MATCHES.test(evt.request.url)
                 ) {
                     // serving single page app instead
-                    console.log('redirecting to the root of the SPA');
+                    console.log(`redirecting to the root of the SPA for '${evt.request.url}'`);
                     let spaRequest = new Request(INDEX_URL);
                     evt.respondWith(this.fromCache(spaRequest));
                     evt.waitUntil(this.update(spaRequest));
