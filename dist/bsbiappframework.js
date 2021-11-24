@@ -12333,7 +12333,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637768365-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637776539-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -18998,7 +18998,12 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
   /**
    *
-   * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
+   * @type {?int}
+   */
+
+  /**
+   *
+   * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string, [baseSquareResolution]: ?number}} [params]
    */
   function TextGeorefField(params) {
     var _this;
@@ -19023,6 +19028,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
 
+    _defineProperty(_assertThisInitialized(_this), "baseSquareResolution", null);
+
     if (params) {
       if (params.type) {
         _this._inputType = params.type;
@@ -19034,6 +19041,10 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       if (params.autocomplete) {
         _this._autocomplete = params.autocomplete;
+      }
+
+      if (params.baseSquareResolution) {
+        _this.baseSquareResolution = params.baseSquareResolution;
       }
     }
 
@@ -19182,7 +19193,32 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       console.log('got input field change event');
       this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId)).value);
       this.fireEvent(FormField.EVENT_CHANGE);
-    }
+    } // /**
+    //  *
+    //  * @param {MouseEvent} event
+    //  */
+    // gpsButtonClickHandler (event) {
+    //     console.log('got gps button click event');
+    //
+    //     navigator.geolocation.getCurrentPosition((position) => {
+    //         const latitude  = position.coords.latitude;
+    //         const longitude = position.coords.longitude;
+    //
+    //         console.log(`Got GPS fix ${latitude} , ${longitude}`);
+    //
+    //         // const latLng = new LatLngWGS84(latitude, longitude);
+    //         const gridCoords = GridCoords.from_latlng(latitude, longitude);
+    //         const gridRef = gridCoords.to_gridref(1000);
+    //
+    //         console.log(`Got grid-ref: ${gridRef}`);
+    //         this.value = gridRef;
+    //         this.fireEvent(FormField.EVENT_CHANGE);
+    //     }, (error) => {
+    //         console.log('gps look-up failed');
+    //         console.log(error);
+    //     });
+    // }
+
     /**
      *
      * @param {MouseEvent} event
@@ -19193,22 +19229,46 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     value: function gpsButtonClickHandler(event) {
       var _this2 = this;
 
-      console.log('got gps button click event');
+      //console.log('got gps button click event');
       navigator.geolocation.getCurrentPosition(function (position) {
-        var latitude = position.coords.latitude;
-        var longitude = position.coords.longitude;
-        console.log("Got GPS fix ".concat(latitude, " , ").concat(longitude)); // const latLng = new LatLngWGS84(latitude, longitude);
-
-        var gridCoords = GridCoords.from_latlng(latitude, longitude);
-        var gridRef = gridCoords.to_gridref(1000);
-        console.log("Got grid-ref: ".concat(gridRef));
-        _this2.value = gridRef;
-
-        _this2.fireEvent(FormField.EVENT_CHANGE);
+        // const latitude  = position.coords.latitude;
+        // const longitude = position.coords.longitude;
+        // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+        //
+        // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+        // const gridRef = gridCoords.to_gridref(1000);
+        //
+        // console.log(`Got grid-ref: ${gridRef}`);
+        // this.value = gridRef;
+        // this.fireEvent(FormField.EVENT_CHANGE);
+        //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+        _this2.processLatLngPosition(position.coords.latitude, position.coords.longitude, position.coords.accuracy * 2);
       }, function (error) {
         console.log('gps look-up failed');
         console.log(error);
       });
+    }
+    /**
+     *
+     * @param {number} latitude
+     * @param {number} longitude
+     * @param {number} precision diameter in metres
+     */
+
+  }, {
+    key: "processLatLngPosition",
+    value: function processLatLngPosition(latitude, longitude, precision) {
+      var gridCoords = GridCoords.from_latlng(latitude, longitude);
+      var scaledPrecision = GridRef.get_normalized_precision(precision);
+
+      if (this.baseSquareResolution && scaledPrecision < this.baseSquareResolution) {
+        scaledPrecision = this.baseSquareResolution;
+      }
+
+      var gridRef = gridCoords.to_gridref(scaledPrecision);
+      console.log("Got grid-ref: ".concat(gridRef));
+      this.value = gridRef;
+      this.fireEvent(FormField.EVENT_CHANGE);
     }
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted

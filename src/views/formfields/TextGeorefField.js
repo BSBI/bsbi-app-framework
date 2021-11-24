@@ -2,7 +2,7 @@ import {FormField} from "./FormField";
 import {uuid} from "../../models/Model";
 import {escapeHTML} from "../../utils/escapeHTML";
 // import {LatLngWGS84} from "british-isles-gridrefs";
-import {GridCoords} from "british-isles-gridrefs";
+import {GridCoords, GridRef} from "british-isles-gridrefs";
 
 export class TextGeorefField extends FormField {
 
@@ -39,7 +39,13 @@ export class TextGeorefField extends FormField {
 
     /**
      *
-     * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
+     * @type {?int}
+     */
+    baseSquareResolution = null;
+
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string, [baseSquareResolution]: ?number}} [params]
      */
     constructor (params) {
         super(params);
@@ -55,6 +61,10 @@ export class TextGeorefField extends FormField {
 
             if (params.autocomplete) {
                 this._autocomplete = params.autocomplete;
+            }
+
+            if (params.baseSquareResolution) {
+                this.baseSquareResolution = params.baseSquareResolution;
             }
         }
     }
@@ -202,30 +212,84 @@ export class TextGeorefField extends FormField {
         this.fireEvent(FormField.EVENT_CHANGE);
     }
 
+    // /**
+    //  *
+    //  * @param {MouseEvent} event
+    //  */
+    // gpsButtonClickHandler (event) {
+    //     console.log('got gps button click event');
+    //
+    //     navigator.geolocation.getCurrentPosition((position) => {
+    //         const latitude  = position.coords.latitude;
+    //         const longitude = position.coords.longitude;
+    //
+    //         console.log(`Got GPS fix ${latitude} , ${longitude}`);
+    //
+    //         // const latLng = new LatLngWGS84(latitude, longitude);
+    //         const gridCoords = GridCoords.from_latlng(latitude, longitude);
+    //         const gridRef = gridCoords.to_gridref(1000);
+    //
+    //         console.log(`Got grid-ref: ${gridRef}`);
+    //         this.value = gridRef;
+    //         this.fireEvent(FormField.EVENT_CHANGE);
+    //     }, (error) => {
+    //         console.log('gps look-up failed');
+    //         console.log(error);
+    //     });
+    // }
+
     /**
      *
      * @param {MouseEvent} event
      */
     gpsButtonClickHandler (event) {
-        console.log('got gps button click event');
+        //console.log('got gps button click event');
 
         navigator.geolocation.getCurrentPosition((position) => {
-            const latitude  = position.coords.latitude;
-            const longitude = position.coords.longitude;
+            // const latitude  = position.coords.latitude;
+            // const longitude = position.coords.longitude;
 
-            console.log(`Got GPS fix ${latitude} , ${longitude}`);
+            // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+            //
+            // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+            // const gridRef = gridCoords.to_gridref(1000);
+            //
+            // console.log(`Got grid-ref: ${gridRef}`);
+            // this.value = gridRef;
+            // this.fireEvent(FormField.EVENT_CHANGE);
 
-            // const latLng = new LatLngWGS84(latitude, longitude);
-            const gridCoords = GridCoords.from_latlng(latitude, longitude);
-            const gridRef = gridCoords.to_gridref(1000);
+            //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
 
-            console.log(`Got grid-ref: ${gridRef}`);
-            this.value = gridRef;
-            this.fireEvent(FormField.EVENT_CHANGE);
+            this.processLatLngPosition(
+                position.coords.latitude,
+                position.coords.longitude,
+                position.coords.accuracy * 2
+            );
         }, (error) => {
             console.log('gps look-up failed');
             console.log(error);
         });
+    }
+
+    /**
+     *
+     * @param {number} latitude
+     * @param {number} longitude
+     * @param {number} precision diameter in metres
+     */
+    processLatLngPosition(latitude, longitude, precision) {
+        const gridCoords = GridCoords.from_latlng(latitude, longitude);
+
+        let scaledPrecision = GridRef.get_normalized_precision(precision);
+        if (this.baseSquareResolution && scaledPrecision < this.baseSquareResolution) {
+            scaledPrecision = this.baseSquareResolution;
+        }
+
+        const gridRef = gridCoords.to_gridref(scaledPrecision);
+
+        console.log(`Got grid-ref: ${gridRef}`);
+        this.value = gridRef;
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
 
     /**
