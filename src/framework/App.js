@@ -538,11 +538,20 @@ export class App extends EventHarness {
 
             if (storedObjectKeys.survey.length) {
 
-                // arbitrarily set first survey key as current
-                // this will be the specified targetSurveyId if that was set
-                return this._restoreSurveyFromLocal(storedObjectKeys.survey[0], storedObjectKeys)
+                const surveyFetchingPromises = [];
+                let n = 0;
+
+                for (let surveyKey of storedObjectKeys.survey) {
+                    // arbitrarily set first survey key as current if a target id hasn't been specified
+
+                    surveyFetchingPromises.push(
+                        this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0))
+                    );
+                }
+
+                return Promise.all(surveyFetchingPromises)
                     .finally(() => {
-                        this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
+                        //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
                         if (!this.currentSurvey) {
                             // survey doesn't actually exist
@@ -600,54 +609,68 @@ export class App extends EventHarness {
 
     /**
      *
-     * @param surveyId
-     * @param storedObjectKeys
+     * @param {string} surveyId
+     * @param {{survey: Array, occurrence: Array, image: Array}} storedObjectKeys
+     * @param {boolean} setAsCurrent
      * @returns {Promise}
      * @private
      */
-    _restoreSurveyFromLocal(surveyId, storedObjectKeys) {
+    _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
         // retrieve surveys first, then occurrences, then images from indexedDb
 
-        return Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
+        let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
             console.log(`retrieving local survey ${surveyId}`);
 
-            // the apps occurrences should only relate to the current survey
-            // (the reset are remote or in IndexedDb)
-            this.clearCurrentSurvey();
+            if (setAsCurrent) {
+                // the apps occurrences should only relate to the current survey
+                // (the reset are remote or in IndexedDb)
+                this.clearCurrentSurvey();
 
-            this.addSurvey(survey);
-            const occurrenceFetchingPromises = [];
+                this.addSurvey(survey);
+                const occurrenceFetchingPromises = [];
 
-            for(let occurrenceKey of storedObjectKeys.occurrence) {
-                occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                    .then((occurrence) => {
-                        if (occurrence.surveyId === surveyId) {
-                            console.log(`adding occurrence ${occurrenceKey}`);
-                            this.addOccurrence(occurrence);
-                        }
-                    }));
+                for (let occurrenceKey of storedObjectKeys.occurrence) {
+                    occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                        .then((occurrence) => {
+                            if (occurrence.surveyId === surveyId) {
+                                console.log(`adding occurrence ${occurrenceKey}`);
+                                this.addOccurrence(occurrence);
+                            }
+                        }));
+                }
+
+                return Promise.all(occurrenceFetchingPromises);
+            } else {
+                // not the current survey, so just add it but don't load occurrences
+                this.addSurvey(survey);
             }
-
-            return Promise.all(occurrenceFetchingPromises);
-        }).finally(() => {
-            //console.log('Reached image fetching part');
-            const imageFetchingPromises = [];
-
-            for(let occurrenceImageKey of storedObjectKeys.image) {
-                imageFetchingPromises.push(OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage)
-                    .then((occurrenceImage) => {
-                        console.log(`restoring image id '${occurrenceImageKey}'`);
-
-                        if (occurrenceImage.surveyId === surveyId) {
-                            OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
-                        }
-                    }, (reason) => {
-                        console.log(`Failed to retrieve an image: ${reason}`);
-                    }));
-            }
-
-            return Promise.all(imageFetchingPromises);
         });
+
+        if (setAsCurrent) {
+            promise.finally(() => {
+                //console.log('Reached image fetching part');
+                const imageFetchingPromises = [];
+
+                for (let occurrenceImageKey of storedObjectKeys.image) {
+                    imageFetchingPromises.push(OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage)
+                        .then((occurrenceImage) => {
+                            console.log(`restoring image id '${occurrenceImageKey}'`);
+
+                            if (occurrenceImage.surveyId === surveyId) {
+                                OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
+                            }
+                        }, (reason) => {
+                            console.log(`Failed to retrieve an image: ${reason}`);
+                        }));
+                }
+
+                this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
+
+                return Promise.all(imageFetchingPromises);
+            });
+        }
+
+        return promise;
     }
 
     /**
