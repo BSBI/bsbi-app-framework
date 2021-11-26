@@ -308,6 +308,7 @@ export class App extends EventHarness {
      * @return {Promise}
      */
     refreshFromServer(surveyIds) {
+        console.log({'Refresh from server, ids' : surveyIds});
         const formData = new FormData;
 
         let n = 0;
@@ -387,7 +388,10 @@ export class App extends EventHarness {
      * @returns {Promise}
      */
     seekKeys(storedObjectKeys) {
+        console.log('starting seekKeys');
         return localforage.keys().then((keys) => {
+            console.log({"in seekKeys: local forage keys" : keys});
+
             for (let key of keys) {
                 let type,id;
 
@@ -479,11 +483,13 @@ export class App extends EventHarness {
      */
     restoreOccurrences(targetSurveyId) {
 
+        console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
+
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
         // only present in current App.surveys
         // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
-        if (this.surveys.has(targetSurveyId)) {
+        if (targetSurveyId && this.surveys.has(targetSurveyId)) {
             const localSurvey = this.surveys.get(targetSurveyId);
 
             if (localSurvey.isPristine) {
@@ -518,6 +524,8 @@ export class App extends EventHarness {
             // called regardless of whether a server refresh was successful
             // storedObjectKeys and indexed db should be as up-to-date as possible
 
+            console.log({storedObjectKeys});
+
             if (storedObjectKeys.survey.length) {
 
                 // arbitrarily set first survey key as current
@@ -546,6 +554,7 @@ export class App extends EventHarness {
                         return Promise.resolve();
                     });
             } else {
+                console.log('no pre-existing surveys, so creating a new one');
                 // no pre-existing surveys, so create a new one
                 this.setNewSurvey();
 
@@ -590,6 +599,8 @@ export class App extends EventHarness {
         // retrieve surveys first, then occurrences, then images from indexedDb
 
         return Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
+            console.log(`retrieving local survey ${surveyId}`);
+
             // the apps occurrences should only relate to the current survey
             // (the reset are remote or in IndexedDb)
             this.clearCurrentSurvey();

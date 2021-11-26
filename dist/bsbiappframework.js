@@ -10911,6 +10911,9 @@ var App = /*#__PURE__*/function (_EventHarness) {
     value: function refreshFromServer(surveyIds) {
       var _this5 = this;
 
+      console.log({
+        'Refresh from server, ids': surveyIds
+      });
       var formData = new FormData();
       var n = 0;
 
@@ -11009,7 +11012,12 @@ var App = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "seekKeys",
     value: function seekKeys(storedObjectKeys) {
+      console.log('starting seekKeys');
       return localforage.keys().then(function (keys) {
+        console.log({
+          "in seekKeys: local forage keys": keys
+        });
+
         var _iterator6 = _createForOfIteratorHelper$7(keys),
             _step6;
 
@@ -11148,11 +11156,12 @@ var App = /*#__PURE__*/function (_EventHarness) {
     value: function restoreOccurrences(targetSurveyId) {
       var _this7 = this;
 
-      // need to check for a special case where restoring a survey that has never been saved even locally
+      console.log("Invoked restoreOccurrences, target survey id: ".concat(targetSurveyId)); // need to check for a special case where restoring a survey that has never been saved even locally
       // i.e. new and unmodified
       // only present in current App.surveys
       // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
-      if (this.surveys.has(targetSurveyId)) {
+
+      if (targetSurveyId && this.surveys.has(targetSurveyId)) {
         var localSurvey = this.surveys.get(targetSurveyId);
 
         if (localSurvey.isPristine) {
@@ -11187,6 +11196,10 @@ var App = /*#__PURE__*/function (_EventHarness) {
       }).finally(function () {
         // called regardless of whether a server refresh was successful
         // storedObjectKeys and indexed db should be as up-to-date as possible
+        console.log({
+          storedObjectKeys: storedObjectKeys
+        });
+
         if (storedObjectKeys.survey.length) {
           // arbitrarily set first survey key as current
           // this will be the specified targetSurveyId if that was set
@@ -11214,7 +11227,8 @@ var App = /*#__PURE__*/function (_EventHarness) {
             return Promise.resolve();
           });
         } else {
-          // no pre-existing surveys, so create a new one
+          console.log('no pre-existing surveys, so creating a new one'); // no pre-existing surveys, so create a new one
+
           _this7.setNewSurvey();
 
           return Promise.resolve();
@@ -11263,8 +11277,9 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
       // retrieve surveys first, then occurrences, then images from indexedDb
       return Survey.retrieveFromLocal(surveyId, new Survey()).then(function (survey) {
-        // the apps occurrences should only relate to the current survey
+        console.log("retrieving local survey ".concat(surveyId)); // the apps occurrences should only relate to the current survey
         // (the reset are remote or in IndexedDb)
+
         _this8.clearCurrentSurvey();
 
         _this8.addSurvey(survey);
@@ -12334,7 +12349,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637943199-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637947720-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
