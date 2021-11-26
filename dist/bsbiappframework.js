@@ -10645,7 +10645,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
     key: "setLocalForageName",
     value: function setLocalForageName(name) {
       localforage.config({
-        name: NyphApp.forageName
+        name: name
       });
     }
   }, {
@@ -12361,7 +12361,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637949454-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637950505-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

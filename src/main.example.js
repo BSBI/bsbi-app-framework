@@ -7,16 +7,16 @@ import {MainView} from "./views/MainView";
 import {StaticContentController} from "./controllers/StaticContentController";
 import {HelpView} from "./views/HelpView";
 import {PatchedNavigo} from "./utils/PatchedNavigo";
-import localforage from 'localforage';
+//import localforage from 'localforage';
 import {SurveyPickerController} from "./controllers/SurveyPickerController";
 import {SurveyPickerView} from "./views/SurveyPickerView";
 import {ExampleAppLayout} from "./views/layout/ExampleAppLayout";
 import {TaxaLoadedHook} from "./utils/TaxaLoadedHook";
 import './theme.scss';
 
-localforage.config({
-    name: ExampleApp.forageName
-});
+// localforage.config({
+//     name: ExampleApp.forageName
+// });
 
 // work around Edge bug
 if (!Promise.prototype.finally) {
@@ -54,6 +54,8 @@ app.setLayout(new ExampleAppLayout());
 app.registerController(new StaticContentController(new HelpView, '/help'));
 app.registerController(new MainController(new MainView));
 app.registerController(new SurveyPickerController(new SurveyPickerView));
+
+app.setLocalForageName(ExampleApp.forageName);
 
 // test detection of cameras
 // see https://stackoverflow.com/questions/23288918/check-if-user-has-webcam-or-not-using-javascript-only

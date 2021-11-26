@@ -101,7 +101,7 @@ export class App extends EventHarness {
      */
     setLocalForageName(name) {
         localforage.config({
-            name: NyphApp.forageName
+            name: name
         });
     }
 
