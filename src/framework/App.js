@@ -95,6 +95,16 @@ export class App extends EventHarness {
         this.reset();
     }
 
+    /**
+     *
+     * @param {string} name
+     */
+    setLocalForageName(name) {
+        localforage.config({
+            name: NyphApp.forageName
+        });
+    }
+
     reset() {
         this.surveys = new Map();
         this.clearCurrentSurvey();

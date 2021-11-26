@@ -10635,8 +10635,20 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
     return _this;
   }
+  /**
+   *
+   * @param {string} name
+   */
+
 
   _createClass(App, [{
+    key: "setLocalForageName",
+    value: function setLocalForageName(name) {
+      localforage.config({
+        name: NyphApp.forageName
+      });
+    }
+  }, {
     key: "reset",
     value: function reset() {
       this.surveys = new Map();
@@ -12349,7 +12361,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637947720-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637949454-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
