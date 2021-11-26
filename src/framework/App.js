@@ -287,6 +287,7 @@ export class App extends EventHarness {
         this.occurrences.set(occurrence.id, occurrence);
 
         occurrence.addListener(Occurrence.EVENT_MODIFIED,
+            // possibly this should be async, with await on the survey and occurrence save
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
                 if (!survey) {

@@ -62,6 +62,14 @@ var AppController = /*#__PURE__*/function () {
     _defineProperty(this, "handle", void 0);
 
     _defineProperty(this, "app", void 0);
+
+    _defineProperty(this, "beforeRouteHandler", null);
+
+    _defineProperty(this, "afterRouteHandler", null);
+
+    _defineProperty(this, "leaveRouteHandler", null);
+
+    _defineProperty(this, "alreadyRouteHandler", null);
   }
 
   _createClass(AppController, [{
@@ -8947,7 +8955,7 @@ var MainController = /*#__PURE__*/function (_AppController) {
      * registers the default route from this.route
      * or alternatively is overridden in a child class
      *
-     * @param {Navigo} router
+     * @param {PatchedNavigo} router
      */
 
   }, {
@@ -10887,7 +10895,8 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
       console.log("in addOccurrence setting id '".concat(occurrence.id, "'"));
       this.occurrences.set(occurrence.id, occurrence);
-      occurrence.addListener(Occurrence.EVENT_MODIFIED, function () {
+      occurrence.addListener(Occurrence.EVENT_MODIFIED, // possibly this should be async, with await on the survey and occurrence save
+      function () {
         var survey = _this4.surveys.get(occurrence.surveyId);
 
         if (!survey) {
@@ -11583,7 +11592,7 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
    * registers the default route from this.route
    * or alternatively is overridden in a child class
    *
-   * @param {Navigo} router
+   * @param {PatchedNavigo} router
    */
 
 
@@ -12390,7 +12399,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637963928-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637969769-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

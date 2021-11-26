@@ -29,6 +29,11 @@ export class AppController {
      */
     app;
 
+    beforeRouteHandler = null;
+    afterRouteHandler = null;
+    leaveRouteHandler = null;
+    alreadyRouteHandler = null;
+
     static #handleIndex = 0;
 
     static get nextHandle() {
