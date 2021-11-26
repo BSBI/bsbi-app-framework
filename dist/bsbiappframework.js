@@ -12315,6 +12315,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
      *  getImageUrlMatch : RegExp,
      *  interceptUrlMatches : RegExp,
      *  ignoreUrlMatches : RegExp,
+     *  passThroughNoCache : RegExp,
      *  indexUrl : string,
      *  urlCacheSet : Array.<string>,
      *  version : string
@@ -12333,7 +12334,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1637776539-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1637943199-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -12397,6 +12398,9 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
           //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
           if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
             console.log("Passing through whitelisted post request for: ".concat(evt.request.url));
+            evt.respondWith(fetch(evt.request));
+          } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
+            console.log("Passing through nocache list post request for: ".concat(evt.request.url));
             evt.respondWith(fetch(evt.request));
           } else {
             //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
@@ -12466,9 +12470,10 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
           return Promise.resolve(response).then(function (response) {
             // save the response locally
             // before returning it to the client
+            console.log('About to clone the json response.');
             return response.clone().json();
           }).then(function (jsonResponseData) {
-            console.log('Following successful remote post about to save locally.');
+            console.log('Following successful remote post, about to save locally.');
             return ResponseFactory.fromPostResponse(jsonResponseData).setPrebuiltResponse(response).populateLocalSave().storeLocally();
           }).catch(function (error) {
             // for some reason local storage failed, after a successful server save

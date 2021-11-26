@@ -28,6 +28,7 @@ export class BSBIServiceWorker {
      *  getImageUrlMatch : RegExp,
      *  interceptUrlMatches : RegExp,
      *  ignoreUrlMatches : RegExp,
+     *  passThroughNoCache : RegExp,
      *  indexUrl : string,
      *  urlCacheSet : Array.<string>,
      *  version : string
@@ -123,6 +124,9 @@ export class BSBIServiceWorker {
                 if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
                     console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
+                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
+                    console.log(`Passing through nocache list post request for: ${evt.request.url}`);
+                    evt.respondWith(fetch(evt.request));
                 } else {
                     //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
                     if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
@@ -191,10 +195,12 @@ export class BSBIServiceWorker {
                             // save the response locally
                             // before returning it to the client
 
+                            console.log('About to clone the json response.')
+
                             return response.clone().json();
                         })
                         .then((jsonResponseData) => {
-                            console.log('Following successful remote post about to save locally.')
+                            console.log('Following successful remote post, about to save locally.');
 
                             return ResponseFactory
                                 .fromPostResponse(jsonResponseData)
