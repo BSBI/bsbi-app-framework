@@ -43,5 +43,6 @@ export {Layout} from './views/layout/Layout';
 export {Page} from './views/Page';
 
 export {MainView} from './views/MainView';
+export {SurveyPickerView} from './views/SurveyPickerView';
 
 export {escapeHTML} from "./utils/escapeHTML";

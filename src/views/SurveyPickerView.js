@@ -1,14 +1,15 @@
 // Survey picker page
 
 import {Page} from "./Page";
-//import htmlContent from "../templates/helpPage.html";
 
 export class SurveyPickerView extends Page {
+
+    content = '<p>Placeholder survey picker content.</p>';
 
     body() {
         // at this point the entire content of #body should be safe to replace
 
         const bodyEl = document.getElementById('body');
-        bodyEl.innerHTML = '<p>Placeholder survey picker content.</p>';
+        bodyEl.innerHTML = this.content;
     }
 }
