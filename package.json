@@ -31,7 +31,7 @@
     "@babel/polyfill": "^7.12.1",
     "@babel/runtime": "^7.16.3",
     "bootstrap": "^4.5.0",
-    "british-isles-gridrefs": "github:japonicus/js-british-isles-gridrefs",
+    "british-isles-gridrefs": "https://github.com/japonicus/js-british-isles-gridrefs.git",
     "core-js": "^3.19.1",
     "localforage": "^1.10.0",
     "navigo": "^7.1.2"
