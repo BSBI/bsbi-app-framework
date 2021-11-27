@@ -9,7 +9,7 @@ export class TextGeorefField extends FormField {
     /**
      * @type {string}
      */
-    #inputId;
+    _inputId;
 
     /**
      * @type {string}
@@ -90,7 +90,7 @@ export class TextGeorefField extends FormField {
         if (this._fieldEl) {
             // do nothing until the view has been constructed
 
-            const inputEl = document.getElementById(this.#inputId);
+            const inputEl = document.getElementById(this._inputId);
             inputEl.value = FormField.cleanRawString(this._value);
         }
     }
@@ -124,10 +124,10 @@ export class TextGeorefField extends FormField {
         container.className = 'form-group';
         this.#containerId = container.id = FormField.nextId;
 
-        this.#inputId = FormField.nextId;
+        this._inputId = FormField.nextId;
 
         const labelEl = container.appendChild(document.createElement('label'));
-        labelEl.htmlFor = this.#inputId;
+        labelEl.htmlFor = this._inputId;
         labelEl.textContent = this.label;
 
         const inputGroupEl = container.appendChild(document.createElement('div'));
@@ -135,7 +135,7 @@ export class TextGeorefField extends FormField {
 
         const inputField = inputGroupEl.appendChild(document.createElement('input'));
         inputField.className = "form-control";
-        inputField.id = this.#inputId;
+        inputField.id = this._inputId;
         inputField.type = 'text';
 
         if (this.placeholder) {
@@ -193,7 +193,7 @@ export class TextGeorefField extends FormField {
      * @param {(boolean|null)} isValid
      */
     markValidity(isValid) {
-        const el = document.getElementById(this.#inputId);
+        const el = document.getElementById(this._inputId);
 
         if (null === isValid) {
             el.classList.remove('is-invalid', 'is-valid');
@@ -208,7 +208,7 @@ export class TextGeorefField extends FormField {
 
         console.log('got input field change event');
 
-        this.value = FormField.cleanRawString(document.getElementById(this.#inputId).value);
+        this.value = FormField.cleanRawString(document.getElementById(this._inputId).value);
         this.fireEvent(FormField.EVENT_CHANGE);
     }
 

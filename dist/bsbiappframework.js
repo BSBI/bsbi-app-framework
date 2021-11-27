@@ -14341,7 +14341,7 @@ function _classPrivateFieldInitSpec$8(obj, privateMap, value) { _checkPrivateRed
 
 function _checkPrivateRedeclaration$8(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-var _inputId$3 = /*#__PURE__*/new WeakMap();
+var _inputId$2 = /*#__PURE__*/new WeakMap();
 
 var _containerId$7 = /*#__PURE__*/new WeakMap();
 
@@ -14387,7 +14387,7 @@ var DateField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _inputId$3, {
+    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _inputId$2, {
       writable: true,
       value: void 0
     });
@@ -14443,7 +14443,7 @@ var DateField = /*#__PURE__*/function (_FormField) {
     value: function updateView() {
       if (this._fieldEl) {
         // do nothing until the view has been constructed
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId$3));
+        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId$2));
         inputEl.value = FormField.cleanRawString(this._value);
       }
     }
@@ -14461,14 +14461,14 @@ var DateField = /*#__PURE__*/function (_FormField) {
 
       _classPrivateFieldSet(this, _containerId$7, container.id = FormField.nextId);
 
-      _classPrivateFieldSet(this, _inputId$3, FormField.nextId);
+      _classPrivateFieldSet(this, _inputId$2, FormField.nextId);
 
       var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$3);
+      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$2);
       labelEl.textContent = this.label;
       var inputField = container.appendChild(document.createElement('input'));
       inputField.className = "form-control";
-      inputField.id = _classPrivateFieldGet(this, _inputId$3);
+      inputField.id = _classPrivateFieldGet(this, _inputId$2);
 
       try {
         // this is needed for compatibility with IE11
@@ -14516,7 +14516,7 @@ var DateField = /*#__PURE__*/function (_FormField) {
   }, {
     key: "markValidity",
     value: function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _inputId$3));
+      var el = document.getElementById(_classPrivateFieldGet(this, _inputId$2));
 
       if (null === isValid) {
         el.classList.remove('is-invalid', 'is-valid');
@@ -14531,7 +14531,7 @@ var DateField = /*#__PURE__*/function (_FormField) {
       event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
       console.log('got date field change event');
-      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId$3)).value);
+      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId$2)).value);
       this.fireEvent(FormField.EVENT_CHANGE);
     }
     /**
@@ -14587,7 +14587,7 @@ var EVENT_DELETE_IMAGE = 'deleteimage';
  * @external $
  */
 
-var _inputId$2 = /*#__PURE__*/new WeakMap();
+var _inputId$1 = /*#__PURE__*/new WeakMap();
 
 var _containerId$6 = /*#__PURE__*/new WeakMap();
 
@@ -14649,7 +14649,7 @@ var ImageField = /*#__PURE__*/function (_FormField) {
 
     _classPrivateMethodInitSpec$4(_assertThisInitialized(_this), _addFiles);
 
-    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _inputId$2, {
+    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _inputId$1, {
       writable: true,
       value: void 0
     });
@@ -14800,10 +14800,10 @@ var ImageField = /*#__PURE__*/function (_FormField) {
 
       _classPrivateFieldSet(this, _containerId$6, container.id = FormField.nextId);
 
-      _classPrivateFieldSet(this, _inputId$2, FormField.nextId);
+      _classPrivateFieldSet(this, _inputId$1, FormField.nextId);
 
       var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$2);
+      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$1);
       labelEl.textContent = this.label;
       var inputGroupEl = container.appendChild(document.createElement('div'));
       inputGroupEl.className = 'input-group';
@@ -14813,14 +14813,14 @@ var ImageField = /*#__PURE__*/function (_FormField) {
       var filePickerField = filePickerWrapper.appendChild(document.createElement('input'));
       filePickerField.type = 'file';
       filePickerField.className = "custom-file-input";
-      filePickerField.id = _classPrivateFieldGet(this, _inputId$2);
+      filePickerField.id = _classPrivateFieldGet(this, _inputId$1);
       filePickerField.accept = ".jpeg, .jpg, image/png, image/jpeg";
       filePickerField.multiple = true;
 
       if (this.placeholder) {
         var pickerLabelEl = filePickerWrapper.appendChild(document.createElement('label'));
         pickerLabelEl.className = 'custom-file-label';
-        pickerLabelEl.htmlFor = _classPrivateFieldGet(this, _inputId$2);
+        pickerLabelEl.htmlFor = _classPrivateFieldGet(this, _inputId$1);
         pickerLabelEl.textContent = this.placeholder;
       }
 
@@ -15047,7 +15047,7 @@ function _classPrivateFieldInitSpec$6(obj, privateMap, value) { _checkPrivateRed
 
 function _checkPrivateRedeclaration$6(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-var _inputId$1 = /*#__PURE__*/new WeakMap();
+var _inputId = /*#__PURE__*/new WeakMap();
 
 var _containerId$5 = /*#__PURE__*/new WeakMap();
 
@@ -15093,7 +15093,7 @@ var InputField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _inputId$1, {
+    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _inputId, {
       writable: true,
       value: void 0
     });
@@ -15150,7 +15150,7 @@ var InputField = /*#__PURE__*/function (_FormField) {
     value: function updateView() {
       if (this._fieldEl) {
         // do nothing until the view has been constructed
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId$1));
+        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId));
         inputEl.value = FormField.cleanRawString(this._value);
       }
     }
@@ -15173,14 +15173,14 @@ var InputField = /*#__PURE__*/function (_FormField) {
 
       _classPrivateFieldSet(this, _containerId$5, container.id = FormField.nextId);
 
-      _classPrivateFieldSet(this, _inputId$1, FormField.nextId);
+      _classPrivateFieldSet(this, _inputId, FormField.nextId);
 
       var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$1);
+      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId);
       labelEl.textContent = this.label;
       var inputField = container.appendChild(document.createElement('input'));
       inputField.className = "form-control";
-      inputField.id = _classPrivateFieldGet(this, _inputId$1);
+      inputField.id = _classPrivateFieldGet(this, _inputId);
 
       try {
         // this is needed for compatibility with IE11
@@ -15228,7 +15228,7 @@ var InputField = /*#__PURE__*/function (_FormField) {
   }, {
     key: "markValidity",
     value: function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _inputId$1));
+      var el = document.getElementById(_classPrivateFieldGet(this, _inputId));
 
       if (null === isValid) {
         el.classList.remove('is-invalid', 'is-valid');
@@ -15243,7 +15243,7 @@ var InputField = /*#__PURE__*/function (_FormField) {
       event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
       console.log('got input field change event');
-      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId$1)).value);
+      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId)).value);
       this.fireEvent(FormField.EVENT_CHANGE);
     }
     /**
@@ -19031,8 +19031,6 @@ function _classPrivateFieldInitSpec$1(obj, privateMap, value) { _checkPrivateRed
 
 function _checkPrivateRedeclaration$1(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-var _inputId = /*#__PURE__*/new WeakMap();
-
 var _containerId = /*#__PURE__*/new WeakMap();
 
 var TextGeorefField = /*#__PURE__*/function (_FormField) {
@@ -19082,10 +19080,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _inputId, {
-      writable: true,
-      value: void 0
-    });
+    _defineProperty(_assertThisInitialized(_this), "_inputId", void 0);
 
     _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _containerId, {
       writable: true,
@@ -19145,7 +19140,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     value: function updateView() {
       if (this._fieldEl) {
         // do nothing until the view has been constructed
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId));
+        var inputEl = document.getElementById(this._inputId);
         inputEl.value = FormField.cleanRawString(this._value);
       }
     }
@@ -19180,16 +19175,15 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       _classPrivateFieldSet(this, _containerId, container.id = FormField.nextId);
 
-      _classPrivateFieldSet(this, _inputId, FormField.nextId);
-
+      this._inputId = FormField.nextId;
       var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId);
+      labelEl.htmlFor = this._inputId;
       labelEl.textContent = this.label;
       var inputGroupEl = container.appendChild(document.createElement('div'));
       inputGroupEl.className = 'input-group';
       var inputField = inputGroupEl.appendChild(document.createElement('input'));
       inputField.className = "form-control";
-      inputField.id = _classPrivateFieldGet(this, _inputId);
+      inputField.id = this._inputId;
       inputField.type = 'text';
 
       if (this.placeholder) {
@@ -19246,7 +19240,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
   }, {
     key: "markValidity",
     value: function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _inputId));
+      var el = document.getElementById(this._inputId);
 
       if (null === isValid) {
         el.classList.remove('is-invalid', 'is-valid');
@@ -19261,7 +19255,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
       console.log('got input field change event');
-      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId)).value);
+      this.value = FormField.cleanRawString(document.getElementById(this._inputId).value);
       this.fireEvent(FormField.EVENT_CHANGE);
     } // /**
     //  *
