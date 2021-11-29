@@ -245,7 +245,8 @@ export class TextGeorefField extends FormField {
     gpsButtonClickHandler (event) {
         //console.log('got gps button click event');
 
-        navigator.geolocation.getCurrentPosition((position) => {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
             // const latitude  = position.coords.latitude;
             // const longitude = position.coords.longitude;
 
@@ -268,6 +269,10 @@ export class TextGeorefField extends FormField {
         }, (error) => {
             console.log('gps look-up failed');
             console.log(error);
+        },
+        {
+            enableHighAccuracy : true,
+            timeout : 60 * 1000, // 60 second timeout
         });
     }
 
