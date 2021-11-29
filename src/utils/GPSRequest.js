@@ -82,7 +82,7 @@ export class GPSRequest extends EventHarness {
 
     /**
      *
-     * @param {?string} gpsPromptBannerId
+     * @param {string=} gpsPromptBannerId
      * @return Promise
      */
     static seekGPS (gpsPromptBannerId) {

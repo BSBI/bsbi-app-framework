@@ -3,6 +3,7 @@ import {uuid} from "../../models/Model";
 import {escapeHTML} from "../../utils/escapeHTML";
 // import {LatLngWGS84} from "british-isles-gridrefs";
 import {GridCoords, GridRef} from "british-isles-gridrefs";
+import {GPSRequest} from "../../utils/GPSRequest";
 
 export class TextGeorefField extends FormField {
 
@@ -45,7 +46,29 @@ export class TextGeorefField extends FormField {
 
     /**
      *
-     * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string, [baseSquareResolution]: ?number}} [params]
+     * @type {string}
+     */
+    gpsPermissionsPromptText = '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>';
+
+    /**
+     *
+     * @type {null|string}
+     * @private
+     */
+    _gpsPermissionsPromptId = null;
+
+    /**
+     *
+     * @param {{
+     * [label] : string,
+     * [helpText]: string,
+     * [options]: {},
+     * [placeholder]: string,
+     * [type]: string,
+     * [autocomplete]: string,
+     * [baseSquareResolution]: ?number,
+     * [gpsPermissionPromptText]: string,
+     * }} [params]
      */
     constructor (params) {
         super(params);
@@ -65,6 +88,10 @@ export class TextGeorefField extends FormField {
 
             if (params.baseSquareResolution) {
                 this.baseSquareResolution = params.baseSquareResolution;
+            }
+
+            if (params.gpsPermissionPromptText) {
+                this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
             }
         }
     }
@@ -178,6 +205,13 @@ export class TextGeorefField extends FormField {
             validationMessageElement.innerHTML = this.validationMessage;
         }
 
+        if (this.gpsPermissionsPromptText && navigator.geolocation) {
+            const gpsPermissionsPromptField = container.appendChild(document.createElement('small'));
+            this._gpsPermissionsPromptId = gpsPermissionsPromptField.id = FormField.nextId;
+            gpsPermissionsPromptField.style.display = 'none'; // hidden initially
+            gpsPermissionsPromptField.innerHTML = this.gpsPermissionsPromptText;
+        }
+
         if (this.helpText) {
             const helpTextField = container.appendChild(document.createElement('small'));
             helpTextField.innerHTML = this.helpText;
@@ -245,8 +279,7 @@ export class TextGeorefField extends FormField {
     gpsButtonClickHandler (event) {
         //console.log('got gps button click event');
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
+        GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
             // const latitude  = position.coords.latitude;
             // const longitude = position.coords.longitude;
 
@@ -269,11 +302,37 @@ export class TextGeorefField extends FormField {
         }, (error) => {
             console.log('gps look-up failed');
             console.log(error);
-        },
-        {
-            enableHighAccuracy : true,
-            timeout : 60 * 1000, // 60 second timeout
         });
+
+        // navigator.geolocation.getCurrentPosition((position) => {
+        //         // const latitude  = position.coords.latitude;
+        //         // const longitude = position.coords.longitude;
+        //
+        //         // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+        //         //
+        //         // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+        //         // const gridRef = gridCoords.to_gridref(1000);
+        //         //
+        //         // console.log(`Got grid-ref: ${gridRef}`);
+        //         // this.value = gridRef;
+        //         // this.fireEvent(FormField.EVENT_CHANGE);
+        //
+        //         //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+        //
+        //         this.processLatLngPosition(
+        //             position.coords.latitude,
+        //             position.coords.longitude,
+        //             position.coords.accuracy * 2
+        //         );
+        //     }, (error) => {
+        //         console.log('gps look-up failed');
+        //         console.log(error);
+        //     }
+        //     ,
+        // {
+        //     enableHighAccuracy : true,
+        //     timeout : 60 * 1000, // 60 second timeout
+        // });
     }
 
     /**
@@ -301,7 +360,11 @@ export class TextGeorefField extends FormField {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : TextGeorefField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
+     * @param {{
+     *          field : TextGeorefField,
+     *          attributes : {options : Object.<string, {label : string}>},
+     *          summary : {summaryPrefix: string}
+     *          }} property properties of the form descriptor
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */

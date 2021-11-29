@@ -193,7 +193,7 @@ export class FormField extends EventHarness {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : FormField, summary : {}}} property properties of the form descriptor
+     * @param {{field : FormField, [attributes]: {}, summary : {}}} property properties of the form descriptor
      * @param {{}} attributes attributes of the model object
      * @returns {string}
      */
