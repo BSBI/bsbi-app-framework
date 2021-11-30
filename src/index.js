@@ -42,7 +42,7 @@ export {Layout} from './views/layout/Layout';
 
 export {Page} from './views/Page';
 
-export {MainView} from './views/MainView';
+//export {MainView} from './views/MainView.example';
 export {SurveyPickerView} from './views/SurveyPickerView';
 
 export {GPSRequest} from './utils/GPSRequest';

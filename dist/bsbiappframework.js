@@ -2757,7 +2757,7 @@ function _isNativeFunction(fn) {
   return Function.toString.call(fn).indexOf("[native code]") !== -1;
 }
 
-function _isNativeReflectConstruct$x() {
+function _isNativeReflectConstruct$w() {
   if (typeof Reflect === "undefined" || !Reflect.construct) return false;
   if (Reflect.construct.sham) return false;
   if (typeof Proxy === "function") return true;
@@ -2771,7 +2771,7 @@ function _isNativeReflectConstruct$x() {
 }
 
 function _construct(Parent, args, Class) {
-  if (_isNativeReflectConstruct$x()) {
+  if (_isNativeReflectConstruct$w()) {
     _construct = Reflect.construct;
   } else {
     _construct = function _construct(Parent, args, Class) {
@@ -2821,14 +2821,14 @@ function _wrapNativeSuper(Class) {
   return _wrapNativeSuper(Class);
 }
 
-function _createSuper$w(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$w(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$v(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$v(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$w() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$v() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 var NotFoundError = /*#__PURE__*/function (_Error) {
   _inherits(NotFoundError, _Error);
 
-  var _super = _createSuper$w(NotFoundError);
+  var _super = _createSuper$v(NotFoundError);
 
   function NotFoundError(message) {
     _classCallCheck(this, NotFoundError);
@@ -4716,9 +4716,9 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
-function _classPrivateFieldInitSpec$c(obj, privateMap, value) { _checkPrivateRedeclaration$c(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$b(obj, privateMap, value) { _checkPrivateRedeclaration$b(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$c(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$b(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _eventListeners = /*#__PURE__*/new WeakMap();
 
@@ -4726,7 +4726,7 @@ var EventHarness = /*#__PURE__*/function () {
   function EventHarness() {
     _classCallCheck(this, EventHarness);
 
-    _classPrivateFieldInitSpec$c(this, _eventListeners, {
+    _classPrivateFieldInitSpec$b(this, _eventListeners, {
       writable: true,
       value: []
     });
@@ -7663,9 +7663,9 @@ module.exports = localforage_js;
 
 var localforage = localforage$1.exports;
 
-function _createSuper$v(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$v(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$u(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$u(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$v() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$u() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function uuid(a) {
   return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid);
 }
@@ -7680,7 +7680,7 @@ var SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
 var Model = /*#__PURE__*/function (_EventHarness) {
   _inherits(Model, _EventHarness);
 
-  var _super = _createSuper$v(Model);
+  var _super = _createSuper$u(Model);
 
   /**
    * @type {string}
@@ -8056,14 +8056,14 @@ var Model = /*#__PURE__*/function (_EventHarness) {
 
 _defineProperty(Model, "_tasks", []);
 
-function _createSuper$u(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$u(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$t(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$t(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$u() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$t() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 var TaxonError = /*#__PURE__*/function (_Error) {
   _inherits(TaxonError, _Error);
 
-  var _super = _createSuper$u(TaxonError);
+  var _super = _createSuper$t(TaxonError);
 
   function TaxonError() {
     _classCallCheck(this, TaxonError);
@@ -8264,9 +8264,9 @@ $$g({ target: 'String', proto: true, forced: forcedStringTrimMethod$1('trim') },
   }
 });
 
-function _createSuper$t(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$t(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$s(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$s(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$t() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$s() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function _classStaticPrivateFieldSpecSet$1(receiver, classConstructor, descriptor, value) { _classCheckPrivateStaticAccess$3(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$3(descriptor, "set"); _classApplyDescriptorSet$1(receiver, descriptor, value); return value; }
 
@@ -8282,7 +8282,7 @@ function _classApplyDescriptorGet$3(receiver, descriptor) { if (descriptor.get) 
 var FormField = /*#__PURE__*/function (_EventHarness) {
   _inherits(FormField, _EventHarness);
 
-  var _super = _createSuper$t(FormField);
+  var _super = _createSuper$s(FormField);
 
   /**
    * overall wrapped field element (not necessarily the form element itself)
@@ -8521,13 +8521,13 @@ var _fieldIdIndex = {
 
 _defineProperty(FormField, "EVENT_CHANGE", 'fieldChange');
 
-function _createSuper$s(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$s(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$r(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$r(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$s() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$r() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$b(obj, privateMap, value) { _checkPrivateRedeclaration$b(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$a(obj, privateMap, value) { _checkPrivateRedeclaration$a(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$b(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$a(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 function _classStaticPrivateFieldSpecSet(receiver, classConstructor, descriptor, value) { _classCheckPrivateStaticAccess$2(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$2(descriptor, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
 
@@ -8546,7 +8546,7 @@ var _formEl = /*#__PURE__*/new WeakMap();
 var Form = /*#__PURE__*/function (_EventHarness) {
   _inherits(Form, _EventHarness);
 
-  var _super = _createSuper$s(Form);
+  var _super = _createSuper$r(Form);
 
   function Form() {
     var _this;
@@ -8559,7 +8559,7 @@ var Form = /*#__PURE__*/function (_EventHarness) {
 
     _this = _super.call.apply(_super, [this].concat(args));
 
-    _classPrivateFieldInitSpec$b(_assertThisInitialized(_this), _formEl, {
+    _classPrivateFieldInitSpec$a(_assertThisInitialized(_this), _formEl, {
       writable: true,
       value: void 0
     });
@@ -8764,13 +8764,13 @@ _defineProperty(Form, "COMPLETION_STATUS_COMPLETE", 'complete');
 
 _defineProperty(Form, "COMPLETION_STATUS_IN_PROGRESS", 'inProgress');
 
-function _createSuper$r(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$r(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$q(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$q(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$r() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$q() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var Occurrence = /*#__PURE__*/function (_Model) {
   _inherits(Occurrence, _Model);
 
-  var _super = _createSuper$r(Occurrence);
+  var _super = _createSuper$q(Occurrence);
 
   function Occurrence() {
     var _this;
@@ -8920,9 +8920,9 @@ var Occurrence = /*#__PURE__*/function (_Model) {
 
 _defineProperty(Occurrence, "EVENT_MODIFIED", 'modified');
 
-function _createSuper$q(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$q(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$p(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$p(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$q() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$p() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 /**
  *
@@ -8930,7 +8930,7 @@ function _isNativeReflectConstruct$q() { if (typeof Reflect === "undefined" || !
 var InternalAppError = /*#__PURE__*/function (_Error) {
   _inherits(InternalAppError, _Error);
 
-  var _super = _createSuper$q(InternalAppError);
+  var _super = _createSuper$p(InternalAppError);
 
   function InternalAppError() {
     _classCallCheck(this, InternalAppError);
@@ -8941,20 +8941,20 @@ var InternalAppError = /*#__PURE__*/function (_Error) {
   return InternalAppError;
 }( /*#__PURE__*/_wrapNativeSuper(Error));
 
-function _createSuper$p(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$p(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$o(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$o(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$p() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$o() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$a(obj, privateMap, value) { _checkPrivateRedeclaration$a(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$9(obj, privateMap, value) { _checkPrivateRedeclaration$9(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$a(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$9(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _currentOccurrenceId = /*#__PURE__*/new WeakMap();
 
 var MainController = /*#__PURE__*/function (_AppController) {
   _inherits(MainController, _AppController);
 
-  var _super = _createSuper$p(MainController);
+  var _super = _createSuper$o(MainController);
 
   /**
    *
@@ -8975,7 +8975,7 @@ var MainController = /*#__PURE__*/function (_AppController) {
 
     _defineProperty(_assertThisInitialized(_this), "view", void 0);
 
-    _classPrivateFieldInitSpec$a(_assertThisInitialized(_this), _currentOccurrenceId, {
+    _classPrivateFieldInitSpec$9(_assertThisInitialized(_this), _currentOccurrenceId, {
       writable: true,
       value: ''
     });
@@ -9365,13 +9365,13 @@ _defineProperty(MainController, "EVENT_BACK", 'back');
 
 _defineProperty(MainController, "EVENT_NEXT_TO_RECORDS", 'nexttorecords');
 
-function _createSuper$o(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$o(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$n(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$n(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$o() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$n() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var StaticContentController = /*#__PURE__*/function (_AppController) {
   _inherits(StaticContentController, _AppController);
 
-  var _super = _createSuper$o(StaticContentController);
+  var _super = _createSuper$n(StaticContentController);
 
   /**
    * @type {string}
@@ -9772,7 +9772,7 @@ function _iterableToArrayLimit(arr, i) {
   return _arr;
 }
 
-function _arrayLikeToArray$8(arr, len) {
+function _arrayLikeToArray$7(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
 
   for (var i = 0, arr2 = new Array(len); i < len; i++) {
@@ -9782,13 +9782,13 @@ function _arrayLikeToArray$8(arr, len) {
   return arr2;
 }
 
-function _unsupportedIterableToArray$8(o, minLen) {
+function _unsupportedIterableToArray$7(o, minLen) {
   if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray$8(o, minLen);
+  if (typeof o === "string") return _arrayLikeToArray$7(o, minLen);
   var n = Object.prototype.toString.call(o).slice(8, -1);
   if (n === "Object" && o.constructor) n = o.constructor.name;
   if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$8(o, minLen);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$7(o, minLen);
 }
 
 function _nonIterableRest() {
@@ -9796,7 +9796,7 @@ function _nonIterableRest() {
 }
 
 function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$8(arr, i) || _nonIterableRest();
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$7(arr, i) || _nonIterableRest();
 }
 
 var defineProperty$3 = objectDefineProperty.f;
@@ -10244,13 +10244,13 @@ fixRegExpWellKnownSymbolLogic('split', function (SPLIT, nativeSplit, maybeCallNa
   ];
 }, !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC, UNSUPPORTED_Y$2);
 
-function _createSuper$n(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$n(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$m(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$m(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$n() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$m() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var Page = /*#__PURE__*/function (_EventHarness) {
   _inherits(Page, _EventHarness);
 
-  var _super = _createSuper$n(Page);
+  var _super = _createSuper$m(Page);
 
   function Page() {
     var _this;
@@ -10413,13 +10413,13 @@ var Page = /*#__PURE__*/function (_EventHarness) {
   return Page;
 }(EventHarness);
 
-function _createSuper$m(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$m(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$l(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$l(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$m() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$l() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var NotFoundView = /*#__PURE__*/function (_Page) {
   _inherits(NotFoundView, _Page);
 
-  var _super = _createSuper$m(NotFoundView);
+  var _super = _createSuper$l(NotFoundView);
 
   function NotFoundView() {
     _classCallCheck(this, NotFoundView);
@@ -10439,13 +10439,13 @@ var NotFoundView = /*#__PURE__*/function (_Page) {
   return NotFoundView;
 }(Page);
 
-function _createSuper$l(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$l(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$k(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$k(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$l() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$k() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var SurveyForm = /*#__PURE__*/function (_Form) {
   _inherits(SurveyForm, _Form);
 
-  var _super = _createSuper$l(SurveyForm);
+  var _super = _createSuper$k(SurveyForm);
 
   /**
    * sections keyed by numerical order
@@ -10603,13 +10603,13 @@ _defineProperty(SurveyForm, "sections", []);
 
 _defineProperty(SurveyForm, "sectionsByKey", {});
 
-function _createSuper$k(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$k(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$j(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$j(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$k() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$j() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var Survey = /*#__PURE__*/function (_Model) {
   _inherits(Survey, _Model);
 
-  var _super = _createSuper$k(Survey);
+  var _super = _createSuper$j(Survey);
 
   function Survey() {
     var _this;
@@ -10747,13 +10747,13 @@ var Survey = /*#__PURE__*/function (_Model) {
 
 _defineProperty(Survey, "EVENT_MODIFIED", 'modified');
 
-function _createSuper$j(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$j(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$i(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$i(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$j() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$i() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var OccurrenceImage = /*#__PURE__*/function (_Model) {
   _inherits(OccurrenceImage, _Model);
 
-  var _super = _createSuper$j(OccurrenceImage);
+  var _super = _createSuper$i(OccurrenceImage);
 
   function OccurrenceImage() {
     var _this;
@@ -10906,19 +10906,19 @@ _defineProperty(OccurrenceImage, "imageCache", new Map());
 
 _defineProperty(OccurrenceImage, "EVENT_MODIFIED", 'modified');
 
-function _createForOfIteratorHelper$7(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$7(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper$6(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$6(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$7(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$7(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$7(o, minLen); }
+function _unsupportedIterableToArray$6(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$6(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$6(o, minLen); }
 
-function _arrayLikeToArray$7(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$6(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _createSuper$i(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$i(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$h(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$h(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$i() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$h() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$9(obj, privateMap, value) { _checkPrivateRedeclaration$9(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$8(obj, privateMap, value) { _checkPrivateRedeclaration$8(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$9(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$8(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _router = /*#__PURE__*/new WeakMap();
 
@@ -10927,7 +10927,7 @@ var _containerEl = /*#__PURE__*/new WeakMap();
 var App = /*#__PURE__*/function (_EventHarness) {
   _inherits(App, _EventHarness);
 
-  var _super = _createSuper$i(App);
+  var _super = _createSuper$h(App);
 
   /**
    * @type {PatchedNavigo}
@@ -10995,12 +10995,12 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
     _this = _super.call(this);
 
-    _classPrivateFieldInitSpec$9(_assertThisInitialized(_this), _router, {
+    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _router, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$9(_assertThisInitialized(_this), _containerEl, {
+    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _containerEl, {
       writable: true,
       value: void 0
     });
@@ -11131,7 +11131,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
         _classPrivateFieldGet(_this2, _router).resolve();
       });
 
-      var _iterator = _createForOfIteratorHelper$7(this.controllers),
+      var _iterator = _createForOfIteratorHelper$6(this.controllers),
           _step;
 
       try {
@@ -11172,7 +11172,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "markAllNotPristine",
     value: function markAllNotPristine() {
-      var _iterator2 = _createForOfIteratorHelper$7(this.occurrences),
+      var _iterator2 = _createForOfIteratorHelper$6(this.occurrences),
           _step2;
 
       try {
@@ -11232,7 +11232,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "haveExtantOccurrences",
     value: function haveExtantOccurrences() {
-      var _iterator3 = _createForOfIteratorHelper$7(this.occurrences),
+      var _iterator3 = _createForOfIteratorHelper$6(this.occurrences),
           _step3;
 
       try {
@@ -11318,7 +11318,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
       var formData = new FormData();
       var n = 0;
 
-      var _iterator4 = _createForOfIteratorHelper$7(surveyIds),
+      var _iterator4 = _createForOfIteratorHelper$6(surveyIds),
           _step4;
 
       try {
@@ -11351,7 +11351,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
         for (var type in jsonResponse) {
           if (jsonResponse.hasOwnProperty(type)) {
-            var _iterator5 = _createForOfIteratorHelper$7(jsonResponse[type]),
+            var _iterator5 = _createForOfIteratorHelper$6(jsonResponse[type]),
                 _step5;
 
             try {
@@ -11419,7 +11419,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
           "in seekKeys: local forage keys": keys
         });
 
-        var _iterator6 = _createForOfIteratorHelper$7(keys),
+        var _iterator6 = _createForOfIteratorHelper$6(keys),
             _step6;
 
         try {
@@ -11486,7 +11486,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
       // syncs surveys first, then occurrences, then images from indexedDb
       var promises = [];
 
-      var _iterator7 = _createForOfIteratorHelper$7(storedObjectKeys.survey),
+      var _iterator7 = _createForOfIteratorHelper$6(storedObjectKeys.survey),
           _step7;
 
       try {
@@ -11504,7 +11504,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
         _iterator7.f();
       }
 
-      var _iterator8 = _createForOfIteratorHelper$7(storedObjectKeys.occurrence),
+      var _iterator8 = _createForOfIteratorHelper$6(storedObjectKeys.occurrence),
           _step8;
 
       try {
@@ -11522,7 +11522,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
         _iterator8.f();
       }
 
-      var _iterator9 = _createForOfIteratorHelper$7(storedObjectKeys.image),
+      var _iterator9 = _createForOfIteratorHelper$6(storedObjectKeys.image),
           _step9;
 
       try {
@@ -11605,7 +11605,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
           var surveyFetchingPromises = [];
           var n = 0;
 
-          var _iterator10 = _createForOfIteratorHelper$7(storedObjectKeys.survey),
+          var _iterator10 = _createForOfIteratorHelper$6(storedObjectKeys.survey),
               _step10;
 
           try {
@@ -11705,7 +11705,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
           var occurrenceFetchingPromises = [];
 
-          var _iterator11 = _createForOfIteratorHelper$7(storedObjectKeys.occurrence),
+          var _iterator11 = _createForOfIteratorHelper$6(storedObjectKeys.occurrence),
               _step11;
 
           try {
@@ -11741,7 +11741,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
           //console.log('Reached image fetching part');
           var imageFetchingPromises = [];
 
-          var _iterator12 = _createForOfIteratorHelper$7(storedObjectKeys.image),
+          var _iterator12 = _createForOfIteratorHelper$6(storedObjectKeys.image),
               _step12;
 
           try {
@@ -11801,19 +11801,19 @@ _defineProperty(App, "EVENT_SURVEYS_CHANGED", 'surveyschanged');
 
 _defineProperty(App, "devMode", false);
 
-function _createForOfIteratorHelper$6(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$6(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper$5(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$5(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$6(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$6(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$6(o, minLen); }
+function _unsupportedIterableToArray$5(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$5(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$5(o, minLen); }
 
-function _arrayLikeToArray$6(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$5(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _createSuper$h(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$h(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$g(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$g(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$h() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$g() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var Layout = /*#__PURE__*/function (_EventHarness) {
   _inherits(Layout, _EventHarness);
 
-  var _super = _createSuper$h(Layout);
+  var _super = _createSuper$g(Layout);
 
   function Layout() {
     var _this;
@@ -11900,7 +11900,7 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
       var items = [];
       var currentSurveyId = this.app.currentSurvey ? this.app.currentSurvey.id : null;
 
-      var _iterator = _createForOfIteratorHelper$6(this.app.surveys),
+      var _iterator = _createForOfIteratorHelper$5(this.app.surveys),
           _step;
 
       try {
@@ -11932,9 +11932,9 @@ _defineProperty(Layout, "SAVE_ALL_SUCCESS_MODAL_ID", 'saveallsuccess');
 
 _defineProperty(Layout, "SAVE_ALL_FAILURE_MODAL_ID", 'saveallfailure');
 
-function _createSuper$g(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$g(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$f(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$f(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$g() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$f() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 /**
  * @external $
  */
@@ -11942,7 +11942,7 @@ function _isNativeReflectConstruct$g() { if (typeof Reflect === "undefined" || !
 var SurveyPickerController = /*#__PURE__*/function (_AppController) {
   _inherits(SurveyPickerController, _AppController);
 
-  var _super = _createSuper$g(SurveyPickerController);
+  var _super = _createSuper$f(SurveyPickerController);
 
   /**
    *
@@ -12296,11 +12296,11 @@ $$7({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT$1 }, {
   }
 });
 
-function _createForOfIteratorHelper$5(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$5(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper$4(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$4(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$5(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$5(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$5(o, minLen); }
+function _unsupportedIterableToArray$4(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$4(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$4(o, minLen); }
 
-function _arrayLikeToArray$5(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$4(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 var ResponseFactory = /*#__PURE__*/function () {
   function ResponseFactory() {
     _classCallCheck(this, ResponseFactory);
@@ -12326,7 +12326,7 @@ var ResponseFactory = /*#__PURE__*/function () {
 
       };
 
-      var _iterator = _createForOfIteratorHelper$5(formData.entries()),
+      var _iterator = _createForOfIteratorHelper$4(formData.entries()),
           _step;
 
       try {
@@ -12470,13 +12470,13 @@ var LocalResponse = /*#__PURE__*/function () {
   return LocalResponse;
 }();
 
-function _createSuper$f(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$f(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$e(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$e(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$f() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$e() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var ImageResponse = /*#__PURE__*/function (_LocalResponse) {
   _inherits(ImageResponse, _LocalResponse);
 
-  var _super = _createSuper$f(ImageResponse);
+  var _super = _createSuper$e(ImageResponse);
 
   function ImageResponse() {
     var _this;
@@ -12563,13 +12563,13 @@ var ImageResponse = /*#__PURE__*/function (_LocalResponse) {
   return ImageResponse;
 }(LocalResponse);
 
-function _createSuper$e(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$e(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$d(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$d(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$e() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$d() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var SurveyResponse = /*#__PURE__*/function (_LocalResponse) {
   _inherits(SurveyResponse, _LocalResponse);
 
-  var _super = _createSuper$e(SurveyResponse);
+  var _super = _createSuper$d(SurveyResponse);
 
   function SurveyResponse() {
     var _this;
@@ -12654,13 +12654,13 @@ var SurveyResponse = /*#__PURE__*/function (_LocalResponse) {
   return SurveyResponse;
 }(LocalResponse);
 
-function _createSuper$d(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$d(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$c(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$c(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$d() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$c() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var OccurrenceResponse = /*#__PURE__*/function (_LocalResponse) {
   _inherits(OccurrenceResponse, _LocalResponse);
 
-  var _super = _createSuper$d(OccurrenceResponse);
+  var _super = _createSuper$c(OccurrenceResponse);
 
   function OccurrenceResponse() {
     var _this;
@@ -12785,7 +12785,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638296862-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638297576-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -13666,13 +13666,13 @@ Navigo.REPLACE_WILDCARD = '(?:.*)';
 Navigo.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
 Navigo.MATCH_REGEXP_FLAGS = '';
 
-function _createSuper$c(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$c(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$b(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$b(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$c() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$b() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var PatchedNavigo = /*#__PURE__*/function (_Navigo) {
   _inherits(PatchedNavigo, _Navigo);
 
-  var _super = _createSuper$c(PatchedNavigo);
+  var _super = _createSuper$b(PatchedNavigo);
 
   function PatchedNavigo() {
     _classCallCheck(this, PatchedNavigo);
@@ -14787,13 +14787,13 @@ $$4({ target: 'URL', proto: true, enumerable: true }, {
   }
 });
 
-function _createSuper$b(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$b(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$a(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$a(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$b() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$a() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$8(obj, privateMap, value) { _checkPrivateRedeclaration$8(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$7(obj, privateMap, value) { _checkPrivateRedeclaration$7(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$8(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$7(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _inputId$2 = /*#__PURE__*/new WeakMap();
 
@@ -14802,7 +14802,7 @@ var _containerId$7 = /*#__PURE__*/new WeakMap();
 var DateField = /*#__PURE__*/function (_FormField) {
   _inherits(DateField, _FormField);
 
-  var _super = _createSuper$b(DateField);
+  var _super = _createSuper$a(DateField);
 
   /**
    * @type {string}
@@ -14841,12 +14841,12 @@ var DateField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _inputId$2, {
+    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _inputId$2, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _containerId$7, {
+    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _containerId$7, {
       writable: true,
       value: void 0
     });
@@ -15016,23 +15016,23 @@ collection('WeakSet', function (init) {
   return function WeakSet() { return init(this, arguments.length ? arguments[0] : undefined); };
 }, collectionWeak);
 
-function _createForOfIteratorHelper$4(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$4(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper$3(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$3(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$4(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$4(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$4(o, minLen); }
+function _unsupportedIterableToArray$3(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$3(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$3(o, minLen); }
 
-function _arrayLikeToArray$4(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$3(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _createSuper$a(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$a(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$9(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$9(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$a() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$9() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateMethodInitSpec$4(obj, privateSet) { _checkPrivateRedeclaration$7(obj, privateSet); privateSet.add(obj); }
+function _classPrivateMethodInitSpec$3(obj, privateSet) { _checkPrivateRedeclaration$6(obj, privateSet); privateSet.add(obj); }
 
-function _classPrivateFieldInitSpec$7(obj, privateMap, value) { _checkPrivateRedeclaration$7(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$6(obj, privateMap, value) { _checkPrivateRedeclaration$6(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$7(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$6(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-function _classPrivateMethodGet$4(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+function _classPrivateMethodGet$3(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
 var IMAGE_MODAL_ID = 'imagemodal';
 var IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
 var DELETE_IMAGE_MODAL_ID = 'deleteimagemodal';
@@ -15054,7 +15054,7 @@ var _save = /*#__PURE__*/new WeakSet();
 var ImageField = /*#__PURE__*/function (_FormField) {
   _inherits(ImageField, _FormField);
 
-  var _super = _createSuper$a(ImageField);
+  var _super = _createSuper$9(ImageField);
 
   /**
    * @type {string}
@@ -15099,21 +15099,21 @@ var ImageField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateMethodInitSpec$4(_assertThisInitialized(_this), _save);
+    _classPrivateMethodInitSpec$3(_assertThisInitialized(_this), _save);
 
-    _classPrivateMethodInitSpec$4(_assertThisInitialized(_this), _addFiles);
+    _classPrivateMethodInitSpec$3(_assertThisInitialized(_this), _addFiles);
 
-    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _inputId$1, {
+    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _inputId$1, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _containerId$6, {
+    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _containerId$6, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _statusBlockId, {
+    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _statusBlockId, {
       writable: true,
       value: void 0
     });
@@ -15158,7 +15158,7 @@ var ImageField = /*#__PURE__*/function (_FormField) {
       var ids = [];
 
       if (this._value && this._value.images) {
-        var _iterator = _createForOfIteratorHelper$4(this._value.images),
+        var _iterator = _createForOfIteratorHelper$3(this._value.images),
             _step;
 
         try {
@@ -15181,7 +15181,7 @@ var ImageField = /*#__PURE__*/function (_FormField) {
       };
 
       if (imageIds) {
-        var _iterator2 = _createForOfIteratorHelper$4(imageIds),
+        var _iterator2 = _createForOfIteratorHelper$3(imageIds),
             _step2;
 
         try {
@@ -15218,7 +15218,7 @@ var ImageField = /*#__PURE__*/function (_FormField) {
         // do nothing until the view has been constructed
         var idList = [];
 
-        var _iterator3 = _createForOfIteratorHelper$4(this._value.images),
+        var _iterator3 = _createForOfIteratorHelper$3(this._value.images),
             _step3;
 
         try {
@@ -15401,7 +15401,7 @@ var ImageField = /*#__PURE__*/function (_FormField) {
       var imageEl = document.getElementById(inputId);
 
       if (imageEl.files.length) {
-        _classPrivateMethodGet$4(this, _addFiles, _addFiles2).call(this, imageEl.files).then(function () {
+        _classPrivateMethodGet$3(this, _addFiles, _addFiles2).call(this, imageEl.files).then(function () {
           _this2.fireEvent(FormField.EVENT_CHANGE);
         });
       } else {
@@ -15444,7 +15444,7 @@ function _addFiles2(fileList) {
   this.parentForm.pingOccurrence();
   var images = [];
 
-  var _iterator4 = _createForOfIteratorHelper$4(fileList),
+  var _iterator4 = _createForOfIteratorHelper$3(fileList),
       _step4;
 
   try {
@@ -15458,7 +15458,7 @@ function _addFiles2(fileList) {
     _iterator4.f();
   }
 
-  return _classPrivateMethodGet$4(this, _save, _save2).call(this, images);
+  return _classPrivateMethodGet$3(this, _save, _save2).call(this, images);
 }
 
 function _save2(images) {
@@ -15484,7 +15484,7 @@ function _save2(images) {
         "Failure reason": reason
       });
     }).finally(function () {
-      return _classPrivateMethodGet$4(_this3, _save, _save2).call(_this3, images);
+      return _classPrivateMethodGet$3(_this3, _save, _save2).call(_this3, images);
     });
   } else {
     return Promise.resolve();
@@ -15493,13 +15493,13 @@ function _save2(images) {
 
 _defineProperty(ImageField, "LICENSE_MODAL", 'imagelicensemodal');
 
-function _createSuper$9(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$9(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$8(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$8(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$9() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$8() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$6(obj, privateMap, value) { _checkPrivateRedeclaration$6(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$5(obj, privateMap, value) { _checkPrivateRedeclaration$5(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$6(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$5(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _inputId = /*#__PURE__*/new WeakMap();
 
@@ -15508,7 +15508,7 @@ var _containerId$5 = /*#__PURE__*/new WeakMap();
 var InputField = /*#__PURE__*/function (_FormField) {
   _inherits(InputField, _FormField);
 
-  var _super = _createSuper$9(InputField);
+  var _super = _createSuper$8(InputField);
 
   /**
    * @type {string}
@@ -15547,12 +15547,12 @@ var InputField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _inputId, {
+    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _inputId, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _containerId$5, {
+    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _containerId$5, {
       writable: true,
       value: void 0
     });
@@ -15735,23 +15735,23 @@ function formattedImplode(separator, finalSeparator, list) {
   }
 }
 
-function _createForOfIteratorHelper$3(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$3(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper$2(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$2(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$3(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$3(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$3(o, minLen); }
+function _unsupportedIterableToArray$2(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$2(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$2(o, minLen); }
 
-function _arrayLikeToArray$3(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$2(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _createSuper$8(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$8(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$7(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$7(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$8() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$7() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateMethodInitSpec$3(obj, privateSet) { _checkPrivateRedeclaration$5(obj, privateSet); privateSet.add(obj); }
+function _classPrivateMethodInitSpec$2(obj, privateSet) { _checkPrivateRedeclaration$4(obj, privateSet); privateSet.add(obj); }
 
-function _classPrivateFieldInitSpec$5(obj, privateMap, value) { _checkPrivateRedeclaration$5(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$4(obj, privateMap, value) { _checkPrivateRedeclaration$4(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$5(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$4(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-function _classPrivateMethodGet$3(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+function _classPrivateMethodGet$2(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
 
 function _classStaticPrivateFieldSpecGet$1(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess$1(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$1(descriptor, "get"); return _classApplyDescriptorGet$1(receiver, descriptor); }
 
@@ -15773,7 +15773,7 @@ var _buildOption$1 = /*#__PURE__*/new WeakSet();
 var OptionsField = /*#__PURE__*/function (_FormField) {
   _inherits(OptionsField, _FormField);
 
-  var _super = _createSuper$8(OptionsField);
+  var _super = _createSuper$7(OptionsField);
 
   /**
    * @type {string}
@@ -15811,14 +15811,14 @@ var OptionsField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateMethodInitSpec$3(_assertThisInitialized(_this), _buildOption$1);
+    _classPrivateMethodInitSpec$2(_assertThisInitialized(_this), _buildOption$1);
 
-    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _containerId$4, {
+    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _containerId$4, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _otherTextId$1, {
+    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _otherTextId$1, {
       writable: true,
       value: void 0
     });
@@ -15872,7 +15872,7 @@ var OptionsField = /*#__PURE__*/function (_FormField) {
     value: function updateView() {
       if (this._fieldEl) {
         // do nothing until the view has been constructed
-        var _iterator = _createForOfIteratorHelper$3(document.querySelectorAll("".concat(_classStaticPrivateFieldSpecGet$1(OptionsField, OptionsField, _TOP_LEVEL_ELEMENT$1), "#").concat(_classPrivateFieldGet(this, _containerId$4), " input[type=\"checkbox\"]"))),
+        var _iterator = _createForOfIteratorHelper$2(document.querySelectorAll("".concat(_classStaticPrivateFieldSpecGet$1(OptionsField, OptionsField, _TOP_LEVEL_ELEMENT$1), "#").concat(_classPrivateFieldGet(this, _containerId$4), " input[type=\"checkbox\"]"))),
             _step;
 
         try {
@@ -15923,7 +15923,7 @@ var OptionsField = /*#__PURE__*/function (_FormField) {
 
       for (var key in this.options) {
         if (this.options.hasOwnProperty(key)) {
-          _classPrivateMethodGet$3(this, _buildOption$1, _buildOption2$1).call(this, container, key, this.options[key]);
+          _classPrivateMethodGet$2(this, _buildOption$1, _buildOption2$1).call(this, container, key, this.options[key]);
         }
       }
 
@@ -15966,7 +15966,7 @@ var OptionsField = /*#__PURE__*/function (_FormField) {
 
       var options = document.querySelectorAll("".concat(_classStaticPrivateFieldSpecGet$1(OptionsField, OptionsField, _TOP_LEVEL_ELEMENT$1), "#").concat(_classPrivateFieldGet(this, _containerId$4), " input[type=\"checkbox\"]:checked"));
 
-      var _iterator2 = _createForOfIteratorHelper$3(options),
+      var _iterator2 = _createForOfIteratorHelper$2(options),
           _step2;
 
       try {
@@ -16005,7 +16005,7 @@ var OptionsField = /*#__PURE__*/function (_FormField) {
       var methods = [];
 
       if (attributes[key].selection.length) {
-        var _iterator3 = _createForOfIteratorHelper$3(attributes[key].selection),
+        var _iterator3 = _createForOfIteratorHelper$2(attributes[key].selection),
             _step3;
 
         try {
@@ -16068,23 +16068,23 @@ var _TOP_LEVEL_ELEMENT$1 = {
   value: 'fieldset'
 };
 
-function _createForOfIteratorHelper$2(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$2(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper$1(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$2(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$2(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$2(o, minLen); }
+function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
 
-function _arrayLikeToArray$2(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$1(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _createSuper$7(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$7(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$6(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$6(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$7() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$6() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateMethodInitSpec$2(obj, privateSet) { _checkPrivateRedeclaration$4(obj, privateSet); privateSet.add(obj); }
+function _classPrivateMethodInitSpec$1(obj, privateSet) { _checkPrivateRedeclaration$3(obj, privateSet); privateSet.add(obj); }
 
-function _classPrivateFieldInitSpec$4(obj, privateMap, value) { _checkPrivateRedeclaration$4(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$3(obj, privateMap, value) { _checkPrivateRedeclaration$3(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$4(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$3(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-function _classPrivateMethodGet$2(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+function _classPrivateMethodGet$1(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
 
 function _classStaticPrivateFieldSpecGet(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor(descriptor, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
 
@@ -16108,7 +16108,7 @@ var _buildOption = /*#__PURE__*/new WeakSet();
 var SelectField = /*#__PURE__*/function (_FormField) {
   _inherits(SelectField, _FormField);
 
-  var _super = _createSuper$7(SelectField);
+  var _super = _createSuper$6(SelectField);
 
   /**
    * @type {string}
@@ -16152,19 +16152,19 @@ var SelectField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateMethodInitSpec$2(_assertThisInitialized(_this), _buildOption);
+    _classPrivateMethodInitSpec$1(_assertThisInitialized(_this), _buildOption);
 
-    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _containerId$3, {
+    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _containerId$3, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _menuId, {
+    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _menuId, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _otherTextId, {
+    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _otherTextId, {
       writable: true,
       value: void 0
     });
@@ -16247,7 +16247,7 @@ var SelectField = /*#__PURE__*/function (_FormField) {
     value: function updateView() {
       if (this._fieldEl) {
         // do nothing until the view has been constructed
-        var _iterator = _createForOfIteratorHelper$2(document.querySelectorAll("select#".concat(_classPrivateFieldGet(this, _menuId), " option"))),
+        var _iterator = _createForOfIteratorHelper$1(document.querySelectorAll("select#".concat(_classPrivateFieldGet(this, _menuId), " option"))),
             _step;
 
         try {
@@ -16309,14 +16309,14 @@ var SelectField = /*#__PURE__*/function (_FormField) {
       }
 
       if (this.placeholder) {
-        _classPrivateMethodGet$2(this, _buildOption, _buildOption2).call(this, container, selectEl, '', {
+        _classPrivateMethodGet$1(this, _buildOption, _buildOption2).call(this, container, selectEl, '', {
           label: this.placeholder
         });
       }
 
       for (var key in this.options) {
         if (this.options.hasOwnProperty(key)) {
-          _classPrivateMethodGet$2(this, _buildOption, _buildOption2).call(this, container, selectEl, key, this.options[key]);
+          _classPrivateMethodGet$1(this, _buildOption, _buildOption2).call(this, container, selectEl, key, this.options[key]);
         }
       }
 
@@ -16364,7 +16364,7 @@ var SelectField = /*#__PURE__*/function (_FormField) {
 
       var options = document.querySelectorAll("select#".concat(_classPrivateFieldGet(this, _menuId), " option:checked"));
 
-      var _iterator2 = _createForOfIteratorHelper$2(options),
+      var _iterator2 = _createForOfIteratorHelper$1(options),
           _step2;
 
       try {
@@ -16411,7 +16411,7 @@ var SelectField = /*#__PURE__*/function (_FormField) {
       var methods = [];
 
       if (attributes[key].selection.length) {
-        var _iterator3 = _createForOfIteratorHelper$2(attributes[key].selection),
+        var _iterator3 = _createForOfIteratorHelper$1(attributes[key].selection),
             _step3;
 
         try {
@@ -16498,23 +16498,23 @@ $$2({ target: 'Array', proto: true, forced: SKIPS_HOLES }, {
 // https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
 addToUnscopables(FIND);
 
-function _createForOfIteratorHelper$1(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
-function _arrayLikeToArray$1(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _createSuper$6(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$6(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$5(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$5(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$6() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$5() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateMethodInitSpec$1(obj, privateSet) { _checkPrivateRedeclaration$3(obj, privateSet); privateSet.add(obj); }
+function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration$2(obj, privateSet); privateSet.add(obj); }
 
-function _classPrivateFieldInitSpec$3(obj, privateMap, value) { _checkPrivateRedeclaration$3(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$2(obj, privateMap, value) { _checkPrivateRedeclaration$2(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$3(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$2(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
-function _classPrivateMethodGet$1(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
 
 var _inputFieldId = /*#__PURE__*/new WeakMap();
 
@@ -16537,7 +16537,7 @@ var _triggerQuery = /*#__PURE__*/new WeakSet();
 var TaxonPickerField = /*#__PURE__*/function (_FormField) {
   _inherits(TaxonPickerField, _FormField);
 
-  var _super = _createSuper$6(TaxonPickerField);
+  var _super = _createSuper$5(TaxonPickerField);
 
   /**
    * @type {TaxonSearch}
@@ -16602,48 +16602,48 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateMethodInitSpec$1(_assertThisInitialized(_this), _triggerQuery);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _triggerQuery);
 
     _defineProperty(_assertThisInitialized(_this), "taxonSearch", void 0);
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _inputFieldId, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _inputFieldId, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _dropDownListDivId, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _dropDownListDivId, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _dropDownListUlId, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _dropDownListUlId, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _containerId$2, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _containerId$2, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _taxonLookupTimeoutHandle, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _taxonLookupTimeoutHandle, {
       writable: true,
       value: null
     });
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _changeEventTimeout, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _changeEventTimeout, {
       writable: true,
       value: null
     });
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _selectedIndex, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _selectedIndex, {
       writable: true,
       value: null
     });
 
     _defineProperty(_assertThisInitialized(_this), "_lastInputValue", '');
 
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _searchResults, {
+    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _searchResults, {
       writable: true,
       value: []
     });
@@ -16898,7 +16898,7 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
       var currentValue = event.target.value.trimLeft(); // save value for testing in InputEvent handler
 
       if (currentValue !== this._lastInputValue) {
-        _classPrivateMethodGet$1(this, _triggerQuery, _triggerQuery2).call(this, event.target);
+        _classPrivateMethodGet(this, _triggerQuery, _triggerQuery2).call(this, event.target);
       }
     }
     /**
@@ -16913,7 +16913,7 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
       //console.log({'key' : event.key});
       if (event.key && (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')) {
         //keypress was a printable character
-        _classPrivateMethodGet$1(this, _triggerQuery, _triggerQuery2).call(this, event.target); // let text = TaxonPickerField.cleanRawInput(event.target);
+        _classPrivateMethodGet(this, _triggerQuery, _triggerQuery2).call(this, event.target); // let text = TaxonPickerField.cleanRawInput(event.target);
         //
         // // proceed if minimum length phrase was provided
         // if ((text.length) >= TaxonSearch.MIN_SEARCH_LENGTH) {
@@ -16961,7 +16961,7 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
         // it is important that the query is not re-run if already focused.
         var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputFieldId));
 
-        _classPrivateMethodGet$1(this, _triggerQuery, _triggerQuery2).call(this, inputEl);
+        _classPrivateMethodGet(this, _triggerQuery, _triggerQuery2).call(this, inputEl);
 
         dropDownEl.classList.add('dropdown-focused');
       }
@@ -16998,7 +16998,7 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
         var htmlResults = [];
         var n = 0;
 
-        var _iterator = _createForOfIteratorHelper$1(_classPrivateFieldGet(this, _searchResults)),
+        var _iterator = _createForOfIteratorHelper(_classPrivateFieldGet(this, _searchResults)),
             _step;
 
         try {
@@ -17155,13 +17155,13 @@ function _triggerQuery2(inputEl) {
 
 _defineProperty(TaxonPickerField, "timeoutDelay", 50);
 
-function _createSuper$5(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$5(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$4(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$4(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$5() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$4() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$2(obj, privateMap, value) { _checkPrivateRedeclaration$2(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$1(obj, privateMap, value) { _checkPrivateRedeclaration$1(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$2(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$1(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _textAreaId = /*#__PURE__*/new WeakMap();
 
@@ -17170,7 +17170,7 @@ var _containerId$1 = /*#__PURE__*/new WeakMap();
 var TextAreaField = /*#__PURE__*/function (_FormField) {
   _inherits(TextAreaField, _FormField);
 
-  var _super = _createSuper$5(TextAreaField);
+  var _super = _createSuper$4(TextAreaField);
 
   /**
    * @type {string}
@@ -17203,12 +17203,12 @@ var TextAreaField = /*#__PURE__*/function (_FormField) {
 
     _this = _super.call(this, params);
 
-    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _textAreaId, {
+    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _textAreaId, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _containerId$1, {
+    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _containerId$1, {
       writable: true,
       value: void 0
     });
@@ -18132,9 +18132,9 @@ try {
 
 var regenerator = runtime.exports;
 
-function _createSuper$4(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$4(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$3(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$3(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$4() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$3() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 /**
  * Wrapper for GPS access, including support for user-interface nudges
  */
@@ -18142,7 +18142,7 @@ function _isNativeReflectConstruct$4() { if (typeof Reflect === "undefined" || !
 var GPSRequest = /*#__PURE__*/function (_EventHarness) {
   _inherits(GPSRequest, _EventHarness);
 
-  var _super = _createSuper$4(GPSRequest);
+  var _super = _createSuper$3(GPSRequest);
 
   function GPSRequest() {
     _classCallCheck(this, GPSRequest);
@@ -18348,20 +18348,20 @@ _defineProperty(GPSRequest, "_gpsPermission", GPSRequest.GPS_PERMISSION_UNCHECKE
 
 _defineProperty(GPSRequest, "gpsEventObject", void 0);
 
-function _createSuper$3(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$3(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$3() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$2() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$1(obj, privateMap, value) { _checkPrivateRedeclaration$1(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$1(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _containerId = /*#__PURE__*/new WeakMap();
 
 var TextGeorefField = /*#__PURE__*/function (_FormField) {
   _inherits(TextGeorefField, _FormField);
 
-  var _super = _createSuper$3(TextGeorefField);
+  var _super = _createSuper$2(TextGeorefField);
 
   /**
    * @type {string}
@@ -18434,7 +18434,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "_inputId", void 0);
 
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _containerId, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _containerId, {
       writable: true,
       value: void 0
     });
@@ -18842,13 +18842,13 @@ _defineProperty(TextGeorefField, "GEOREF_SOURCE_POSTCODE", 'postcode');
 
 _defineProperty(TextGeorefField, "GEOREF_SOURCE_PLACE", 'place');
 
-function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$2() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$1() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 var OccurrenceForm = /*#__PURE__*/function (_Form) {
   _inherits(OccurrenceForm, _Form);
 
-  var _super = _createSuper$2(OccurrenceForm);
+  var _super = _createSuper$1(OccurrenceForm);
 
   /**
    * @protected
@@ -19066,1081 +19066,6 @@ _defineProperty(SurveyFormSection, "help", '');
 
 _defineProperty(SurveyFormSection, "properties", void 0);
 
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return _arrayLikeToArray$8(arr);
-}
-
-function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
-}
-
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$8(arr) || _nonIterableSpread();
-}
-
-var htmlLayout = "\r\n<div class=\"container-fluid\">\r\n    <div class=\"row\" style=\"height: 90vh;\">\r\n        <div class=\"col d-md-block pr-md-0 pt-3\" id=\"col1panel\" style=\"overflow-y: auto; max-height: calc(100vh - 5rem);\">\r\n        </div>\r\n        <div class=\"col d-md-none pl-0 pr-0\" id=\"ctrlpanel\" style=\"background-color: aliceblue; width: 28px; max-width: 28px; overflow-y: hidden; \">\r\n            <button class=\"navbar-light navbar-toggler pl-0 pr-0\" type=\"button\" aria-label=\"Back\" id=\"right-panel-back\">\r\n                <i class=\"material-icons-round\" style=\"color: gray;\">view_list</i>\r\n            </button>\r\n        </div>\r\n        <div class=\"col d-md-block pr-md-0\" id=\"col2panel\" style=\"overflow-y: auto; height: 100%;\">\r\n        </div>\r\n    </div>\r\n</div>\r\n";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$1() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration(obj, privateSet); privateSet.add(obj); }
-
-function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-var LEFT_PANEL_ID = 'col1panel';
-var RIGHT_PANEL_ID = 'col2panel';
-var CONTROL_PANEL_ID = 'ctrlpanel';
-var PANEL_BACK_BUTTON_ID = 'right-panel-back';
-var PANEL_LEFT = 'left';
-var PANEL_RIGHT = 'right';
-var DELETE_OCCURRENCE_MODAL_ID = 'deleteoccurrencemodal';
-var FINISH_MODAL_ID = 'finishmodal';
-var OCCURRENCE_LIST_CONTAINER_ID = 'occurrencelistcontainer'; //SurveyForm.registerSection(GardenFlowerSurveyFormAboutSection);
-//SurveyForm.registerSection(GardenFlowerSurveyFormGardenSection);
-
-/**
- * @external $
- */
-
-var _surveyFormSections = /*#__PURE__*/new WeakMap();
-
-var _occurrenceForm = /*#__PURE__*/new WeakMap();
-
-var _occurrenceChangeHandles = /*#__PURE__*/new WeakMap();
-
-var _refreshSurveyHelpPanel = /*#__PURE__*/new WeakSet();
-
-var _refreshOccurrenceEditor = /*#__PURE__*/new WeakSet();
-
-var _displayDefaultRightPanel = /*#__PURE__*/new WeakSet();
-
-var _clearOccurrenceListeners = /*#__PURE__*/new WeakSet();
-
-var _populateLeftPanel = /*#__PURE__*/new WeakSet();
-
-var _registerModals = /*#__PURE__*/new WeakSet();
-
-var _registerLeftPanelAccordionEvent = /*#__PURE__*/new WeakSet();
-
-var _appendWelcomeSection = /*#__PURE__*/new WeakSet();
-
-var _appendSurveyForm = /*#__PURE__*/new WeakSet();
-
-var _appendOccurrenceListContainer = /*#__PURE__*/new WeakSet();
-
-var _buildOccurrenceList = /*#__PURE__*/new WeakSet();
-
-var _occurrenceSummaryHTML = /*#__PURE__*/new WeakSet();
-
-var MainView = /*#__PURE__*/function (_Page) {
-  _inherits(MainView, _Page);
-
-  var _super = _createSuper$1(MainView);
-
-  function MainView() {
-    var _this;
-
-    _classCallCheck(this, MainView);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _occurrenceSummaryHTML);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _buildOccurrenceList);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _appendOccurrenceListContainer);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _appendSurveyForm);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _appendWelcomeSection);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _registerLeftPanelAccordionEvent);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _registerModals);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _populateLeftPanel);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _clearOccurrenceListeners);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _displayDefaultRightPanel);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _refreshOccurrenceEditor);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _refreshSurveyHelpPanel);
-
-    _defineProperty(_assertThisInitialized(_this), "controller", void 0);
-
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _surveyFormSections, {
-      writable: true,
-      value: {}
-    });
-
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _occurrenceForm, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _occurrenceChangeHandles, {
-      writable: true,
-      value: {}
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "panelKey", '');
-
-    _defineProperty(_assertThisInitialized(_this), "OCCURRENCES_ARE_LAST_SECTION", true);
-
-    _defineProperty(_assertThisInitialized(_this), "occurrenceSummaryText", 'Placeholder occurrence summary text in MainView.js');
-
-    _defineProperty(_assertThisInitialized(_this), "welcomeContent", 'Placeholder welcome text in MainView.js');
-
-    _defineProperty(_assertThisInitialized(_this), "defaultRightHandSideHelp", 'Default right-hand side help text in MainView.js');
-
-    return _this;
-  }
-
-  _createClass(MainView, [{
-    key: "initialise",
-    value:
-    /**
-     * called once during late-stage app initialisation
-     * (NB this may not be the current view when called)
-     *
-     * an opportunity to register listeners on this.controller.app
-     */
-    function initialise() {
-      this.controller.app.addListener(App.EVENT_OCCURRENCE_ADDED, this.occurrenceAddedHandler.bind(this));
-    }
-    /**
-     * called before display to initialise a two-panel layout
-     */
-
-  }, {
-    key: "setLayout",
-    value: function setLayout() {
-      var _this2 = this;
-
-      var bodyEl = document.getElementById('body');
-      bodyEl.innerHTML = htmlLayout; // register handler on right-pane back button
-
-      document.getElementById(PANEL_BACK_BUTTON_ID).addEventListener('click', function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-
-        _this2.fireEvent(MainController.EVENT_BACK);
-      });
-    }
-    /**
-     * need to ensure that the open accordion sections match the url
-     * do this by class tweaking, so that handlers do not fire
-     */
-
-  }, {
-    key: "refreshLeftPanelAccordionState",
-    value: function refreshLeftPanelAccordionState() {
-      var cards = document.querySelectorAll("div#".concat(this.leftPanelAccordionId, " div[data-parent=\"#").concat(this.leftPanelAccordionId, "\"].collapse"));
-      var targetMatch;
-
-      if (this.controller.viewSubcontext) {
-        targetMatch = this.controller.viewSubcontext === 'record' ? 'record' : this.controller.surveySection;
-      } else {
-        targetMatch = '';
-      }
-
-      var _iterator = _createForOfIteratorHelper(cards),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var card = _step.value;
-          var cardSection = card.getAttribute('data-sectionkey');
-
-          if (cardSection === targetMatch) {
-            card.classList.add('show');
-          } else {
-            card.classList.remove('show');
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-
-      this._refreshOccurrenceAccordionState();
-    }
-    /**
-     * collapse open occurrence cards that don't match the current occurrence id
-     *
-     * @private
-     */
-
-  }, {
-    key: "_refreshOccurrenceAccordionState",
-    value: function _refreshOccurrenceAccordionState() {
-      var occurrenceCards = document.querySelectorAll("div#".concat(OCCURRENCE_LIST_CONTAINER_ID, " div[data-parent=\"#").concat(OCCURRENCE_LIST_CONTAINER_ID, "\"].collapse"));
-      var targetMatch = this.controller.currentOccurrenceId;
-
-      var _iterator2 = _createForOfIteratorHelper(occurrenceCards),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var card = _step2.value;
-          var cardOccurrenceId = card.getAttribute('data-occurrenceid');
-
-          if (cardOccurrenceId === targetMatch) {
-            card.classList.add('show');
-          } else {
-            card.classList.remove('show');
-          }
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-    }
-  }, {
-    key: "display",
-    value: function display() {
-      if (this.controller.needsFullRefresh) {
-        console.log('Full refresh triggered.');
-        this.setLayout();
-
-        _classPrivateMethodGet(this, _populateLeftPanel, _populateLeftPanel2).call(this);
-      } else {
-        // need to ensure that the open accordion sections match the url
-        this.refreshLeftPanelAccordionState();
-      }
-
-      if (this.controller.needRightPanelRefresh) {
-        // the view of the current record (in the right-hand editor pane)
-        // has changed and needs rebuilding from scratch
-        switch (this.controller.viewSubcontext) {
-          case 'record':
-            _classPrivateMethodGet(this, _refreshOccurrenceEditor, _refreshOccurrenceEditor2).call(this);
-
-            break;
-
-          case 'survey':
-            _classPrivateMethodGet(this, _refreshSurveyHelpPanel, _refreshSurveyHelpPanel2).call(this);
-
-            break;
-
-          default:
-            _classPrivateMethodGet(this, _displayDefaultRightPanel, _displayDefaultRightPanel2).call(this);
-
-        }
-      }
-
-      this.setResponsivePanel('' === this.panelKey ? PANEL_LEFT : PANEL_RIGHT);
-    }
-  }, {
-    key: "refreshOccurrenceFooterControls",
-    value:
-    /**
-     * adds next/new and finish/close button to below right-panel occurrence editor
-     * @param {HTMLElement} editorContainer
-     */
-    function refreshOccurrenceFooterControls(editorContainer) {
-      var _this3 = this;
-
-      var nextSection;
-      var buttonContainer = editorContainer.appendChild(document.createElement('div'));
-      var backButton = buttonContainer.appendChild(document.createElement('button'));
-      backButton.className = 'btn btn-secondary btn-md-lg mt-2 mb-3 mr-2';
-      backButton.type = 'button';
-      backButton.textContent = 'back to list';
-      backButton.setAttribute('data-buttonaction', 'back');
-
-      if (this.occurrenceIsMostRecent(this.controller.currentOccurrence)) {
-        var addNewButton = buttonContainer.appendChild(document.createElement('button'));
-        addNewButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3 mr-2';
-        addNewButton.type = 'button';
-        addNewButton.textContent = 'add another';
-        addNewButton.setAttribute('data-buttonaction', 'new');
-      }
-
-      if (this.OCCURRENCES_ARE_LAST_SECTION) {
-        var finishButton = buttonContainer.appendChild(document.createElement('button'));
-        finishButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3';
-        finishButton.type = 'button';
-        finishButton.textContent = 'finish';
-        finishButton.setAttribute('data-buttonaction', 'finish');
-      } else {
-        var nextFormIndex = 1;
-        nextSection = SurveyForm.sections[nextFormIndex];
-        var nextButton = buttonContainer.appendChild(document.createElement('button'));
-        nextButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3';
-        nextButton.type = 'button';
-        nextButton.textContent = 'next »';
-        nextButton.setAttribute('data-buttonaction', 'next');
-        nextButton.title = nextSection.sectionTitle;
-      }
-
-      buttonContainer.addEventListener('click', function (event) {
-        var buttonEl = event.target.closest('button');
-
-        if (buttonEl && buttonEl.hasAttribute('data-buttonaction')) {
-          switch (buttonEl.getAttribute('data-buttonaction')) {
-            case 'new':
-              _this3.fireEvent(MainController.EVENT_NEW_RECORD);
-
-              break;
-
-            case 'back':
-              _this3.controller.app.router.navigate('/list/record/');
-
-              break;
-
-            case 'finish':
-              _this3.controller.app.router.navigate('/list/record/'); // display the finish dialogue box
-
-
-              $("#".concat(FINISH_MODAL_ID)).modal();
-              break;
-
-            case 'next':
-              _this3.controller.app.router.navigate("/list/survey/".concat(nextSection.sectionNavigationKey));
-
-              break;
-
-            default:
-              throw new Error("Unrecognised button action ".concat(buttonEl.getAttribute('data-buttonaction')));
-          }
-        }
-      });
-    }
-    /**
-     *
-     * @param {Occurrence} occurrence
-     * @returns {boolean}
-     */
-
-  }, {
-    key: "occurrenceIsMostRecent",
-    value: function occurrenceIsMostRecent(occurrence) {
-      // loop through entries sorted by creation date, most recent first
-      var _iterator3 = _createForOfIteratorHelper(this.controller.occurrences.entries()),
-          _step3;
-
-      try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var occurrenceTuple = _step3.value;
-
-          if (occurrenceTuple[1].createdStamp > occurrence.createdStamp && !occurrenceTuple[1].deleted) {
-            return false;
-          }
-        }
-      } catch (err) {
-        _iterator3.e(err);
-      } finally {
-        _iterator3.f();
-      }
-
-      return true;
-    }
-    /**
-     *
-     * @param {string} [htmlText]
-     */
-
-  }, {
-    key: "newButtonClickHandler",
-    value:
-    /**
-     * @param {MouseEvent} event
-     */
-    function newButtonClickHandler(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      this.fireEvent(MainController.EVENT_NEW_RECORD);
-    }
-    /**
-     *
-     */
-
-  }, {
-    key: "occurrenceAddedHandler",
-    value:
-    /**
-     * called after the one-off addition of a new occurrence
-     *
-     * @param {{occurrenceId: string, surveyId: string}} params
-     */
-    function occurrenceAddedHandler(params) {
-      var occurrenceList = document.getElementById(OCCURRENCE_LIST_CONTAINER_ID);
-
-      if (occurrenceList) {
-        var occurrence = this.controller.occurrences.get(params.occurrenceId);
-        var itemCard = document.createElement('div');
-        itemCard.className = 'card';
-        itemCard.id = "card_".concat(occurrence.id);
-        itemCard.innerHTML = _classPrivateMethodGet(this, _occurrenceSummaryHTML, _occurrenceSummaryHTML2).call(this, occurrence);
-        _classPrivateFieldGet(this, _occurrenceChangeHandles)[occurrence.id] = occurrence.addListener(Occurrence.EVENT_MODIFIED, this.occurrenceChangeHandler.bind(this), {
-          occurrenceId: occurrence.id
-        });
-        occurrenceList.insertBefore(itemCard, occurrenceList.firstChild);
-      }
-    }
-    /**
-     * sets validity flag in occurrence accordion header
-     *
-     * @param {Occurrence} occurrence
-     */
-
-  }, {
-    key: "refreshOccurrenceValiditySummary",
-    value: function refreshOccurrenceValiditySummary(occurrence) {
-      var cardEl = document.getElementById("card_".concat(occurrence.id));
-
-      if (cardEl) {
-        var validity = occurrence.evaluateCompletionStatus(OccurrenceForm.properties);
-
-        if (validity.requiredFieldsPresent) {
-          cardEl.classList.remove('is-invalid');
-        } else {
-          cardEl.classList.add('is-invalid');
-        }
-      }
-    }
-    /**
-     *
-     * @param {{occurrenceId : string}} params
-     */
-
-  }, {
-    key: "occurrenceChangeHandler",
-    value: function occurrenceChangeHandler(params) {
-      var occurrence = this.controller.occurrences.get(params.occurrenceId);
-      var el = document.getElementById("card_".concat(params.occurrenceId));
-
-      if (el) {
-        if (!occurrence.deleted) {
-          el.innerHTML = _classPrivateMethodGet(this, _occurrenceSummaryHTML, _occurrenceSummaryHTML2).call(this, occurrence);
-          this.refreshOccurrenceValiditySummary(occurrence);
-        } else {
-          el.parentElement.removeChild(el); // remove the event listener
-
-          if (_classPrivateFieldGet(this, _occurrenceChangeHandles)[params.occurrenceId]) {
-            occurrence.removeListener(Occurrence.EVENT_MODIFIED, _classPrivateFieldGet(this, _occurrenceChangeHandles)[params.occurrenceId]);
-            _classPrivateFieldGet(this, _occurrenceChangeHandles)[params.occurrenceId] = null;
-          }
-        }
-      }
-    }
-    /**
-     *
-     * @param {Occurrence} occurrence
-     * @returns {string}
-     */
-
-  }, {
-    key: "occurrenceSummaryBodyHTML",
-    value: function occurrenceSummaryBodyHTML(occurrence) {
-      var html = '';
-
-      for (var key in occurrence.attributes) {
-        if (occurrence.attributes.hasOwnProperty(key) && OccurrenceForm.properties.hasOwnProperty(key) && !OccurrenceForm.properties[key].field.isEmpty(occurrence.attributes[key])) {
-          var summaryHTML = OccurrenceForm.properties[key].field.summarise(key, OccurrenceForm.properties[key], occurrence.attributes);
-
-          if (summaryHTML) {
-            html += "<p class=\"ellipsed-line mb-0\">".concat(summaryHTML, "</p>");
-          }
-        }
-      }
-
-      if (App.devMode) {
-        html += "<p class=\"mb-0\">(<i>id ".concat(occurrence.id, "</i>)</p>");
-      }
-
-      return html;
-    }
-    /**
-     *
-     * @param {Occurrence} occurrence
-     * @returns {string}
-     */
-
-  }, {
-    key: "occurrenceSummaryHeadingHTML",
-    value: function occurrenceSummaryHeadingHTML(occurrence) {
-      var html = '';
-
-      if (occurrence.attributes.hasOwnProperty('images') && occurrence.attributes.images.length) {
-        var firstImageId = occurrence.attributes.images[0];
-        html += OccurrenceImage.imageLink(firstImageId, 48, 48, {
-          className: 'mr-1'
-        });
-      }
-
-      if (occurrence.attributes.taxon && occurrence.attributes.taxon.taxonId) {
-        // have an well-formed taxon
-        html += occurrence.taxon.formattedHTML(occurrence.attributes.taxon.vernacularMatch);
-      } else if (occurrence.attributes.taxon && occurrence.attributes.taxon.taxonName) {
-        // match with unrecognised taxon name
-        html += escapeHTML(occurrence.attributes.taxon.taxonName);
-      } else {
-        html += '<span>(unnamed plant)</span>';
-      }
-
-      return html;
-    }
-    /**
-     * cardHeadingEl.setAttribute('data-toggle', 'collapse');
-     cardHeadingEl.setAttribute('data-target', `#${descriptor.cardDescriptionId}`);
-     *
-     * @param {Occurrence} occurrence
-     * @return {string}
-     */
-
-  }, {
-    key: "setResponsivePanel",
-    value:
-    /**
-     *
-     * @param {('left'|'right')} panel
-     */
-    function setResponsivePanel(panel) {
-      var rightPanel = document.getElementById(RIGHT_PANEL_ID);
-      var leftPanel = document.getElementById(LEFT_PANEL_ID);
-      var midPanel = document.getElementById(CONTROL_PANEL_ID);
-
-      switch (panel) {
-        case PANEL_LEFT:
-          leftPanel.classList.remove('d-none');
-          leftPanel.classList.add('d-block');
-          rightPanel.classList.remove('d-block');
-          rightPanel.classList.add('d-none');
-          midPanel.classList.remove('d-md-none');
-          midPanel.classList.add('d-none');
-          break;
-
-        case PANEL_RIGHT:
-          leftPanel.classList.remove('d-block');
-          leftPanel.classList.add('d-none');
-          rightPanel.classList.remove('d-none');
-          rightPanel.classList.add('d-block');
-          midPanel.classList.remove('d-none');
-          midPanel.classList.add('d-md-none');
-          break;
-
-        default:
-          throw new Error("Unrecognised panel value '".concat(panel));
-      }
-    }
-  }]);
-
-  return MainView;
-}(Page);
-
-function _refreshSurveyHelpPanel2() {
-  var rightPanelContainer = document.getElementById(RIGHT_PANEL_ID);
-  var sectionKey = this.controller.surveySection; // section key can be 'welcome' which is a special case that doesn't match a section form
-
-  var help = SurveyForm.sectionsByKey[sectionKey] ? SurveyForm.sectionsByKey[sectionKey].help : '';
-
-  if (help) {
-    rightPanelContainer.innerHTML = help;
-  } else if (sectionKey === 'welcome') {
-    rightPanelContainer.innerHTML = this.defaultRightHandSideHelp;
-  } else {
-    // shouldn't get here
-    rightPanelContainer.innerHTML = "<p>placeholder survey help content for '".concat(sectionKey, "'</p>");
-  }
-}
-
-function _refreshOccurrenceEditor2() {
-  try {
-    var occurrence = this.controller.currentOccurrence;
-    var editorContainer = document.getElementById(RIGHT_PANEL_ID);
-
-    if (occurrence) {
-      if (!_classPrivateFieldGet(this, _occurrenceForm) || _classPrivateFieldGet(this, _occurrenceForm).occurrenceId !== occurrence.id) {
-        if (_classPrivateFieldGet(this, _occurrenceForm)) {
-          _classPrivateFieldGet(this, _occurrenceForm).destructor();
-        } // form has not been initialised or current occurrence has changed
-
-
-        _classPrivateFieldSet(this, _occurrenceForm, occurrence.setForm(new OccurrenceForm(occurrence))); //this.#occurrenceForm = occurrence.getForm();
-
-
-        _classPrivateFieldGet(this, _occurrenceForm).surveyId = this.controller.app.currentSurvey.id; // scroll to the top of the panel
-
-        editorContainer.scrollTop = 0;
-      }
-
-      editorContainer.innerHTML = '';
-
-      var formEl = _classPrivateFieldGet(this, _occurrenceForm).formElement;
-
-      editorContainer.appendChild(formEl);
-
-      _classPrivateFieldGet(this, _occurrenceForm).populateFormContent();
-
-      if (occurrence.isNew) {
-        console.log('Firing event for initialisation of new occurrence.');
-
-        _classPrivateFieldGet(this, _occurrenceForm).fireEvent(Form.EVENT_INITIALISE_NEW, {
-          survey: this.controller.app.currentSurvey
-        }); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
-
-      }
-
-      this.refreshOccurrenceFooterControls(editorContainer); // ensures that the accordion matches the navigation state
-
-      $("#description_".concat(occurrence.id)).collapse('show');
-    } else {
-      _classPrivateMethodGet(this, _displayDefaultRightPanel, _displayDefaultRightPanel2).call(this, OccurrenceForm.help);
-    }
-  } catch (error) {
-    console.log({
-      error: error
-    });
-
-    var _editorContainer = document.getElementById(RIGHT_PANEL_ID);
-
-    if (_editorContainer) {
-      _editorContainer.innerHTML = "<p>".concat(error.message, "</p>");
-    } else {
-      document.body.innerHTML = "<h2>Internal error</h2><p>Please report this problem:</p><p>".concat(error.message, "</p>");
-    }
-  }
-}
-
-function _displayDefaultRightPanel2(htmlText) {
-  var editorContainer = document.getElementById(RIGHT_PANEL_ID);
-  editorContainer.innerHTML = htmlText || this.defaultRightHandSideHelp;
-}
-
-function _clearOccurrenceListeners2() {
-  for (var id in _classPrivateFieldGet(this, _occurrenceChangeHandles)) {
-    var occurrence = this.controller.occurrences.get[id];
-
-    if (occurrence) {
-      occurrence.removeListener(Occurrence.EVENT_MODIFIED, _classPrivateFieldGet(this, _occurrenceChangeHandles)[id]);
-    }
-  }
-
-  _classPrivateFieldSet(this, _occurrenceChangeHandles, {});
-}
-
-function _populateLeftPanel2() {
-  var _this4 = this;
-
-  var leftPanel = document.getElementById(LEFT_PANEL_ID);
-  var accordionEl = leftPanel.appendChild(document.createElement('div'));
-  accordionEl.className = "accordion";
-  this.leftPanelAccordionId = accordionEl.id = Form.nextId;
-
-  _classPrivateMethodGet(this, _appendWelcomeSection, _appendWelcomeSection2).call(this);
-
-  _classPrivateMethodGet(this, _appendSurveyForm, _appendSurveyForm2).call(this, 0, accordionEl, MainView.NEXT_RECORDS); // about you
-
-
-  _classPrivateMethodGet(this, _appendOccurrenceListContainer, _appendOccurrenceListContainer2).call(this); // Keep this as is useful as guide for building other app layouts
-  //this.#appendSurveyForm(1, accordionEl, MainView.NEXT_IS_FINAL); // about your garden
-
-
-  _classPrivateMethodGet(this, _buildOccurrenceList, _buildOccurrenceList2).call(this);
-  /**
-   * need to manually intercept clicks on the form help buttons
-   * to prevent click also triggering an accordion toggle
-   */
-
-
-  accordionEl.addEventListener('click',
-  /** @param {MouseEvent} event */
-  function (event) {
-    var targetLinkEl = event.target.closest('a');
-
-    if (targetLinkEl && targetLinkEl.hasAttribute('data-help-link')) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      _this4.controller.app.router.navigate(targetLinkEl.getAttribute('data-help-link'));
-    }
-  });
-
-  _classPrivateMethodGet(this, _registerLeftPanelAccordionEvent, _registerLeftPanelAccordionEvent2).call(this);
-
-  _classPrivateMethodGet(this, _registerModals, _registerModals2).call(this);
-}
-
-function _registerModals2() {
-  var _this5 = this;
-
-  //const container = document.getElementById(LEFT_PANEL_ID);
-  var container = document.body; // Delete record modal
-
-  var deleteOccurrenceModalHTML = "<div class=\"modal fade\" id=\"".concat(DELETE_OCCURRENCE_MODAL_ID, "\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"").concat(DELETE_OCCURRENCE_MODAL_ID, "Title\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h5 class=\"modal-title\" id=\"").concat(DELETE_OCCURRENCE_MODAL_ID, "Title\">Delete record?</h5>\n        <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n        Please confirm that you wish to delete the record.\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" class=\"btn btn-secondary\" data-dismiss=\"modal\">Back</button>\n        <button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"").concat(DELETE_OCCURRENCE_MODAL_ID, "confirmed\">Delete record</button>\n      </div>\n    </div>\n  </div>\n</div>");
-  var deleteOccurrenceModalEl = document.createElement('div');
-  deleteOccurrenceModalEl.innerHTML = deleteOccurrenceModalHTML;
-  container.appendChild(deleteOccurrenceModalEl.firstChild);
-  $("#".concat(DELETE_OCCURRENCE_MODAL_ID)).on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget); // Button that triggered the modal
-    // button will not be valid if modal has been invoked directly from script,
-    // in which case the occurrence id attribute will already have been set
-
-    if (button && button.data('occurrenceid')) {
-      var occurrenceId = button.data('occurrenceid');
-      document.getElementById("".concat(DELETE_OCCURRENCE_MODAL_ID, "confirmed")).setAttribute('data-occurrenceid', occurrenceId);
-    }
-  });
-  document.getElementById("".concat(DELETE_OCCURRENCE_MODAL_ID, "confirmed")).addEventListener('click', function (event) {
-    var confirmButtonEl = event.target.closest('button');
-
-    if (confirmButtonEl && confirmButtonEl.hasAttribute('data-occurrenceid')) {
-      var occurrenceId = confirmButtonEl.getAttribute('data-occurrenceid');
-      console.log("Deleting occurrence ".concat(occurrenceId, "."));
-
-      _this5.fireEvent(MainController.EVENT_DELETE_OCCURRENCE, {
-        occurrenceId: occurrenceId
-      });
-    }
-  }); // 'finish' modal
-  // this pop-up is informational only
-
-  var finishModalEl = document.createElement('div');
-  finishModalEl.innerHTML = "<div class=\"modal fade\" id=\"".concat(FINISH_MODAL_ID, "\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"").concat(FINISH_MODAL_ID, "Title\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h5 class=\"modal-title\" id=\"").concat(FINISH_MODAL_ID, "Title\">Thank you</h5>\n        <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n        <p>Thank you! Your form responses have been sent. If you wish, you can continue to make changes and edit or add further records.</p>\n        <p>If you provided an email address, then we will send you a message with a link to this form, so that you can return to it later if needed.</p>\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" class=\"btn btn-secondary\" data-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n</div>");
-  container.appendChild(finishModalEl.firstChild);
-  container.appendChild(ImageField.licenseModal()); // image modal
-  // includes a button to delete the image
-
-  var imageModalEl = document.createElement('div');
-  imageModalEl.innerHTML = "<div class=\"modal fade\" id=\"".concat(IMAGE_MODAL_ID, "\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"").concat(IMAGE_MODAL_ID, "Title\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header d-none d-md-flex\">\n        <h5 class=\"modal-title\" id=\"").concat(IMAGE_MODAL_ID, "Title\">Photo</h5>\n        <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\" style=\"position: relative;\">\n        <picture>\n        </picture>\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" id=\"").concat(IMAGE_MODAL_DELETE_BUTTON_ID, "\" class=\"btn btn-outline-danger delete-occurrence-button mr-3\" data-toggle=\"modal\" data-target=\"#").concat(DELETE_IMAGE_MODAL_ID, "\" data-imageid=\"\"><i class=\"material-icons\">delete</i></button>\n        <button type=\"button\" class=\"btn btn-secondary\" data-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n</div>");
-  container.appendChild(imageModalEl.firstChild);
-  document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID).addEventListener('click', function (event) {
-    var deleteButtonEl = event.target.closest('button');
-
-    if (deleteButtonEl && deleteButtonEl.hasAttribute('data-imageid')) {
-      var imageId = deleteButtonEl.getAttribute('data-imageid'); //console.log(`Deleting image ${occurrenceId}.`);
-
-      _classPrivateFieldGet(_this5, _occurrenceForm).fireEvent(EVENT_DELETE_IMAGE, {
-        imageId: imageId
-      });
-
-      $("#".concat(IMAGE_MODAL_ID)).modal('hide');
-    }
-  });
-}
-
-function _registerLeftPanelAccordionEvent2() {
-  var _this6 = this;
-
-  // console.log('Registering left panel accordion event handler.');
-  $("#".concat(LEFT_PANEL_ID)).on('show.bs.collapse', function (event) {
-    // this will fire for both selection events within the records list and for changes to the top-level accordion
-    if (event.target.dataset.occurrenceid) {
-      console.log({
-        'left panel accordion show event (with occ id)': event
-      });
-
-      _this6.fireEvent(MainController.EVENT_SELECT_OCCURRENCE, {
-        occurrenceId: event.target.dataset.occurrenceid
-      });
-    } else if (event.target.dataset.sectionkey) {
-      console.log({
-        'left panel accordion show event (with section key)': event
-      });
-
-      _this6.fireEvent(MainController.EVENT_SELECT_SURVEY_SECTION, {
-        sectionKey: event.target.dataset.sectionkey
-      });
-    } else {
-      console.log({
-        'left panel accordion show event (other)': event
-      });
-    }
-  }).on('hidden.bs.collapse', function (event) {
-    // this will fire for both selection events within the records list and for changes to the top-level accordion
-    console.log({
-      'left panel accordion hide event': event
-    });
-
-    if (event.target.dataset.occurrenceid) {
-      // should evaluate the validity of the individual occurrence
-      var occurrence = _this6.controller.occurrences.get(event.target.dataset.occurrenceid);
-
-      if (occurrence.isNew && !occurrence.isPristine) {
-        // closing of the slider is an action suggesting that user has moved on and validation should start
-        occurrence.isNew = false;
-
-        _this6.refreshOccurrenceValiditySummary(occurrence);
-      } // only trigger a navigation if the occurrence was the current one
-
-
-      if (_this6.controller.currentOccurrenceId === event.target.dataset.occurrenceid) {
-        _this6.fireEvent(MainController.EVENT_SELECT_OCCURRENCE, {
-          occurrenceId: ''
-        });
-      }
-    } else if (event.target.dataset.sectionkey) {
-      if (event.target.dataset.sectionkey === 'record') {
-        // closing the top-level occurrences list
-        // need to propagate validation down to the occurrences
-        // only trigger a navigation if the view context was the current one
-        if (_this6.controller.viewSubcontext === 'record') {
-          _this6.fireEvent(MainController.EVENT_SELECT_SURVEY_SECTION, {
-            sectionKey: ''
-          });
-        }
-      } else {
-        if (_classPrivateFieldGet(_this6, _surveyFormSections)[event.target.dataset.sectionkey]) {
-          var isValid = _classPrivateFieldGet(_this6, _surveyFormSections)[event.target.dataset.sectionkey].validateForm();
-
-          console.log({
-            'survey section validity': isValid
-          }); // only trigger a navigation if the section was the current one
-
-          if (_this6.controller.surveySection === event.target.dataset.sectionkey) {
-            _this6.fireEvent(MainController.EVENT_SELECT_SURVEY_SECTION, {
-              sectionKey: ''
-            });
-          }
-        }
-      }
-    }
-  });
-}
-
-function _appendWelcomeSection2() {
-  var accordionEl = document.getElementById(this.leftPanelAccordionId); // add 'next' button to the bottom of the survey form
-
-  var nextButton = document.createElement('button');
-  nextButton.className = 'btn btn-primary';
-  nextButton.type = 'button';
-  nextButton.textContent = 'get started »';
-  nextButton.setAttribute('data-toggle', 'collapse');
-  nextButton.setAttribute('data-target', '#survey-0-about');
-  var cardId = Form.nextId;
-  var sectionElement = document.createElement('div');
-  sectionElement.innerHTML = this.welcomeContent;
-  sectionElement.appendChild(nextButton);
-  var helpLink = document.createElement('span');
-  helpLink.className = 'd-md-none pl-2'; // noinspection HtmlUnknownTarget
-
-  helpLink.innerHTML = "(<a href=\"/app/list/survey/welcome/help\" data-navigo=\"list/survey/welcome/help\">more info</a>)";
-  sectionElement.appendChild(helpLink);
-  accordionEl.appendChild(this.card({
-    cardId: cardId,
-    cardHeadingId: Form.nextId,
-    collapsed: this.controller.surveySection !== 'welcome',
-    headingButtonId: Form.nextId,
-    headingHTML: '<img src="/img/BSBIlong.png" alt="" style="float:right; max-width: 40%; max-height: 48px;">' + '<div style="float: left;">Welcome</div>',
-    // was 'Welcome'
-    buttonStyleString: 'width: 100%',
-    headingNonbuttonHTML: '',
-    // `<small class="btn d-md-none">(<a href="/app/list/survey/${sectionClass.sectionNavigationKey}/help" data-help-link="/list/survey/${sectionClass.sectionNavigationKey}/help">help</a>)</small>`,
-    headingValidationWarningHTML: '',
-    cardDescriptionId: "survey-welcome",
-    // Form.nextId,
-    parentContainerId: accordionEl.id,
-    bodyContentElement: sectionElement,
-    dataAttributes: {
-      sectionkey: "welcome"
-    }
-  }));
-}
-
-function _appendSurveyForm2(formIndex, accordionEl, next) {
-  var _this7 = this;
-
-  var sectionClass = SurveyForm.sections[formIndex];
-  var surveyFormSection = new SurveyForm(sectionClass);
-  _classPrivateFieldGet(this, _surveyFormSections)[sectionClass.sectionNavigationKey] = surveyFormSection;
-  var formElement = surveyFormSection.formElement; // add 'next' button to the bottom of the survey form
-
-  var nextButton = document.createElement('button');
-  nextButton.className = 'btn btn-primary';
-  nextButton.type = 'button';
-  nextButton.textContent = 'next »';
-
-  switch (next) {
-    case MainView.NEXT_RECORDS:
-      // records section is next
-      // if there are no records then clicking the button should add a new one automatically
-      // the complexity of this dual action requires a click handler
-      nextButton.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        _this7.fireEvent(MainController.EVENT_NEXT_TO_RECORDS);
-      });
-      break;
-
-    case MainView.NEXT_SURVEY_SECTION:
-      // there's another survey section
-      var nextSection = SurveyForm.sections[formIndex + 1];
-      nextButton.setAttribute('data-toggle', 'collapse');
-      nextButton.setAttribute('data-target', "#survey-".concat(formIndex + 1, "-").concat(nextSection.sectionNavigationKey));
-      nextButton.title = nextSection.sectionTitle;
-      break;
-
-    case MainView.NEXT_IS_FINAL:
-      nextButton.textContent = 'finish';
-      nextButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3';
-      nextButton.type = 'button';
-      nextButton.addEventListener('click', function
-        /* event */
-      () {
-        _this7.controller.app.router.navigate('/list/'); // display the finish dialogue box
-
-
-        $("#".concat(FINISH_MODAL_ID)).modal();
-      });
-      break;
-
-    default:
-      throw new Error("Unrecognized next section keyword '".concat(next, "'"));
-  }
-
-  formElement.appendChild(nextButton);
-  var cardId = Form.nextId;
-  accordionEl.appendChild(this.card({
-    cardId: cardId,
-    cardHeadingId: Form.nextId,
-    collapsed: this.controller.surveySection !== sectionClass.sectionNavigationKey,
-    headingButtonId: Form.nextId,
-    headingHTML: sectionClass.sectionTitle,
-    headingNonbuttonHTML: "<small class=\"btn d-md-none\" style=\"margin: 0; padding: 0;\">(<a href=\"/app/list/survey/".concat(sectionClass.sectionNavigationKey, "/help\" data-help-link=\"/list/survey/").concat(sectionClass.sectionNavigationKey, "/help\">help</a>)</small>"),
-    headingValidationWarningHTML: 'Please check the form for some missing responses.',
-    cardDescriptionId: "survey-".concat(formIndex, "-").concat(sectionClass.sectionNavigationKey),
-    // Form.nextId,
-    parentContainerId: accordionEl.id,
-    bodyContentElement: formElement,
-    dataAttributes: {
-      sectionkey: sectionClass.sectionNavigationKey
-    }
-  })); // cannot call registerForm until the form is part of the document
-
-  this.controller.survey.registerForm(surveyFormSection);
-  surveyFormSection.addListener(SurveyForm.EVENT_VALIDATION_STATE_CHANGE, function (params) {
-    var cardEl = document.getElementById(cardId);
-
-    if (params.isValid) {
-      cardEl.classList.remove('is-invalid');
-    } else {
-      cardEl.classList.add('is-invalid');
-    }
-  });
-}
-
-function _appendOccurrenceListContainer2() {
-  var accordionEl = document.getElementById(this.leftPanelAccordionId);
-  var content = document.createDocumentFragment();
-  var summaryEl = content.appendChild(document.createElement('p')); // noinspection HtmlUnknownTarget
-
-  summaryEl.innerHTML = "".concat(this.occurrenceSummaryText, "<small class=\"d-block d-md-none\"><a href=\"/app/list/record/help\">(help)</a></small>");
-  var newButtonEl = content.appendChild(document.createElement('button'));
-  newButtonEl.type = 'button';
-  newButtonEl.className = 'btn btn-primary btn-lg mb-2';
-  newButtonEl.innerText = 'Add a plant record.';
-  newButtonEl.addEventListener('click', this.newButtonClickHandler.bind(this));
-  var recordListContainer = content.appendChild(document.createElement('div'));
-  recordListContainer.id = OCCURRENCE_LIST_CONTAINER_ID;
-  accordionEl.appendChild(this.card({
-    cardId: Form.nextId,
-    cardHeadingId: Form.nextId,
-    collapsed: this.controller.viewSubcontext !== 'record',
-    headingButtonId: Form.nextId,
-    headingHTML: 'Your plant records',
-    cardDescriptionId: Form.nextId,
-    parentContainerId: accordionEl.id,
-    bodyContentElement: content,
-    dataAttributes: {
-      sectionkey: 'record'
-    }
-  }));
-}
-
-function _buildOccurrenceList2() {
-  var listContainer = document.getElementById(OCCURRENCE_LIST_CONTAINER_ID);
-
-  if (!listContainer) {
-    throw new InternalAppError("Failed to find list container.");
-  }
-
-  _classPrivateMethodGet(this, _clearOccurrenceListeners, _clearOccurrenceListeners2).call(this);
-
-  var occurrencesHtml = []; // loop through entries sorted by creation date, most recent first
-
-  var _iterator4 = _createForOfIteratorHelper(_toConsumableArray(this.controller.occurrences.entries()).sort(function (a, b) {
-    return b[1].createdStamp - a[1].createdStamp;
-  })),
-      _step4;
-
-  try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var occurrenceTuple = _step4.value;
-      var occurrence = occurrenceTuple[1];
-      console.log("displaying '".concat(occurrence.id, "'"));
-
-      if (!occurrence.deleted) {
-        var valid = occurrence.isNew || occurrence.evaluateCompletionStatus(OccurrenceForm.properties).requiredFieldsPresent;
-        occurrencesHtml.push("<div class=\"card".concat(valid ? '' : ' is-invalid', "\" id=\"card_").concat(occurrence.id, "\">\n    ").concat(_classPrivateMethodGet(this, _occurrenceSummaryHTML, _occurrenceSummaryHTML2).call(this, occurrence), "\n</div>"));
-        _classPrivateFieldGet(this, _occurrenceChangeHandles)[occurrence.id] = occurrence.addListener(Occurrence.EVENT_MODIFIED, this.occurrenceChangeHandler.bind(this), {
-          occurrenceId: occurrence.id
-        });
-      }
-    }
-  } catch (err) {
-    _iterator4.e(err);
-  } finally {
-    _iterator4.f();
-  }
-
-  listContainer.className = 'accordion';
-  listContainer.innerHTML = occurrencesHtml.join('');
-  /**
-   * need to manually intercept clicks on the delete occurrence button
-   * to prevent click also triggering an accordion toggle
-   */
-
-  listContainer.addEventListener('click',
-  /** @param {MouseEvent} event */
-  function (event) {
-    var targetButtonEl = event.target.closest('button');
-
-    if (targetButtonEl && targetButtonEl.hasAttribute('data-toggle') && targetButtonEl.getAttribute('data-toggle') === 'modal') {
-      // annotate the delete record modal dialogue box with the occurrence id
-      document.getElementById("".concat(DELETE_OCCURRENCE_MODAL_ID, "confirmed")).setAttribute('data-occurrenceid', targetButtonEl.getAttribute('data-occurrenceid')); // display the dialogue box
-
-      $(targetButtonEl.getAttribute('data-target')).modal();
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  });
-}
-
-function _occurrenceSummaryHTML2(occurrence) {
-  return "<div class=\"card-header pointer pl-2 pr-2 pt-2 pb-2\" id=\"heading_".concat(occurrence.id, "\" data-toggle=\"collapse\" data-target=\"#description_").concat(occurrence.id, "\">\n    <div class=\"float-right\">\n        <button type=\"button\" class=\"btn btn-outline-danger delete-occurrence-button\" data-toggle=\"modal\" data-target=\"#").concat(DELETE_OCCURRENCE_MODAL_ID, "\" data-occurrenceid=\"").concat(occurrence.id, "\"><i class=\"material-icons\">delete</i></button>\n    </div>\n    <h2 class=\"mb-0 pb-0 mt-0 pt-0 pl-0 ml-0\">\n        <button class=\"btn btn-link").concat(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed', " pt-0 pb-0 pl-0\" id=\"headingbutton_").concat(occurrence.id, "\" type=\"button\" data-toggle=\"collapse\" data-target=\"#description_").concat(occurrence.id, "\" aria-expanded=\"").concat(this.controller.currentOccurrenceId === occurrence.id ? 'true' : 'false', "\" aria-controls=\"description_").concat(occurrence.id, "\">\n          ").concat(this.occurrenceSummaryHeadingHTML(occurrence), "\n        </button>\n    </h2>\n    <div class=\"card-invalid-feedback\">\n        <small>Please check for errors or missing details.</small>\n    </div>\n</div>\n<div id=\"description_").concat(occurrence.id, "\" class=\"collapse").concat(this.controller.currentOccurrenceId === occurrence.id ? ' show' : '', "\" aria-labelledby=\"heading_").concat(occurrence.id, "\" data-parent=\"#").concat(OCCURRENCE_LIST_CONTAINER_ID, "\" data-occurrenceid=\"").concat(occurrence.id, "\">\n  <div class=\"card-body\">\n    ").concat(this.occurrenceSummaryBodyHTML(occurrence), "\n  </div>\n</div>");
-}
-
-_defineProperty(MainView, "NEXT_RECORDS", 'records');
-
-_defineProperty(MainView, "NEXT_SURVEY_SECTION", 'survey');
-
-_defineProperty(MainView, "NEXT_IS_FINAL", 'last');
-
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
@@ -20177,5 +19102,5 @@ var SurveyPickerView = /*#__PURE__*/function (_Page) {
   return SurveyPickerView;
 }(Page);
 
-export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, MainView, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField, UUID_REGEX, escapeHTML };
+export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField, UUID_REGEX, escapeHTML };
 //# sourceMappingURL=bsbiappframework.js.map

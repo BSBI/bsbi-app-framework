@@ -78,19 +78,19 @@ export class MainView extends Page {
      * @abstract
      * @type {string}
      */
-    occurrenceSummaryText = 'Placeholder occurrence summary text in MainView.js';
+    occurrenceSummaryText = 'Placeholder occurrence summary text in MainView.example.js';
 
     /**
      * @abastract
      * @type {string}
      */
-    welcomeContent = 'Placeholder welcome text in MainView.js';
+    welcomeContent = 'Placeholder welcome text in MainView.example.js';
 
     /**
      * @abastract
      * @type {string}
      */
-    defaultRightHandSideHelp = 'Default right-hand side help text in MainView.js';
+    defaultRightHandSideHelp = 'Default right-hand side help text in MainView.example.js';
 
     /**
      * called once during late-stage app initialisation

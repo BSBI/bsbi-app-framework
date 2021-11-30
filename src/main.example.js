@@ -3,7 +3,7 @@
 
 import {ExampleApp} from './framework/ExampleApp';
 import {MainController} from "./controllers/MainController";
-import {MainView} from "./views/MainView";
+import {MainView} from "./views/MainView.example";
 import {StaticContentController} from "./controllers/StaticContentController";
 import {HelpView} from "./views/HelpView";
 import {PatchedNavigo} from "./utils/PatchedNavigo";
