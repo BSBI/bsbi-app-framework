@@ -45,12 +45,18 @@ export class Form extends EventHarness {
     liveValidation = false;
 
     /**
-     * set if checked form fields are complete and valid
+     * set if all required form fields are complete and valid
      * (starting point is null while form is empty - so that the first validation check results in a validation change event firing)
      *
      * @type {(boolean|null)}
      */
     isValid = null;
+
+    /**
+     *
+     * @type {string|null}
+     */
+    nextButtonId = null;
 
     /**
      *
@@ -147,6 +153,22 @@ export class Form extends EventHarness {
         if (this.liveValidation) {
             this.validateForm();
         }
+    }
+
+    /**
+     * similar to validateForm but does not update form validity UI
+     * @returns {boolean}
+     */
+    testRequiredComplete() {
+        const validityResult =  this.model.evaluateCompletionStatus(this.getFormSectionProperties()).requiredFieldsPresent;
+
+        if (this.isValid !== validityResult) {
+            this.isValid = validityResult;
+
+            this.fireEvent(Form.EVENT_VALIDATION_STATE_CHANGE, {isValid : this.isValid});
+        }
+
+        return validityResult;
     }
 
     /**

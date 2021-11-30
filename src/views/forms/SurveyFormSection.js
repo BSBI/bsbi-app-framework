@@ -25,5 +25,11 @@ export class SurveyFormSection {
      * @type {Object.<string,{field: typeof FormField, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>}
      */
     static properties;
+
+    /**
+     *
+     * @type {boolean}
+     */
+    static completionRequired = false;
 }
 

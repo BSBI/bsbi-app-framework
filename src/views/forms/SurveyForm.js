@@ -26,6 +26,13 @@ export class SurveyForm extends Form {
      */
     section;
 
+    // /**
+    //  * id of this section on the left-pane carousel
+    //  *
+    //  * @type {string|null}
+    //  */
+    // cardId = null;
+
     /**
      *
      * @param {typeof SurveyFormSection} section
@@ -124,6 +131,14 @@ export class SurveyForm extends Form {
      */
     getFormSectionProperties() {
         return this.section.properties;
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    sectionCompletionRequired() {
+        return this.section.completionRequired;
     }
 }
 

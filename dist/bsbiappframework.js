@@ -8574,6 +8574,8 @@ var Form = /*#__PURE__*/function (_EventHarness) {
 
     _defineProperty(_assertThisInitialized(_this), "isValid", null);
 
+    _defineProperty(_assertThisInitialized(_this), "nextButtonId", null);
+
     _defineProperty(_assertThisInitialized(_this), "_formFieldsBuilt", false);
 
     return _this;
@@ -8672,6 +8674,25 @@ var Form = /*#__PURE__*/function (_EventHarness) {
       if (this.liveValidation) {
         this.validateForm();
       }
+    }
+    /**
+     * similar to validateForm but does not update form validity UI
+     * @returns {boolean}
+     */
+
+  }, {
+    key: "testRequiredComplete",
+    value: function testRequiredComplete() {
+      var validityResult = this.model.evaluateCompletionStatus(this.getFormSectionProperties()).requiredFieldsPresent;
+
+      if (this.isValid !== validityResult) {
+        this.isValid = validityResult;
+        this.fireEvent(Form.EVENT_VALIDATION_STATE_CHANGE, {
+          isValid: this.isValid
+        });
+      }
+
+      return validityResult;
     }
     /**
      *
@@ -10466,6 +10487,12 @@ var SurveyForm = /*#__PURE__*/function (_Form) {
   /**
    * @type {typeof SurveyFormSection}
    */
+  // /**
+  //  * id of this section on the left-pane carousel
+  //  *
+  //  * @type {string|null}
+  //  */
+  // cardId = null;
 
   /**
    *
@@ -10587,6 +10614,16 @@ var SurveyForm = /*#__PURE__*/function (_Form) {
     key: "getFormSectionProperties",
     value: function getFormSectionProperties() {
       return this.section.properties;
+    }
+    /**
+     *
+     * @returns {boolean}
+     */
+
+  }, {
+    key: "sectionCompletionRequired",
+    value: function sectionCompletionRequired() {
+      return this.section.completionRequired;
     }
   }], [{
     key: "registerSection",
@@ -12792,7 +12829,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638301887-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638314264-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -19072,6 +19109,8 @@ _defineProperty(SurveyFormSection, "sectionNavigationKey", void 0);
 _defineProperty(SurveyFormSection, "help", '');
 
 _defineProperty(SurveyFormSection, "properties", void 0);
+
+_defineProperty(SurveyFormSection, "completionRequired", false);
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
