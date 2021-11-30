@@ -10568,10 +10568,11 @@ var SurveyForm = /*#__PURE__*/function (_Form) {
   }, {
     key: "changeHandler",
     value: function changeHandler(event) {
-      console.log('survey form change event');
       console.log({
-        event: event
+        'survey form change event': event
       });
+      this.liveValidation = true; // after the first change start reflecting state
+
       this.fireEvent(Form.CHANGE_EVENT, {
         form: this
       });
@@ -12829,7 +12830,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638314264-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638316591-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
