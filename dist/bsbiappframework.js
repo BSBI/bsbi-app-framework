@@ -8738,6 +8738,8 @@ var Form = /*#__PURE__*/function (_EventHarness) {
 
 _defineProperty(Form, "CHANGE_EVENT", 'change');
 
+_defineProperty(Form, "EVENT_INITIALISE_NEW", 'initialisenew');
+
 var _formSerial = {
   writable: true,
   value: 0
@@ -8810,15 +8812,21 @@ var Occurrence = /*#__PURE__*/function (_Model) {
     value:
     /**
      *
-     * @param {Form} form
-     * @returns {Form}
+     * @param {OccurrenceForm} form
+     * @param {Survey} survey unfortunate smudging of concerns, but needed because occurrence may need access to default survey geo-ref
+     * @returns {OccurrenceForm}
      */
-    function setForm(form) {
+    function setForm(form, survey) {
+      form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
+
       if (!this.isNew) {
         form.liveValidation = true;
+      } else {
+        form.fireEvent(Form.EVENT_INITIALISE_NEW, {
+          survey: survey
+        }); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
       }
 
-      form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
       return form;
     }
     /**
@@ -10619,10 +10627,22 @@ var Survey = /*#__PURE__*/function (_Model) {
 
     _defineProperty(_assertThisInitialized(_this), "attributes", {});
 
+    _defineProperty(_assertThisInitialized(_this), "isNew", false);
+
     return _this;
   }
 
   _createClass(Survey, [{
+    key: "geoReference",
+    get:
+    /**
+     *
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     */
+    function get() {
+      return this.attributes.geoRef || null;
+    }
+  }, {
     key: "formChangedHandler",
     value:
     /**
@@ -10652,6 +10672,10 @@ var Survey = /*#__PURE__*/function (_Model) {
     value: function registerForm(form) {
       form.model = this;
       form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
+
+      if (this.isNew) {
+        form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+      }
     }
     /**
      * if not securely saved then makes a post to /savesurvey.php
@@ -12760,7 +12784,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638225735-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638292997-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -18348,7 +18372,13 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
   /**
    *
-   * @type {string}
+   * @type {{}}
+   * @private
+   */
+
+  /**
+   *
+   * @type {{rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}}
    * @private
    */
 
@@ -18391,6 +18421,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    * [autocomplete]: string,
    * [baseSquareResolution]: ?number,
    * [gpsPermissionPromptText]: string,
+   * [initialiseFromDefaultSurveyGeoref] : boolean
    * }} [params]
    */
   function TextGeorefField(params) {
@@ -18407,7 +18438,14 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       value: void 0
     });
 
-    _defineProperty(_assertThisInitialized(_this), "_value", '');
+    _defineProperty(_assertThisInitialized(_this), "_value", {
+      gridRef: '',
+      rawString: '',
+      // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+      source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+      latLng: null,
+      precision: null
+    });
 
     _defineProperty(_assertThisInitialized(_this), "_inputType", 'text');
 
@@ -18416,6 +18454,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     _defineProperty(_assertThisInitialized(_this), "baseSquareResolution", null);
 
     _defineProperty(_assertThisInitialized(_this), "gpsPermissionsPromptText", '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>');
+
+    _defineProperty(_assertThisInitialized(_this), "initialiseFromDefaultSurveyGeoref", false);
 
     _defineProperty(_assertThisInitialized(_this), "_gpsPermissionsPromptId", null);
 
@@ -18439,13 +18479,17 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       if (params.gpsPermissionPromptText) {
         _this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
       }
+
+      if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
+        _this.initialiseFromDefaultSurveyGeoref = params.initialiseFromDefaultSurveyGeoref;
+      }
     }
 
     return _this;
   }
   /**
    *
-   * @param {(string|null|undefined)} textContent
+   * @param {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}|string|null)} georefSpec
    */
 
 
@@ -18454,13 +18498,38 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     get:
     /**
      *
-     * @returns {string}
+     * @returns {{rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}}
      */
     function get() {
       return this._value;
     },
-    set: function set(textContent) {
-      this._value = undefined === textContent || null == textContent ? '' : textContent.trim();
+    set: function set(georefSpec) {
+      //this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+      if (georefSpec) {
+        if (typeof georefSpec === 'string') {
+          // backward compatible string gridref
+          this._value = {
+            gridRef: georefSpec,
+            rawString: georefSpec,
+            // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            source: null,
+            latLng: null,
+            precision: null
+          };
+        } else {
+          this._value = georefSpec;
+        }
+      } else {
+        this._value = {
+          gridRef: '',
+          rawString: '',
+          // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+          source: null,
+          latLng: null,
+          precision: null
+        };
+      }
+
       this.updateView();
     }
   }, {
@@ -18469,7 +18538,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       if (this._fieldEl) {
         // do nothing until the view has been constructed
         var inputEl = document.getElementById(this._inputId);
-        inputEl.value = FormField.cleanRawString(this._value);
+        inputEl.value = FormField.cleanRawString(this._value.gridRef);
       }
     }
     /**
@@ -18591,7 +18660,30 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
       console.log('got input field change event');
-      this.value = FormField.cleanRawString(document.getElementById(this._inputId).value);
+      var rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
+      var gridRefParser = Oo.from_string(rawValue);
+
+      if (gridRefParser) {
+        this.value = {
+          gridRef: gridRefParser.preciseGridRef,
+          rawString: rawValue,
+          // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+          source: TextGeorefField.GEOREF_SOURCE_GRIDREF,
+          latLng: null,
+          precision: null
+        };
+      } else {
+        // should try geo-coding the value
+        this.value = {
+          gridRef: '',
+          rawString: rawValue,
+          // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+          source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+          latLng: null,
+          precision: null
+        };
+      }
+
       this.fireEvent(FormField.EVENT_CHANGE);
     } // /**
     //  *
@@ -18627,10 +18719,46 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
   }, {
     key: "gpsButtonClickHandler",
     value: function gpsButtonClickHandler(event) {
+      this.seekGPS().catch(function (error) {
+        console.log({
+          'gps look-up failed, error': error
+        });
+      }); // GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
+      //     // const latitude  = position.coords.latitude;
+      //     // const longitude = position.coords.longitude;
+      //
+      //     // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+      //     //
+      //     // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+      //     // const gridRef = gridCoords.to_gridref(1000);
+      //     //
+      //     // console.log(`Got grid-ref: ${gridRef}`);
+      //     // this.value = gridRef;
+      //     // this.fireEvent(FormField.EVENT_CHANGE);
+      //
+      //     //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+      //
+      //     this.processLatLngPosition(
+      //         position.coords.latitude,
+      //         position.coords.longitude,
+      //         position.coords.accuracy * 2
+      //     );
+      // }, (error) => {
+      //     console.log('gps look-up failed');
+      //     console.log(error);
+      // });
+    }
+    /**
+     *
+     * @returns {Promise<unknown>}
+     */
+
+  }, {
+    key: "seekGPS",
+    value: function seekGPS() {
       var _this2 = this;
 
-      //console.log('got gps button click event');
-      GPSRequest.seekGPS(this._gpsPermissionsPromptId).then(function (position) {
+      return GPSRequest.seekGPS(this._gpsPermissionsPromptId).then(function (position) {
         // const latitude  = position.coords.latitude;
         // const longitude = position.coords.longitude;
         // console.log(`Got GPS fix ${latitude} , ${longitude}`);
@@ -18642,50 +18770,20 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
         // this.value = gridRef;
         // this.fireEvent(FormField.EVENT_CHANGE);
         //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-        _this2.processLatLngPosition(position.coords.latitude, position.coords.longitude, position.coords.accuracy * 2);
-      }, function (error) {
-        console.log('gps look-up failed');
-        console.log(error);
-      }); // navigator.geolocation.getCurrentPosition((position) => {
-      //         // const latitude  = position.coords.latitude;
-      //         // const longitude = position.coords.longitude;
-      //
-      //         // console.log(`Got GPS fix ${latitude} , ${longitude}`);
-      //         //
-      //         // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-      //         // const gridRef = gridCoords.to_gridref(1000);
-      //         //
-      //         // console.log(`Got grid-ref: ${gridRef}`);
-      //         // this.value = gridRef;
-      //         // this.fireEvent(FormField.EVENT_CHANGE);
-      //
-      //         //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-      //
-      //         this.processLatLngPosition(
-      //             position.coords.latitude,
-      //             position.coords.longitude,
-      //             position.coords.accuracy * 2
-      //         );
-      //     }, (error) => {
-      //         console.log('gps look-up failed');
-      //         console.log(error);
-      //     }
-      //     ,
-      // {
-      //     enableHighAccuracy : true,
-      //     timeout : 60 * 1000, // 60 second timeout
-      // });
+        _this2.processLatLngPosition(position.coords.latitude, position.coords.longitude, position.coords.accuracy * 2, TextGeorefField.GEOREF_SOURCE_GPS);
+      });
     }
     /**
      *
      * @param {number} latitude
      * @param {number} longitude
      * @param {number} precision diameter in metres
+     * @param {string} source
      */
 
   }, {
     key: "processLatLngPosition",
-    value: function processLatLngPosition(latitude, longitude, precision) {
+    value: function processLatLngPosition(latitude, longitude, precision, source) {
       var gridCoords = pi.from_latlng(latitude, longitude);
       var scaledPrecision = Oo.get_normalized_precision(precision);
 
@@ -18694,8 +18792,18 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       }
 
       var gridRef = gridCoords.to_gridref(scaledPrecision);
-      console.log("Got grid-ref: ".concat(gridRef));
-      this.value = gridRef;
+      console.log("Got grid-ref: ".concat(gridRef)); //this.value = gridRef;
+
+      this.value = {
+        gridRef: gridRef,
+        rawString: '',
+        source: source,
+        latLng: {
+          lat: latitude,
+          lng: longitude
+        },
+        precision: precision
+      };
       this.fireEvent(FormField.EVENT_CHANGE);
     }
     /**
@@ -18720,6 +18828,18 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
   return TextGeorefField;
 }(FormField);
+
+_defineProperty(TextGeorefField, "GEOREF_SOURCE_UNKNOWN", null);
+
+_defineProperty(TextGeorefField, "GEOREF_SOURCE_GRIDREF", 'gridref');
+
+_defineProperty(TextGeorefField, "GEOREF_SOURCE_MAP", 'map');
+
+_defineProperty(TextGeorefField, "GEOREF_SOURCE_GPS", 'gps');
+
+_defineProperty(TextGeorefField, "GEOREF_SOURCE_POSTCODE", 'postcode');
+
+_defineProperty(TextGeorefField, "GEOREF_SOURCE_PLACE", 'place');
 
 function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
@@ -19559,7 +19679,7 @@ function _refreshOccurrenceEditor2() {
         } // form has not been initialised or current occurrence has changed
 
 
-        _classPrivateFieldSet(this, _occurrenceForm, occurrence.setForm(new OccurrenceForm(occurrence))); //this.#occurrenceForm = occurrence.getForm();
+        _classPrivateFieldSet(this, _occurrenceForm, occurrence.setForm(new OccurrenceForm(occurrence), this.controller.app.currentSurvey)); //this.#occurrenceForm = occurrence.getForm();
 
 
         _classPrivateFieldGet(this, _occurrenceForm).surveyId = this.controller.app.currentSurvey.id; // scroll to the top of the panel

@@ -8,7 +8,7 @@
 import {Model} from "./Model";
 import {SurveyForm} from "../views/forms/SurveyForm";
 import {escapeHTML} from "../utils/escapeHTML";
-import {Form} from "..";
+import {Form, Taxon} from "..";
 
 export class Survey extends Model {
 
@@ -29,6 +29,21 @@ export class Survey extends Model {
      */
     attributes = {
 
+    };
+
+    /**
+     * if set then provide default values (e.g. GPS look-up of current geo-reference)
+     *
+     * @type {boolean}
+     */
+    isNew = false;
+
+    /**
+     *
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     */
+    get geoReference() {
+        return this.attributes.geoRef || null;
     };
 
     /**
@@ -57,6 +72,10 @@ export class Survey extends Model {
     registerForm(form) {
         form.model = this;
         form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
+
+        if (this.isNew) {
+            form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+        }
     }
 
     /**

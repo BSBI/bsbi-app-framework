@@ -60,15 +60,18 @@ export class Occurrence extends Model {
 
     /**
      *
-     * @param {Form} form
-     * @returns {Form}
+     * @param {OccurrenceForm} form
+     * @param {Survey} survey unfortunate smudging of concerns, but needed because occurrence may need access to default survey geo-ref
+     * @returns {OccurrenceForm}
      */
-    setForm(form) {
+    setForm(form, survey) {
+        form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
+
         if (!this.isNew) {
             form.liveValidation = true;
+        } else {
+            form.fireEvent(Form.EVENT_INITIALISE_NEW, {survey}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
         }
-
-        form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
         return form;
     }
 

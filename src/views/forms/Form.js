@@ -4,6 +4,7 @@ import {FormField} from "../formfields/FormField";
 export class Form extends EventHarness {
 
     static CHANGE_EVENT = 'change';
+    static EVENT_INITIALISE_NEW = 'initialisenew';
 
     /**
      * @type {HTMLElement}

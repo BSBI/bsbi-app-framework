@@ -19,10 +19,29 @@ export class TextGeorefField extends FormField {
 
     /**
      *
-     * @type {string}
+     * @type {{}}
      * @private
      */
-    _value = '';
+
+    /**
+     *
+     * @type {{rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}}
+     * @private
+     */
+    _value = {
+        gridRef: '',
+        rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+        source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+        latLng: null,
+        precision: null
+    };
+
+    static GEOREF_SOURCE_UNKNOWN = null;
+    static GEOREF_SOURCE_GRIDREF = 'gridref';
+    static GEOREF_SOURCE_MAP = 'map';
+    static GEOREF_SOURCE_GPS = 'gps';
+    static GEOREF_SOURCE_POSTCODE = 'postcode';
+    static GEOREF_SOURCE_PLACE = 'place';
 
     /**
      *
@@ -50,6 +69,8 @@ export class TextGeorefField extends FormField {
      */
     gpsPermissionsPromptText = '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>';
 
+    initialiseFromDefaultSurveyGeoref = false;
+
     /**
      *
      * @type {null|string}
@@ -68,6 +89,7 @@ export class TextGeorefField extends FormField {
      * [autocomplete]: string,
      * [baseSquareResolution]: ?number,
      * [gpsPermissionPromptText]: string,
+     * [initialiseFromDefaultSurveyGeoref] : boolean
      * }} [params]
      */
     constructor (params) {
@@ -93,21 +115,49 @@ export class TextGeorefField extends FormField {
             if (params.gpsPermissionPromptText) {
                 this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
             }
+
+            if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
+                this.initialiseFromDefaultSurveyGeoref = params.initialiseFromDefaultSurveyGeoref;
+            }
         }
     }
 
     /**
      *
-     * @param {(string|null|undefined)} textContent
+     * @param {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}|string|null)} georefSpec
      */
-    set value(textContent) {
-        this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+    set value(georefSpec) {
+        //this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+
+        if (georefSpec) {
+            if (typeof (georefSpec) === 'string') {
+                // backward compatible string gridref
+                this._value = {
+                    gridRef: georefSpec,
+                    rawString: georefSpec, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                    source: null,
+                    latLng: null,
+                    precision: null
+                };
+            } else {
+                this._value = georefSpec;
+            }
+        } else {
+            this._value = {
+                gridRef: '',
+                rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: null,
+                latLng: null,
+                precision: null
+            };
+        }
+
         this.updateView();
     }
 
     /**
      *
-     * @returns {string}
+     * @returns {{rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}}
      */
     get value() {
         return this._value;
@@ -118,7 +168,7 @@ export class TextGeorefField extends FormField {
             // do nothing until the view has been constructed
 
             const inputEl = document.getElementById(this._inputId);
-            inputEl.value = FormField.cleanRawString(this._value);
+            inputEl.value = FormField.cleanRawString(this._value.gridRef);
         }
     }
 
@@ -242,7 +292,29 @@ export class TextGeorefField extends FormField {
 
         console.log('got input field change event');
 
-        this.value = FormField.cleanRawString(document.getElementById(this._inputId).value);
+        let rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
+        const gridRefParser = GridRef.from_string(rawValue);
+
+        if (gridRefParser) {
+            this.value = {
+                gridRef: gridRefParser.preciseGridRef,
+                rawString: rawValue, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: TextGeorefField.GEOREF_SOURCE_GRIDREF,
+                latLng: null,
+                precision: null
+            };
+        } else {
+            // should try geo-coding the value
+
+            this.value = {
+                gridRef: '',
+                rawString: rawValue, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                latLng: null,
+                precision: null
+            }
+        }
+
         this.fireEvent(FormField.EVENT_CHANGE);
     }
 
@@ -277,9 +349,42 @@ export class TextGeorefField extends FormField {
      * @param {MouseEvent} event
      */
     gpsButtonClickHandler (event) {
-        //console.log('got gps button click event');
+        this.seekGPS().catch((error) => {
+            console.log({'gps look-up failed, error' : error});
+        });
 
-        GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
+        // GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
+        //     // const latitude  = position.coords.latitude;
+        //     // const longitude = position.coords.longitude;
+        //
+        //     // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+        //     //
+        //     // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+        //     // const gridRef = gridCoords.to_gridref(1000);
+        //     //
+        //     // console.log(`Got grid-ref: ${gridRef}`);
+        //     // this.value = gridRef;
+        //     // this.fireEvent(FormField.EVENT_CHANGE);
+        //
+        //     //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+        //
+        //     this.processLatLngPosition(
+        //         position.coords.latitude,
+        //         position.coords.longitude,
+        //         position.coords.accuracy * 2
+        //     );
+        // }, (error) => {
+        //     console.log('gps look-up failed');
+        //     console.log(error);
+        // });
+    }
+
+    /**
+     *
+     * @returns {Promise<unknown>}
+     */
+    seekGPS() {
+        return GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
             // const latitude  = position.coords.latitude;
             // const longitude = position.coords.longitude;
 
@@ -297,42 +402,10 @@ export class TextGeorefField extends FormField {
             this.processLatLngPosition(
                 position.coords.latitude,
                 position.coords.longitude,
-                position.coords.accuracy * 2
+                position.coords.accuracy * 2,
+                TextGeorefField.GEOREF_SOURCE_GPS
             );
-        }, (error) => {
-            console.log('gps look-up failed');
-            console.log(error);
         });
-
-        // navigator.geolocation.getCurrentPosition((position) => {
-        //         // const latitude  = position.coords.latitude;
-        //         // const longitude = position.coords.longitude;
-        //
-        //         // console.log(`Got GPS fix ${latitude} , ${longitude}`);
-        //         //
-        //         // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-        //         // const gridRef = gridCoords.to_gridref(1000);
-        //         //
-        //         // console.log(`Got grid-ref: ${gridRef}`);
-        //         // this.value = gridRef;
-        //         // this.fireEvent(FormField.EVENT_CHANGE);
-        //
-        //         //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-        //
-        //         this.processLatLngPosition(
-        //             position.coords.latitude,
-        //             position.coords.longitude,
-        //             position.coords.accuracy * 2
-        //         );
-        //     }, (error) => {
-        //         console.log('gps look-up failed');
-        //         console.log(error);
-        //     }
-        //     ,
-        // {
-        //     enableHighAccuracy : true,
-        //     timeout : 60 * 1000, // 60 second timeout
-        // });
     }
 
     /**
@@ -340,8 +413,9 @@ export class TextGeorefField extends FormField {
      * @param {number} latitude
      * @param {number} longitude
      * @param {number} precision diameter in metres
+     * @param {string} source
      */
-    processLatLngPosition(latitude, longitude, precision) {
+    processLatLngPosition(latitude, longitude, precision, source) {
         const gridCoords = GridCoords.from_latlng(latitude, longitude);
 
         let scaledPrecision = GridRef.get_normalized_precision(precision);
@@ -352,7 +426,15 @@ export class TextGeorefField extends FormField {
         const gridRef = gridCoords.to_gridref(scaledPrecision);
 
         console.log(`Got grid-ref: ${gridRef}`);
-        this.value = gridRef;
+        //this.value = gridRef;
+        this.value = {
+            gridRef: gridRef,
+            rawString: '',
+            source: source,
+            latLng: {lat:latitude,lng:longitude},
+            precision: precision
+        };
+
         this.fireEvent(FormField.EVENT_CHANGE);
     }
 
