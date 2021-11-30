@@ -128,7 +128,9 @@ export class Form extends EventHarness {
 
                 field.parentForm = this;
                 field.attributeName = key;
-                this._formContentContainer.appendChild(field.fieldElement);
+                //this._formContentContainer.appendChild(field.fieldElement);
+
+                field.addField(this._formContentContainer);
 
                 field.addListener(FormField.EVENT_CHANGE, this.changeHandler.bind(this));
             }

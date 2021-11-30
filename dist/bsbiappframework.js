@@ -8392,9 +8392,16 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
 
   }, {
     key: "addField",
-    value: function addField() {
-      var formEl = this.parentForm.formElement;
-      formEl.appendChild(this.fieldElement);
+    value:
+    /**
+     *
+     * @param {HTMLElement} contentContainer
+     */
+    function addField(contentContainer) {
+      // const formEl = this.parentForm.formElement;
+      //
+      // formEl.appendChild(this.fieldElement);
+      contentContainer.appendChild(this.fieldElement);
     }
     /**
      *
@@ -8645,10 +8652,9 @@ var Form = /*#__PURE__*/function (_EventHarness) {
         if (this.fields.hasOwnProperty(key)) {
           var field = this.fields[key];
           field.parentForm = this;
-          field.attributeName = key;
+          field.attributeName = key; //this._formContentContainer.appendChild(field.fieldElement);
 
-          this._formContentContainer.appendChild(field.fieldElement);
-
+          field.addField(this._formContentContainer);
           field.addListener(FormField.EVENT_CHANGE, this.changeHandler.bind(this));
         }
       }
@@ -12784,7 +12790,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638292997-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638295282-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

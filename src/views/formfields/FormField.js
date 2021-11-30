@@ -110,10 +110,16 @@ export class FormField extends EventHarness {
      */
     attributeName;
 
-    addField () {
-        const formEl = this.parentForm.formElement;
+    /**
+     *
+     * @param {HTMLElement} contentContainer
+     */
+    addField(contentContainer) {
+        // const formEl = this.parentForm.formElement;
+        //
+        // formEl.appendChild(this.fieldElement);
 
-        formEl.appendChild(this.fieldElement);
+        contentContainer.appendChild(this.fieldElement);
     }
 
     /**
