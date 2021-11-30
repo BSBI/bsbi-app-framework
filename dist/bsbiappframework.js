@@ -8819,18 +8819,13 @@ var Occurrence = /*#__PURE__*/function (_Model) {
     /**
      *
      * @param {OccurrenceForm} form
-     * @param {Survey} survey unfortunate smudging of concerns, but needed because occurrence may need access to default survey geo-ref
      * @returns {OccurrenceForm}
      */
-    function setForm(form, survey) {
+    function setForm(form) {
       form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
 
       if (!this.isNew) {
         form.liveValidation = true;
-      } else {
-        form.fireEvent(Form.EVENT_INITIALISE_NEW, {
-          survey: survey
-        }); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
       }
 
       return form;
@@ -12790,7 +12785,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638295282-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638296862-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -19685,7 +19680,7 @@ function _refreshOccurrenceEditor2() {
         } // form has not been initialised or current occurrence has changed
 
 
-        _classPrivateFieldSet(this, _occurrenceForm, occurrence.setForm(new OccurrenceForm(occurrence), this.controller.app.currentSurvey)); //this.#occurrenceForm = occurrence.getForm();
+        _classPrivateFieldSet(this, _occurrenceForm, occurrence.setForm(new OccurrenceForm(occurrence))); //this.#occurrenceForm = occurrence.getForm();
 
 
         _classPrivateFieldGet(this, _occurrenceForm).surveyId = this.controller.app.currentSurvey.id; // scroll to the top of the panel
@@ -19700,6 +19695,15 @@ function _refreshOccurrenceEditor2() {
       editorContainer.appendChild(formEl);
 
       _classPrivateFieldGet(this, _occurrenceForm).populateFormContent();
+
+      if (occurrence.isNew) {
+        console.log('Firing event for initialisation of new occurrence.');
+
+        _classPrivateFieldGet(this, _occurrenceForm).fireEvent(Form.EVENT_INITIALISE_NEW, {
+          survey: this.controller.app.currentSurvey
+        }); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+
+      }
 
       this.refreshOccurrenceFooterControls(editorContainer); // ensures that the accordion matches the navigation state
 
