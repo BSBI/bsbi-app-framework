@@ -10641,7 +10641,14 @@ var Survey = /*#__PURE__*/function (_Model) {
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     function get() {
-      return this.attributes.georef || null;
+      return this.attributes.georef || {
+        gridRef: '',
+        rawString: '',
+        // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+        source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+        latLng: null,
+        precision: null
+      };
     }
   }, {
     key: "formChangedHandler",
@@ -10719,7 +10726,7 @@ var Survey = /*#__PURE__*/function (_Model) {
   }, {
     key: "generateSurveyName",
     value: function generateSurveyName() {
-      var place = (this.attributes.place || this.attributes.georef || '(unlocalised)').trim();
+      var place = (this.attributes.place || this.attributes.georef.gridRef || '(unlocalised)').trim();
       var createdDate = new Date(this.createdStamp * 1000);
       var dateString;
 
@@ -12785,7 +12792,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638297576-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638301887-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -18358,7 +18365,7 @@ function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollect
 
 var _containerId = /*#__PURE__*/new WeakMap();
 
-var TextGeorefField = /*#__PURE__*/function (_FormField) {
+var TextGeorefField$1 = /*#__PURE__*/function (_FormField) {
   _inherits(TextGeorefField, _FormField);
 
   var _super = _createSuper$2(TextGeorefField);
@@ -18830,17 +18837,17 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
   return TextGeorefField;
 }(FormField);
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_UNKNOWN", null);
+_defineProperty(TextGeorefField$1, "GEOREF_SOURCE_UNKNOWN", null);
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_GRIDREF", 'gridref');
+_defineProperty(TextGeorefField$1, "GEOREF_SOURCE_GRIDREF", 'gridref');
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_MAP", 'map');
+_defineProperty(TextGeorefField$1, "GEOREF_SOURCE_MAP", 'map');
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_GPS", 'gps');
+_defineProperty(TextGeorefField$1, "GEOREF_SOURCE_GPS", 'gps');
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_POSTCODE", 'postcode');
+_defineProperty(TextGeorefField$1, "GEOREF_SOURCE_POSTCODE", 'postcode');
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_PLACE", 'place');
+_defineProperty(TextGeorefField$1, "GEOREF_SOURCE_PLACE", 'place');
 
 function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
@@ -19102,5 +19109,5 @@ var SurveyPickerView = /*#__PURE__*/function (_Page) {
   return SurveyPickerView;
 }(Page);
 
-export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField, UUID_REGEX, escapeHTML };
+export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField$1 as TextGeorefField, UUID_REGEX, escapeHTML };
 //# sourceMappingURL=bsbiappframework.js.map

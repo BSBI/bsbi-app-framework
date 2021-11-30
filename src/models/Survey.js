@@ -43,7 +43,13 @@ export class Survey extends Model {
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get geoReference() {
-        return this.attributes.georef || null;
+        return this.attributes.georef || {
+            gridRef: '',
+            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+            latLng: null,
+            precision: null
+        };
     };
 
     /**
@@ -116,7 +122,7 @@ export class Survey extends Model {
      * @returns {string} an html-safe string based on the locality and creation date
      */
     generateSurveyName() {
-        let place = (this.attributes.place || this.attributes.georef || '(unlocalised)').trim();
+        let place = (this.attributes.place || this.attributes.georef.gridRef || '(unlocalised)').trim();
         const createdDate = new Date(this.createdStamp * 1000);
 
         let dateString;
