@@ -10641,7 +10641,7 @@ var Survey = /*#__PURE__*/function (_Model) {
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     function get() {
-      return this.attributes.geoRef || null;
+      return this.attributes.georef || null;
     }
   }, {
     key: "formChangedHandler",
