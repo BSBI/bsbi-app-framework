@@ -48,3 +48,5 @@ export {SurveyPickerView} from './views/SurveyPickerView';
 export {GPSRequest} from './utils/GPSRequest';
 
 export {escapeHTML} from "./utils/escapeHTML";
+
+export {doubleClickIntercepted} from "./utils/stopDoubleClick";

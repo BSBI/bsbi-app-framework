@@ -8702,8 +8702,10 @@ var Form = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "validateForm",
     value: function validateForm() {
-      this.liveValidation = true;
-      this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
+      //this.liveValidation = true;
+      if (this.liveValidation) {
+        this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
+      }
 
       var validationResult = this.model.evaluateCompletionStatus(this.getFormSectionProperties());
 
@@ -10570,8 +10572,7 @@ var SurveyForm = /*#__PURE__*/function (_Form) {
     value: function changeHandler(event) {
       console.log({
         'survey form change event': event
-      });
-      this.liveValidation = true; // after the first change start reflecting state
+      }); //this.liveValidation = true; // after the first change start reflecting state
 
       this.fireEvent(Form.CHANGE_EVENT, {
         form: this
@@ -11875,6 +11876,8 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
 
     _defineProperty(_assertThisInitialized(_this), "surveysMenuId", void 0);
 
+    _defineProperty(_assertThisInitialized(_this), "newSurveyLabel", 'new survey');
+
     return _this;
   }
 
@@ -11892,6 +11895,20 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
       app.addListener(App.EVENT_SURVEYS_CHANGED, function () {
         _this2.refreshSurveysMenu();
       });
+
+      if (navigator.hasOwnProperty('onLine') && navigator.onLine === false) {
+        this.addOfflineFlag();
+      }
+
+      window.addEventListener('online', function () {
+        document.body.classList.remove('offline');
+      });
+      window.addEventListener('offline', this.addOfflineFlag);
+    }
+  }, {
+    key: "addOfflineFlag",
+    value: function addOfflineFlag() {
+      document.body.classList.add('offline');
     }
   }, {
     key: "initialise",
@@ -11937,11 +11954,17 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
     key: "refreshSurveysMenu",
     value: function refreshSurveysMenu() {
       var surveyMenuContainer = document.getElementById(this.surveysMenuId);
+      var items = this.getSurveyItems();
+      surveyMenuContainer.innerHTML = "<a class=\"dropdown-item\" href=\"/app/survey/save\" data-navigo=\"survey/save\">save all</a>\n    <div class=\"dropdown-divider\"></div>\n    ".concat(items.join(''), "\n    <div class=\"dropdown-divider\"></div>\n    <a class=\"dropdown-item\" href=\"/app/survey/new\" data-navigo=\"survey/new\">").concat(this.newSurveyLabel, "</a>\n    <a class=\"dropdown-item\" href=\"/app/survey/reset\" data-navigo=\"survey/reset\">reset</a>");
+      this.app.router.updatePageLinks();
+    }
+  }, {
+    key: "getSurveyItems",
+    value: function getSurveyItems() {
       /**
        *
        * @type {Array.<string>}
        */
-
       var items = [];
       var currentSurveyId = this.app.currentSurvey ? this.app.currentSurvey.id : null;
 
@@ -11961,8 +11984,7 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
         _iterator.f();
       }
 
-      surveyMenuContainer.innerHTML = "<a class=\"dropdown-item\" href=\"/app/survey/save\" data-navigo=\"survey/save\">save all</a>\n    <div class=\"dropdown-divider\"></div>\n    ".concat(items.join(''), "\n    <div class=\"dropdown-divider\"></div>\n    <a class=\"dropdown-item\" href=\"/app/survey/new\" data-navigo=\"survey/new\">new survey</a>\n    <a class=\"dropdown-item\" href=\"/app/survey/reset\" data-navigo=\"survey/reset\">reset</a>");
-      this.app.router.updatePageLinks();
+      return items;
     }
   }]);
 
@@ -14876,8 +14898,25 @@ var DateField = /*#__PURE__*/function (_FormField) {
    */
 
   /**
+   * minimum date (inclusive) or null if no constraint
+   */
+
+  /**
+   * minimum date (inclusive) or null if no constraint
+   */
+
+  /**
    *
-   * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
+   * @param {{
+   * [label] : string,
+   * [helpText]: string,
+   * [options]: {},
+   * [placeholder]: string,
+   * [type]: string,
+   * [autocomplete]: string,
+   * [minDate] : string,
+   * [maxDate] : string,
+   * }} [params]
    */
   function DateField(params) {
     var _this;
@@ -14902,6 +14941,10 @@ var DateField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
 
+    _defineProperty(_assertThisInitialized(_this), "_minDate", null);
+
+    _defineProperty(_assertThisInitialized(_this), "_maxDate", null);
+
     _this._value = new Date().toJSON().slice(0, 10); // default to current date
 
     if (params) {
@@ -14911,6 +14954,14 @@ var DateField = /*#__PURE__*/function (_FormField) {
 
       if (params.autocomplete) {
         _this._autocomplete = params.autocomplete;
+      }
+
+      if (params.minDate) {
+        _this._minDate = params.minDate;
+      }
+
+      if (params.maxDate) {
+        _this._maxDate = params.maxDate;
       }
     }
 
@@ -15009,12 +15060,32 @@ var DateField = /*#__PURE__*/function (_FormField) {
     }
     /**
      *
-     * @param {(boolean|null)} isValid
+     * @param {string} key
+     * @param {{
+     * field : typeof DateField,
+     * attributes : {
+         * [label] : string,
+         * [helpText]: string,
+         * [options]: {},
+         * [placeholder]: string,
+         * [type]: string,
+         * [autocomplete]: string,
+         * [minDate] : string,
+         * [maxDate] : string
+         * }
+     * }} property properties of the form descriptor
+     * @param attributes attributes of the model object
+     * @return {(boolean|null)} returns null if validity was not assessed
      */
 
   }, {
     key: "markValidity",
-    value: function markValidity(isValid) {
+    value:
+    /**
+     *
+     * @param {(boolean|null)} isValid
+     */
+    function markValidity(isValid) {
       var el = document.getElementById(_classPrivateFieldGet(this, _inputId$2));
 
       if (null === isValid) {
@@ -15037,12 +15108,43 @@ var DateField = /*#__PURE__*/function (_FormField) {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : typeof DateField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
+     * @param {{field : DateField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
 
   }], [{
+    key: "isValid",
+    value: function isValid(key, property, attributes) {
+      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
+        // test whether required field is missing
+        if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
+          return false;
+        } else {
+          // check if range constraints are met
+          var dateValue = attributes[key];
+
+          if (property.attributes.minDate && dateValue < property.attributes.minDate) {
+            return false;
+          }
+
+          if (property.attributes.maxDate && dateValue > property.attributes.maxDate) {
+            return false;
+          }
+
+          var today = new Date().toJSON().slice(0, 10);
+
+          if (dateValue > today) {
+            return false;
+          }
+        }
+      } // field is present or optional
+      // report as valid unless content is corrupt
+
+
+      return null; // field not assessed
+    }
+  }, {
     key: "summariseImpl",
     value: function summariseImpl(key, property, attributes) {
       return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
@@ -19149,5 +19251,20 @@ var SurveyPickerView = /*#__PURE__*/function (_Page) {
   return SurveyPickerView;
 }(Page);
 
-export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField$1 as TextGeorefField, UUID_REGEX, escapeHTML };
+/**
+ *
+ * @param {MouseEvent} event
+ * @returns {boolean}
+ */
+function doubleClickIntercepted(event) {
+  if (event.detail && event.detail > 1) {
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+
+  return false;
+}
+
+export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField$1 as TextGeorefField, UUID_REGEX, doubleClickIntercepted, escapeHTML };
 //# sourceMappingURL=bsbiappframework.js.map

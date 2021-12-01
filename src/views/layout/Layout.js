@@ -19,6 +19,13 @@ export class Layout extends EventHarness {
      */
     surveysMenuId;
 
+    /**
+     * this also needs to be edited in index.html
+     *
+     * @type {string}
+     */
+    newSurveyLabel = 'new survey';
+
     static NEW_SURVEY_MODAL_ID = 'newsurveymodal';
     static RESET_MODAL_ID = 'resetmodal';
     static SAVE_ALL_SUCCESS_MODAL_ID = 'saveallsuccess';
@@ -33,6 +40,19 @@ export class Layout extends EventHarness {
         app.addListener(App.EVENT_SURVEYS_CHANGED, () => {
             this.refreshSurveysMenu();
         });
+
+        if (navigator.hasOwnProperty('onLine') && navigator.onLine === false) {
+            this.addOfflineFlag();
+        }
+
+        window.addEventListener('online',  () => {
+            document.body.classList.remove('offline');
+        });
+        window.addEventListener('offline', this.addOfflineFlag);
+    }
+
+    addOfflineFlag() {
+        document.body.classList.add('offline');
     }
 
     initialise() {
@@ -79,7 +99,19 @@ export class Layout extends EventHarness {
 
     refreshSurveysMenu() {
         const surveyMenuContainer = document.getElementById(this.surveysMenuId);
+        const items = this.getSurveyItems();
 
+        surveyMenuContainer.innerHTML = `<a class="dropdown-item" href="/app/survey/save" data-navigo="survey/save">save all</a>
+    <div class="dropdown-divider"></div>
+    ${items.join('')}
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="/app/survey/new" data-navigo="survey/new">${this.newSurveyLabel}</a>
+    <a class="dropdown-item" href="/app/survey/reset" data-navigo="survey/reset">reset</a>`;
+
+        this.app.router.updatePageLinks()
+    }
+
+    getSurveyItems() {
         /**
          *
          * @type {Array.<string>}
@@ -95,13 +127,6 @@ export class Layout extends EventHarness {
             items[items.length] = `<a class="dropdown-item" href="/app/survey/add/${surveyTuple[0]}" data-navigo="survey/add/${surveyTuple[0]}">${label}</a>`;
         }
 
-        surveyMenuContainer.innerHTML = `<a class="dropdown-item" href="/app/survey/save" data-navigo="survey/save">save all</a>
-    <div class="dropdown-divider"></div>
-    ${items.join('')}
-    <div class="dropdown-divider"></div>
-    <a class="dropdown-item" href="/app/survey/new" data-navigo="survey/new">new survey</a>
-    <a class="dropdown-item" href="/app/survey/reset" data-navigo="survey/reset">reset</a>`;
-
-        this.app.router.updatePageLinks()
+        return items;
     }
 }

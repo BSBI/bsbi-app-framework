@@ -486,7 +486,7 @@ export class MainView extends Page {
       </div>
       <div class="modal-body">
         <p>Thank you! Your form responses have been sent. If you wish, you can continue to make changes and edit or add further records.</p>
-        <p>If you provided an email address, then we will send you a message with a link to this form, so that you can return to it later if needed.</p>
+        <p>We will send you an email with a link to this form, so that you can return to it later if needed.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

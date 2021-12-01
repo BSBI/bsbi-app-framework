@@ -36,8 +36,27 @@ export class DateField extends FormField {
     _autocomplete = '';
 
     /**
+     * minimum date (inclusive) or null if no constraint
+     */
+    _minDate = null;
+
+    /**
+     * minimum date (inclusive) or null if no constraint
+     */
+    _maxDate = null;
+
+    /**
      *
-     * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
+     * @param {{
+     * [label] : string,
+     * [helpText]: string,
+     * [options]: {},
+     * [placeholder]: string,
+     * [type]: string,
+     * [autocomplete]: string,
+     * [minDate] : string,
+     * [maxDate] : string,
+     * }} [params]
      */
     constructor (params) {
         super(params);
@@ -51,6 +70,14 @@ export class DateField extends FormField {
 
             if (params.autocomplete) {
                 this._autocomplete = params.autocomplete;
+            }
+
+            if (params.minDate) {
+                this._minDate = params.minDate;
+            }
+
+            if (params.maxDate) {
+                this._maxDate = params.maxDate;
             }
         }
     }
@@ -145,6 +172,56 @@ export class DateField extends FormField {
 
     /**
      *
+     * @param {string} key
+     * @param {{
+     * field : typeof DateField,
+     * attributes : {
+         * [label] : string,
+         * [helpText]: string,
+         * [options]: {},
+         * [placeholder]: string,
+         * [type]: string,
+         * [autocomplete]: string,
+         * [minDate] : string,
+         * [maxDate] : string
+         * }
+     * }} property properties of the form descriptor
+     * @param attributes attributes of the model object
+     * @return {(boolean|null)} returns null if validity was not assessed
+     */
+    static isValid(key, property, attributes) {
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is missing
+            if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
+                return false;
+            } else {
+                // check if range constraints are met
+                let dateValue = attributes[key];
+
+                if (property.attributes.minDate && dateValue < property.attributes.minDate) {
+                    return false;
+                }
+
+                if (property.attributes.maxDate && dateValue > property.attributes.maxDate) {
+                    return false;
+                }
+
+                let today = (new Date).toJSON().slice(0,10);
+                if (dateValue > today) {
+                    return false;
+                }
+            }
+        }
+        // field is present or optional
+        // report as valid unless content is corrupt
+
+        return null; // field not assessed
+    }
+
+    /**
+     *
      * @param {(boolean|null)} isValid
      */
     markValidity(isValid) {
@@ -171,7 +248,7 @@ export class DateField extends FormField {
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
      * @param {string} key
-     * @param {{field : typeof DateField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
+     * @param {{field : DateField, attributes : {options : Object.<string, {label : string}>}, summary : {summaryPrefix: string}}} property properties of the form descriptor
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */

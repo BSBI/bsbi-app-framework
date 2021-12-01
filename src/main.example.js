@@ -7,7 +7,6 @@ import {MainView} from "./views/MainView.example";
 import {StaticContentController} from "./controllers/StaticContentController";
 import {HelpView} from "./views/HelpView";
 import {PatchedNavigo} from "./utils/PatchedNavigo";
-//import localforage from 'localforage';
 import {SurveyPickerController} from "./controllers/SurveyPickerController";
 import {SurveyPickerView} from "./views/SurveyPickerView";
 import {ExampleAppLayout} from "./views/layout/ExampleAppLayout";

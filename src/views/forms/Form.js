@@ -176,8 +176,11 @@ export class Form extends EventHarness {
      * @returns {boolean}
      */
     validateForm() {
-        this.liveValidation = true;
-        this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
+        //this.liveValidation = true;
+
+        if (this.liveValidation) {
+            this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
+        }
         const validationResult = this.model.evaluateCompletionStatus(this.getFormSectionProperties());
 
         for (let key in this.fields) {

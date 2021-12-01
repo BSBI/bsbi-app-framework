@@ -90,7 +90,7 @@ export class SurveyForm extends Form {
      */
     changeHandler(event) {
         console.log({'survey form change event' : event});
-        this.liveValidation = true; // after the first change start reflecting state
+        //this.liveValidation = true; // after the first change start reflecting state
 
         this.fireEvent(Form.CHANGE_EVENT, {form: this});
     }
