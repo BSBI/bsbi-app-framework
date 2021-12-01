@@ -11721,8 +11721,15 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    */
 
   /**
+   * the maximum precision to use for geocoded results
    *
    * @type {?int}
+   */
+
+  /**
+   * minimum resolution (m) to allow
+   *
+   * @type {number}
    */
 
   /**
@@ -11784,6 +11791,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
 
     _defineProperty(_assertThisInitialized(_this), "baseSquareResolution", null);
+
+    _defineProperty(_assertThisInitialized(_this), "minResolution", 2000);
 
     _defineProperty(_assertThisInitialized(_this), "gpsPermissionsPromptText", '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>');
 
@@ -14407,7 +14416,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638376527-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638393265-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

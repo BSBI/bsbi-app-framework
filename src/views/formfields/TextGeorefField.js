@@ -59,10 +59,18 @@ export class TextGeorefField extends FormField {
     _autocomplete = '';
 
     /**
+     * the maximum precision to use for geocoded results
      *
      * @type {?int}
      */
     baseSquareResolution = null;
+
+    /**
+     * minimum resolution (m) to allow
+     *
+     * @type {number}
+     */
+    minResolution = 2000;
 
     /**
      *
