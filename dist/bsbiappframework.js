@@ -12312,7 +12312,7 @@ var Survey = /*#__PURE__*/function (_Model) {
   }, {
     key: "generateSurveyName",
     value: function generateSurveyName() {
-      var place = (this.attributes.place || this.attributes.georef.gridRef || '(unlocalised)').trim();
+      var place = (this.attributes.place || this.attributes.georef && this.attributes.georef.gridRef || '(unlocalised)').trim();
       var createdDate = new Date(this.createdStamp * 1000);
       var dateString;
 
@@ -13442,6 +13442,8 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
 
     _defineProperty(_assertThisInitialized(_this), "newSurveyLabel", 'new survey');
 
+    _defineProperty(_assertThisInitialized(_this), "newSurveyContent", newSurveyModal);
+
     return _this;
   }
 
@@ -13481,7 +13483,7 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
 
       this.refreshSurveysMenu();
       var modalContent = document.createElement('div');
-      modalContent.innerHTML = newSurveyModal;
+      modalContent.innerHTML = this.newSurveyContent;
       document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
       modalContent = document.createElement('div');
       modalContent.innerHTML = resetModal;
@@ -14416,7 +14418,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638393265-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638398994-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

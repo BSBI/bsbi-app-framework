@@ -26,6 +26,8 @@ export class Layout extends EventHarness {
      */
     newSurveyLabel = 'new survey';
 
+    newSurveyContent = newSurveyModal;
+
     static NEW_SURVEY_MODAL_ID = 'newsurveymodal';
     static RESET_MODAL_ID = 'resetmodal';
     static SAVE_ALL_SUCCESS_MODAL_ID = 'saveallsuccess';
@@ -59,7 +61,7 @@ export class Layout extends EventHarness {
         this.refreshSurveysMenu();
 
         let modalContent = document.createElement('div');
-        modalContent.innerHTML = newSurveyModal;
+        modalContent.innerHTML = this.newSurveyContent;
         document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
 
         modalContent = document.createElement('div');

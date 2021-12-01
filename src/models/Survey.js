@@ -124,7 +124,7 @@ export class Survey extends Model {
      * @returns {string} an html-safe string based on the locality and creation date
      */
     generateSurveyName() {
-        let place = (this.attributes.place || this.attributes.georef.gridRef || '(unlocalised)').trim();
+        let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
         const createdDate = new Date(this.createdStamp * 1000);
 
         let dateString;
