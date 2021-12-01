@@ -50,3 +50,8 @@ export {GPSRequest} from './utils/GPSRequest';
 export {escapeHTML} from "./utils/escapeHTML";
 
 export {doubleClickIntercepted} from "./utils/stopDoubleClick";
+
+export * from "british-isles-gridrefs";
+
+//export {GridRef, GridRefCI, GridRefGB, GridRefIE, GridCoords, LatLngWGS84, GridCoordsGB, LatLngGB, GridCoordsIE, LatLngIE, GridCoordsCI, LatLngCI} from "british-isles-gridrefs";
+
