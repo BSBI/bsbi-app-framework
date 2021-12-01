@@ -61,7 +61,7 @@ export class Survey extends Model {
         console.log('Survey change handler invoked.');
 
         // read new values
-        // then fire it's own change event (Occurrence.EVENT_MODIFIED)
+        // then fire its own change event (Occurrence.EVENT_MODIFIED)
         params.form.updateModelFromContent();
 
         // refresh the form's validation state

@@ -10698,7 +10698,7 @@ var Survey = /*#__PURE__*/function (_Model) {
      */
     function formChangedHandler(params) {
       console.log('Survey change handler invoked.'); // read new values
-      // then fire it's own change event (Occurrence.EVENT_MODIFIED)
+      // then fire its own change event (Occurrence.EVENT_MODIFIED)
 
       params.form.updateModelFromContent(); // refresh the form's validation state
 
@@ -12830,7 +12830,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638316591-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638318958-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
