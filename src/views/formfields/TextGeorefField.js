@@ -4,6 +4,7 @@ import {escapeHTML} from "../../utils/escapeHTML";
 // import {LatLngWGS84} from "british-isles-gridrefs";
 import {GridCoords, GridRef} from "british-isles-gridrefs";
 import {GPSRequest} from "../../utils/GPSRequest";
+import {doubleClickIntercepted} from "../../utils/stopDoubleClick";
 
 export class TextGeorefField extends FormField {
 
@@ -71,6 +72,13 @@ export class TextGeorefField extends FormField {
 
     initialiseFromDefaultSurveyGeoref = false;
 
+    // /**
+    //  * if set (default false) then the field's placeholder changes dynamically, e.g. depending on the surveys base georef.
+    //  *
+    //  * @type {boolean}
+    //  */
+    // dynamicPlaceholderFlag = false;
+
     /**
      *
      * @type {null|string}
@@ -103,6 +111,10 @@ export class TextGeorefField extends FormField {
             if (params.placeholder) {
                 this.placeholder = params.placeholder;
             }
+
+            // if (params.dynamicPlaceholder) {
+            //     this.dynamicPlaceholder = params.dynamicPlaceholder;
+            // }
 
             if (params.autocomplete) {
                 this._autocomplete = params.autocomplete;
@@ -290,7 +302,7 @@ export class TextGeorefField extends FormField {
     inputChangeHandler (event) {
         event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-        console.log('got input field change event');
+        //console.log('got input field change event');
 
         let rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
         const gridRefParser = GridRef.from_string(rawValue);
@@ -349,6 +361,10 @@ export class TextGeorefField extends FormField {
      * @param {MouseEvent} event
      */
     gpsButtonClickHandler (event) {
+        if (doubleClickIntercepted(event)) {
+            return;
+        }
+
         this.seekGPS().catch((error) => {
             console.log({'gps look-up failed, error' : error});
         });

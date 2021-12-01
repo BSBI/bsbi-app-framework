@@ -99,7 +99,7 @@ export class DateField extends FormField {
      * @returns {string}
      */
     get value() {
-        return this._value;
+        return this._value ? this._value.slice(0,10) : '';
     }
 
     updateView() {

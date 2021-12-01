@@ -1,5 +1,6 @@
 import {FormField} from "./FormField";
 import {OccurrenceImage} from "../../models/OccurrenceImage";
+import {doubleClickIntercepted} from "../../utils/stopDoubleClick";
 
 export const IMAGE_MODAL_ID = 'imagemodal';
 export const IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
@@ -267,13 +268,17 @@ export class ImageField extends FormField {
      * @param {MouseEvent} event
      */
     imageClickHandler (event) {
+        if (doubleClickIntercepted(event)) {
+            return;
+        }
+
         let targetEl = event.target.closest('picture');
 
         if (!targetEl) {
             targetEl = event.target.closest('img');
         }
 
-        console.log({'clicked image' : targetEl});
+        // console.log({'clicked image' : targetEl});
 
         const imageId = targetEl.getAttribute('data-imageid');
 

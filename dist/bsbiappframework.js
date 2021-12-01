@@ -12852,7 +12852,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638318958-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638374522-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -13733,6 +13733,21 @@ Navigo.REPLACE_WILDCARD = '(?:.*)';
 Navigo.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
 Navigo.MATCH_REGEXP_FLAGS = '';
 
+/**
+ *
+ * @param {MouseEvent} event
+ * @returns {boolean}
+ */
+function doubleClickIntercepted(event) {
+  if (event.detail && event.detail > 1) {
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+
+  return false;
+}
+
 function _createSuper$b(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$b(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _isNativeReflectConstruct$b() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
@@ -13762,7 +13777,13 @@ var PatchedNavigo = /*#__PURE__*/function (_Navigo) {
 
       this._findLinks().forEach(function (link) {
         if (!link.hasListenerAttached) {
-          link.addEventListener('click', function (e) {
+          link.addEventListener('click',
+          /** @param {MouseEvent} e */
+          function (e) {
+            if (doubleClickIntercepted(e)) {
+              return;
+            }
+
             if ((e.ctrlKey || e.metaKey) && e.target.tagName.toLowerCase() === 'a') {
               return false;
             }
@@ -14981,7 +15002,7 @@ var DateField = /*#__PURE__*/function (_FormField) {
      * @returns {string}
      */
     function get() {
-      return this._value;
+      return this._value ? this._value.slice(0, 10) : '';
     },
     set: function set(textContent) {
       this._value = undefined === textContent || null == textContent ? new Date().toJSON().slice(0, 10) // current date in ISO format
@@ -15509,15 +15530,17 @@ var ImageField = /*#__PURE__*/function (_FormField) {
   }, {
     key: "imageClickHandler",
     value: function imageClickHandler(event) {
+      if (doubleClickIntercepted(event)) {
+        return;
+      }
+
       var targetEl = event.target.closest('picture');
 
       if (!targetEl) {
         targetEl = event.target.closest('img');
-      }
+      } // console.log({'clicked image' : targetEl});
 
-      console.log({
-        'clicked image': targetEl
-      });
+
       var imageId = targetEl.getAttribute('data-imageid');
 
       if (imageId) {
@@ -17183,10 +17206,13 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
      * @param {MouseEvent} event
      */
     function dropboxClickHandler(event) {
-      console.log('click handler');
-      console.log(event);
-      var targetEl = event.target.closest('a');
-      console.log(targetEl);
+      if (doubleClickIntercepted(event)) {
+        return;
+      } //console.log('click handler');
+      //console.log(event);
+
+
+      var targetEl = event.target.closest('a'); //console.log(targetEl);
 
       if (_classPrivateFieldGet(this, _changeEventTimeout)) {
         clearTimeout(_classPrivateFieldGet(this, _changeEventTimeout));
@@ -17197,8 +17223,7 @@ var TaxonPickerField = /*#__PURE__*/function (_FormField) {
       }
 
       if (targetEl && targetEl.dataset.occurrenceid) {
-        event.preventDefault();
-        console.log("got target ".concat(targetEl.dataset.occurrenceid));
+        event.preventDefault(); //console.log(`got target ${targetEl.dataset.occurrenceid}`);
 
         var result = _classPrivateFieldGet(this, _searchResults)[targetEl.dataset.resultnumber]; //document.getElementById(this.#inputFieldId).blur();
 
@@ -17284,9 +17309,8 @@ function _triggerQuery2(inputEl) {
   if (text.length >= TaxonSearch.MIN_SEARCH_LENGTH) {
     // Set new timeout - don't run if user is typing
     _classPrivateFieldSet(this, _taxonLookupTimeoutHandle, setTimeout(function () {
-      _classPrivateFieldSet(_this4, _searchResults, _this4.taxonSearch.lookup(FormField.cleanRawInput(document.getElementById(_classPrivateFieldGet(_this4, _inputFieldId)))));
+      _classPrivateFieldSet(_this4, _searchResults, _this4.taxonSearch.lookup(FormField.cleanRawInput(document.getElementById(_classPrivateFieldGet(_this4, _inputFieldId))))); //console.log(this.#searchResults);
 
-      console.log(_classPrivateFieldGet(_this4, _searchResults));
 
       _this4.refreshSearchResultsList();
 
@@ -18551,6 +18575,12 @@ var TextGeorefField$1 = /*#__PURE__*/function (_FormField) {
    *
    * @type {string}
    */
+  // /**
+  //  * if set (default false) then the field's placeholder changes dynamically, e.g. depending on the surveys base georef.
+  //  *
+  //  * @type {boolean}
+  //  */
+  // dynamicPlaceholderFlag = false;
 
   /**
    *
@@ -18614,7 +18644,10 @@ var TextGeorefField$1 = /*#__PURE__*/function (_FormField) {
 
       if (params.placeholder) {
         _this.placeholder = params.placeholder;
-      }
+      } // if (params.dynamicPlaceholder) {
+      //     this.dynamicPlaceholder = params.dynamicPlaceholder;
+      // }
+
 
       if (params.autocomplete) {
         _this._autocomplete = params.autocomplete;
@@ -18806,8 +18839,8 @@ var TextGeorefField$1 = /*#__PURE__*/function (_FormField) {
     key: "inputChangeHandler",
     value: function inputChangeHandler(event) {
       event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+      //console.log('got input field change event');
 
-      console.log('got input field change event');
       var rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
       var gridRefParser = Oo.from_string(rawValue);
 
@@ -18867,6 +18900,10 @@ var TextGeorefField$1 = /*#__PURE__*/function (_FormField) {
   }, {
     key: "gpsButtonClickHandler",
     value: function gpsButtonClickHandler(event) {
+      if (doubleClickIntercepted(event)) {
+        return;
+      }
+
       this.seekGPS().catch(function (error) {
         console.log({
           'gps look-up failed, error': error
@@ -19250,21 +19287,6 @@ var SurveyPickerView = /*#__PURE__*/function (_Page) {
 
   return SurveyPickerView;
 }(Page);
-
-/**
- *
- * @param {MouseEvent} event
- * @returns {boolean}
- */
-function doubleClickIntercepted(event) {
-  if (event.detail && event.detail > 1) {
-    event.preventDefault();
-    event.stopPropagation();
-    return true;
-  }
-
-  return false;
-}
 
 export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, Layout, MainController, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField$1 as TextGeorefField, UUID_REGEX, doubleClickIntercepted, escapeHTML };
 //# sourceMappingURL=bsbiappframework.js.map

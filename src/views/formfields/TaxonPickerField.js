@@ -1,6 +1,7 @@
 import {FormField} from "./FormField";
 import {TaxonSearch} from "../../utils/taxonpicker/TaxonSearch";
 import {Taxon} from "../../models/Taxon";
+import {doubleClickIntercepted} from "../../utils/stopDoubleClick";
 
 export class TaxonPickerField extends FormField {
     /**
@@ -393,7 +394,7 @@ export class TaxonPickerField extends FormField {
                     FormField.cleanRawInput(document.getElementById(this.#inputFieldId))
                 );
 
-                console.log(this.#searchResults);
+                //console.log(this.#searchResults);
 
                 this.refreshSearchResultsList();
 
@@ -489,11 +490,15 @@ export class TaxonPickerField extends FormField {
      * @param {MouseEvent} event
      */
     dropboxClickHandler(event) {
-        console.log('click handler');
-        console.log(event);
+        if (doubleClickIntercepted(event)) {
+            return;
+        }
+
+        //console.log('click handler');
+        //console.log(event);
 
         const targetEl = event.target.closest('a');
-        console.log(targetEl);
+        //console.log(targetEl);
 
         if (this.#changeEventTimeout) {
             clearTimeout(this.#changeEventTimeout);
@@ -504,7 +509,7 @@ export class TaxonPickerField extends FormField {
         if (targetEl && targetEl.dataset.occurrenceid) {
             event.preventDefault();
 
-            console.log(`got target ${targetEl.dataset.occurrenceid}`);
+            //console.log(`got target ${targetEl.dataset.occurrenceid}`);
 
             const result = this.#searchResults[targetEl.dataset.resultnumber];
 

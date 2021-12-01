@@ -1,4 +1,5 @@
 import Navigo from "navigo";
+import {doubleClickIntercepted} from "./stopDoubleClick";
 
 export class PatchedNavigo extends Navigo {
     updatePageLinks() {
@@ -13,7 +14,11 @@ export class PatchedNavigo extends Navigo {
 
         this._findLinks().forEach((link) => {
             if (!link.hasListenerAttached) {
-                link.addEventListener('click', (e) => {
+                link.addEventListener('click', /** @param {MouseEvent} e */ (e) => {
+                    if (doubleClickIntercepted(e)) {
+                        return;
+                    }
+
                     if ((e.ctrlKey || e.metaKey) && e.target.tagName.toLowerCase() === 'a') {
                         return false;
                     }
