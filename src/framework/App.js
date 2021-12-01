@@ -139,6 +139,10 @@ export class App extends EventHarness {
         this.#router = router;
     }
 
+    /**
+     * 
+     * @returns {PatchedNavigo}
+     */
     get router() {
         return this.#router;
     }

@@ -423,10 +423,13 @@ export class TextGeorefField extends FormField {
 
             //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
 
+            console.log({'gps position' : position});
+            let accuracy = position.coords.accuracy * 2;
+
             this.processLatLngPosition(
                 position.coords.latitude,
                 position.coords.longitude,
-                position.coords.accuracy * 2,
+                accuracy,
                 TextGeorefField.GEOREF_SOURCE_GPS
             );
         });
@@ -445,6 +448,10 @@ export class TextGeorefField extends FormField {
         let scaledPrecision = GridRef.get_normalized_precision(precision);
         if (this.baseSquareResolution && scaledPrecision < this.baseSquareResolution) {
             scaledPrecision = this.baseSquareResolution;
+        }
+
+        if (this.minResolution && scaledPrecision > this.minResolution) {
+            scaledPrecision = this.minResolution;
         }
 
         const gridRef = gridCoords.to_gridref(scaledPrecision);

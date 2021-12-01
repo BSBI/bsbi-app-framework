@@ -12118,7 +12118,12 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
         // this.value = gridRef;
         // this.fireEvent(FormField.EVENT_CHANGE);
         //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-        _this2.processLatLngPosition(position.coords.latitude, position.coords.longitude, position.coords.accuracy * 2, TextGeorefField.GEOREF_SOURCE_GPS);
+        console.log({
+          'gps position': position
+        });
+        var accuracy = position.coords.accuracy * 2;
+
+        _this2.processLatLngPosition(position.coords.latitude, position.coords.longitude, accuracy, TextGeorefField.GEOREF_SOURCE_GPS);
       });
     }
     /**
@@ -12137,6 +12142,10 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       if (this.baseSquareResolution && scaledPrecision < this.baseSquareResolution) {
         scaledPrecision = this.baseSquareResolution;
+      }
+
+      if (this.minResolution && scaledPrecision > this.minResolution) {
+        scaledPrecision = this.minResolution;
       }
 
       var gridRef = gridCoords.to_gridref(scaledPrecision);
@@ -12666,7 +12675,12 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
   }, {
     key: "router",
-    get: function get() {
+    get:
+    /**
+     * 
+     * @returns {PatchedNavigo}
+     */
+    function get() {
       return _classPrivateFieldGet(this, _router);
     },
     set: function set(router) {
@@ -14418,7 +14432,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638398994-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638400929-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
