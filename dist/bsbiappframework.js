@@ -12677,7 +12677,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
     key: "router",
     get:
     /**
-     * 
+     *
      * @returns {PatchedNavigo}
      */
     function get() {
@@ -13434,6 +13434,10 @@ function _arrayLikeToArray$5(arr, len) { if (len == null || len > arr.length) le
 function _createSuper$e(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$e(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _isNativeReflectConstruct$e() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+/**
+ * @external $
+ */
+
 var Layout = /*#__PURE__*/function (_EventHarness) {
   _inherits(Layout, _EventHarness);
 
@@ -13516,6 +13520,9 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
 
           if (event.detail < 2) {
             // only if not a double click
+            // force hide the new survey modal
+            $("#".concat(Layout.NEW_SURVEY_MODAL_ID)).modal('hide');
+
             _this3.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
           }
         });
@@ -14432,7 +14439,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638400929-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638402204-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

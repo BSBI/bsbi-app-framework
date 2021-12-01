@@ -140,7 +140,7 @@ export class App extends EventHarness {
     }
 
     /**
-     * 
+     *
      * @returns {PatchedNavigo}
      */
     get router() {

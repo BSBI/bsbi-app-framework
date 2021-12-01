@@ -7,6 +7,10 @@ import saveAllFailureModal from "../../templates/syncFailureModal.html";
 import {EventHarness} from "../../framework/EventHarness";
 import {App} from "../../framework/App";
 
+/**
+ * @external $
+ */
+
 export class Layout extends EventHarness {
 
     /**
@@ -84,6 +88,10 @@ export class Layout extends EventHarness {
 
                 if (event.detail < 2) {
                     // only if not a double click
+
+                    // force hide the new survey modal
+                    $(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal('hide');
+
                     this.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
                 }
             });
