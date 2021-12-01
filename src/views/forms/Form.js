@@ -4,7 +4,18 @@ import {FormField} from "../formfields/FormField";
 export class Form extends EventHarness {
 
     static CHANGE_EVENT = 'change';
+
+    /**
+     * Fired instead of EVENT_INITIALISED for a newly created entry
+     * @type {string}
+     */
     static EVENT_INITIALISE_NEW = 'initialisenew';
+
+    /**
+     * Fired after the model content has been applied to a form
+     * @type {string}
+     */
+    static EVENT_INITIALISED = 'initialised';
 
     /**
      * @type {HTMLElement}
@@ -213,6 +224,7 @@ export class Form extends EventHarness {
                     field.value = model.attributes[key]; // value setter will update the field
                 }
             }
+
             this.conditionallyValidateForm();
         }
     }

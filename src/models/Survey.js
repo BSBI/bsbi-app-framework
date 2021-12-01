@@ -8,7 +8,9 @@
 import {Model} from "./Model";
 import {SurveyForm} from "../views/forms/SurveyForm";
 import {escapeHTML} from "../utils/escapeHTML";
-import {Form, Taxon} from "..";
+import {TextGeorefField} from "../views/formfields/TextGeorefField";
+//import {Taxon} from "..";
+import {Form} from "../views/forms/Form";
 
 export class Survey extends Model {
 

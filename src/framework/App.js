@@ -77,11 +77,23 @@ export class App extends EventHarness {
      */
     static EVENT_RESET_SURVEYS = 'userresetsurveys';
 
-
+    /**
+     * Fired after App.currentSurvey has been set to a new blank survey
+     * the survey will be accessible in App.currentSurvey
+     *
+     * @type {string}
+     */
+    static EVENT_NEW_SURVEY = 'newsurvey';
 
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    /**
+     * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
+     *
+     * @type {string}
+     */
     static EVENT_SURVEYS_CHANGED = 'surveyschanged';
 
     /**
@@ -587,6 +599,10 @@ export class App extends EventHarness {
         this.currentSurvey = new Survey();
         this.currentSurvey.projectId = this.projectId;
         this.currentSurvey.isPristine = true;
+        this.currentSurvey.isNew = true;
+
+        this.fireEvent(App.EVENT_NEW_SURVEY);
+
         this.addSurvey(this.currentSurvey);
     }
 
