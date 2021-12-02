@@ -26,7 +26,13 @@ export class TextGeorefField extends FormField {
 
     /**
      *
-     * @type {{rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}}
+     * @type {{
+     * rawString: string,
+     * precision: number|null,
+     * source: string|null,
+     * gridRef: string,
+     * latLng: ({lat:number,lng:number}|null)
+     * }}
      * @private
      */
     _value = {
