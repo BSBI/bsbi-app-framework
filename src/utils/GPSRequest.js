@@ -71,6 +71,7 @@ export class GPSRequest extends EventHarness {
                     };
 
                     console.log({'GPS permission state': permissionStatus.state});
+                    GPSRequest._gpsPermission = permissionStatus.state;
                 })
             } else {
                 GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;

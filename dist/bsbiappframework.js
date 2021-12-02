@@ -11527,6 +11527,7 @@ var GPSRequest = /*#__PURE__*/function (_EventHarness) {
                   console.log({
                     'GPS permission state': permissionStatus.state
                   });
+                  GPSRequest._gpsPermission = permissionStatus.state;
                 });
 
               case 5:
@@ -14445,7 +14446,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638450199-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638451407-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
