@@ -39,7 +39,7 @@ export class GPSRequest extends EventHarness {
             }
         }
 
-        return GPSRequest.DEVICE_TYPE_MOBILE; // GPSRequest._deviceType;
+        return GPSRequest._deviceType;
     }
 
     static GPS_PERMISSION_UNKNOWN = 'unknown';
@@ -70,7 +70,7 @@ export class GPSRequest extends EventHarness {
                         GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
                     };
 
-                    console.log({'GPS permission state': permissionStatus.state});
+                    //console.log({'GPS permission state': permissionStatus.state});
                     GPSRequest._gpsPermission = permissionStatus.state;
                 })
             } else {
