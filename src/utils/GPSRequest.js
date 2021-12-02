@@ -39,7 +39,7 @@ export class GPSRequest extends EventHarness {
             }
         }
 
-        return GPSRequest._deviceType;
+        return GPSRequest.DEVICE_TYPE_MOBILE; // GPSRequest._deviceType;
     }
 
     static GPS_PERMISSION_UNKNOWN = 'unknown';
