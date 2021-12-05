@@ -43,7 +43,7 @@ export class TextGeorefField extends FormField {
         precision: null
     };
 
-    static GEOREF_SOURCE_UNKNOWN = null;
+    static GEOREF_SOURCE_UNKNOWN = 'unknown';
     static GEOREF_SOURCE_GRIDREF = 'gridref';
     static GEOREF_SOURCE_MAP = 'map';
     static GEOREF_SOURCE_GPS = 'gps';
