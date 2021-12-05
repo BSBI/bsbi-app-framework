@@ -11707,7 +11707,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    * @type {{
    * rawString: string,
    * precision: number|null,
-   * source: string|null,
+   * source: string,
    * gridRef: string,
    * latLng: ({lat:number,lng:number}|null)
    * }}
