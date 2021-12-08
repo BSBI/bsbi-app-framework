@@ -92,6 +92,9 @@ export class Model extends EventHarness {
     get id() {
         if (!this._id) {
             this._id = uuid();
+        } else if (this._id === 'undefined') {
+            console.error("id is literal 'undefined', am forcing new id");
+            this._id = uuid();
         }
 
         return this._id;

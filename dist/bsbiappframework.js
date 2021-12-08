@@ -7776,6 +7776,9 @@ var Model = /*#__PURE__*/function (_EventHarness) {
     get: function get() {
       if (!this._id) {
         this._id = uuid();
+      } else if (this._id === 'undefined') {
+        console.error("id is literal 'undefined', am forcing new id");
+        this._id = uuid();
       }
 
       return this._id;
@@ -12974,7 +12977,10 @@ var App = /*#__PURE__*/function (_EventHarness) {
       try {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
           var key = _step4.value;
-          formData.append("surveyId[".concat(n++, "]"), key);
+
+          if (key && key !== 'undefined') {
+            formData.append("surveyId[".concat(n++, "]"), key);
+          }
         }
       } catch (err) {
         _iterator4.e(err);
@@ -13207,10 +13213,16 @@ var App = /*#__PURE__*/function (_EventHarness) {
     value: function restoreOccurrences(targetSurveyId) {
       var _this7 = this;
 
-      console.log("Invoked restoreOccurrences, target survey id: ".concat(targetSurveyId)); // need to check for a special case where restoring a survey that has never been saved even locally
+      console.log("Invoked restoreOccurrences, target survey id: ".concat(targetSurveyId));
+
+      if (targetSurveyId === 'undefined') {
+        console.error("Attempt to restore occurrences for literal 'undefined' survey id.");
+        targetSurveyId = '';
+      } // need to check for a special case where restoring a survey that has never been saved even locally
       // i.e. new and unmodified
       // only present in current App.surveys
       // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
+
 
       if (targetSurveyId && this.surveys.has(targetSurveyId)) {
         var localSurvey = this.surveys.get(targetSurveyId);
@@ -14469,7 +14481,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638953978-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638958051-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

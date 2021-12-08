@@ -340,7 +340,9 @@ export class App extends EventHarness {
 
         let n = 0;
         for (let key of surveyIds) {
-            formData.append(`surveyId[${n++}]`, key);
+            if (key && key !== 'undefined') {
+                formData.append(`surveyId[${n++}]`, key);
+            }
         }
 
         return fetch(App.LOAD_SURVEYS_ENDPOINT, {
@@ -511,6 +513,11 @@ export class App extends EventHarness {
     restoreOccurrences(targetSurveyId) {
 
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
+
+        if (targetSurveyId === 'undefined') {
+            console.error(`Attempt to restore occurrences for literal 'undefined' survey id.`);
+            targetSurveyId = '';
+        }
 
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
