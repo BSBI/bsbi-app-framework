@@ -11739,6 +11739,11 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    */
 
   /**
+   * if set then as well as labelling the GPS button with a symbol, also include text 'GPS'
+   * @type {boolean}
+   */
+
+  /**
    *
    * @type {string}
    */
@@ -11766,7 +11771,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    * [autocomplete]: string,
    * [baseSquareResolution]: ?number,
    * [gpsPermissionPromptText]: string,
-   * [initialiseFromDefaultSurveyGeoref] : boolean
+   * [initialiseFromDefaultSurveyGeoref] : boolean,
+   * [gpsTextLabel] : boolean,
    * }} [params]
    */
   function TextGeorefField(params) {
@@ -11800,6 +11806,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "minResolution", 2000);
 
+    _defineProperty(_assertThisInitialized(_this), "gpsTextLabel", false);
+
     _defineProperty(_assertThisInitialized(_this), "gpsPermissionsPromptText", '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>');
 
     _defineProperty(_assertThisInitialized(_this), "initialiseFromDefaultSurveyGeoref", false);
@@ -11828,6 +11836,10 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       if (params.gpsPermissionPromptText) {
         _this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
+      }
+
+      if (params.gpsTextLabel) {
+        _this.gpsTextLabel = params.gpsTextLabel;
       }
 
       if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
@@ -11955,9 +11967,21 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
         gpsButton.type = 'button';
         gpsButton.className = 'btn btn-outline-secondary btn-sm';
         gpsButton.title = 'use GPS';
+
+        if (this.gpsTextLabel) {
+          var gpsTextLabel = gpsButton.appendChild(document.createElement('span'));
+          gpsTextLabel.style.verticalAlign = 'middle';
+          gpsTextLabel.innerText = 'GPS ';
+        }
+
         var buttonIconEl = gpsButton.appendChild(document.createElement('span'));
         buttonIconEl.className = 'material-icons';
         buttonIconEl.innerText = 'gps_not_fixed';
+
+        if (this.gpsTextLabel) {
+          buttonIconEl.style.verticalAlign = 'middle';
+        }
+
         gpsButton.addEventListener('click', this.gpsButtonClickHandler.bind(this));
       }
 
@@ -14445,7 +14469,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.2.1638710148-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.2.1638953978-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

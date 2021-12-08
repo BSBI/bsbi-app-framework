@@ -79,6 +79,12 @@ export class TextGeorefField extends FormField {
     minResolution = 2000;
 
     /**
+     * if set then as well as labelling the GPS button with a symbol, also include text 'GPS'
+     * @type {boolean}
+     */
+    gpsTextLabel = false;
+
+    /**
      *
      * @type {string}
      */
@@ -111,7 +117,8 @@ export class TextGeorefField extends FormField {
      * [autocomplete]: string,
      * [baseSquareResolution]: ?number,
      * [gpsPermissionPromptText]: string,
-     * [initialiseFromDefaultSurveyGeoref] : boolean
+     * [initialiseFromDefaultSurveyGeoref] : boolean,
+     * [gpsTextLabel] : boolean,
      * }} [params]
      */
     constructor (params) {
@@ -140,6 +147,10 @@ export class TextGeorefField extends FormField {
 
             if (params.gpsPermissionPromptText) {
                 this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
+            }
+
+            if (params.gpsTextLabel) {
+                this.gpsTextLabel = params.gpsTextLabel;
             }
 
             if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
@@ -264,9 +275,19 @@ export class TextGeorefField extends FormField {
             gpsButton.className = 'btn btn-outline-secondary btn-sm';
             gpsButton.title = 'use GPS';
 
+            if (this.gpsTextLabel) {
+                const gpsTextLabel = gpsButton.appendChild(document.createElement('span'));
+                gpsTextLabel.style.verticalAlign = 'middle';
+                gpsTextLabel.innerText = 'GPS ';
+            }
+
             const buttonIconEl = gpsButton.appendChild(document.createElement('span'));
             buttonIconEl.className = 'material-icons';
             buttonIconEl.innerText = 'gps_not_fixed';
+
+            if (this.gpsTextLabel) {
+                buttonIconEl.style.verticalAlign = 'middle';
+            }
 
             gpsButton.addEventListener('click', this.gpsButtonClickHandler.bind(this));
         }
