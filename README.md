@@ -1,6 +1,6 @@
 # backyard-botany-app
 
-This repo implements the recording form used for the BSBI's Garden Wildflower Hunt recording form. See https://backyard.bsbi.org/app
+This repo implements the recording form used for the BSBI's recording apps
 
 
 *See also https://github.com/japonicus/backyard-botany-app*

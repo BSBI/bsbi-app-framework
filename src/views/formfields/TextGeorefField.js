@@ -19,10 +19,12 @@ export class TextGeorefField extends FormField {
     #containerId;
 
     /**
+     * set if map has a well-defined zoom and centre
+     * (i.e. has been initialised from a typed grid-ref, a manual re-centre or user-click)
      *
-     * @type {{}}
-     * @private
+     * @type {boolean}
      */
+    mapPositionIsCurrent = false;
 
     /**
      *
@@ -172,7 +174,7 @@ export class TextGeorefField extends FormField {
                 this._value = {
                     gridRef: georefSpec,
                     rawString: georefSpec, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-                    source: null,
+                    source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
                     latLng: null,
                     precision: null
                 };
@@ -342,6 +344,8 @@ export class TextGeorefField extends FormField {
         let rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
         const gridRefParser = GridRef.from_string(rawValue);
 
+        this.mapPositionIsCurrent = false; // any linked map ought to be re-centred & zoomed
+
         if (gridRefParser) {
             this.value = {
                 gridRef: gridRefParser.preciseGridRef,
@@ -452,6 +456,8 @@ export class TextGeorefField extends FormField {
 
             console.log({'gps position' : position});
             let accuracy = position.coords.accuracy * 2;
+
+            this.mapPositionIsCurrent = false; // force zoom and re-centre
 
             this.processLatLngPosition(
                 position.coords.latitude,

@@ -38,6 +38,17 @@ export class Layout extends EventHarness {
     static SAVE_ALL_FAILURE_MODAL_ID = 'saveallfailure';
 
     /**
+     * @type {string}
+     */
+    pathPrefix;
+
+    constructor() {
+        super();
+
+        this.pathPrefix = window.location.pathname.split('/')[1];
+    }
+
+    /**
      *
      * @param {App} app
      */
@@ -111,12 +122,12 @@ export class Layout extends EventHarness {
         const surveyMenuContainer = document.getElementById(this.surveysMenuId);
         const items = this.getSurveyItems();
 
-        surveyMenuContainer.innerHTML = `<a class="dropdown-item" href="/app/survey/save" data-navigo="survey/save">save all</a>
+        surveyMenuContainer.innerHTML = `<a class="dropdown-item" href="/${this.pathPrefix}/survey/save" data-navigo="survey/save">save all</a>
     <div class="dropdown-divider"></div>
     ${items.join('')}
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" href="/app/survey/new" data-navigo="survey/new">${this.newSurveyLabel}</a>
-    <a class="dropdown-item" href="/app/survey/reset" data-navigo="survey/reset">reset</a>`;
+    <a class="dropdown-item" href="/${this.pathPrefix}/survey/new" data-navigo="survey/new">${this.newSurveyLabel}</a>
+    <a class="dropdown-item" href="/${this.pathPrefix}/survey/reset" data-navigo="survey/reset">reset</a>`;
 
         this.app.router.updatePageLinks()
     }
@@ -134,7 +145,7 @@ export class Layout extends EventHarness {
             const survey = surveyTuple[1];
 
             const label = survey.generateSurveyName() + (surveyTuple[0] === currentSurveyId ? ' <span style="color: green">●</span>' : '');
-            items[items.length] = `<a class="dropdown-item" href="/app/survey/add/${surveyTuple[0]}" data-navigo="survey/add/${surveyTuple[0]}">${label}</a>`;
+            items[items.length] = `<a class="dropdown-item" href="/${this.pathPrefix}/survey/add/${surveyTuple[0]}" data-navigo="survey/add/${surveyTuple[0]}">${label}</a>`;
         }
 
         return items;

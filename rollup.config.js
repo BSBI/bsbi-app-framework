@@ -10,7 +10,7 @@ import { terser } from 'rollup-plugin-terser';
 // `npm run dev` -> `production` is false
 const production = !process.env.ROLLUP_WATCH;
 
-const version = `1.0.2.${Math.floor((Date.now() / 1000))}`;
+const version = `1.0.3.${Math.floor((Date.now() / 1000))}`;
 
 export default [
 	{
