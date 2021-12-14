@@ -134,6 +134,9 @@ export class Layout extends EventHarness {
                 event.preventDefault();
 
                 if (event.detail < 2) {
+                    // force hide the new survey modal
+                    $(`#${Layout.RESET_MODAL_ID}`).modal('hide');
+
                     // only if not a double click
                     this.app.fireEvent(App.EVENT_RESET_SURVEYS);
                 }

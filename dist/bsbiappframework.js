@@ -11507,18 +11507,20 @@ var GPSRequest = /*#__PURE__*/function (_EventHarness) {
             switch (_context.prev = _context.next) {
               case 0:
                 if (!(GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED)) {
-                  _context.next = 8;
+                  _context.next = 9;
                   break;
                 }
+
+                GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
 
                 GPSRequest.gpsEventObject = new GPSRequest();
 
                 if (!(navigator.permissions && navigator.permissions.query)) {
-                  _context.next = 7;
+                  _context.next = 8;
                   break;
                 }
 
-                _context.next = 5;
+                _context.next = 6;
                 return navigator.permissions.query({
                   name: 'geolocation'
                 }).then(function (permissionStatus) {
@@ -11533,17 +11535,17 @@ var GPSRequest = /*#__PURE__*/function (_EventHarness) {
                   GPSRequest._gpsPermission = permissionStatus.state;
                 });
 
-              case 5:
-                _context.next = 8;
+              case 6:
+                _context.next = 9;
                 break;
 
-              case 7:
+              case 8:
                 GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;
 
-              case 8:
+              case 9:
                 return _context.abrupt("return", GPSRequest._gpsPermission);
 
-              case 9:
+              case 10:
               case "end":
                 return _context.stop();
             }
@@ -11557,6 +11559,57 @@ var GPSRequest = /*#__PURE__*/function (_EventHarness) {
 
       return haveGPSPermission;
     }()
+    /**
+     * returns a promise with GPSRequest.GPS_PERMISSION_ parameter
+     *
+     * @returns {Promise<string>} GPSRequest.GPS_PERMISSION_
+     */
+
+  }, {
+    key: "haveGPSPermissionPromise",
+    value: function haveGPSPermissionPromise() {
+      if (GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED) {
+        GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
+
+        GPSRequest.gpsEventObject = new GPSRequest();
+
+        if (navigator.permissions && navigator.permissions.query) {
+          return navigator.permissions.query({
+            name: 'geolocation'
+          }).then(function (permissionStatus) {
+            permissionStatus.onchange = function () {
+              console.log('geolocation permission status has changed to ', this.state);
+              GPSRequest._gpsPermission = this.state;
+              GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+            }; //console.log({'GPS permission state': permissionStatus.state});
+
+
+            GPSRequest._gpsPermission = permissionStatus.state;
+            return GPSRequest._gpsPermission;
+          });
+        } else {
+          GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;
+          return new Promise(function () {
+            return GPSRequest._gpsPermission;
+          });
+        }
+      } else {
+        return new Promise(function () {
+          return GPSRequest._gpsPermission;
+        });
+      }
+    }
+  }, {
+    key: "_setGPSPermission",
+    value: function _setGPSPermission(state) {
+      if (GPSRequest._gpsPermission !== state) {
+        GPSRequest._gpsPermission = state;
+
+        if (GPSRequest.gpsEventObject) {
+          GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+        }
+      }
+    }
     /**
      *
      * @param {string=} gpsPromptBannerId
@@ -11614,9 +11667,11 @@ var GPSRequest = /*#__PURE__*/function (_EventHarness) {
           clearTimeout(nudgeTimeoutId);
           hideNudgeBanner();
         } // unsure if this should be set as permission may only have been one-off
+        //GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_GRANTED;
 
 
-        GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_GRANTED;
+        GPSRequest._setGPSPermission(GPSRequest.GPS_PERMISSION_GRANTED);
+
         return position;
       }, function (error) {
         console.log('gps look-up failed');
@@ -11752,6 +11807,16 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    *
    * @type {string}
    */
+
+  /**
+   *
+   * @type {boolean}
+   */
+
+  /**
+   *
+   * @type {boolean}
+   */
   // /**
   //  * if set (default false) then the field's placeholder changes dynamically, e.g. depending on the surveys base georef.
   //  *
@@ -11778,6 +11843,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    * [gpsPermissionPromptText]: string,
    * [initialiseFromDefaultSurveyGeoref] : boolean,
    * [gpsTextLabel] : boolean,
+   * [showGPSEnableLinkIfNotActiveOnMobile] : boolean,
    * }} [params]
    */
   function TextGeorefField(params) {
@@ -11819,6 +11885,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "initialiseFromDefaultSurveyGeoref", false);
 
+    _defineProperty(_assertThisInitialized(_this), "showGPSEnableLinkIfNotActiveOnMobile", true);
+
     _defineProperty(_assertThisInitialized(_this), "_gpsPermissionsPromptId", null);
 
     if (params) {
@@ -11851,6 +11919,10 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
         _this.initialiseFromDefaultSurveyGeoref = params.initialiseFromDefaultSurveyGeoref;
+      }
+
+      if (params.hasOwnProperty('showGPSEnableLinkIfNotActiveOnMobile')) {
+        _this.showGPSEnableLinkIfNotActiveOnMobile = params.showGPSEnableLinkIfNotActiveOnMobile;
       }
     }
 
@@ -11942,6 +12014,18 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       _classPrivateFieldSet(this, _containerId$7, container.id = FormField.nextId);
 
       this._inputId = FormField.nextId;
+
+      if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
+        // if on a mobile device and GPS is not turned on
+        var gpsEnabledLinkEl = document.createElement('a');
+        gpsEnabledLinkEl.className = 'no-gps-link-prompt'; // will be visible only if document body doesn't have a 'gps-enabled' class
+
+        gpsEnabledLinkEl.href = '#';
+        gpsEnabledLinkEl.innerText = 'Please enable GPS';
+        container.appendChild(gpsEnabledLinkEl);
+        gpsEnabledLinkEl.addEventListener('click', this.gpsButtonClickHandler.bind(this));
+      }
+
       var labelEl = container.appendChild(document.createElement('label'));
       labelEl.htmlFor = this._inputId;
       labelEl.textContent = this.label;
@@ -12109,30 +12193,9 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
         console.log({
           'gps look-up failed, error': error
         });
-      }); // GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
-      //     // const latitude  = position.coords.latitude;
-      //     // const longitude = position.coords.longitude;
-      //
-      //     // console.log(`Got GPS fix ${latitude} , ${longitude}`);
-      //     //
-      //     // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-      //     // const gridRef = gridCoords.to_gridref(1000);
-      //     //
-      //     // console.log(`Got grid-ref: ${gridRef}`);
-      //     // this.value = gridRef;
-      //     // this.fireEvent(FormField.EVENT_CHANGE);
-      //
-      //     //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-      //
-      //     this.processLatLngPosition(
-      //         position.coords.latitude,
-      //         position.coords.longitude,
-      //         position.coords.accuracy * 2
-      //     );
-      // }, (error) => {
-      //     console.log('gps look-up failed');
-      //     console.log(error);
-      // });
+      });
+      event.preventDefault();
+      event.stopPropagation();
     }
     /**
      *
@@ -13552,11 +13615,31 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
         document.body.classList.remove('offline');
       });
       window.addEventListener('offline', this.addOfflineFlag);
+      this.registerGPSClassMarker();
     }
   }, {
     key: "addOfflineFlag",
     value: function addOfflineFlag() {
       document.body.classList.add('offline');
+    }
+  }, {
+    key: "registerGPSClassMarker",
+    value: function registerGPSClassMarker() {
+      if (navigator.geolocation) {
+        GPSRequest.haveGPSPermissionPromise().then(function (permission) {
+          if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
+            document.body.classList.add('gps-enabled');
+          }
+
+          GPSRequest.gpsEventObject.addListener(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, function (permission) {
+            if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
+              document.body.classList.add('gps-enabled');
+            } else {
+              document.body.classList.remove('gps-enabled');
+            }
+          });
+        });
+      }
     }
   }, {
     key: "initialise",
@@ -13595,7 +13678,9 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
           event.preventDefault();
 
           if (event.detail < 2) {
-            // only if not a double click
+            // force hide the new survey modal
+            $("#".concat(Layout.RESET_MODAL_ID)).modal('hide'); // only if not a double click
+
             _this3.app.fireEvent(App.EVENT_RESET_SURVEYS);
           }
         });
@@ -14503,7 +14588,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1639304793-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1639484882-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
