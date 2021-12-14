@@ -2,7 +2,7 @@ import {EventHarness} from "../../framework/EventHarness";
 
 export class FormField extends EventHarness {
 
-    _value;
+    _value = null;
 
     /**
      * overall wrapped field element (not necessarily the form element itself)
@@ -154,7 +154,7 @@ export class FormField extends EventHarness {
      * @returns {boolean}
      */
     static isEmpty(value) {
-        return value === '';
+        return value === '' || value === undefined || value === null;
     }
 
     /**
