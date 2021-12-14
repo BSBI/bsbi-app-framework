@@ -60,6 +60,7 @@ export class GPSRequest extends EventHarness {
      */
     static async haveGPSPermission() {
         if (GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED) {
+            GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
             GPSRequest.gpsEventObject = new GPSRequest();
 
             if (navigator.permissions && navigator.permissions.query) {
@@ -79,6 +80,49 @@ export class GPSRequest extends EventHarness {
         }
 
         return GPSRequest._gpsPermission;
+    }
+
+    /**
+     * returns a promise with GPSRequest.GPS_PERMISSION_ parameter
+     *
+     * @returns {Promise<string>} GPSRequest.GPS_PERMISSION_
+     */
+    static haveGPSPermissionPromise() {
+        if (GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED) {
+            GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
+
+            GPSRequest.gpsEventObject = new GPSRequest();
+
+            if (navigator.permissions && navigator.permissions.query) {
+                return navigator.permissions.query({name: 'geolocation'}).then(function (permissionStatus) {
+                    permissionStatus.onchange = function () {
+                        console.log('geolocation permission status has changed to ', this.state);
+                        GPSRequest._gpsPermission = this.state;
+                        GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+                    };
+
+                    //console.log({'GPS permission state': permissionStatus.state});
+                    GPSRequest._gpsPermission = permissionStatus.state;
+                    return GPSRequest._gpsPermission;
+                })
+            } else {
+                GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;
+
+                return new Promise(() => GPSRequest._gpsPermission);
+            }
+        } else {
+            return new Promise(() => GPSRequest._gpsPermission);
+        }
+    }
+
+    static _setGPSPermission(state) {
+        if (GPSRequest._gpsPermission !== state) {
+            GPSRequest._gpsPermission = state;
+
+            if (GPSRequest.gpsEventObject) {
+                GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+            }
+        }
     }
 
     /**
@@ -144,7 +188,8 @@ export class GPSRequest extends EventHarness {
             }
 
             // unsure if this should be set as permission may only have been one-off
-            GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_GRANTED;
+            //GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_GRANTED;
+            GPSRequest._setGPSPermission(GPSRequest.GPS_PERMISSION_GRANTED);
 
             return position;
         }, (error) => {

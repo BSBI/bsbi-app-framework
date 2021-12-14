@@ -6,6 +6,7 @@ import saveAllSuccessModal from "../../templates/syncSuccessModal.html";
 import saveAllFailureModal from "../../templates/syncFailureModal.html";
 import {EventHarness} from "../../framework/EventHarness";
 import {App} from "../../framework/App";
+import {GPSRequest} from "../../utils/GPSRequest";
 
 /**
  * @external $
@@ -66,10 +67,32 @@ export class Layout extends EventHarness {
             document.body.classList.remove('offline');
         });
         window.addEventListener('offline', this.addOfflineFlag);
+
+        this.registerGPSClassMarker();
     }
 
     addOfflineFlag() {
         document.body.classList.add('offline');
+    }
+
+    registerGPSClassMarker() {
+        if (navigator.geolocation ) {
+
+            GPSRequest.haveGPSPermissionPromise().then((permission) => {
+                    if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
+                        document.body.classList.add('gps-enabled');
+                    }
+
+                    GPSRequest.gpsEventObject.addListener(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, (permission) => {
+                        if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
+                            document.body.classList.add('gps-enabled');
+                        } else {
+                            document.body.classList.remove('gps-enabled');
+                        }
+                    });
+                }
+            );
+        }
     }
 
     initialise() {

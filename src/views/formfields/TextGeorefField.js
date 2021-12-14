@@ -92,7 +92,17 @@ export class TextGeorefField extends FormField {
      */
     gpsPermissionsPromptText = '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>';
 
+    /**
+     *
+     * @type {boolean}
+     */
     initialiseFromDefaultSurveyGeoref = false;
+
+    /**
+     *
+     * @type {boolean}
+     */
+    showGPSEnableLinkIfNotActiveOnMobile = true;
 
     // /**
     //  * if set (default false) then the field's placeholder changes dynamically, e.g. depending on the surveys base georef.
@@ -121,6 +131,7 @@ export class TextGeorefField extends FormField {
      * [gpsPermissionPromptText]: string,
      * [initialiseFromDefaultSurveyGeoref] : boolean,
      * [gpsTextLabel] : boolean,
+     * [showGPSEnableLinkIfNotActiveOnMobile] : boolean,
      * }} [params]
      */
     constructor (params) {
@@ -157,6 +168,10 @@ export class TextGeorefField extends FormField {
 
             if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
                 this.initialiseFromDefaultSurveyGeoref = params.initialiseFromDefaultSurveyGeoref;
+            }
+
+            if (params.hasOwnProperty('showGPSEnableLinkIfNotActiveOnMobile')) {
+                this.showGPSEnableLinkIfNotActiveOnMobile = params.showGPSEnableLinkIfNotActiveOnMobile;
             }
         }
     }
@@ -241,6 +256,18 @@ export class TextGeorefField extends FormField {
         this.#containerId = container.id = FormField.nextId;
 
         this._inputId = FormField.nextId;
+
+        if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
+            // if on a mobile device and GPS is not turned on
+
+            const gpsEnabledLinkEl = document.createElement('a');
+            gpsEnabledLinkEl.className = 'no-gps-link-prompt'; // will be visible only if document body doesn't have a 'gps-enabled' class
+            gpsEnabledLinkEl.href = '#';
+            gpsEnabledLinkEl.innerText = 'Please enable GPS';
+            container.appendChild(gpsEnabledLinkEl);
+
+            gpsEnabledLinkEl.addEventListener('click', this.gpsButtonClickHandler.bind(this));
+        }
 
         const labelEl = container.appendChild(document.createElement('label'));
         labelEl.htmlFor = this._inputId;
@@ -363,7 +390,7 @@ export class TextGeorefField extends FormField {
                 source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
                 latLng: null,
                 precision: null
-            }
+            };
         }
 
         this.fireEvent(FormField.EVENT_CHANGE);
@@ -408,30 +435,8 @@ export class TextGeorefField extends FormField {
             console.log({'gps look-up failed, error' : error});
         });
 
-        // GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
-        //     // const latitude  = position.coords.latitude;
-        //     // const longitude = position.coords.longitude;
-        //
-        //     // console.log(`Got GPS fix ${latitude} , ${longitude}`);
-        //     //
-        //     // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-        //     // const gridRef = gridCoords.to_gridref(1000);
-        //     //
-        //     // console.log(`Got grid-ref: ${gridRef}`);
-        //     // this.value = gridRef;
-        //     // this.fireEvent(FormField.EVENT_CHANGE);
-        //
-        //     //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-        //
-        //     this.processLatLngPosition(
-        //         position.coords.latitude,
-        //         position.coords.longitude,
-        //         position.coords.accuracy * 2
-        //     );
-        // }, (error) => {
-        //     console.log('gps look-up failed');
-        //     console.log(error);
-        // });
+        event.preventDefault();
+        event.stopPropagation();
     }
 
     /**
