@@ -525,4 +525,24 @@ export class TextGeorefField extends FormField {
             escapeHTML(attributes[key].trim())
             : '';
     }
+
+    static isValid(key, property, attributes) {
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is missing
+            if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
+                return false;
+            } else {
+                // check if grid-ref is set
+                let gridRef = attributes[key];
+
+                return !!gridRef;
+            }
+        }
+        // field is present or optional
+        // report as valid unless content is corrupt
+
+        return null; // field not assessed
+    }
 }

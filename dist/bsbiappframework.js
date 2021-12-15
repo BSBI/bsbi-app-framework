@@ -12285,6 +12285,24 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     value: function summariseImpl(key, property, attributes) {
       return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
     }
+  }, {
+    key: "isValid",
+    value: function isValid(key, property, attributes) {
+      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
+        // test whether required field is missing
+        if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
+          return false;
+        } else {
+          // check if grid-ref is set
+          var gridRef = attributes[key];
+          return !!gridRef;
+        }
+      } // field is present or optional
+      // report as valid unless content is corrupt
+
+
+      return null; // field not assessed
+    }
   }]);
 
   return TextGeorefField;
@@ -14590,7 +14608,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1639490166-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1639604553-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
