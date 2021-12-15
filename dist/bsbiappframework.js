@@ -12234,11 +12234,13 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
      * @param {number} longitude
      * @param {number} precision diameter in metres
      * @param {string} source
+     * @param {string} rawString
      */
 
   }, {
     key: "processLatLngPosition",
     value: function processLatLngPosition(latitude, longitude, precision, source) {
+      var rawString = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
       var gridCoords = pi.from_latlng(latitude, longitude);
       var scaledPrecision = Oo.get_normalized_precision(precision);
 
@@ -12255,7 +12257,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       this.value = {
         gridRef: gridRef,
-        rawString: '',
+        rawString: rawString,
         source: source,
         latLng: {
           lat: latitude,

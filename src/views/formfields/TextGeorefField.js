@@ -479,8 +479,9 @@ export class TextGeorefField extends FormField {
      * @param {number} longitude
      * @param {number} precision diameter in metres
      * @param {string} source
+     * @param {string} rawString
      */
-    processLatLngPosition(latitude, longitude, precision, source) {
+    processLatLngPosition(latitude, longitude, precision, source, rawString = '') {
         const gridCoords = GridCoords.from_latlng(latitude, longitude);
 
         let scaledPrecision = GridRef.get_normalized_precision(precision);
@@ -498,7 +499,7 @@ export class TextGeorefField extends FormField {
         //this.value = gridRef;
         this.value = {
             gridRef: gridRef,
-            rawString: '',
+            rawString: rawString,
             source: source,
             latLng: {lat:latitude,lng:longitude},
             precision: precision
