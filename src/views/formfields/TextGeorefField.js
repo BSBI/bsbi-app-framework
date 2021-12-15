@@ -527,6 +527,8 @@ export class TextGeorefField extends FormField {
     }
 
     static isValid(key, property, attributes) {
+        console.log("in TextGeorefField isValid");
+
         if (property.attributes.completion &&
             (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
         ) {
@@ -536,6 +538,8 @@ export class TextGeorefField extends FormField {
             } else {
                 // check if grid-ref is set
                 let gridRef = attributes[key];
+
+                console.log({"testing gr validity" : gridRef});
 
                 return !!gridRef;
             }

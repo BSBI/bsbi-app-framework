@@ -12288,6 +12288,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
   }, {
     key: "isValid",
     value: function isValid(key, property, attributes) {
+      console.log("in TextGeorefField isValid");
+
       if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
         // test whether required field is missing
         if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
@@ -12295,6 +12297,9 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
         } else {
           // check if grid-ref is set
           var gridRef = attributes[key];
+          console.log({
+            "testing gr validity": gridRef
+          });
           return !!gridRef;
         }
       } // field is present or optional
@@ -14608,7 +14613,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1639604553-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1639608838-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

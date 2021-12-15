@@ -1,5 +1,3 @@
-//import uuidv3 from "uuid/v3";
-
 import {EventHarness} from "../framework/EventHarness";
 import localforage from 'localforage';
 
