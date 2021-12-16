@@ -33,6 +33,7 @@
     "bootstrap": "^4.5.0",
     "british-isles-gridrefs": "https://github.com/japonicus/js-british-isles-gridrefs.git",
     "core-js": "^3.19.1",
+    "email-validator": "^2.0.4",
     "localforage": "^1.10.0",
     "navigo": "^7.1.2"
   },

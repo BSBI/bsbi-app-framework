@@ -66,11 +66,30 @@ export class Survey extends Model {
         // then fire its own change event (Occurrence.EVENT_MODIFIED)
         params.form.updateModelFromContent();
 
+        console.log('Survey calling conditional validation.');
+
         // refresh the form's validation state
         params.form.conditionallyValidateForm();
 
         this.touch();
         this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+    }
+
+    /**
+     * Used for special-case setting of a custom attribute
+     * (i.e. not usually one linked to a form)
+     * e.g. used for updating the NYPH null-list flag
+     *
+     * @param attributeName
+     * @param value
+     */
+    setAttribute(attributeName, value) {
+        if (this.attributes[attributeName] !== value) {
+            this.attributes[attributeName] = value;
+
+            this.touch();
+            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+        }
     }
 
     /**
@@ -83,6 +102,9 @@ export class Survey extends Model {
 
         if (this.isNew) {
             form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+            form.liveValidation = false;
+        } else {
+            form.liveValidation = true;
         }
     }
 

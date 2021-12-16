@@ -3022,7 +3022,7 @@ var charCodeAt = uncurryThis$f(''.charCodeAt);
 var replace$5 = uncurryThis$f(''.replace);
 var numberToString = uncurryThis$f(1.0.toString);
 
-var tester = /[\uD800-\uDFFF]/g;
+var tester$1 = /[\uD800-\uDFFF]/g;
 var low = /^[\uD800-\uDBFF]$/;
 var hi$1 = /^[\uDC00-\uDFFF]$/;
 
@@ -3048,7 +3048,7 @@ if ($stringify$1) {
     stringify: function stringify(it, replacer, space) {
       for (var i = 0, l = arguments.length, args = Array$3(l); i < l; i++) args[i] = arguments[i];
       var result = apply$4($stringify$1, null, args);
-      return typeof result == 'string' ? replace$5(result, tester, fix) : result;
+      return typeof result == 'string' ? replace$5(result, tester$1, fix) : result;
     }
   });
 }
@@ -8465,6 +8465,7 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "isValid",
     value: function isValid(key, property, attributes) {
+      //console.log(`FormField isValid for '${key}'`);
       if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
         // test whether required field is missing
         return !(!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key]));
@@ -8674,7 +8675,10 @@ var Form = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "conditionallyValidateForm",
     value: function conditionallyValidateForm() {
+      console.log('called conditionallyValidateForm');
+
       if (this.liveValidation) {
+        console.log('doing validation conditionallyValidateForm');
         this.validateForm();
       }
     }
@@ -8705,7 +8709,6 @@ var Form = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "validateForm",
     value: function validateForm() {
-      //this.liveValidation = true;
       if (this.liveValidation) {
         this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
       }
@@ -10566,7 +10569,15 @@ var SurveyForm = /*#__PURE__*/function (_Form) {
     /**
      * the change event triggers after a field has changed, before the value has been read back into the model
      *
-     * @param event
+     * @param {{
+     *      'context' : {
+     *     'attributeName' : string,
+     *     'completion' : string,
+     *     'parentForm' : Form,
+     *     'validationMessage' : ''
+     *     },
+     *     'eventName' : string
+     * }} event
      */
     ,
     set: function set(model) {
@@ -12285,22 +12296,41 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
     value: function summariseImpl(key, property, attributes) {
       return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
     }
+    /**
+     *
+     * @param value
+     * @returns {boolean}
+     */
+
+  }, {
+    key: "isEmpty",
+    value: function isEmpty(value) {
+      return !(value && value.gridRef);
+    }
+    /**
+     *
+     *
+     * @param {string} key
+     * @param property
+     * @param attributes
+     * @returns {null|boolean}
+     */
+
   }, {
     key: "isValid",
     value: function isValid(key, property, attributes) {
-      console.log("in TextGeorefField isValid");
-
+      //console.log("in TextGeorefField isValid");
       if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
         // test whether required field is missing
         if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
           return false;
         } else {
           // check if grid-ref is set
-          var gridRef = attributes[key];
+          var geoRef = attributes[key];
           console.log({
-            "testing gr validity": gridRef
+            "testing gr validity": geoRef
           });
-          return !!gridRef;
+          return !!(geoRef && geoRef.gridRef);
         }
       } // field is present or optional
       // report as valid unless content is corrupt
@@ -12384,13 +12414,34 @@ var Survey = /*#__PURE__*/function (_Model) {
       console.log('Survey change handler invoked.'); // read new values
       // then fire its own change event (Occurrence.EVENT_MODIFIED)
 
-      params.form.updateModelFromContent(); // refresh the form's validation state
+      params.form.updateModelFromContent();
+      console.log('Survey calling conditional validation.'); // refresh the form's validation state
 
       params.form.conditionallyValidateForm();
       this.touch();
       this.fireEvent(Survey.EVENT_MODIFIED, {
         surveyId: this.id
       });
+    }
+    /**
+     * Used for special-case setting of a custom attribute
+     * (i.e. not usually one linked to a form)
+     * e.g. used for updating the NYPH null-list flag
+     *
+     * @param attributeName
+     * @param value
+     */
+
+  }, {
+    key: "setAttribute",
+    value: function setAttribute(attributeName, value) {
+      if (this.attributes[attributeName] !== value) {
+        this.attributes[attributeName] = value;
+        this.touch();
+        this.fireEvent(Survey.EVENT_MODIFIED, {
+          surveyId: this.id
+        });
+      }
     }
     /**
      *
@@ -12405,6 +12456,10 @@ var Survey = /*#__PURE__*/function (_Model) {
 
       if (this.isNew) {
         form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+
+        form.liveValidation = false;
+      } else {
+        form.liveValidation = true;
       }
     }
     /**
@@ -14613,7 +14668,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1639608838-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1639662588-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -17409,6 +17464,35 @@ function _save2(images) {
 
 _defineProperty(ImageField, "LICENSE_MODAL", 'imagelicensemodal');
 
+var tester = /^[-!#$%&'*+\/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+\/0-9=?A-Z^_a-z`{|}~])*@[a-zA-Z0-9](-*\.?[a-zA-Z0-9])*\.[a-zA-Z](-?[a-zA-Z0-9])+$/;
+// Thanks to:
+// http://fightingforalostcause.net/misc/2006/compare-email-regex.php
+// http://thedailywtf.com/Articles/Validating_Email_Addresses.aspx
+// http://stackoverflow.com/questions/201323/what-is-the-best-regular-expression-for-validating-email-addresses/201378#201378
+var validate = function(email)
+{
+	if (!email)
+		return false;
+		
+	if(email.length>254)
+		return false;
+
+	var valid = tester.test(email);
+	if(!valid)
+		return false;
+
+	// Further checking of some things regex can't handle
+	var parts = email.split("@");
+	if(parts[0].length>64)
+		return false;
+
+	var domainParts = parts[1].split(".");
+	if(domainParts.some(function(part) { return part.length>63; }))
+		return false;
+
+	return true;
+};
+
 function _createSuper$6(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$6(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _isNativeReflectConstruct$6() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
@@ -17497,7 +17581,10 @@ var InputField = /*#__PURE__*/function (_FormField) {
   }
   /**
    *
-   * @param {(string|null|undefined)} textContent
+   * @param {string} key
+   * @param property properties of the form descriptor
+   * @param attributes attributes of the model object
+   * @return {(boolean|null)} returns null if validity was not assessed
    */
 
 
@@ -17511,7 +17598,12 @@ var InputField = /*#__PURE__*/function (_FormField) {
     function get() {
       return this._value;
     },
-    set: function set(textContent) {
+    set:
+    /**
+     *
+     * @param {(string|null|undefined)} textContent
+     */
+    function set(textContent) {
       this._value = undefined === textContent || null == textContent ? '' : textContent.trim();
       this.updateView();
     }
@@ -17626,6 +17718,19 @@ var InputField = /*#__PURE__*/function (_FormField) {
      */
 
   }], [{
+    key: "emailValidator",
+    value: function emailValidator(key, property, attributes) {
+      //console.log(`FormField isValid for '${key}'`);
+      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
+        // test whether required field is present and is email
+        return attributes.hasOwnProperty(key) && !property.field.isEmpty(attributes[key]) && validate(attributes[key]);
+      } // field is present or optional
+      // report as valid unless content is corrupt
+
+
+      return null; // field not assessed
+    }
+  }, {
     key: "summariseImpl",
     value: function summariseImpl(key, property, attributes) {
       return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';

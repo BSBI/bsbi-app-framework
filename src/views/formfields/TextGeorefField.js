@@ -526,8 +526,25 @@ export class TextGeorefField extends FormField {
             : '';
     }
 
+    /**
+     *
+     * @param value
+     * @returns {boolean}
+     */
+    static isEmpty(value) {
+        return !(value && value.gridRef);
+    }
+
+    /**
+     *
+     *
+     * @param {string} key
+     * @param property
+     * @param attributes
+     * @returns {null|boolean}
+     */
     static isValid(key, property, attributes) {
-        console.log("in TextGeorefField isValid");
+        //console.log("in TextGeorefField isValid");
 
         if (property.attributes.completion &&
             (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
@@ -537,11 +554,11 @@ export class TextGeorefField extends FormField {
                 return false;
             } else {
                 // check if grid-ref is set
-                let gridRef = attributes[key];
+                let geoRef = attributes[key];
 
-                console.log({"testing gr validity" : gridRef});
+                console.log({"testing gr validity" : geoRef});
 
-                return !!gridRef;
+                return !!(geoRef && geoRef.gridRef);
             }
         }
         // field is present or optional

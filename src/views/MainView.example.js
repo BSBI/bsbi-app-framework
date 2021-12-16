@@ -12,7 +12,7 @@ import {escapeHTML} from "../utils/escapeHTML";
 import {OccurrenceForm} from "./forms/OccurrenceForm";
 import {OccurrenceImage} from "../models/OccurrenceImage";
 import {EVENT_DELETE_IMAGE, IMAGE_MODAL_ID, IMAGE_MODAL_DELETE_BUTTON_ID, ImageField, DELETE_IMAGE_MODAL_ID} from "./formfields/ImageField";
-import {App} from "..";
+import {App, doubleClickIntercepted} from "..";
 
 const LEFT_PANEL_ID = 'col1panel';
 const RIGHT_PANEL_ID = 'col2panel';
@@ -811,6 +811,10 @@ export class MainView extends Page {
          * to prevent click also triggering an accordion toggle
          */
         listContainer.addEventListener('click', /** @param {MouseEvent} event */ (event) => {
+            if (doubleClickIntercepted(e)) {
+                return;
+            }
+
             const targetButtonEl = event.target.closest('button');
 
             if (targetButtonEl && targetButtonEl.hasAttribute('data-toggle') && targetButtonEl.getAttribute('data-toggle') === 'modal') {

@@ -165,7 +165,7 @@ export class FormField extends EventHarness {
      * @return {(boolean|null)} returns null if validity was not assessed
      */
     static isValid(key, property, attributes) {
-        console.log(`FormField isValid for '${key}'`);
+        //console.log(`FormField isValid for '${key}'`);
 
         if (property.attributes.completion &&
             (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)

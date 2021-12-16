@@ -1,6 +1,7 @@
 import {FormField} from "./FormField";
 import {uuid} from "../../models/Model";
 import {escapeHTML} from "../../utils/escapeHTML";
+import * as EmailValidator from 'email-validator';
 
 export class InputField extends FormField {
 
@@ -55,6 +56,31 @@ export class InputField extends FormField {
                 this._autocomplete = params.autocomplete;
             }
         }
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @param property properties of the form descriptor
+     * @param attributes attributes of the model object
+     * @return {(boolean|null)} returns null if validity was not assessed
+     */
+    static emailValidator(key, property, attributes) {
+        //console.log(`FormField isValid for '${key}'`);
+
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is present and is email
+            return (attributes.hasOwnProperty(key) &&
+                (!property.field.isEmpty(attributes[key])) &&
+                EmailValidator.validate(attributes[key])
+            );
+        }
+        // field is present or optional
+        // report as valid unless content is corrupt
+
+        return null; // field not assessed
     }
 
     /**

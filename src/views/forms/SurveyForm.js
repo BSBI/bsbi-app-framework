@@ -86,7 +86,15 @@ export class SurveyForm extends Form {
     /**
      * the change event triggers after a field has changed, before the value has been read back into the model
      *
-     * @param event
+     * @param {{
+     *      'context' : {
+     *     'attributeName' : string,
+     *     'completion' : string,
+     *     'parentForm' : Form,
+     *     'validationMessage' : ''
+     *     },
+     *     'eventName' : string
+     * }} event
      */
     changeHandler(event) {
         console.log({'survey form change event' : event});

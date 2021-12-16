@@ -161,7 +161,10 @@ export class Form extends EventHarness {
      * validation is only applied if the form is subject to live validation
      */
     conditionallyValidateForm() {
+        console.log('called conditionallyValidateForm');
+
         if (this.liveValidation) {
+            console.log('doing validation conditionallyValidateForm');
             this.validateForm();
         }
     }
@@ -187,8 +190,6 @@ export class Form extends EventHarness {
      * @returns {boolean}
      */
     validateForm() {
-        //this.liveValidation = true;
-
         if (this.liveValidation) {
             this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
         }
