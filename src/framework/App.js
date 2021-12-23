@@ -213,6 +213,9 @@ export class App extends EventHarness {
     display() {
         console.log('App display');
         this.#router.resolve();
+
+        // it's opportune at this point to try to ping the server again to save anything left outstanding
+        this.syncAll();
     }
 
     saveRoute() {

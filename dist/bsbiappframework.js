@@ -12952,7 +12952,10 @@ var App = /*#__PURE__*/function (_EventHarness) {
     value: function display() {
       console.log('App display');
 
-      _classPrivateFieldGet(this, _router).resolve();
+      _classPrivateFieldGet(this, _router).resolve(); // it's opportune at this point to try to ping the server again to save anything left outstanding
+
+
+      this.syncAll();
     }
   }, {
     key: "saveRoute",
@@ -13925,7 +13928,9 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
       // invoke sync of any/all unsaved data
       // show pop-ups on success and failure
       this.app.syncAll().then(function (result) {
-        console.log("In save all handler, success result: ".concat(result));
+        console.log({
+          'In save all handler, success result': result
+        });
 
         if (Array.isArray(result)) {
           $("#".concat(Layout.SAVE_ALL_SUCCESS_MODAL_ID)).modal();
@@ -13933,7 +13938,9 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
           $("#".concat(Layout.SAVE_ALL_FAILURE_MODAL_ID)).modal();
         }
       }, function (result) {
-        console.log("In save all handler, failure result: ".concat(result));
+        console.log({
+          'In save all handler, failure result': result
+        });
         $("#".concat(Layout.SAVE_ALL_FAILURE_MODAL_ID)).modal();
       }).finally(function () {// stop the spinner
       });
@@ -13968,7 +13975,9 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
       // (the reset are remote or in IndexedDb)
 
       this.app.clearCurrentSurvey();
-      this.app.setNewSurvey();
+      this.app.setNewSurvey(); // it's opportune at this point to try to ping the server again to save anything left outstanding
+
+      this.app.syncAll();
       this.app.router.pause();
       this.app.router.navigate('/list/survey/welcome').resume();
       this.app.router.resolve();
@@ -14668,7 +14677,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1639662588-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640270427-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

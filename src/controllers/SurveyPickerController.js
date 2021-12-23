@@ -125,7 +125,7 @@ export class SurveyPickerController extends AppController {
         // invoke sync of any/all unsaved data
         // show pop-ups on success and failure
         this.app.syncAll().then((result) => {
-            console.log(`In save all handler, success result: ${result}`);
+            console.log({'In save all handler, success result' : result});
 
             if (Array.isArray(result)) {
                 $(`#${Layout.SAVE_ALL_SUCCESS_MODAL_ID}`).modal();
@@ -133,7 +133,7 @@ export class SurveyPickerController extends AppController {
                 $(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
             }
         }, (result) => {
-            console.log(`In save all handler, failure result: ${result}`);
+            console.log({'In save all handler, failure result' : result});
             $(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
         }).finally(() => {
             // stop the spinner
@@ -170,6 +170,10 @@ export class SurveyPickerController extends AppController {
         this.app.clearCurrentSurvey();
 
         this.app.setNewSurvey();
+
+        // it's opportune at this point to try to ping the server again to save anything left outstanding
+        this.app.syncAll();
+
         this.app.router.pause();
         this.app.router.navigate('/list/survey/welcome').resume();
         this.app.router.resolve();
