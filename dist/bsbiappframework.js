@@ -4716,9 +4716,9 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
-function _classPrivateFieldInitSpec$b(obj, privateMap, value) { _checkPrivateRedeclaration$b(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$a(obj, privateMap, value) { _checkPrivateRedeclaration$a(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$b(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$a(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _eventListeners = /*#__PURE__*/new WeakMap();
 
@@ -4726,7 +4726,7 @@ var EventHarness = /*#__PURE__*/function () {
   function EventHarness() {
     _classCallCheck(this, EventHarness);
 
-    _classPrivateFieldInitSpec$b(this, _eventListeners, {
+    _classPrivateFieldInitSpec$a(this, _eventListeners, {
       writable: true,
       value: []
     });
@@ -8529,9 +8529,9 @@ function _createSuper$r(Derived) { var hasNativeReflectConstruct = _isNativeRefl
 
 function _isNativeReflectConstruct$r() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$a(obj, privateMap, value) { _checkPrivateRedeclaration$a(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$9(obj, privateMap, value) { _checkPrivateRedeclaration$9(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$a(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$9(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 function _classStaticPrivateFieldSpecSet(receiver, classConstructor, descriptor, value) { _classCheckPrivateStaticAccess$2(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$2(descriptor, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
 
@@ -8563,7 +8563,7 @@ var Form = /*#__PURE__*/function (_EventHarness) {
 
     _this = _super.call.apply(_super, [this].concat(args));
 
-    _classPrivateFieldInitSpec$a(_assertThisInitialized(_this), _formEl, {
+    _classPrivateFieldInitSpec$9(_assertThisInitialized(_this), _formEl, {
       writable: true,
       value: void 0
     });
@@ -8777,6 +8777,8 @@ _defineProperty(Form, "EVENT_INITIALISE_NEW", 'initialisenew');
 
 _defineProperty(Form, "EVENT_INITIALISED", 'initialised');
 
+_defineProperty(Form, "EVENT_CAMERA", 'cameraimage');
+
 var _formSerial = {
   writable: true,
   value: 0
@@ -8976,9 +8978,9 @@ function _createSuper$o(Derived) { var hasNativeReflectConstruct = _isNativeRefl
 
 function _isNativeReflectConstruct$o() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function _classPrivateFieldInitSpec$9(obj, privateMap, value) { _checkPrivateRedeclaration$9(obj, privateMap); privateMap.set(obj, value); }
+function _classPrivateFieldInitSpec$8(obj, privateMap, value) { _checkPrivateRedeclaration$8(obj, privateMap); privateMap.set(obj, value); }
 
-function _checkPrivateRedeclaration$9(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _checkPrivateRedeclaration$8(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
 
 var _currentOccurrenceId = /*#__PURE__*/new WeakMap();
 
@@ -9006,7 +9008,7 @@ var MainController = /*#__PURE__*/function (_AppController) {
 
     _defineProperty(_assertThisInitialized(_this), "view", void 0);
 
-    _classPrivateFieldInitSpec$9(_assertThisInitialized(_this), _currentOccurrenceId, {
+    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _currentOccurrenceId, {
       writable: true,
       value: ''
     });
@@ -11746,13 +11748,6 @@ function doubleClickIntercepted(event) {
 function _createSuper$i(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$i(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _isNativeReflectConstruct$i() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateFieldInitSpec$8(obj, privateMap, value) { _checkPrivateRedeclaration$8(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$8(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-var _containerId$7 = /*#__PURE__*/new WeakMap();
-
 var TextGeorefField = /*#__PURE__*/function (_FormField) {
   _inherits(TextGeorefField, _FormField);
 
@@ -11866,10 +11861,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "_inputId", void 0);
 
-    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _containerId$7, {
-      writable: true,
-      value: void 0
-    });
+    _defineProperty(_assertThisInitialized(_this), "containerId", void 0);
 
     _defineProperty(_assertThisInitialized(_this), "mapPositionIsCurrent", false);
 
@@ -12021,9 +12013,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       // </div>
       var container = document.createElement('div');
       container.className = 'form-group';
-
-      _classPrivateFieldSet(this, _containerId$7, container.id = FormField.nextId);
-
+      this.containerId = container.id = FormField.nextId;
       this._inputId = FormField.nextId;
 
       if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
@@ -12200,10 +12190,14 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
         return;
       }
 
+      var containerEl = document.getElementById(this.containerId);
+      containerEl.classList.add('gps-active');
       this.seekGPS().catch(function (error) {
         console.log({
           'gps look-up failed, error': error
         });
+      }).finally(function () {
+        containerEl.classList.remove('gps-active');
       });
       event.preventDefault();
       event.stopPropagation();
@@ -13696,6 +13690,7 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
 
       window.addEventListener('online', function () {
         document.body.classList.remove('offline');
+        app.syncAll(); // possibly not needed but useful as fallback to try to force saving
       });
       window.addEventListener('offline', this.addOfflineFlag);
       this.registerGPSClassMarker();
@@ -14677,7 +14672,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640270427-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640301312-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -17256,7 +17251,7 @@ var ImageField = /*#__PURE__*/function (_FormField) {
         pickerLabelEl.textContent = this.placeholder;
       }
 
-      if (this.includeCamera) {
+      if (this.includeCamera && GPSRequest.getDeviceType() !== GPSRequest.DEVICE_TYPE_IMMOBILE) {
         var cameraButtonContainer = document.createElement('div');
         cameraButtonContainer.className = 'input-group-append';
         var cameraSpan = cameraButtonContainer.appendChild(document.createElement('span'));
@@ -17273,7 +17268,10 @@ var ImageField = /*#__PURE__*/function (_FormField) {
         cameraInput.style.display = 'none';
         cameraInput.id = FormField.nextId;
         inputGroupEl.appendChild(cameraButtonContainer);
-        cameraInput.addEventListener('change', this.inputChangeHandler.bind(this, cameraInput.id));
+        cameraInput.addEventListener('change', this.inputChangeHandler.bind(this, {
+          inputId: cameraInput.id,
+          origin: ImageField.ORIGIN_CAMERA
+        }));
       } // styling save buttons: https://www.abeautifulsite.net/whipping-file-inputs-into-shape-with-bootstrap-3
       // (partially relevant)
       // <label class="img-picker icon icon-camera">
@@ -17299,7 +17297,10 @@ var ImageField = /*#__PURE__*/function (_FormField) {
         validationMessageElement.innerHTML = this.validationMessage;
       }
 
-      filePickerField.addEventListener('change', this.inputChangeHandler.bind(this, filePickerField.id));
+      filePickerField.addEventListener('change', this.inputChangeHandler.bind(this, {
+        inputId: filePickerField.id,
+        origin: ImageField.ORIGIN_FILE
+      }));
       this._fieldEl = container;
       this.parentForm.addListener(EVENT_DELETE_IMAGE, this.deleteImageHandler.bind(this));
     }
@@ -17315,10 +17316,10 @@ var ImageField = /*#__PURE__*/function (_FormField) {
       console.log("delete image ".concat(params.imageId));
       var image;
 
-      for (var key in this._value.images) {
-        if (this._value.images.hasOwnProperty(key)) {
-          if (this._value.images[key].id === params.imageId) {
-            image = this._value.images.splice(key, 1)[0];
+      for (var _key in this._value.images) {
+        if (this._value.images.hasOwnProperty(_key)) {
+          if (this._value.images[_key].id === params.imageId) {
+            image = this._value.images.splice(_key, 1)[0];
             break;
           }
         }
@@ -17327,7 +17328,11 @@ var ImageField = /*#__PURE__*/function (_FormField) {
       if (!image) {
         console.log("Failed to find image id ".concat(params.imageId));
       } else {
-        // @todo need to resave image to flag as deleted
+        // re-save image to flag as deleted
+        this._value.images[key].deleted = true;
+
+        _classPrivateMethodGet$3(this, _save, _save2).call(this, [this._value.images[key]]);
+
         this.updateView();
         this.fireEvent(FormField.EVENT_CHANGE);
       }
@@ -17366,24 +17371,32 @@ var ImageField = /*#__PURE__*/function (_FormField) {
      * called with an additional bound element id parameter
      * (this allows the handler to easily distinguish between the two file pickers)
      *
-     * @param {string} inputId
+     * @param {{inputId : string, origin : string}} params
      * @param {Event} event
      */
 
   }, {
     key: "inputChangeHandler",
-    value: function inputChangeHandler(inputId, event) {
+    value: function inputChangeHandler(params, event) {
       var _this2 = this;
 
       event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      console.log('got image field input change event');
-      var imageEl = document.getElementById(inputId);
+      console.log({
+        'got image field input change event': params
+      });
+      var imageEl = document.getElementById(params.inputId);
 
       if (imageEl.files.length) {
         _classPrivateMethodGet$3(this, _addFiles, _addFiles2).call(this, imageEl.files).then(function () {
           _this2.fireEvent(FormField.EVENT_CHANGE);
         });
+
+        if (params.origin === ImageField.ORIGIN_CAMERA) {
+          // if origin of image was camera button click then it's useful to fire event
+          // as this might be a good time to take a GPS fix
+          this.parentForm.fireEvent(Form.EVENT_CAMERA);
+        }
       } else {
         this.fireEvent(FormField.EVENT_CHANGE);
       }
@@ -17447,17 +17460,23 @@ function _save2(images) {
   if (images.length) {
     var image = images.shift();
     return image.save(this.parentForm.surveyId, this.parentForm.occurrenceId, this.parentForm.projectId).then(function (jsonImageDescriptor) {
-      console.log("Added image '".concat(image.id, "'"));
-      console.log({
-        jsonDescription: jsonImageDescriptor
-      });
+      if (!image.deleted) {
+        console.log("Added image '".concat(image.id, "'"));
+        console.log({
+          jsonDescription: jsonImageDescriptor
+        });
 
-      _this3._value.images.push(image);
+        _this3._value.images.push(image);
 
-      _this3.updateView(); // excessive view updates, should do once when all promises have succeeded
-      // this may break with multiple images if fileList is live and is cleared when input is cleared
-      // during view update, need to test
+        _this3.updateView(); // excessive view updates, should do once when all promises have succeeded
+        // this may break with multiple images if fileList is live and is cleared when input is cleared
+        // during view update, need to test
 
+      } else {
+        console.log({
+          'deleted image': image.id
+        });
+      }
     }, function (reason) {
       console.log("Failed to add image ".concat(image.id));
       console.log({
@@ -17472,6 +17491,10 @@ function _save2(images) {
 }
 
 _defineProperty(ImageField, "LICENSE_MODAL", 'imagelicensemodal');
+
+_defineProperty(ImageField, "ORIGIN_CAMERA", 'cameraimage');
+
+_defineProperty(ImageField, "ORIGIN_FILE", 'fileimage');
 
 var tester = /^[-!#$%&'*+\/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+\/0-9=?A-Z^_a-z`{|}~])*@[a-zA-Z0-9](-*\.?[a-zA-Z0-9])*\.[a-zA-Z](-?[a-zA-Z0-9])+$/;
 // Thanks to:

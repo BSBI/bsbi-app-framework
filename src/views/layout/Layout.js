@@ -65,6 +65,7 @@ export class Layout extends EventHarness {
 
         window.addEventListener('online',  () => {
             document.body.classList.remove('offline');
+            app.syncAll(); // possibly not needed but useful as fallback to try to force saving
         });
         window.addEventListener('offline', this.addOfflineFlag);
 

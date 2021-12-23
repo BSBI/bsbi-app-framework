@@ -1,6 +1,8 @@
 import {FormField} from "./FormField";
 import {OccurrenceImage} from "../../models/OccurrenceImage";
 import {doubleClickIntercepted} from "../../utils/stopDoubleClick";
+import {GPSRequest} from "../../utils/GPSRequest";
+import {Form} from "../forms/Form";
 
 export const IMAGE_MODAL_ID = 'imagemodal';
 export const IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
@@ -55,6 +57,9 @@ export class ImageField extends FormField {
     placeholder = '';
 
     static LICENSE_MODAL = 'imagelicensemodal';
+
+    static ORIGIN_CAMERA = 'cameraimage';
+    static ORIGIN_FILE = 'fileimage';
 
     /**
      *
@@ -178,7 +183,7 @@ export class ImageField extends FormField {
             pickerLabelEl.textContent = this.placeholder;
         }
 
-        if (this.includeCamera) {
+        if (this.includeCamera && (GPSRequest.getDeviceType() !== GPSRequest.DEVICE_TYPE_IMMOBILE)) {
             const cameraButtonContainer = document.createElement('div');
             cameraButtonContainer.className = 'input-group-append';
 
@@ -200,7 +205,7 @@ export class ImageField extends FormField {
             cameraInput.id = FormField.nextId;
 
             inputGroupEl.appendChild(cameraButtonContainer);
-            cameraInput.addEventListener('change', this.inputChangeHandler.bind(this, cameraInput.id));
+            cameraInput.addEventListener('change', this.inputChangeHandler.bind(this, {inputId : cameraInput.id, origin : ImageField.ORIGIN_CAMERA}));
         }
 
         // styling save buttons: https://www.abeautifulsite.net/whipping-file-inputs-into-shape-with-bootstrap-3
@@ -227,7 +232,7 @@ export class ImageField extends FormField {
             validationMessageElement.innerHTML = this.validationMessage;
         }
 
-        filePickerField.addEventListener('change', this.inputChangeHandler.bind(this, filePickerField.id));
+        filePickerField.addEventListener('change', this.inputChangeHandler.bind(this, {inputId : filePickerField.id, origin : ImageField.ORIGIN_FILE}));
 
         this._fieldEl = container;
 
@@ -256,7 +261,9 @@ export class ImageField extends FormField {
         if (!image) {
             console.log(`Failed to find image id ${params.imageId}`);
         } else {
-            // @todo need to resave image to flag as deleted
+            // re-save image to flag as deleted
+            this._value.images[key].deleted = true;
+            this.#save([this._value.images[key]]);
 
             this.updateView();
             this.fireEvent(FormField.EVENT_CHANGE);
@@ -300,21 +307,27 @@ export class ImageField extends FormField {
      * called with an additional bound element id parameter
      * (this allows the handler to easily distinguish between the two file pickers)
      *
-     * @param {string} inputId
+     * @param {{inputId : string, origin : string}} params
      * @param {Event} event
      */
-    inputChangeHandler (inputId, event) {
+    inputChangeHandler (params, event) {
         event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-        console.log('got image field input change event');
+        console.log({'got image field input change event' : params});
 
-        let imageEl = document.getElementById(inputId);
+        let imageEl = document.getElementById(params.inputId);
 
         if (imageEl.files.length) {
             this.#addFiles(imageEl.files)
                 .then(() => {
                     this.fireEvent(FormField.EVENT_CHANGE);
                 });
+
+            if (params.origin === ImageField.ORIGIN_CAMERA) {
+                // if origin of image was camera button click then it's useful to fire event
+                // as this might be a good time to take a GPS fix
+                this.parentForm.fireEvent(Form.EVENT_CAMERA);
+            }
         } else {
             this.fireEvent(FormField.EVENT_CHANGE);
         }
@@ -349,12 +362,17 @@ export class ImageField extends FormField {
             const image = images.shift();
             return image.save(this.parentForm.surveyId, this.parentForm.occurrenceId, this.parentForm.projectId)
                 .then((jsonImageDescriptor) => {
-                    console.log(`Added image '${image.id}'`);
-                    console.log({jsonDescription: jsonImageDescriptor});
-                    this._value.images.push(image);
-                    this.updateView(); // excessive view updates, should do once when all promises have succeeded
-                    // this may break with multiple images if fileList is live and is cleared when input is cleared
-                    // during view update, need to test
+
+                    if (!image.deleted) {
+                        console.log(`Added image '${image.id}'`);
+                        console.log({jsonDescription: jsonImageDescriptor});
+                        this._value.images.push(image);
+                        this.updateView(); // excessive view updates, should do once when all promises have succeeded
+                        // this may break with multiple images if fileList is live and is cleared when input is cleared
+                        // during view update, need to test
+                    } else {
+                        console.log({'deleted image' : image.id});
+                    }
                 }, (reason) => {
                     console.log(`Failed to add image ${image.id}`);
                     console.log({"Failure reason": reason});

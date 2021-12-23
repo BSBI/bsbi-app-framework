@@ -16,7 +16,7 @@ export class TextGeorefField extends FormField {
     /**
      * @type {string}
      */
-    #containerId;
+    containerId;
 
     /**
      * set if map has a well-defined zoom and centre
@@ -253,7 +253,7 @@ export class TextGeorefField extends FormField {
 
         const container = document.createElement('div');
         container.className = 'form-group';
-        this.#containerId = container.id = FormField.nextId;
+        this.containerId = container.id = FormField.nextId;
 
         this._inputId = FormField.nextId;
 
@@ -431,8 +431,13 @@ export class TextGeorefField extends FormField {
             return;
         }
 
+        let containerEl = document.getElementById(this.containerId);
+
+        containerEl.classList.add('gps-active');
         this.seekGPS().catch((error) => {
             console.log({'gps look-up failed, error' : error});
+        }).finally(() => {
+            containerEl.classList.remove('gps-active');
         });
 
         event.preventDefault();

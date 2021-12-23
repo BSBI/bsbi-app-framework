@@ -17,6 +17,8 @@ export class Form extends EventHarness {
      */
     static EVENT_INITIALISED = 'initialised';
 
+    static EVENT_CAMERA = 'cameraimage';
+
     /**
      * @type {HTMLElement}
      */
