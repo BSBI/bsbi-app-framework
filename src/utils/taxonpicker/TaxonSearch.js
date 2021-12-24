@@ -668,6 +668,13 @@ export class TaxonSearch {
                             (aQIndex < bQIndex) ? 1 : -1
                         );
                     }
+                } else if (a.vernacularMatched && b.vernacularMatched) {
+                    // matching both names using vernacular
+                    // so sort by this
+
+                    if (a.vernacular !== b.vernacular) {
+                        return a.vernacular < b.vernacular ? -1 : 1;
+                    }
                 }
                 return a.uname < b.uname ? -1 : 1;
             });

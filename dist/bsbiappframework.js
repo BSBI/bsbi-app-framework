@@ -12288,7 +12288,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
   }], [{
     key: "summariseImpl",
     value: function summariseImpl(key, property, attributes) {
-      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
+      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined && attributes[key].gridRef ? escapeHTML(attributes[key].gridRef.trim()) : '';
     }
     /**
      *
@@ -14672,7 +14672,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640301312-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640343346-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -16439,6 +16439,12 @@ var TaxonSearch = /*#__PURE__*/function () {
               var aQIndex = ['s.s.', '', null, 's.l.', 'agg.'].indexOf(a.qualifier);
               var bQIndex = ['s.s.', '', null, 's.l.', 'agg.'].indexOf(b.qualifier);
               return aQIndex === bQIndex ? 0 : aQIndex < bQIndex ? 1 : -1;
+            }
+          } else if (a.vernacularMatched && b.vernacularMatched) {
+            // matching both names using vernacular
+            // so sort by this
+            if (a.vernacular !== b.vernacular) {
+              return a.vernacular < b.vernacular ? -1 : 1;
             }
           }
 
