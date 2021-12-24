@@ -191,7 +191,7 @@ export class FormField extends EventHarness {
     static summarise(key, property, attributes) {
         if (property.summary && (!property.summary.hasOwnProperty('summarise') || true === property.summary.summarise)) {
             // test is that summary spec object exists and doesn't have the summarise flag set to false
-            return property.field.summariseImpl(key, property, attributes);
+            // return property.field.summariseImpl(key, property, attributes);
 
             if (property.summarise) {
                 return property.summarise(key, property, attributes);

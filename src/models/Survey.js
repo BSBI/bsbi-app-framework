@@ -54,6 +54,14 @@ export class Survey extends Model {
         };
     };
 
+    get date() {
+        return this.attributes.date || '';
+    }
+
+    get place() {
+        return this.attributes.place || '';
+    }
+
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
      *

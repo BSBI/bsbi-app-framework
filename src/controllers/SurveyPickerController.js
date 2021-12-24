@@ -160,6 +160,7 @@ export class SurveyPickerController extends AppController {
 
     /**
      * called after user has confirmed add new survey dialog box
+     *
      */
     addNewSurveyHandler() {
         console.log("reached addNewSurveyHandler");
@@ -175,7 +176,7 @@ export class SurveyPickerController extends AppController {
         this.app.syncAll();
 
         this.app.router.pause();
-        this.app.router.navigate('/list/survey/welcome').resume();
+        this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
         this.app.router.resolve();
     }
 

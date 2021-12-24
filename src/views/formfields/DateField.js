@@ -88,10 +88,19 @@ export class DateField extends FormField {
      */
     set value(textContent) {
         this._value = (undefined === textContent || null == textContent) ?
-            (new Date).toJSON().slice(0,10) // current date in ISO format
+            DateField.todaysDate() // current date in ISO format
             :
             textContent.trim();
         this.updateView();
+    }
+
+    /**
+     * current date in ISO format
+     *
+     * @returns {string}
+     */
+    static todaysDate() {
+        return (new Date).toJSON().slice(0,10) // current date in ISO format
     }
 
     /**
@@ -183,7 +192,7 @@ export class DateField extends FormField {
          * [type]: string,
          * [autocomplete]: string,
          * [minDate] : string,
-         * [maxDate] : string
+         * [maxDate] : string,
          * }
      * }} property properties of the form descriptor
      * @param attributes attributes of the model object

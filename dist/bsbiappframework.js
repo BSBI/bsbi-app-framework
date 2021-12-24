@@ -7682,53 +7682,6 @@ var Model = /*#__PURE__*/function (_EventHarness) {
 
   var _super = _createSuper$u(Model);
 
-  /**
-   * @type {string}
-   */
-
-  /**
-   * set if the object has been posted to the server
-   *
-   * @type {boolean}
-   */
-
-  /**
-   * set if the object has been added to a temporary store (e.g. indexedDb)
-   *
-   * @type {boolean}
-   */
-
-  /**
-   *
-   * @type {boolean}
-   */
-
-  /**
-   * unix timestamp
-   * Provided that the created stamp is < the modified stamp then the externally assigned creation stamp will be used
-   *
-   * @type {number}
-   */
-
-  /**
-   * unix timestamp
-   * modified stamp is generally server assigned - rather than using a potentially discrepant client clock
-   * this may increase synchrony and trust between distributed clients
-   *
-   * @type {number}
-   */
-
-  /**
-   * DDb AppProject id
-   *
-   * @type {number}
-   */
-
-  /**
-   * paired with isNew this marks records that have never been edited
-   *
-   * @type {boolean}
-   */
   function Model() {
     var _this;
 
@@ -7763,6 +7716,40 @@ var Model = /*#__PURE__*/function (_EventHarness) {
 
 
   _createClass(Model, [{
+    key: "savedRemotely",
+    set:
+    /**
+     * @type {string}
+     */
+
+    /**
+     * set if the object has been posted to the server
+     *
+     * @type {boolean}
+     */
+
+    /**
+     *
+     * @param {Boolean} savedFlag
+     */
+    function set(savedFlag) {
+      if (this._savedRemotely !== savedFlag) {
+        this._savedRemotely = !!savedFlag;
+
+        if (this._savedRemotely) {
+          this.fireEvent(Model.EVENT_SAVED_REMOTELY, {
+            id: this.id
+          });
+        }
+      }
+    }
+    /**
+     * set if the object has been added to a temporary store (e.g. indexedDb)
+     *
+     * @type {boolean}
+     */
+
+  }, {
     key: "unsaved",
     value: function unsaved() {
       return !(this._savedLocally && this._savedRemotely);
@@ -7884,13 +7871,15 @@ var Model = /*#__PURE__*/function (_EventHarness) {
 
             switch (responseData.saveState) {
               case SAVE_STATE_SERVER:
-                _this3._savedLocally = true;
-                _this3._savedRemotely = true;
+                _this3._savedLocally = true; //this._savedRemotely = true;
+
+                _this3.savedRemotely = true;
                 break;
 
               case SAVE_STATE_LOCAL:
-                _this3._savedLocally = true;
-                _this3._savedRemotely = false;
+                _this3._savedLocally = true; //this._savedRemotely = false;
+
+                _this3.savedRemotely = false;
                 break;
 
               default:
@@ -7966,12 +7955,14 @@ var Model = /*#__PURE__*/function (_EventHarness) {
     value: function _parseSavedState(saveState) {
       switch (saveState) {
         case SAVE_STATE_LOCAL:
-          this._savedRemotely = false;
+          //this._savedRemotely = false;
+          this.savedRemotely = false;
           this._savedLocally = true;
           break;
 
         case SAVE_STATE_SERVER:
-          this._savedRemotely = true;
+          //this._savedRemotely = true;
+          this.savedRemotely = true;
           this._savedLocally = true;
           break;
 
@@ -7993,8 +7984,9 @@ var Model = /*#__PURE__*/function (_EventHarness) {
         this.createdStamp = this.modifiedStamp;
       }
 
-      this._savedLocally = false;
-      this._savedRemotely = false;
+      this._savedLocally = false; //this._savedRemotely = false;
+
+      this.savedRemotely = false;
     }
     /**
      *
@@ -8056,6 +8048,8 @@ var Model = /*#__PURE__*/function (_EventHarness) {
 
   return Model;
 }(EventHarness);
+
+_defineProperty(Model, "EVENT_SAVED_REMOTELY", 'savedremotely');
 
 _defineProperty(Model, "_tasks", []);
 
@@ -8488,7 +8482,12 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
     value: function summarise(key, property, attributes) {
       if (property.summary && (!property.summary.hasOwnProperty('summarise') || true === property.summary.summarise)) {
         // test is that summary spec object exists and doesn't have the summarise flag set to false
-        return property.field.summariseImpl(key, property, attributes);
+        // return property.field.summariseImpl(key, property, attributes);
+        if (property.summarise) {
+          return property.summarise(key, property, attributes);
+        } else {
+          return property.field.summariseImpl(key, property, attributes);
+        }
       } else {
         return '';
       }
@@ -8822,10 +8821,6 @@ var Occurrence = /*#__PURE__*/function (_Model) {
       //     vernacularMatch: false
       // }
     });
-
-    _defineProperty(_assertThisInitialized(_this), "_savedRemotely", false);
-
-    _defineProperty(_assertThisInitialized(_this), "_savedLocally", false);
 
     _defineProperty(_assertThisInitialized(_this), "SAVE_ENDPOINT", '/saveoccurrence.php');
 
@@ -12288,7 +12283,7 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
   }], [{
     key: "summariseImpl",
     value: function summariseImpl(key, property, attributes) {
-      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined && attributes[key].gridRef ? escapeHTML(attributes[key].gridRef.trim()) : '';
+      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined && attributes[key].gridRef ? "<span>grid-reference <span class=\"gridref-summary\">".concat(escapeHTML(attributes[key].gridRef.trim()), "</span></span>") : '';
     }
     /**
      *
@@ -12397,14 +12392,24 @@ var Survey = /*#__PURE__*/function (_Model) {
       };
     }
   }, {
-    key: "formChangedHandler",
-    value:
+    key: "date",
+    get: function get() {
+      return this.attributes.date || '';
+    }
+  }, {
+    key: "place",
+    get: function get() {
+      return this.attributes.place || '';
+    }
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
      *
      * @param {{form: SurveyForm}} params
      */
-    function formChangedHandler(params) {
+
+  }, {
+    key: "formChangedHandler",
+    value: function formChangedHandler(params) {
       console.log('Survey change handler invoked.'); // read new values
       // then fire its own change event (Occurrence.EVENT_MODIFIED)
 
@@ -13959,6 +13964,7 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
     }
     /**
      * called after user has confirmed add new survey dialog box
+     *
      */
 
   }, {
@@ -13974,7 +13980,8 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
 
       this.app.syncAll();
       this.app.router.pause();
-      this.app.router.navigate('/list/survey/welcome').resume();
+      this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+
       this.app.router.resolve();
     }
     /**
@@ -14672,7 +14679,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640343346-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640368827-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -16444,7 +16451,7 @@ var TaxonSearch = /*#__PURE__*/function () {
             // matching both names using vernacular
             // so sort by this
             if (a.vernacular !== b.vernacular) {
-              return a.vernacular < b.vernacular ? -1 : 1;
+              return a.vernacular.length < b.vernacular.length ? -1 : 1;
             }
           }
 
@@ -16816,10 +16823,16 @@ var DateField = /*#__PURE__*/function (_FormField) {
       return this._value ? this._value.slice(0, 10) : '';
     },
     set: function set(textContent) {
-      this._value = undefined === textContent || null == textContent ? new Date().toJSON().slice(0, 10) // current date in ISO format
+      this._value = undefined === textContent || null == textContent ? DateField.todaysDate() // current date in ISO format
       : textContent.trim();
       this.updateView();
     }
+    /**
+     * current date in ISO format
+     *
+     * @returns {string}
+     */
+
   }, {
     key: "updateView",
     value: function updateView() {
@@ -16903,7 +16916,7 @@ var DateField = /*#__PURE__*/function (_FormField) {
          * [type]: string,
          * [autocomplete]: string,
          * [minDate] : string,
-         * [maxDate] : string
+         * [maxDate] : string,
          * }
      * }} property properties of the form descriptor
      * @param attributes attributes of the model object
@@ -16946,6 +16959,11 @@ var DateField = /*#__PURE__*/function (_FormField) {
      */
 
   }], [{
+    key: "todaysDate",
+    value: function todaysDate() {
+      return new Date().toJSON().slice(0, 10); // current date in ISO format
+    }
+  }, {
     key: "isValid",
     value: function isValid(key, property, attributes) {
       if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {

@@ -25,6 +25,22 @@ export class Model extends EventHarness {
      */
     _savedRemotely = false;
 
+    static EVENT_SAVED_REMOTELY = 'savedremotely';
+
+    /**
+     *
+     * @param {Boolean} savedFlag
+     */
+    set savedRemotely(savedFlag) {
+        if (this._savedRemotely !== savedFlag) {
+            this._savedRemotely = !!savedFlag;
+
+            if (this._savedRemotely) {
+                this.fireEvent(Model.EVENT_SAVED_REMOTELY, {id : this.id});
+            }
+        }
+    }
+
     /**
      * set if the object has been added to a temporary store (e.g. indexedDb)
      *
@@ -199,12 +215,14 @@ export class Model extends EventHarness {
                     switch (responseData.saveState) {
                         case SAVE_STATE_SERVER:
                             this._savedLocally = true;
-                            this._savedRemotely = true;
+                            //this._savedRemotely = true;
+                            this.savedRemotely = true;
                             break;
 
                         case SAVE_STATE_LOCAL:
                             this._savedLocally = true;
-                            this._savedRemotely = false;
+                            //this._savedRemotely = false;
+                            this.savedRemotely = false;
                             break;
 
                         default:
@@ -286,12 +304,14 @@ export class Model extends EventHarness {
     _parseSavedState(saveState) {
         switch (saveState) {
             case SAVE_STATE_LOCAL:
-                this._savedRemotely = false;
+                //this._savedRemotely = false;
+                this.savedRemotely = false;
                 this._savedLocally = true;
                 break;
 
             case SAVE_STATE_SERVER:
-                this._savedRemotely = true;
+                //this._savedRemotely = true;
+                this.savedRemotely = true;
                 this._savedLocally = true;
                 break;
 
@@ -312,7 +332,8 @@ export class Model extends EventHarness {
         }
 
         this._savedLocally = false;
-        this._savedRemotely = false;
+        //this._savedRemotely = false;
+        this.savedRemotely = false;
     }
 
     /**

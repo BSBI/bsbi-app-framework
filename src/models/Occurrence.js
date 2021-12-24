@@ -16,20 +16,20 @@ export class Occurrence extends Model {
         // }
     };
 
-    /**
-     * set if the image has been posted to the server
-     * (a local copy might still exist, which may have been reduced to thumbnail resolution)
-     *
-     * @type {boolean}
-     */
-    _savedRemotely = false;
+    // /**
+    //  * set if the image has been posted to the server
+    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedRemotely = false;
 
-    /**
-     * set if the image has been added to a temporary store (e.g. indexedDb)
-     *
-     * @type {boolean}
-     */
-    _savedLocally = false;
+    // /**
+    //  * set if the image has been added to a temporary store (e.g. indexedDb)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedLocally = false;
 
     SAVE_ENDPOINT = '/saveoccurrence.php';
 

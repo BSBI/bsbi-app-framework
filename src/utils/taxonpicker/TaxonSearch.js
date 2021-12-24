@@ -673,7 +673,7 @@ export class TaxonSearch {
                     // so sort by this
 
                     if (a.vernacular !== b.vernacular) {
-                        return a.vernacular < b.vernacular ? -1 : 1;
+                        return a.vernacular.length < b.vernacular.length ? -1 : 1;
                     }
                 }
                 return a.uname < b.uname ? -1 : 1;

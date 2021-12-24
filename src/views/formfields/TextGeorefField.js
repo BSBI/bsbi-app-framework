@@ -527,7 +527,7 @@ export class TextGeorefField extends FormField {
      */
     static summariseImpl(key, property, attributes) {
         return (attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined && attributes[key].gridRef) ?
-            escapeHTML(attributes[key].gridRef.trim())
+            `<span>grid-reference <span class="gridref-summary">${escapeHTML(attributes[key].gridRef.trim())}</span></span>`
             : '';
     }
 
