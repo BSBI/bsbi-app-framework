@@ -41,6 +41,12 @@ export class Survey extends Model {
     isNew = false;
 
     /**
+     * kludge to flag once the App singleton has set up a listner for changes on the survey
+     * @type {boolean}
+     */
+    hasAppModifiedListener = false;
+
+    /**
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */

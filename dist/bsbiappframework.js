@@ -12371,6 +12371,8 @@ var Survey = /*#__PURE__*/function (_Model) {
 
     _defineProperty(_assertThisInitialized(_this), "isNew", false);
 
+    _defineProperty(_assertThisInitialized(_this), "hasAppModifiedListener", false);
+
     return _this;
   }
 
@@ -12712,78 +12714,6 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
   var _super = _createSuper$f(App);
 
-  /**
-   * @type {PatchedNavigo}
-   */
-
-  /**
-   * @type {HTMLElement}
-   */
-
-  /**
-   *
-   * @type {Array.<AppController>}
-   */
-
-  /**
-   * tracks the handle of the current page controller
-   * updating this is the responsibility of the controller
-   *
-   * @type {number|boolean}
-   */
-
-  /**
-   *
-   * @type {Array.<{url : string}>}
-   */
-
-  /**
-   * keyed by occurrence id (a UUID string)
-   *
-   * @type {Map.<string,Occurrence>}
-   */
-
-  /**
-   * keyed by survey id (a UUID string)
-   *
-   * @type {Map.<string,Survey>}
-   */
-
-  /**
-   * @type {Survey}
-   */
-
-  /**
-   * @type {Layout}
-   */
-
-  /**
-   * Event fired when user requests a new blank survey
-   * @type {string}
-   */
-
-  /**
-   * Event fired when user requests a reset (local clearance) of all surveys
-   * @type {string}
-   */
-
-  /**
-   * Fired after App.currentSurvey has been set to a new blank survey
-   * the survey will be accessible in App.currentSurvey
-   *
-   * @type {string}
-   */
-
-  /**
-   * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {boolean}
-   */
   function App() {
     var _this;
 
@@ -12826,6 +12756,80 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
 
   _createClass(App, [{
+    key: "currentSurvey",
+    set:
+    /**
+     * @type {PatchedNavigo}
+     */
+
+    /**
+     * @type {HTMLElement}
+     */
+
+    /**
+     *
+     * @type {Array.<AppController>}
+     */
+
+    /**
+     * tracks the handle of the current page controller
+     * updating this is the responsibility of the controller
+     *
+     * @type {number|boolean}
+     */
+
+    /**
+     *
+     * @type {Array.<{url : string}>}
+     */
+
+    /**
+     * keyed by occurrence id (a UUID string)
+     *
+     * @type {Map.<string,Occurrence>}
+     */
+
+    /**
+     * keyed by survey id (a UUID string)
+     *
+     * @type {Map.<string,Survey>}
+     */
+
+    /**
+     * @type {Survey}
+     */
+
+    /**
+     *
+     * @param {?Survey} survey
+     */
+    function set(survey) {
+      if (this.currentSurvey !== survey) {
+        this.currentSurvey = survey;
+        var surveyId = survey ? survey.id : null;
+        localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
+      }
+    }
+    /**
+     *
+     * @returns {Promise<string | null>}
+     */
+
+  }, {
+    key: "getLastSurveyId",
+    value: function getLastSurveyId() {
+      return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME).catch(function (error) {
+        console.log({
+          'Error retrieving last survey id': error
+        });
+        return Promise.resolve(null);
+      });
+    }
+    /**
+     * @type {Layout}
+     */
+
+  }, {
     key: "setLocalForageName",
     value: function setLocalForageName(name) {
       localforage.config({
@@ -13013,9 +13017,11 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
       if (survey.projectId !== this.projectId) {
         throw new Error("Survey project id '".concat(survey.projectId, " does not match with current project ('").concat(this.projectId, "')"));
-      }
+      } //if (!this.surveys.has(survey.id)) {
 
-      if (!this.surveys.has(survey.id)) {
+
+      if (!survey.hasAppModifiedListener) {
+        survey.hasAppModifiedListener = true;
         console.log("setting survey's modified/save handler");
         survey.addListener(Survey.EVENT_MODIFIED, function () {
           _this3.fireEvent(App.EVENT_SURVEYS_CHANGED);
@@ -13232,22 +13238,25 @@ var App = /*#__PURE__*/function (_EventHarness) {
         try {
           for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
             var key = _step6.value;
-            var type = void 0,
-                id = void 0;
 
-            var _key$split = key.split('.', 2);
+            if (key !== App.CURRENT_SURVEY_KEY_NAME) {
+              var type = void 0,
+                  id = void 0;
 
-            var _key$split2 = _slicedToArray(_key$split, 2);
+              var _key$split = key.split('.', 2);
 
-            type = _key$split2[0];
-            id = _key$split2[1];
+              var _key$split2 = _slicedToArray(_key$split, 2);
 
-            if (storedObjectKeys.hasOwnProperty(type)) {
-              if (!storedObjectKeys[type].includes(id)) {
-                storedObjectKeys[type].push(id);
+              type = _key$split2[0];
+              id = _key$split2[1];
+
+              if (storedObjectKeys.hasOwnProperty(type)) {
+                if (!storedObjectKeys[type].includes(id)) {
+                  storedObjectKeys[type].push(id);
+                }
+              } else {
+                console.log("Unrecognised stored key type '".concat(type, "."));
               }
-            } else {
-              console.log("Unrecognised stored key type '".concat(type, "."));
             }
           }
         } catch (err) {
@@ -13361,20 +13370,33 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
   }, {
     key: "restoreOccurrences",
-    value: function restoreOccurrences(targetSurveyId) {
+    value: function restoreOccurrences() {
       var _this7 = this;
 
+      var targetSurveyId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
       console.log("Invoked restoreOccurrences, target survey id: ".concat(targetSurveyId));
 
       if (targetSurveyId === 'undefined') {
         console.error("Attempt to restore occurrences for literal 'undefined' survey id.");
         targetSurveyId = '';
-      } // need to check for a special case where restoring a survey that has never been saved even locally
+      }
+
+      return targetSurveyId ? this._restoreOccurrenceImp(targetSurveyId) : this.getLastSurveyId().then(function (lastSurveyId) {
+        console.log("Retrieved last used survey id '".concat(lastSurveyId, "'"));
+        return _this7._restoreOccurrenceImp(lastSurveyId);
+      }, function () {
+        return _this7._restoreOccurrenceImp();
+      });
+    }
+  }, {
+    key: "_restoreOccurrenceImp",
+    value: function _restoreOccurrenceImp(targetSurveyId) {
+      var _this8 = this;
+
+      // need to check for a special case where restoring a survey that has never been saved even locally
       // i.e. new and unmodified
       // only present in current App.surveys
       // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
-
-
       if (targetSurveyId && this.surveys.has(targetSurveyId)) {
         var localSurvey = this.surveys.get(targetSurveyId);
 
@@ -13400,9 +13422,9 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
       return this.seekKeys(storedObjectKeys).then(function (storedObjectKeys) {
         if (storedObjectKeys.survey.length) {
-          return _this7.refreshFromServer(storedObjectKeys.survey).finally(function () {
+          return _this8.refreshFromServer(storedObjectKeys.survey).finally(function () {
             // re-seek keys from indexed db, to take account of any new occurrences received from the server
-            return _this7.seekKeys(storedObjectKeys);
+            return _this8.seekKeys(storedObjectKeys);
           });
         } else {
           return null;
@@ -13425,7 +13447,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
             for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
               var surveyKey = _step10.value;
               // arbitrarily set first survey key as current if a target id hasn't been specified
-              surveyFetchingPromises.push(_this7._restoreSurveyFromLocal(surveyKey, storedObjectKeys, targetSurveyId === surveyKey || !targetSurveyId && n++ === 0));
+              surveyFetchingPromises.push(_this8._restoreSurveyFromLocal(surveyKey, storedObjectKeys, targetSurveyId === surveyKey || !targetSurveyId && n++ === 0));
             }
           } catch (err) {
             _iterator10.e(err);
@@ -13435,21 +13457,21 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
           return Promise.all(surveyFetchingPromises).finally(function () {
             //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
-            if (!_this7.currentSurvey) {
+            if (!_this8.currentSurvey) {
               // survey doesn't actually exist
               // this could have happened in an invalid survey id was provided as a targetSurveyId
               console.log("Failed to retrieve survey id '".concat(targetSurveyId, "'"));
               return Promise.reject(new Error("Failed to retrieve survey id '".concat(targetSurveyId, "'")));
             }
 
-            if (_this7.currentSurvey.deleted) {
+            if (_this8.currentSurvey.deleted) {
               // unusual case where survey is deleted
               // substitute a new one
               // this should probably never happen, as items deleted on the server ought to have been
               // removed locally
-              _this7.setNewSurvey();
+              _this8.setNewSurvey();
             } else {
-              _this7.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+              _this8.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
 
             }
 
@@ -13458,7 +13480,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
         } else {
           console.log('no pre-existing surveys, so creating a new one'); // no pre-existing surveys, so create a new one
 
-          _this7.setNewSurvey();
+          _this8.setNewSurvey();
 
           return Promise.resolve();
         }
@@ -13505,7 +13527,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "_restoreSurveyFromLocal",
     value: function _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
-      var _this8 = this;
+      var _this9 = this;
 
       // retrieve surveys first, then occurrences, then images from indexedDb
       var promise = Survey.retrieveFromLocal(surveyId, new Survey()).then(function (survey) {
@@ -13514,9 +13536,9 @@ var App = /*#__PURE__*/function (_EventHarness) {
         if (setAsCurrent) {
           // the apps occurrences should only relate to the current survey
           // (the reset are remote or in IndexedDb)
-          _this8.clearCurrentSurvey();
+          _this9.clearCurrentSurvey();
 
-          _this8.addSurvey(survey);
+          _this9.addSurvey(survey);
 
           var occurrenceFetchingPromises = [];
 
@@ -13530,7 +13552,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
                 if (occurrence.surveyId === surveyId) {
                   console.log("adding occurrence ".concat(occurrenceKey));
 
-                  _this8.addOccurrence(occurrence);
+                  _this9.addOccurrence(occurrence);
                 }
               }));
             };
@@ -13547,7 +13569,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
           return Promise.all(occurrenceFetchingPromises);
         } else {
           // not the current survey, so just add it but don't load occurrences
-          _this8.addSurvey(survey);
+          _this9.addSurvey(survey);
         }
       });
 
@@ -13582,7 +13604,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
             _iterator12.f();
           }
 
-          _this8.currentSurvey = _this8.surveys.get(storedObjectKeys.survey[0]);
+          _this9.currentSurvey = _this9.surveys.get(storedObjectKeys.survey[0]);
           return Promise.all(imageFetchingPromises);
         });
       }
@@ -13615,6 +13637,8 @@ _defineProperty(App, "LOAD_SURVEYS_ENDPOINT", '/loadsurveys.php');
 _defineProperty(App, "EVENT_OCCURRENCE_ADDED", 'occurrenceadded');
 
 _defineProperty(App, "EVENT_SURVEYS_CHANGED", 'surveyschanged');
+
+_defineProperty(App, "CURRENT_SURVEY_KEY_NAME", 'currentsurvey');
 
 _defineProperty(App, "devMode", false);
 
@@ -13699,6 +13723,11 @@ var Layout = /*#__PURE__*/function (_EventHarness) {
       });
       window.addEventListener('offline', this.addOfflineFlag);
       this.registerGPSClassMarker();
+      var navMain = $("#navbarSupportedContent");
+      navMain.on("click", "a", null, function () {
+        console.log('forced navbar collapse');
+        navMain.collapse('hide');
+      });
     }
   }, {
     key: "addOfflineFlag",
@@ -14679,7 +14708,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640368827-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640516391-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;

@@ -70,6 +70,12 @@ export class Layout extends EventHarness {
         window.addEventListener('offline', this.addOfflineFlag);
 
         this.registerGPSClassMarker();
+
+        const navMain = $("#navbarSupportedContent");
+        navMain.on("click", "a", null, function () {
+            console.log('forced navbar collapse');
+            navMain.collapse('hide');
+        });
     }
 
     addOfflineFlag() {

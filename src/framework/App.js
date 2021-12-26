@@ -61,6 +61,31 @@ export class App extends EventHarness {
     currentSurvey;
 
     /**
+     *
+     * @param {?Survey} survey
+     */
+    set currentSurvey(survey) {
+        if (this.currentSurvey !== survey) {
+            this.currentSurvey = survey;
+
+            let surveyId = survey ? survey.id : null;
+            localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
+        }
+    }
+
+    /**
+     *
+     * @returns {Promise<string | null>}
+     */
+    getLastSurveyId() {
+        return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME)
+            .catch((error) => {
+                console.log({'Error retrieving last survey id' : error});
+                return Promise.resolve(null);
+            });
+    }
+
+    /**
      * @type {Layout}
      */
     layout;
@@ -95,6 +120,13 @@ export class App extends EventHarness {
      * @type {string}
      */
     static EVENT_SURVEYS_CHANGED = 'surveyschanged';
+
+    /**
+     * IndexedDb key used for storing id of current (last accessed) survey (or null)
+     *
+     * @type {string}
+     */
+    static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
 
     /**
      *
@@ -256,7 +288,10 @@ export class App extends EventHarness {
             throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
         }
 
-        if (!this.surveys.has(survey.id)) {
+        //if (!this.surveys.has(survey.id)) {
+        if (!survey.hasAppModifiedListener) {
+            survey.hasAppModifiedListener = true;
+
             console.log("setting survey's modified/save handler");
             survey.addListener(
                 Survey.EVENT_MODIFIED,
@@ -425,16 +460,18 @@ export class App extends EventHarness {
             console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
-                let type,id;
+                if (key !== App.CURRENT_SURVEY_KEY_NAME) {
+                    let type, id;
 
-                [type, id] = key.split('.', 2);
+                    [type, id] = key.split('.', 2);
 
-                if (storedObjectKeys.hasOwnProperty(type)) {
-                    if (!storedObjectKeys[type].includes(id)) {
-                        storedObjectKeys[type].push(id);
+                    if (storedObjectKeys.hasOwnProperty(type)) {
+                        if (!storedObjectKeys[type].includes(id)) {
+                            storedObjectKeys[type].push(id);
+                        }
+                    } else {
+                        console.log(`Unrecognised stored key type '${type}.`);
                     }
-                } else {
-                    console.log(`Unrecognised stored key type '${type}.`);
                 }
             }
 
@@ -513,7 +550,7 @@ export class App extends EventHarness {
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
      * @return {Promise}
      */
-    restoreOccurrences(targetSurveyId) {
+    restoreOccurrences(targetSurveyId = '') {
 
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
 
@@ -522,6 +559,20 @@ export class App extends EventHarness {
             targetSurveyId = '';
         }
 
+        return (targetSurveyId) ?
+            this._restoreOccurrenceImp(targetSurveyId)
+            :
+            this.getLastSurveyId().then(
+                (lastSurveyId) => {
+                    console.log(`Retrieved last used survey id '${lastSurveyId}'`);
+
+                    return this._restoreOccurrenceImp(lastSurveyId);
+                },
+                () => this._restoreOccurrenceImp()
+            );
+    }
+
+    _restoreOccurrenceImp(targetSurveyId) {
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
         // only present in current App.surveys

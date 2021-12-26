@@ -1,6 +1,6 @@
 // service worker for BSBI app
 
-// currently based around the 'Cache and update' recipe along with many modifications
+// based around the 'Cache and update' recipe along with many modifications
 // see https://serviceworke.rs
 
 import localforage from 'localforage';
@@ -9,8 +9,8 @@ import {ImageResponse} from "./responses/ImageResponse";
 import {packageClientResponse} from "./packageClientResponse";
 import {SurveyResponse} from "./responses/SurveyResponse";
 import {OccurrenceResponse} from "./responses/OccurrenceResponse";
-import {OccurrenceImage} from "..";
-import {Model} from "..";
+import {OccurrenceImage} from "../models/OccurrenceImage";
+import {Model} from "../models/Model";
 
 export class BSBIServiceWorker {
 
