@@ -56,21 +56,29 @@ export class App extends EventHarness {
     surveys;
 
     /**
-     * @type {Survey}
+     * @type {?Survey}
      */
-    currentSurvey;
+    _currentSurvey = null;
 
     /**
      *
      * @param {?Survey} survey
      */
     set currentSurvey(survey) {
-        if (this.currentSurvey !== survey) {
-            this.currentSurvey = survey;
+        if (this._currentSurvey !== survey) {
+            this._currentSurvey = survey || null;
 
             let surveyId = survey ? survey.id : null;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
         }
+    }
+
+    /**
+     *
+     * @returns {?Survey}
+     */
+    get currentSurvey() {
+        return this._currentSurvey;
     }
 
     /**

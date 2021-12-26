@@ -12741,7 +12741,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
     _defineProperty(_assertThisInitialized(_this), "surveys", void 0);
 
-    _defineProperty(_assertThisInitialized(_this), "currentSurvey", void 0);
+    _defineProperty(_assertThisInitialized(_this), "_currentSurvey", null);
 
     _defineProperty(_assertThisInitialized(_this), "layout", void 0);
 
@@ -12757,6 +12757,19 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
   _createClass(App, [{
     key: "currentSurvey",
+    get:
+    /**
+     *
+     * @returns {?Survey}
+     */
+    function get() {
+      return this._currentSurvey;
+    }
+    /**
+     *
+     * @returns {Promise<string | null>}
+     */
+    ,
     set:
     /**
      * @type {PatchedNavigo}
@@ -12796,7 +12809,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
      */
 
     /**
-     * @type {Survey}
+     * @type {?Survey}
      */
 
     /**
@@ -12804,17 +12817,12 @@ var App = /*#__PURE__*/function (_EventHarness) {
      * @param {?Survey} survey
      */
     function set(survey) {
-      if (this.currentSurvey !== survey) {
-        this.currentSurvey = survey;
+      if (this._currentSurvey !== survey) {
+        this._currentSurvey = survey || null;
         var surveyId = survey ? survey.id : null;
         localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
       }
     }
-    /**
-     *
-     * @returns {Promise<string | null>}
-     */
-
   }, {
     key: "getLastSurveyId",
     value: function getLastSurveyId() {
@@ -14708,7 +14716,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640516391-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640516877-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
