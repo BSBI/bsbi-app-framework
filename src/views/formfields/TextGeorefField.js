@@ -74,11 +74,17 @@ export class TextGeorefField extends FormField {
     baseSquareResolution = null;
 
     /**
-     * minimum resolution (m) to allow
+     * minimum (least precise) precision (m diameter) to allow
      *
      * @type {number}
      */
     minResolution = 2000;
+
+    /**
+     * maximum (most precise) precision (m diameter) to allow
+     * @type {number}
+     */
+    maxResolution = 10;
 
     /**
      * if set then as well as labelling the GPS button with a symbol, also include text 'GPS'
@@ -128,6 +134,8 @@ export class TextGeorefField extends FormField {
      * [type]: string,
      * [autocomplete]: string,
      * [baseSquareResolution]: ?number,
+     * [maxResolution]: ?number,
+     * [minResolution]: ?number,
      * [gpsPermissionPromptText]: string,
      * [initialiseFromDefaultSurveyGeoref] : boolean,
      * [gpsTextLabel] : boolean,
@@ -156,6 +164,14 @@ export class TextGeorefField extends FormField {
 
             if (params.baseSquareResolution) {
                 this.baseSquareResolution = params.baseSquareResolution;
+            }
+
+            if (params.maxResolution) {
+                this.maxResolution = params.maxResolution;
+            }
+
+            if (params.minResolution) {
+                this.minResolution = params.minResolution;
             }
 
             if (params.gpsPermissionPromptText) {
@@ -490,8 +506,8 @@ export class TextGeorefField extends FormField {
         const gridCoords = GridCoords.from_latlng(latitude, longitude);
 
         let scaledPrecision = GridRef.get_normalized_precision(precision);
-        if (this.baseSquareResolution && scaledPrecision < this.baseSquareResolution) {
-            scaledPrecision = this.baseSquareResolution;
+        if (this.maxResolution && scaledPrecision < this.maxResolution) {
+            scaledPrecision = this.maxResolution;
         }
 
         if (this.minResolution && scaledPrecision > this.minResolution) {

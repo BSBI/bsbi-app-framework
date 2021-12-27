@@ -435,8 +435,7 @@ export class BSBIServiceWorker {
             })
                 .catch((error) => {
                     const url = evt.request.url;
-                    console.log(error);
-                    console.log(`caught ${error}`);
+                    console.log({'caught' : error});
                     console.log(`In catch following failed network fetch, attempting image match for '${url}'`);
 
                     const matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
@@ -447,6 +446,7 @@ export class BSBIServiceWorker {
                         return this.imageFromLocalDatabase(imageId);
                     } else {
                         console.log(`(via catch) Failed to match image id in url '${url}'`);
+                        return Promise.reject(null);
                     }
                 })
         );
@@ -504,6 +504,7 @@ export class BSBIServiceWorker {
                 }
             }).catch((error) => {
                 console.log(`Cache attempt failed for ${request.url}: error was ${error}`);
+                return Promise.reject(`Cache attempt failed for ${request.url}: error was ${error}`);
             });
         });
     }

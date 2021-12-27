@@ -130,6 +130,21 @@ export class App extends EventHarness {
     static EVENT_SURVEYS_CHANGED = 'surveyschanged';
 
     /**
+     * Fired after fully-successful sync-all
+     * (or if sync-all resolved with nothing to send)
+     *
+     * @type {string}
+     */
+    static EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
+
+    /**
+     * fired if sync-all called, but one or more objects failed to be saved to the server
+     *
+     * @type {string}
+     */
+    static EVENT_SYNC_ALL_FAILED = 'syncallfailed';
+
+    /**
      * IndexedDb key used for storing id of current (last accessed) survey (or null)
      *
      * @type {string}
@@ -499,9 +514,15 @@ export class App extends EventHarness {
 
         return this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
-                return this._syncLocalUnsaved(storedObjectKeys);
+                return this._syncLocalUnsaved(storedObjectKeys)
+                    .then((result) => {
+                        this.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
+
+                        return result;
+                    });
             }, (failedResult) => {
                 console.log(`Failed to sync all: ${failedResult}`);
+                this.fireEvent(App.EVENT_SYNC_ALL_FAILED);
                 return false;
             });
     }
@@ -513,7 +534,7 @@ export class App extends EventHarness {
      * @private
      */
     _syncLocalUnsaved(storedObjectKeys) {
-        // syncs surveys first, then occurrences, then images from indexedDb
+        // synchronises surveys first, then occurrences, then images from indexedDb
 
         const promises = [];
         for(let surveyKey of storedObjectKeys.survey) {
@@ -548,6 +569,7 @@ export class App extends EventHarness {
 
         return Promise.all(promises).catch((result) => {
             console.log(`Save failure: ${result}`);
+            return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
         });
     }
 

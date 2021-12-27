@@ -99,7 +99,7 @@ export class Page extends EventHarness {
         }
 
         buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
-        buttonEl.innerHTML = descriptor.headingHTML;
+        buttonEl.innerHTML = `<div class="material-icons icon-show-collapsed">expand_more</div><div class="material-icons icon-hide-collapsed">unfold_less</div>${descriptor.headingHTML}`;
 
         if (descriptor.headingNonbuttonHTML) {
             const extraHeadingElement = headingEl.appendChild(document.createElement('span'));

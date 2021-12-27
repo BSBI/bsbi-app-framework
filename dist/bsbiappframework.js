@@ -8139,12 +8139,12 @@ var Taxon = /*#__PURE__*/function () {
 
       if (Taxon.showVernacular) {
         if (vernacularMatched) {
-          return acceptedTaxon ? "<q><b>".concat(escapeHTML(this.vernacular), "</b></q> <span class=\"italictaxon\">").concat(this.nameString).concat(this.qualifier ? " <b>".concat(this.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>") + " = <span class=\"italictaxon\">".concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <b>".concat(acceptedTaxon.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<q><b>".concat(escapeHTML(this.vernacular), "</b></q> <span class=\"italictaxon\">").concat(this.nameString).concat(this.qualifier ? " <b>".concat(this.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>");
+          return acceptedTaxon ? "<q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q><wbr> <span class=\"italictaxon\">").concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>") + " = <span class=\"italictaxon\">".concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <span class=\"taxon-qualifier\">".concat(acceptedTaxon.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q><wbr> <span class=\"italictaxon\">").concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>");
         } else {
-          return acceptedTaxon ? "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <b>".concat(this.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(this.authority, "</span>").concat(this.vernacular ? " <q><b>".concat(escapeHTML(this.vernacular), "</b></q>") : '', " = <span class=\"italictaxon\">").concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <b>".concat(acceptedTaxon.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <b>".concat(this.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>").concat(this.vernacular ? " <q><b>".concat(escapeHTML(this.vernacular), "</b></q>") : '');
+          return acceptedTaxon ? "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(this.authority, "</span>").concat(this.vernacular ? " <wbr><q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q>") : '', " = <span class=\"italictaxon\">").concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <span class=\"taxon-qualifier\">".concat(acceptedTaxon.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>").concat(this.vernacular ? " <wbr><q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q>") : '');
         }
       } else {
-        return acceptedTaxon ? "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <b>".concat(this.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(this.authority, "</span>") + " = <span class=\"italictaxon\">".concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <b>".concat(acceptedTaxon.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <b>".concat(this.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>");
+        return acceptedTaxon ? "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(this.authority, "</span>") + " = <span class=\"italictaxon\">".concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <span class=\"taxon-qualifier\">".concat(acceptedTaxon.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>");
       }
     }
   }], [{
@@ -10383,7 +10383,7 @@ var Page = /*#__PURE__*/function (_EventHarness) {
       }
 
       buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
-      buttonEl.innerHTML = descriptor.headingHTML;
+      buttonEl.innerHTML = "<div class=\"material-icons icon-show-collapsed\">expand_more</div><div class=\"material-icons icon-hide-collapsed\">unfold_less</div>".concat(descriptor.headingHTML);
 
       if (descriptor.headingNonbuttonHTML) {
         var extraHeadingElement = headingEl.appendChild(document.createElement('span'));
@@ -11794,8 +11794,13 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    */
 
   /**
-   * minimum resolution (m) to allow
+   * minimum (least precise) precision (m diameter) to allow
    *
+   * @type {number}
+   */
+
+  /**
+   * maximum (most precise) precision (m diameter) to allow
    * @type {number}
    */
 
@@ -11841,6 +11846,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
    * [type]: string,
    * [autocomplete]: string,
    * [baseSquareResolution]: ?number,
+   * [maxResolution]: ?number,
+   * [minResolution]: ?number,
    * [gpsPermissionPromptText]: string,
    * [initialiseFromDefaultSurveyGeoref] : boolean,
    * [gpsTextLabel] : boolean,
@@ -11877,6 +11884,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
     _defineProperty(_assertThisInitialized(_this), "minResolution", 2000);
 
+    _defineProperty(_assertThisInitialized(_this), "maxResolution", 10);
+
     _defineProperty(_assertThisInitialized(_this), "gpsTextLabel", false);
 
     _defineProperty(_assertThisInitialized(_this), "gpsPermissionsPromptText", '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>');
@@ -11905,6 +11914,14 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
 
       if (params.baseSquareResolution) {
         _this.baseSquareResolution = params.baseSquareResolution;
+      }
+
+      if (params.maxResolution) {
+        _this.maxResolution = params.maxResolution;
+      }
+
+      if (params.minResolution) {
+        _this.minResolution = params.minResolution;
       }
 
       if (params.gpsPermissionPromptText) {
@@ -12244,8 +12261,8 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
       var gridCoords = pi.from_latlng(latitude, longitude);
       var scaledPrecision = Oo.get_normalized_precision(precision);
 
-      if (this.baseSquareResolution && scaledPrecision < this.baseSquareResolution) {
-        scaledPrecision = this.baseSquareResolution;
+      if (this.maxResolution && scaledPrecision < this.maxResolution) {
+        scaledPrecision = this.maxResolution;
       }
 
       if (this.minResolution && scaledPrecision > this.minResolution) {
@@ -13291,9 +13308,16 @@ var App = /*#__PURE__*/function (_EventHarness) {
         image: []
       };
       return this.seekKeys(storedObjectKeys).then(function (storedObjectKeys) {
-        return _this6._syncLocalUnsaved(storedObjectKeys);
+        return _this6._syncLocalUnsaved(storedObjectKeys).then(function (result) {
+          _this6.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
+
+          return result;
+        });
       }, function (failedResult) {
         console.log("Failed to sync all: ".concat(failedResult));
+
+        _this6.fireEvent(App.EVENT_SYNC_ALL_FAILED);
+
         return false;
       });
     }
@@ -13307,7 +13331,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
   }, {
     key: "_syncLocalUnsaved",
     value: function _syncLocalUnsaved(storedObjectKeys) {
-      // syncs surveys first, then occurrences, then images from indexedDb
+      // synchronises surveys first, then occurrences, then images from indexedDb
       var promises = [];
 
       var _iterator7 = _createForOfIteratorHelper$6(storedObjectKeys.survey),
@@ -13366,6 +13390,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
       return Promise.all(promises).catch(function (result) {
         console.log("Save failure: ".concat(result));
+        return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
       });
     }
     /**
@@ -13645,6 +13670,10 @@ _defineProperty(App, "LOAD_SURVEYS_ENDPOINT", '/loadsurveys.php');
 _defineProperty(App, "EVENT_OCCURRENCE_ADDED", 'occurrenceadded');
 
 _defineProperty(App, "EVENT_SURVEYS_CHANGED", 'surveyschanged');
+
+_defineProperty(App, "EVENT_ALL_SYNCED_TO_SERVER", 'allsyncedtoserver');
+
+_defineProperty(App, "EVENT_SYNC_ALL_FAILED", 'syncallfailed');
 
 _defineProperty(App, "CURRENT_SURVEY_KEY_NAME", 'currentsurvey');
 
@@ -14716,7 +14745,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640516877-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640615657-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -15055,8 +15084,9 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
         }
       }).catch(function (error) {
         var url = evt.request.url;
-        console.log(error);
-        console.log("caught ".concat(error));
+        console.log({
+          'caught': error
+        });
         console.log("In catch following failed network fetch, attempting image match for '".concat(url, "'"));
         var matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
 
@@ -15066,6 +15096,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
           return _this4.imageFromLocalDatabase(imageId);
         } else {
           console.log("(via catch) Failed to match image id in url '".concat(url, "'"));
+          return Promise.reject(null);
         }
       }));
     }
@@ -15129,6 +15160,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
           }
         }).catch(function (error) {
           console.log("Cache attempt failed for ".concat(request.url, ": error was ").concat(error));
+          return Promise.reject("Cache attempt failed for ".concat(request.url, ": error was ").concat(error));
         });
       });
     }
