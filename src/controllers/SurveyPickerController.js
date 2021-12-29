@@ -105,7 +105,12 @@ export class SurveyPickerController extends AppController {
         $(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal();
 
         this.app.router.pause();
-        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+
+        console.log({'route history' : this.app.routeHistory});
+
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
         this.app.router.resume();
 
         done(false); // block navigation
@@ -115,7 +120,9 @@ export class SurveyPickerController extends AppController {
         $(`#${Layout.RESET_MODAL_ID}`).modal();
 
         this.app.router.pause();
-        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
         this.app.router.resume();
 
         done(false); // block navigation
@@ -141,7 +148,9 @@ export class SurveyPickerController extends AppController {
         });
 
         this.app.router.pause();
-        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
         this.app.router.resume();
 
         done(false); // block navigation

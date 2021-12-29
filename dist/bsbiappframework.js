@@ -13973,7 +13973,13 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
     value: function beforeNewHandler(done) {
       $("#".concat(Layout.NEW_SURVEY_MODAL_ID)).modal();
       this.app.router.pause();
-      window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+      console.log({
+        'route history': this.app.routeHistory
+      });
+
+      if (window.history.state) {
+        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+      }
 
       this.app.router.resume();
       done(false); // block navigation
@@ -13983,7 +13989,10 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
     value: function beforeResetHandler(done) {
       $("#".concat(Layout.RESET_MODAL_ID)).modal();
       this.app.router.pause();
-      window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+
+      if (window.history.state) {
+        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+      }
 
       this.app.router.resume();
       done(false); // block navigation
@@ -14011,7 +14020,10 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
       }).finally(function () {// stop the spinner
       });
       this.app.router.pause();
-      window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+
+      if (window.history.state) {
+        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+      }
 
       this.app.router.resume();
       done(false); // block navigation
@@ -14745,7 +14757,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640615657-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640806650-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
