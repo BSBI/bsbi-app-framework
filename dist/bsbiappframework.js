@@ -14761,7 +14761,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640953099-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640959929-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -14781,7 +14781,8 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
         // resolves.
 
         evt.waitUntil(_this.precache() // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
-        .then(function () {
+        .finally(function () {
+          console.log("Service worker skip waiting after precache.");
           return self.skipWaiting();
         }));
       });
@@ -14808,6 +14809,8 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
         }).then(function () {
           console.log('[ServiceWorker] Claiming clients for version', _this.CACHE_VERSION);
           return self.clients.claim();
+        }).finally(function () {
+          return self.skipWaiting();
         }));
       }); // // see https://davidwalsh.name/background-sync
       // // https://developers.google.com/web/updates/2015/12/background-sync

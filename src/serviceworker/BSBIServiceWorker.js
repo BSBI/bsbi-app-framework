@@ -74,7 +74,12 @@ export class BSBIServiceWorker {
             evt.waitUntil(
                 this.precache()
                     // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
-                    .then(() => self.skipWaiting()));
+                    .finally(() => {
+                        console.log("Service worker skip waiting after precache.");
+
+                        return self.skipWaiting();
+                    })
+            );
         });
 
         self.addEventListener('activate', (event) => {
@@ -100,7 +105,7 @@ export class BSBIServiceWorker {
                 }).then(() => {
                     console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
                     return self.clients.claim();
-                })
+                }).finally(() => self.skipWaiting())
             );
         });
 
