@@ -78,6 +78,7 @@ export class BSBIServiceWorker {
         });
 
         self.addEventListener('activate', (event) => {
+            console.log({'service worker activate event' : event});
 
             event.waitUntil(self.clients.matchAll({
                 includeUncontrolled: true
@@ -367,6 +368,9 @@ export class BSBIServiceWorker {
     precache() {
         return caches.open(this.CACHE_VERSION).then((cache) => {
             return cache.addAll(this.URL_CACHE_SET);
+        }).catch((error) => {
+            console.log({'Precache failed result' : error});
+            return Promise.resolve();
         });
     }
 

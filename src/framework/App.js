@@ -597,10 +597,10 @@ export class App extends EventHarness {
                     console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
                     return this._restoreOccurrenceImp(lastSurveyId).catch(() => {
-                        console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey.`);
+                        console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
 
                         this.currentSurvey = null;
-                        this._restoreOccurrenceImp();
+                        return this._restoreOccurrenceImp();
                     });
                 },
                 () => this._restoreOccurrenceImp()
@@ -649,7 +649,7 @@ export class App extends EventHarness {
 
             console.log({storedObjectKeys});
 
-            if (storedObjectKeys.survey.length) {
+            if (storedObjectKeys && storedObjectKeys.survey && storedObjectKeys.survey.length) {
 
                 const surveyFetchingPromises = [];
                 let n = 0;

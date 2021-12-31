@@ -13417,10 +13417,9 @@ var App = /*#__PURE__*/function (_EventHarness) {
       return targetSurveyId ? this._restoreOccurrenceImp(targetSurveyId) : this.getLastSurveyId().then(function (lastSurveyId) {
         console.log("Retrieved last used survey id '".concat(lastSurveyId, "'"));
         return _this7._restoreOccurrenceImp(lastSurveyId).catch(function () {
-          console.log("Failed to retrieve lastSurveyId ".concat(lastSurveyId, ". Resetting current survey."));
+          console.log("Failed to retrieve lastSurveyId ".concat(lastSurveyId, ". Resetting current survey and retrying."));
           _this7.currentSurvey = null;
-
-          _this7._restoreOccurrenceImp();
+          return _this7._restoreOccurrenceImp();
         });
       }, function () {
         return _this7._restoreOccurrenceImp();
@@ -13474,7 +13473,7 @@ var App = /*#__PURE__*/function (_EventHarness) {
           storedObjectKeys: storedObjectKeys
         });
 
-        if (storedObjectKeys.survey.length) {
+        if (storedObjectKeys && storedObjectKeys.survey && storedObjectKeys.survey.length) {
           var surveyFetchingPromises = [];
           var n = 0;
 
@@ -14762,7 +14761,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640949661-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640953099-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -14787,6 +14786,9 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
         }));
       });
       self.addEventListener('activate', function (event) {
+        console.log({
+          'service worker activate event': event
+        });
         event.waitUntil(self.clients.matchAll({
           includeUncontrolled: true
         }).then(function (clientList) {
@@ -15036,6 +15038,11 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
 
       return caches.open(this.CACHE_VERSION).then(function (cache) {
         return cache.addAll(_this2.URL_CACHE_SET);
+      }).catch(function (error) {
+        console.log({
+          'Precache failed result': error
+        });
+        return Promise.resolve();
       });
     }
     /**
