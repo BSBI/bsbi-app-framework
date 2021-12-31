@@ -596,7 +596,12 @@ export class App extends EventHarness {
                 (lastSurveyId) => {
                     console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
-                    return this._restoreOccurrenceImp(lastSurveyId);
+                    return this._restoreOccurrenceImp(lastSurveyId).catch(() => {
+                        console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey.`);
+
+                        this.currentSurvey = null;
+                        this._restoreOccurrenceImp();
+                    });
                 },
                 () => this._restoreOccurrenceImp()
             );

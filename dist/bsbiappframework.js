@@ -13416,7 +13416,12 @@ var App = /*#__PURE__*/function (_EventHarness) {
 
       return targetSurveyId ? this._restoreOccurrenceImp(targetSurveyId) : this.getLastSurveyId().then(function (lastSurveyId) {
         console.log("Retrieved last used survey id '".concat(lastSurveyId, "'"));
-        return _this7._restoreOccurrenceImp(lastSurveyId);
+        return _this7._restoreOccurrenceImp(lastSurveyId).catch(function () {
+          console.log("Failed to retrieve lastSurveyId ".concat(lastSurveyId, ". Resetting current survey."));
+          _this7.currentSurvey = null;
+
+          _this7._restoreOccurrenceImp();
+        });
       }, function () {
         return _this7._restoreOccurrenceImp();
       });
@@ -14757,7 +14762,7 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
       ImageResponse.register();
       SurveyResponse.register();
       OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1640806650-".concat(configuration.version);
+      this.CACHE_VERSION = "version-1.0.3.1640949661-".concat(configuration.version);
       var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
       var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
       var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
