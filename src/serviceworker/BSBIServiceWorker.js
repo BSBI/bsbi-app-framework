@@ -74,40 +74,42 @@ export class BSBIServiceWorker {
             evt.waitUntil(
                 this.precache()
                     // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
-                    .finally(() => {
-                        console.log("Service worker skip waiting after precache.");
-
-                        return self.skipWaiting();
-                    })
+                    // .finally(() => {
+                    //     console.log("Service worker skip waiting after precache.");
+                    //
+                    //     return self.skipWaiting();
+                    // })
             );
         });
 
         self.addEventListener('activate', (event) => {
             console.log({'service worker activate event' : event});
 
-            event.waitUntil(self.clients.matchAll({
-                includeUncontrolled: true
-            }).then((clientList) => {
-                const urls = clientList.map((client) => {
-                    return client.url;
-                });
-                console.log('[ServiceWorker] Matching clients:', urls.join(', '));
-            }).then(() => caches.keys())
-                .then((cacheNames) => {
-                    return Promise.all(
-                        cacheNames.map((cacheName) => {
-                            if (cacheName !== this.CACHE_VERSION) {
-                                console.log('[ServiceWorker] Deleting old cache:', cacheName);
-                                return caches.delete(cacheName);
-                            }
-                        })
-                    );
-                }).then(() => {
-                    console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
-                    return self.clients.claim();
-                }).finally(() => self.skipWaiting())
-            );
-        });
+            event.waitUntil(
+                self.clients.matchAll({
+                    includeUncontrolled: true
+                }).then((clientList) => {
+                    const urls = clientList.map((client) => {
+                        return client.url;
+                    });
+                    console.log('[ServiceWorker] Matching clients:', urls.join(', '));
+                }).then(() => caches.keys())
+                    .then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.map((cacheName) => {
+                                // test for 'version' prefix to avoid deleting mapbox tiles
+                                if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
+                                    console.log('[ServiceWorker] Deleting old cache:', cacheName);
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    }).then(() => {
+                        console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
+                        return self.clients.claim();
+                    })
+                );
+            });
 
 
         // // see https://davidwalsh.name/background-sync
@@ -216,7 +218,7 @@ export class BSBIServiceWorker {
                         })
                         .catch((error) => {
                             // for some reason local storage failed, after a successful server save
-                            console.log({error});
+                            console.log({'local storage failed' : error});
 
                             return Promise.resolve(response); // pass through the server response
                         });
@@ -225,47 +227,49 @@ export class BSBIServiceWorker {
                     return Promise.reject('Failed to save to server.');
                 }
             })
-            .catch((reason) => {
-                // would get here if the network is down
-                // or if got invalid response from the server
+            .catch( (reason) => {
+                    console.log({'post fetch failed (probably no network)': reason});
 
-                console.log(`post fetch failed (probably no network), (reason: ${reason})`);
-                //console.log({'post failure reason' : reason});
+                    // would get here if the network is down
+                    // or if got invalid response from the server
 
-                // /**
-                //  * simulated result of post, returned as JSON body
-                //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-                //  */
-                // let returnedToClient = {};
+                    console.log(`post fetch failed (probably no network), (reason: ${reason})`);
+                    //console.log({'post failure reason' : reason});
 
-                return clonedRequest.formData()
-                    .then((formData) => {
-                            console.log('got to form data handler');
-                            //console.log({formData});
+                    // /**
+                    //  * simulated result of post, returned as JSON body
+                    //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+                    //  */
+                    // let returnedToClient = {};
 
-                            return ResponseFactory
-                                .fromPostedData(formData)
-                                .populateClientResponse()
-                                .storeLocally();
-                        }, reason => {
-                            console.log('failed to read form data locally');
-                            console.log({reason});
+                    return clonedRequest.formData()
+                        .then((formData) => {
+                                console.log('got to form data handler');
+                                //console.log({formData});
 
-                            /**
-                             * simulated result of post, returned as JSON body
-                             * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                             */
-                            let returnedToClient = {
-                                error: 'Failed to process posted response data. (internal error)',
-                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                    'Please try to re-establish a network connection and try again.'
-                            };
+                                return ResponseFactory
+                                    .fromPostedData(formData)
+                                    .populateClientResponse()
+                                    .storeLocally();
+                            }, (reason) => {
+                                console.log({'failed to read form data locally' : reason});
 
-                            return packageClientResponse(returnedToClient);
-                        }
-                    );
-            }));
+                                /**
+                                 * simulated result of post, returned as JSON body
+                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                                 */
+                                let returnedToClient = {
+                                    error: 'Failed to process posted response data. (internal error)',
+                                    errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                        'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                        'Please try to re-establish a network connection and try again.'
+                                };
+
+                                return packageClientResponse(returnedToClient);
+                            }
+                        );
+                }
+            ));
     }
 
     /**
@@ -286,6 +290,7 @@ export class BSBIServiceWorker {
             console.log({'Cloning error': e});
         }
 
+        // send back a quick response to the client from local storage (before the server request completes)
         event.respondWith(
             clonedRequest.formData()
                 .then((formData) => {
@@ -295,8 +300,63 @@ export class BSBIServiceWorker {
                         return ResponseFactory
                             .fromPostedData(formData)
                             .populateClientResponse()
-                            .storeLocally();
-                    }, reason => {
+                            .storeLocally()
+                            .then((response) => {
+
+                                // separately send data to the server, but response goes to client before this completes
+                                // am unsure if the return from the wait until part ever reaches the client
+                                event.waitUntil(fetch(event.request)
+                                    .then((response) => {
+                                            console.log('posting image to server in waitUntil part of fetch cycle');
+
+                                            // would get here if the server responds at all, but need to check that the response is ok (not a server error)
+                                            if (response.ok) {
+                                                console.log('posted image to server in waitUntil part of fetch cycle: got OK response');
+
+                                                return Promise.resolve(response)
+                                                    .then((response) => {
+                                                        // save the response locally
+                                                        // before returning it to the client
+
+                                                        return response.clone().json();
+                                                    })
+                                                    .then((jsonResponseData) => {
+                                                        return ResponseFactory
+                                                            .fromPostResponse(jsonResponseData)
+                                                            .setPrebuiltResponse(response)
+                                                            .populateLocalSave()
+                                                            .storeLocally();
+                                                    })
+                                                    .catch((error) => {
+                                                        // for some reason local storage failed, after a successful server save
+                                                        console.log({error});
+
+                                                        return Promise.resolve(response); // pass through the server response
+                                                    });
+                                            } else {
+                                                console.log('posted image to server in waitUntil part of fetch cycle: got Error response');
+
+                                                /**
+                                                 * simulated result of post, returned as JSON body
+                                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                                                 */
+                                                let returnedToClient = {
+                                                    error: 'Failed to save posted response data. (internal error)',
+                                                    errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                                        'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                                        'Please try to re-establish a network connection and try again.'
+                                                };
+
+                                                return packageClientResponse(returnedToClient);
+                                            }
+                                        }, () => {
+                                            console.log('Rejected image post fetch from server - implies network is down')
+                                        }
+                                    ));
+
+                                return response;
+                            });
+                    }, (reason) => {
                         console.log('failed to read form data locally');
                         console.log({reason});
 
@@ -315,53 +375,6 @@ export class BSBIServiceWorker {
                     }
                 )
         );
-
-        event.waitUntil(fetch(event.request)
-            .then((response) => {
-                console.log('posted image to server in waitUntil part of fetch cycle');
-
-                // would get here if the server responds at all, but need to check that the response is ok (not a server error)
-                if (response.ok) {
-                    console.log('posted image to server in waitUntil part of fetch cycle: got OK response');
-
-                    return Promise.resolve(response)
-                        .then((response) => {
-                            // save the response locally
-                            // before returning it to the client
-
-                            return response.clone().json();
-                        })
-                        .then((jsonResponseData) => {
-                            return ResponseFactory
-                                .fromPostResponse(jsonResponseData)
-                                .setPrebuiltResponse(response)
-                                .populateLocalSave()
-                                .storeLocally();
-                        })
-                        .catch((error) => {
-                            // for some reason local storage failed, after a successful server save
-                            console.log({error});
-
-                            return Promise.resolve(response); // pass through the server response
-                        });
-                } else {
-                    // console.log(`Failed to save, moving on to attempt IndexedDb`);
-                    // return Promise.reject('Failed to save to server.');
-
-                    /**
-                     * simulated result of post, returned as JSON body
-                     * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                     */
-                    let returnedToClient = {
-                        error: 'Failed to save posted response data. (internal error)',
-                        errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                            'Please try to re-establish a network connection and try again.'
-                    };
-
-                    return packageClientResponse(returnedToClient);
-                }
-            }))
     }
 
     /**
@@ -483,6 +496,7 @@ export class BSBIServiceWorker {
                 });
             } else {
                 console.log(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
+                return Promise.reject(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
             }
         });
     }

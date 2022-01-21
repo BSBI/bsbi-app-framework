@@ -460,38 +460,53 @@ export class TextGeorefField extends FormField {
         event.stopPropagation();
     }
 
+    _seekingGPS = false;
+
     /**
      *
      * @returns {Promise<unknown>}
      */
     seekGPS() {
-        return GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
-            // const latitude  = position.coords.latitude;
-            // const longitude = position.coords.longitude;
 
-            // console.log(`Got GPS fix ${latitude} , ${longitude}`);
-            //
-            // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-            // const gridRef = gridCoords.to_gridref(1000);
-            //
-            // console.log(`Got grid-ref: ${gridRef}`);
-            // this.value = gridRef;
-            // this.fireEvent(FormField.EVENT_CHANGE);
+        if (this._seekingGPS) {
+            // a GPS request is already in progress
+            // don't allow concurrent GPS seek requests
+            return Promise.reject();
+        } else {
+            this._seekingGPS = true;
 
-            //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+            return GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
+                this._seekingGPS = false;
+                // const latitude  = position.coords.latitude;
+                // const longitude = position.coords.longitude;
 
-            console.log({'gps position' : position});
-            let accuracy = position.coords.accuracy * 2;
+                // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+                //
+                // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+                // const gridRef = gridCoords.to_gridref(1000);
+                //
+                // console.log(`Got grid-ref: ${gridRef}`);
+                // this.value = gridRef;
+                // this.fireEvent(FormField.EVENT_CHANGE);
 
-            this.mapPositionIsCurrent = false; // force zoom and re-centre
+                //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
 
-            this.processLatLngPosition(
-                position.coords.latitude,
-                position.coords.longitude,
-                accuracy,
-                TextGeorefField.GEOREF_SOURCE_GPS
-            );
-        });
+                console.log({'gps position': position});
+                let accuracy = position.coords.accuracy * 2;
+
+                this.mapPositionIsCurrent = false; // force zoom and re-centre
+
+                this.processLatLngPosition(
+                    position.coords.latitude,
+                    position.coords.longitude,
+                    accuracy,
+                    TextGeorefField.GEOREF_SOURCE_GPS
+                );
+            }, (error) => {
+                this._seekingGPS = false;
+                return error;
+            });
+        }
     }
 
     /**

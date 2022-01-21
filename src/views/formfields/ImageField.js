@@ -262,8 +262,8 @@ export class ImageField extends FormField {
             console.log(`Failed to find image id ${params.imageId}`);
         } else {
             // re-save image to flag as deleted
-            this._value.images[key].deleted = true;
-            this.#save([this._value.images[key]]);
+            image.deleted = true;
+            this.#save([image]);
 
             this.updateView();
             this.fireEvent(FormField.EVENT_CHANGE);

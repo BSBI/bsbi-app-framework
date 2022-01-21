@@ -155,7 +155,8 @@ export class GPSRequest extends EventHarness {
         return new Promise((resolve, reject) =>
             navigator.geolocation.getCurrentPosition(resolve, reject, {
                 enableHighAccuracy : true,
-                timeout : 60 * 1000, // 60 second timeout
+                timeout : 30 * 1000, // 30 second timeout
+                maximumAge : 20 * 1000, // can use a cached response from up to 20s ago
             })
         ).then((position) => {
             // const latitude  = position.coords.latitude;
@@ -193,8 +194,7 @@ export class GPSRequest extends EventHarness {
 
             return position;
         }, (error) => {
-            console.log('gps look-up failed');
-            console.log(error);
+            console.log({'gps look-up failed' : error});
 
             switch(error.code) {
                 case error.TIMEOUT:
@@ -203,6 +203,8 @@ export class GPSRequest extends EventHarness {
                     nudge && showNudgeBanner();
                     break;
             }
+
+            return null;
         });
     }
 }
