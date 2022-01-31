@@ -62,7 +62,6 @@ export class TextGeorefField extends FormField {
     /**
      *
      * @type {string}
-     * @private
      */
     _autocomplete = '';
 

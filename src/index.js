@@ -32,6 +32,7 @@ export {SelectField} from './views/formfields/SelectField';
 export {TaxonPickerField} from './views/formfields/TaxonPickerField';
 export {TextAreaField} from './views/formfields/TextAreaField';
 export {TextGeorefField} from './views/formfields/TextGeorefField';
+export {MapGeorefField} from './views/formfields/MapGeorefField';
 
 export {Form} from './views/forms/Form';
 export {OccurrenceForm} from './views/forms/OccurrenceForm';

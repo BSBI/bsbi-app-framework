@@ -27,7 +27,7 @@ export default [
 			format: 'es', // 'cjs'
 			sourcemap: true,
 			name: 'bsbiappframework',
-			globals: { BsbiDb: 'BsbiDb', jquery: '$' },
+			globals: { BsbiDb: 'BsbiDb', jquery: '$', MapboxGeocoder: 'MapboxGeocoder' },
 		},
 		external: ['BsbiDb', 'jquery'],
 

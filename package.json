@@ -35,6 +35,7 @@
     "core-js": "^3.19.1",
     "email-validator": "^2.0.4",
     "localforage": "^1.10.0",
+    "mapbox-gl": "^2.6.1",
     "navigo": "^7.1.2"
   },
   "scripts": {
