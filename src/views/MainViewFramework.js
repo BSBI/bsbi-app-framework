@@ -1,6 +1,6 @@
 // Overall view for the main list page *and occurrence side panels*
 
-import htmlLayout from "../templates/mainViewLayout.html";
+import {Page} from "./Page";
 import {SurveyForm} from "./forms/SurveyForm";
 import {MainController} from "../controllers/MainController";
 import {Occurrence} from "../models/Occurrence";
@@ -12,7 +12,6 @@ import {OccurrenceImage} from "../models/OccurrenceImage";
 import {ImageField} from "./formfields/ImageField";
 import {App, doubleClickIntercepted} from "..";
 import {Modal} from "bootstrap";
-import {MainViewFramework} from "./MainViewFramework";
 
 const LEFT_PANEL_ID = 'col1panel';
 const RIGHT_PANEL_ID = 'col2panel';
@@ -28,14 +27,11 @@ const FINISH_MODAL_ID = 'finishmodal';
 
 const OCCURRENCE_LIST_CONTAINER_ID = 'occurrencelistcontainer';
 
-//SurveyForm.registerSection(GardenFlowerSurveyFormAboutSection);
-//SurveyForm.registerSection(GardenFlowerSurveyFormGardenSection);
-
 /**
  * @external $
  */
 
-export class MainView extends MainViewFramework {
+export class MainViewFramework extends Page {
 
     /**
      * @type {MainController}
@@ -92,21 +88,37 @@ export class MainView extends MainViewFramework {
      */
     defaultRightHandSideHelp = 'Default right-hand side help text in MainView.example.js';
 
-    // /**
-    //  * called once during late-stage app initialisation
-    //  * (NB this may not be the current view when called)
-    //  *
-    //  * an opportunity to register listeners on this.controller.app
-    //  */
-    // initialise() {
-    //     this.controller.app.addListener(App.EVENT_OCCURRENCE_ADDED, this.occurrenceAddedHandler.bind(this));
-    // }
+    /**
+     * called once during late-stage app initialisation
+     * (NB this may not be the current view when called)
+     *
+     * an opportunity to register listeners on this.controller.app
+     */
+    initialise() {
+        this.controller.app.addListener(App.EVENT_OCCURRENCE_ADDED, this.occurrenceAddedHandler.bind(this));
+    }
 
     /**
      * called before display to initialise a two-panel layout
+     *
+     * @param {string} htmlLayout
+     * @protected
      */
-    setLayout() {
-        super.setLayoutImpl(htmlLayout);
+    setLayoutImpl(htmlLayout) {
+        const bodyEl = document.getElementById('body');
+        bodyEl.innerHTML = htmlLayout;
+
+        // register handler on right-pane back button
+        document.getElementById(PANEL_BACK_BUTTON_ID).addEventListener('click', (event) => {
+            if (doubleClickIntercepted(event)) {
+                return;
+            }
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            this.fireEvent(MainController.EVENT_BACK);
+        });
     }
 
     /**
@@ -319,8 +331,7 @@ export class MainView extends MainViewFramework {
                     case 'finish':
                         this.controller.app.router.navigate('/list/record/');
                         // display the finish dialogue box
-                        //$(`#${FINISH_MODAL_ID}`).modal();
-                        this.finishModal.show();
+                        $(`#${FINISH_MODAL_ID}`).modal();
                         break;
 
                     case 'next':
@@ -422,6 +433,7 @@ export class MainView extends MainViewFramework {
     finishModal;
 
     #registerModals() {
+        //const container = document.getElementById(LEFT_PANEL_ID);
         const container = document.body;
 
         // Delete record modal

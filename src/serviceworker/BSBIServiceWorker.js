@@ -46,7 +46,7 @@ export class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-VERSION-${configuration.version}`;
+        this.CACHE_VERSION = `version-BSBI_APP_VERSION-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;

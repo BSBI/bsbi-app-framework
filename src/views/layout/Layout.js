@@ -7,10 +7,7 @@ import saveAllFailureModal from "../../templates/syncFailureModal.html";
 import {EventHarness} from "../../framework/EventHarness";
 import {App} from "../../framework/App";
 import {GPSRequest} from "../../utils/GPSRequest";
-
-/**
- * @external $
- */
+import {Modal, Collapse} from 'bootstrap';
 
 export class Layout extends EventHarness {
 
@@ -71,10 +68,20 @@ export class Layout extends EventHarness {
 
         this.registerGPSClassMarker();
 
-        const navMain = $("#navbarSupportedContent");
-        navMain.on("click", "a", null, function () {
-            console.log('forced navbar collapse');
-            navMain.collapse('hide');
+        // const navMain = $("#navbarSupportedContent");
+        // navMain.on("click", "a", null, function () {
+        //     console.log('forced navbar collapse');
+        //     navMain.collapse('hide');
+        // });
+
+        const navEl = document.getElementById('navbarSupportedContent');
+        navEl.addEventListener('click', (event) => {
+            const element = event.target;
+            console.log({'nav content click' : event});
+            if (element.tagName === 'A') {
+                console.log('forced navbar collapse');
+                Collapse.getOrCreateInstance(navEl).hide();
+            }
         });
     }
 
@@ -102,6 +109,26 @@ export class Layout extends EventHarness {
         }
     }
 
+    /**
+     * @type {Modal}
+     */
+    newSurveyModal;
+
+    /**
+     * @type {Modal}
+     */
+    resetModal;
+
+    /**
+     * @type {Modal}
+     */
+    saveAllSuccessModal;
+
+    /**
+     * @type {Modal}
+     */
+    saveAllFailureModal;
+
     initialise() {
         this.refreshSurveysMenu();
 
@@ -123,6 +150,11 @@ export class Layout extends EventHarness {
 
         // register event handlers once the content is likely to be in the DOM
         setTimeout(() => {
+            this.newSurveyModal = Modal.getOrCreateInstance(document.getElementById(Layout.NEW_SURVEY_MODAL_ID), {});
+            this.resetModal = Modal.getOrCreateInstance(document.getElementById(Layout.RESET_MODAL_ID), {});
+            this.saveAllSuccessModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_SUCCESS_MODAL_ID), {});
+            this.saveAllFailureModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_FAILURE_MODAL_ID), {});
+
             document.getElementById(`${Layout.NEW_SURVEY_MODAL_ID}confirmed`).addEventListener('click', (event) => {
                 event.stopPropagation();
                 event.preventDefault();
@@ -131,7 +163,8 @@ export class Layout extends EventHarness {
                     // only if not a double click
 
                     // force hide the new survey modal
-                    $(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal('hide');
+                    //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal('hide');
+                    this.newSurveyModal.hide();
 
                     this.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
                 }
@@ -142,7 +175,8 @@ export class Layout extends EventHarness {
 
                 if (event.detail < 2) {
                     // force hide the new survey modal
-                    $(`#${Layout.RESET_MODAL_ID}`).modal('hide');
+                    //$(`#${Layout.RESET_MODAL_ID}`).modal('hide');
+                    this.resetModal.hide();
 
                     // only if not a double click
                     this.app.fireEvent(App.EVENT_RESET_SURVEYS);

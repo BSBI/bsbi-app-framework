@@ -3,15 +3,12 @@ import {OccurrenceImage} from "../../models/OccurrenceImage";
 import {doubleClickIntercepted} from "../../utils/stopDoubleClick";
 import {GPSRequest} from "../../utils/GPSRequest";
 import {Form} from "../forms/Form";
+import {Modal} from 'bootstrap';
 
 export const IMAGE_MODAL_ID = 'imagemodal';
 export const IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
 export const DELETE_IMAGE_MODAL_ID = 'deleteimagemodal';
 export const EVENT_DELETE_IMAGE = 'deleteimage';
-
-/**
- * @external $
- */
 
 export class ImageField extends FormField {
 
@@ -298,8 +295,9 @@ export class ImageField extends FormField {
             const deleteButton = document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID);
             deleteButton.setAttribute('data-imageid', imageId);
 
-            $(`#${IMAGE_MODAL_ID}`).modal({
-            });
+            //$(`#${IMAGE_MODAL_ID}`).modal({});
+            //Modal.getOrCreateInstance(document.getElementById(IMAGE_MODAL_ID), {}).show();
+            ImageField.imageModal.show();
         }
     }
 
@@ -386,10 +384,71 @@ export class ImageField extends FormField {
     }
 
     /**
-     *
-     * @returns {HTMLDivElement}
+     * @type {Modal}
      */
-    static licenseModal() {
+    static imageModal;
+
+    /**
+     * image display modal div
+     * includes a button to delete the image
+     *
+     * @param {HTMLDivElement} container
+     * @param {MainView} mainView
+     */
+    static registerImageModalElement(container, mainView) {
+        const imageModalEl = document.createElement('div');
+        imageModalEl.innerHTML = `<div class="modal fade" id="${IMAGE_MODAL_ID}" tabindex="-1" role="dialog" aria-labelledby="${IMAGE_MODAL_ID}Title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header d-none d-md-flex">
+        <h5 class="modal-title" id="${IMAGE_MODAL_ID}Title">Photo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="position: relative;">
+        <picture>
+        </picture>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-toggle="modal" data-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+
+        container.appendChild(imageModalEl.firstChild);
+        ImageField.imageModal = Modal.getOrCreateInstance(document.getElementById(IMAGE_MODAL_ID));
+
+        document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID).addEventListener('click', (event) => {
+            if (doubleClickIntercepted(event)) {
+                return;
+            }
+
+            const deleteButtonEl = event.target.closest('button');
+
+            if (deleteButtonEl && deleteButtonEl.hasAttribute('data-imageid')) {
+                const imageId = deleteButtonEl.getAttribute('data-imageid');
+                //console.log(`Deleting image ${occurrenceId}.`);
+
+                mainView.getOccurrenceForm().fireEvent(EVENT_DELETE_IMAGE, {imageId});
+                ImageField.imageModal.hide();
+                //$(`#${IMAGE_MODAL_ID}`).modal('hide');
+            }
+        });
+    }
+
+    /**
+     * @type {Modal}
+     */
+    static licenseModal;
+
+    /**
+     *
+     * @param {HTMLDivElement} container
+     */
+    static registerLicenseModal(container) {
         // 'image license' modal
         // this pop-up is informational only
         const modalEl = document.createElement('div');
@@ -432,6 +491,8 @@ export class ImageField extends FormField {
   </div>
 </div>`;
 
-        return modalEl.firstChild;
+        container.appendChild(modalEl.firstChild);
+
+        ImageField.licenseModal = Modal.getOrCreateInstance(document.getElementById(ImageField.LICENSE_MODAL));
     }
 }

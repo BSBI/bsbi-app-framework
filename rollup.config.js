@@ -27,16 +27,16 @@ export default [
 			format: 'es', // 'cjs'
 			sourcemap: true,
 			name: 'bsbiappframework',
-			globals: { BsbiDb: 'BsbiDb', jquery: '$', MapboxGeocoder: 'MapboxGeocoder' },
+			globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
 		},
-		external: ['BsbiDb', 'jquery'],
+		external: ['BsbiDb'],
 
 		plugins: [
 			resolve(), // tells Rollup how to find files in node_modules
 			replace({
 				preventAssignment: true,
 				values: {
-					VERSION: version,
+					BSBI_APP_VERSION: version,
 					// ENVIRONMENT: JSON.stringify('development')
 				},
 			}),
@@ -71,7 +71,7 @@ export default [
 	// 		resolve(), // tells Rollup how to find files in node_modules
 	// 		replace({
 	// 			values: {
-	// 				VERSION: version,
+	// 				BSBI_APP_VERSION: version,
 	// 				// ENVIRONMENT: JSON.stringify('development')
 	// 			},
 	// 		}),

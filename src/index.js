@@ -43,7 +43,8 @@ export {Layout} from './views/layout/Layout';
 
 export {Page} from './views/Page';
 
-//export {MainView} from './views/MainView.example';
+//export {MainViewFramework} from './views/MainViewFramework';
+
 export {SurveyPickerView} from './views/SurveyPickerView';
 
 export {GPSRequest} from './utils/GPSRequest';

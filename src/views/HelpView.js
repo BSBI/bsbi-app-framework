@@ -15,6 +15,6 @@ export class HelpView extends Page {
         // at this point the entire content of #body should be safe to replace
 
         const bodyEl = document.getElementById('body');
-        bodyEl.innerHTML = `${this.htmlContent}<p>Version VERSION</p>`;
+        bodyEl.innerHTML = `${this.htmlContent}<p>Version BSBI_APP_VERSION</p>`;
     }
 }

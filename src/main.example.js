@@ -1,5 +1,5 @@
 // Example of using the BSBI app framework
-// version VERSION
+// version BSBI_APP_VERSION
 
 import {ExampleApp} from './framework/ExampleApp';
 import {MainController} from "./controllers/MainController";

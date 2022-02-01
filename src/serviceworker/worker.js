@@ -36,6 +36,6 @@ serviceWorker.initialise({
         'https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js',
         'https://fonts.googleapis.com/css2?family=Gentium+Basic&display=swap'
     ],
-    version : 'VERSION'
+    version : 'BSBI_APP_VERSION'
 });
 
