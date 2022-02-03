@@ -1,4883 +1,102 @@
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, descriptor.key, descriptor);
-  }
-}
-
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  Object.defineProperty(Constructor, "prototype", {
-    writable: false
-  });
-  return Constructor;
-}
-
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
-function _classStaticPrivateFieldSpecSet$2(receiver, classConstructor, descriptor, value) { _classCheckPrivateStaticAccess$4(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$4(descriptor, "set"); _classApplyDescriptorSet$3(receiver, descriptor, value); return value; }
-
-function _classApplyDescriptorSet$3(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
-
-function _classStaticPrivateFieldSpecGet$4(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess$4(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$4(descriptor, "get"); return _classApplyDescriptorGet$5(receiver, descriptor); }
-
-function _classCheckPrivateStaticFieldDescriptor$4(descriptor, action) { if (descriptor === undefined) { throw new TypeError("attempted to " + action + " private static field before its declaration"); } }
-
-function _classCheckPrivateStaticAccess$4(receiver, classConstructor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } }
-
-function _classApplyDescriptorGet$5(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
-
 // AppController
 // Abstract super-class for page controllers
-var AppController = /*#__PURE__*/function () {
-  function AppController() {
-    _classCallCheck(this, AppController);
 
-    _defineProperty(this, "route", null);
+class AppController {
 
-    _defineProperty(this, "view", void 0);
+    /**
+     *
+     * @type {(null|string)}
+     */
+    route = null;
 
-    _defineProperty(this, "title", 'untitled');
+    /**
+     *
+     * @type {Page}
+     */
+    view;
 
-    _defineProperty(this, "handle", void 0);
+    title = 'untitled';
 
-    _defineProperty(this, "app", void 0);
+    /**
+     *
+     * @type {number}
+     */
+    handle;
 
-    _defineProperty(this, "beforeRouteHandler", null);
+    /**
+     *
+     * @type {App}
+     */
+    app;
 
-    _defineProperty(this, "afterRouteHandler", null);
+    beforeRouteHandler = null;
+    afterRouteHandler = null;
+    leaveRouteHandler = null;
+    alreadyRouteHandler = null;
 
-    _defineProperty(this, "leaveRouteHandler", null);
+    static #handleIndex = 0;
 
-    _defineProperty(this, "alreadyRouteHandler", null);
-  }
+    static get nextHandle() {
+        return AppController.#handleIndex++;
+    }
 
-  _createClass(AppController, [{
-    key: "initialise",
-    value:
     /**
      * called from App.initialise() to trigger late-stage initialisation
      */
-    function initialise() {
-      this.view.initialise();
+    initialise() {
+        this.view.initialise();
     }
+
     /**
      * registers the default route from this.route
      * or alternatively is overridden in a child class
      *
      * @param {PatchedNavigo} router
      */
+    registerRoute(router) {
+        if (null === this.route) {
+            throw new Error(`No route set for '${this.title}' controller.`);
+        }
 
-  }, {
-    key: "registerRoute",
-    value: function registerRoute(router) {
-      if (null === this.route) {
-        throw new Error("No route set for '".concat(this.title, "' controller."));
-      }
+        console.log({route : this.route});
 
-      console.log({
-        route: this.route
-      });
-      router.on(this.route, this.routeHandler.bind(this), {
-        before: this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        after: this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        leave: this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        already: this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-      });
+        router.on(
+            this.route,
+            this.routeHandler.bind(this),
+            {
+                before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+                after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+                leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+                already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+            }
+        );
     }
+
     /**
      *
      * @param {object} params
      * @param {string} query
      */
+    routeHandler(params, query) {
 
-  }, {
-    key: "routeHandler",
-    value: function routeHandler(params, query) {}
-  }], [{
-    key: "nextHandle",
-    get: function get() {
-      var _AppController$handle;
-
-      return _classStaticPrivateFieldSpecSet$2(AppController, AppController, _handleIndex, (_AppController$handle = +_classStaticPrivateFieldSpecGet$4(AppController, AppController, _handleIndex)) + 1), _AppController$handle;
     }
-  }]);
-
-  return AppController;
-}();
-var _handleIndex = {
-  writable: true,
-  value: 0
-};
-
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-function commonjsRequire (path) {
-	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
 }
 
-var check = function (it) {
-  return it && it.Math == Math && it;
-};
-
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-var global$$ =
-  // eslint-disable-next-line es/no-global-this -- safe
-  check(typeof globalThis == 'object' && globalThis) ||
-  check(typeof window == 'object' && window) ||
-  // eslint-disable-next-line no-restricted-globals -- safe
-  check(typeof self == 'object' && self) ||
-  check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
-  // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || Function('return this')();
-
-var objectGetOwnPropertyDescriptor = {};
-
-var fails$z = function (exec) {
-  try {
-    return !!exec();
-  } catch (error) {
-    return true;
-  }
-};
-
-var fails$y = fails$z;
-
-// Detect IE8's incomplete defineProperty implementation
-var descriptors = !fails$y(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
-});
-
-var fails$x = fails$z;
-
-var functionBindNative = !fails$x(function () {
-  var test = (function () { /* empty */ }).bind();
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return typeof test != 'function' || test.hasOwnProperty('prototype');
-});
-
-var NATIVE_BIND$4 = functionBindNative;
-
-var call$k = Function.prototype.call;
-
-var functionCall = NATIVE_BIND$4 ? call$k.bind(call$k) : function () {
-  return call$k.apply(call$k, arguments);
-};
-
-var objectPropertyIsEnumerable = {};
-
-var $propertyIsEnumerable$1 = {}.propertyIsEnumerable;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor$3 = Object.getOwnPropertyDescriptor;
-
-// Nashorn ~ JDK8 bug
-var NASHORN_BUG = getOwnPropertyDescriptor$3 && !$propertyIsEnumerable$1.call({ 1: 2 }, 1);
-
-// `Object.prototype.propertyIsEnumerable` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-objectPropertyIsEnumerable.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
-  var descriptor = getOwnPropertyDescriptor$3(this, V);
-  return !!descriptor && descriptor.enumerable;
-} : $propertyIsEnumerable$1;
-
-var createPropertyDescriptor$5 = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-var NATIVE_BIND$3 = functionBindNative;
-
-var FunctionPrototype$3 = Function.prototype;
-var bind$9 = FunctionPrototype$3.bind;
-var call$j = FunctionPrototype$3.call;
-var uncurryThis$C = NATIVE_BIND$3 && bind$9.bind(call$j, call$j);
-
-var functionUncurryThis = NATIVE_BIND$3 ? function (fn) {
-  return fn && uncurryThis$C(fn);
-} : function (fn) {
-  return fn && function () {
-    return call$j.apply(fn, arguments);
-  };
-};
-
-var uncurryThis$B = functionUncurryThis;
-
-var toString$g = uncurryThis$B({}.toString);
-var stringSlice$8 = uncurryThis$B(''.slice);
-
-var classofRaw$1 = function (it) {
-  return stringSlice$8(toString$g(it), 8, -1);
-};
-
-var global$_ = global$$;
-var uncurryThis$A = functionUncurryThis;
-var fails$w = fails$z;
-var classof$e = classofRaw$1;
-
-var Object$5 = global$_.Object;
-var split = uncurryThis$A(''.split);
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-var indexedObject = fails$w(function () {
-  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return !Object$5('z').propertyIsEnumerable(0);
-}) ? function (it) {
-  return classof$e(it) == 'String' ? split(it, '') : Object$5(it);
-} : Object$5;
-
-var global$Z = global$$;
-
-var TypeError$m = global$Z.TypeError;
-
-// `RequireObjectCoercible` abstract operation
-// https://tc39.es/ecma262/#sec-requireobjectcoercible
-var requireObjectCoercible$a = function (it) {
-  if (it == undefined) throw TypeError$m("Can't call method on " + it);
-  return it;
-};
-
-// toObject with fallback for non-array-like ES3 strings
-var IndexedObject$2 = indexedObject;
-var requireObjectCoercible$9 = requireObjectCoercible$a;
-
-var toIndexedObject$b = function (it) {
-  return IndexedObject$2(requireObjectCoercible$9(it));
-};
-
-// `IsCallable` abstract operation
-// https://tc39.es/ecma262/#sec-iscallable
-var isCallable$p = function (argument) {
-  return typeof argument == 'function';
-};
-
-var isCallable$o = isCallable$p;
-
-var isObject$l = function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$o(it);
-};
-
-var global$Y = global$$;
-var isCallable$n = isCallable$p;
-
-var aFunction = function (argument) {
-  return isCallable$n(argument) ? argument : undefined;
-};
-
-var getBuiltIn$b = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(global$Y[namespace]) : global$Y[namespace] && global$Y[namespace][method];
-};
-
-var uncurryThis$z = functionUncurryThis;
-
-var objectIsPrototypeOf = uncurryThis$z({}.isPrototypeOf);
-
-var getBuiltIn$a = getBuiltIn$b;
-
-var engineUserAgent = getBuiltIn$a('navigator', 'userAgent') || '';
-
-var global$X = global$$;
-var userAgent$5 = engineUserAgent;
-
-var process$4 = global$X.process;
-var Deno = global$X.Deno;
-var versions = process$4 && process$4.versions || Deno && Deno.version;
-var v8 = versions && versions.v8;
-var match$1, version;
-
-if (v8) {
-  match$1 = v8.split('.');
-  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
-  // but their correct versions are not interesting for us
-  version = match$1[0] > 0 && match$1[0] < 4 ? 1 : +(match$1[0] + match$1[1]);
+class NotFoundError extends Error {
+    constructor (message) {
+        super(message);
+    }
 }
 
-// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
-// so check `userAgent` even if `.v8` exists, but 0
-if (!version && userAgent$5) {
-  match$1 = userAgent$5.match(/Edge\/(\d+)/);
-  if (!match$1 || match$1[1] >= 74) {
-    match$1 = userAgent$5.match(/Chrome\/(\d+)/);
-    if (match$1) version = +match$1[1];
-  }
-}
+class EventHarness {
+    /**
+     *
+     * @type {*[]}
+     */
+    #eventListeners = [];
+
+    static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
-var engineV8Version = version;
-
-/* eslint-disable es/no-symbol -- required for testing */
-
-var V8_VERSION$3 = engineV8Version;
-var fails$v = fails$z;
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
-var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$v(function () {
-  var symbol = Symbol();
-  // Chrome 38 Symbol has incorrect toString conversion
-  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  return !String(symbol) || !(Object(symbol) instanceof Symbol) ||
-    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    !Symbol.sham && V8_VERSION$3 && V8_VERSION$3 < 41;
-});
-
-/* eslint-disable es/no-symbol -- required for testing */
-
-var NATIVE_SYMBOL$3 = nativeSymbol;
-
-var useSymbolAsUid = NATIVE_SYMBOL$3
-  && !Symbol.sham
-  && typeof Symbol.iterator == 'symbol';
-
-var global$W = global$$;
-var getBuiltIn$9 = getBuiltIn$b;
-var isCallable$m = isCallable$p;
-var isPrototypeOf$7 = objectIsPrototypeOf;
-var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
-
-var Object$4 = global$W.Object;
-
-var isSymbol$3 = USE_SYMBOL_AS_UID$1 ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  var $Symbol = getBuiltIn$9('Symbol');
-  return isCallable$m($Symbol) && isPrototypeOf$7($Symbol.prototype, Object$4(it));
-};
-
-var global$V = global$$;
-
-var String$5 = global$V.String;
-
-var tryToString$4 = function (argument) {
-  try {
-    return String$5(argument);
-  } catch (error) {
-    return 'Object';
-  }
-};
-
-var global$U = global$$;
-var isCallable$l = isCallable$p;
-var tryToString$3 = tryToString$4;
-
-var TypeError$l = global$U.TypeError;
-
-// `Assert: IsCallable(argument) is true`
-var aCallable$7 = function (argument) {
-  if (isCallable$l(argument)) return argument;
-  throw TypeError$l(tryToString$3(argument) + ' is not a function');
-};
-
-var aCallable$6 = aCallable$7;
-
-// `GetMethod` abstract operation
-// https://tc39.es/ecma262/#sec-getmethod
-var getMethod$7 = function (V, P) {
-  var func = V[P];
-  return func == null ? undefined : aCallable$6(func);
-};
-
-var global$T = global$$;
-var call$i = functionCall;
-var isCallable$k = isCallable$p;
-var isObject$k = isObject$l;
-
-var TypeError$k = global$T.TypeError;
-
-// `OrdinaryToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-ordinarytoprimitive
-var ordinaryToPrimitive$1 = function (input, pref) {
-  var fn, val;
-  if (pref === 'string' && isCallable$k(fn = input.toString) && !isObject$k(val = call$i(fn, input))) return val;
-  if (isCallable$k(fn = input.valueOf) && !isObject$k(val = call$i(fn, input))) return val;
-  if (pref !== 'string' && isCallable$k(fn = input.toString) && !isObject$k(val = call$i(fn, input))) return val;
-  throw TypeError$k("Can't convert object to primitive value");
-};
-
-var shared$5 = {exports: {}};
-
-var isPure = false;
-
-var global$S = global$$;
-
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty$a = Object.defineProperty;
-
-var setGlobal$3 = function (key, value) {
-  try {
-    defineProperty$a(global$S, key, { value: value, configurable: true, writable: true });
-  } catch (error) {
-    global$S[key] = value;
-  } return value;
-};
-
-var global$R = global$$;
-var setGlobal$2 = setGlobal$3;
-
-var SHARED = '__core-js_shared__';
-var store$3 = global$R[SHARED] || setGlobal$2(SHARED, {});
-
-var sharedStore = store$3;
-
-var store$2 = sharedStore;
-
-(shared$5.exports = function (key, value) {
-  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
-})('versions', []).push({
-  version: '3.21.0',
-  mode: 'global',
-  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.21.0/LICENSE',
-  source: 'https://github.com/zloirock/core-js'
-});
-
-var global$Q = global$$;
-var requireObjectCoercible$8 = requireObjectCoercible$a;
-
-var Object$3 = global$Q.Object;
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-var toObject$a = function (argument) {
-  return Object$3(requireObjectCoercible$8(argument));
-};
-
-var uncurryThis$y = functionUncurryThis;
-var toObject$9 = toObject$a;
-
-var hasOwnProperty = uncurryThis$y({}.hasOwnProperty);
-
-// `HasOwnProperty` abstract operation
-// https://tc39.es/ecma262/#sec-hasownproperty
-var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
-  return hasOwnProperty(toObject$9(it), key);
-};
-
-var uncurryThis$x = functionUncurryThis;
-
-var id$2 = 0;
-var postfix = Math.random();
-var toString$f = uncurryThis$x(1.0.toString);
-
-var uid$4 = function (key) {
-  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$f(++id$2 + postfix, 36);
-};
-
-var global$P = global$$;
-var shared$4 = shared$5.exports;
-var hasOwn$g = hasOwnProperty_1;
-var uid$3 = uid$4;
-var NATIVE_SYMBOL$2 = nativeSymbol;
-var USE_SYMBOL_AS_UID = useSymbolAsUid;
-
-var WellKnownSymbolsStore$1 = shared$4('wks');
-var Symbol$1 = global$P.Symbol;
-var symbolFor = Symbol$1 && Symbol$1['for'];
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$3;
-
-var wellKnownSymbol$q = function (name) {
-  if (!hasOwn$g(WellKnownSymbolsStore$1, name) || !(NATIVE_SYMBOL$2 || typeof WellKnownSymbolsStore$1[name] == 'string')) {
-    var description = 'Symbol.' + name;
-    if (NATIVE_SYMBOL$2 && hasOwn$g(Symbol$1, name)) {
-      WellKnownSymbolsStore$1[name] = Symbol$1[name];
-    } else if (USE_SYMBOL_AS_UID && symbolFor) {
-      WellKnownSymbolsStore$1[name] = symbolFor(description);
-    } else {
-      WellKnownSymbolsStore$1[name] = createWellKnownSymbol(description);
-    }
-  } return WellKnownSymbolsStore$1[name];
-};
-
-var global$O = global$$;
-var call$h = functionCall;
-var isObject$j = isObject$l;
-var isSymbol$2 = isSymbol$3;
-var getMethod$6 = getMethod$7;
-var ordinaryToPrimitive = ordinaryToPrimitive$1;
-var wellKnownSymbol$p = wellKnownSymbol$q;
-
-var TypeError$j = global$O.TypeError;
-var TO_PRIMITIVE$1 = wellKnownSymbol$p('toPrimitive');
-
-// `ToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-toprimitive
-var toPrimitive$1 = function (input, pref) {
-  if (!isObject$j(input) || isSymbol$2(input)) return input;
-  var exoticToPrim = getMethod$6(input, TO_PRIMITIVE$1);
-  var result;
-  if (exoticToPrim) {
-    if (pref === undefined) pref = 'default';
-    result = call$h(exoticToPrim, input, pref);
-    if (!isObject$j(result) || isSymbol$2(result)) return result;
-    throw TypeError$j("Can't convert object to primitive value");
-  }
-  if (pref === undefined) pref = 'number';
-  return ordinaryToPrimitive(input, pref);
-};
-
-var toPrimitive = toPrimitive$1;
-var isSymbol$1 = isSymbol$3;
-
-// `ToPropertyKey` abstract operation
-// https://tc39.es/ecma262/#sec-topropertykey
-var toPropertyKey$4 = function (argument) {
-  var key = toPrimitive(argument, 'string');
-  return isSymbol$1(key) ? key : key + '';
-};
-
-var global$N = global$$;
-var isObject$i = isObject$l;
-
-var document$3 = global$N.document;
-// typeof document.createElement is 'object' in old IE
-var EXISTS$1 = isObject$i(document$3) && isObject$i(document$3.createElement);
-
-var documentCreateElement$2 = function (it) {
-  return EXISTS$1 ? document$3.createElement(it) : {};
-};
-
-var DESCRIPTORS$h = descriptors;
-var fails$u = fails$z;
-var createElement$1 = documentCreateElement$2;
-
-// Thanks to IE8 for its funny defineProperty
-var ie8DomDefine = !DESCRIPTORS$h && !fails$u(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(createElement$1('div'), 'a', {
-    get: function () { return 7; }
-  }).a != 7;
-});
-
-var DESCRIPTORS$g = descriptors;
-var call$g = functionCall;
-var propertyIsEnumerableModule$1 = objectPropertyIsEnumerable;
-var createPropertyDescriptor$4 = createPropertyDescriptor$5;
-var toIndexedObject$a = toIndexedObject$b;
-var toPropertyKey$3 = toPropertyKey$4;
-var hasOwn$f = hasOwnProperty_1;
-var IE8_DOM_DEFINE$1 = ie8DomDefine;
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor$2 = Object.getOwnPropertyDescriptor;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-objectGetOwnPropertyDescriptor.f = DESCRIPTORS$g ? $getOwnPropertyDescriptor$2 : function getOwnPropertyDescriptor(O, P) {
-  O = toIndexedObject$a(O);
-  P = toPropertyKey$3(P);
-  if (IE8_DOM_DEFINE$1) try {
-    return $getOwnPropertyDescriptor$2(O, P);
-  } catch (error) { /* empty */ }
-  if (hasOwn$f(O, P)) return createPropertyDescriptor$4(!call$g(propertyIsEnumerableModule$1.f, O, P), O[P]);
-};
-
-var objectDefineProperty = {};
-
-var DESCRIPTORS$f = descriptors;
-var fails$t = fails$z;
-
-// V8 ~ Chrome 36-
-// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-var v8PrototypeDefineBug = DESCRIPTORS$f && fails$t(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
-    value: 42,
-    writable: false
-  }).prototype != 42;
-});
-
-var global$M = global$$;
-var isObject$h = isObject$l;
-
-var String$4 = global$M.String;
-var TypeError$i = global$M.TypeError;
-
-// `Assert: Type(argument) is Object`
-var anObject$l = function (argument) {
-  if (isObject$h(argument)) return argument;
-  throw TypeError$i(String$4(argument) + ' is not an object');
-};
-
-var global$L = global$$;
-var DESCRIPTORS$e = descriptors;
-var IE8_DOM_DEFINE = ie8DomDefine;
-var V8_PROTOTYPE_DEFINE_BUG$1 = v8PrototypeDefineBug;
-var anObject$k = anObject$l;
-var toPropertyKey$2 = toPropertyKey$4;
-
-var TypeError$h = global$L.TypeError;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var $defineProperty$1 = Object.defineProperty;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
-var ENUMERABLE = 'enumerable';
-var CONFIGURABLE$1 = 'configurable';
-var WRITABLE = 'writable';
-
-// `Object.defineProperty` method
-// https://tc39.es/ecma262/#sec-object.defineproperty
-objectDefineProperty.f = DESCRIPTORS$e ? V8_PROTOTYPE_DEFINE_BUG$1 ? function defineProperty(O, P, Attributes) {
-  anObject$k(O);
-  P = toPropertyKey$2(P);
-  anObject$k(Attributes);
-  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-    var current = $getOwnPropertyDescriptor$1(O, P);
-    if (current && current[WRITABLE]) {
-      O[P] = Attributes.value;
-      Attributes = {
-        configurable: CONFIGURABLE$1 in Attributes ? Attributes[CONFIGURABLE$1] : current[CONFIGURABLE$1],
-        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
-        writable: false
-      };
-    }
-  } return $defineProperty$1(O, P, Attributes);
-} : $defineProperty$1 : function defineProperty(O, P, Attributes) {
-  anObject$k(O);
-  P = toPropertyKey$2(P);
-  anObject$k(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return $defineProperty$1(O, P, Attributes);
-  } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw TypeError$h('Accessors not supported');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-var DESCRIPTORS$d = descriptors;
-var definePropertyModule$6 = objectDefineProperty;
-var createPropertyDescriptor$3 = createPropertyDescriptor$5;
-
-var createNonEnumerableProperty$8 = DESCRIPTORS$d ? function (object, key, value) {
-  return definePropertyModule$6.f(object, key, createPropertyDescriptor$3(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-var redefine$d = {exports: {}};
-
-var uncurryThis$w = functionUncurryThis;
-var isCallable$j = isCallable$p;
-var store$1 = sharedStore;
-
-var functionToString$1 = uncurryThis$w(Function.toString);
-
-// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable$j(store$1.inspectSource)) {
-  store$1.inspectSource = function (it) {
-    return functionToString$1(it);
-  };
-}
-
-var inspectSource$4 = store$1.inspectSource;
-
-var global$K = global$$;
-var isCallable$i = isCallable$p;
-var inspectSource$3 = inspectSource$4;
-
-var WeakMap$2 = global$K.WeakMap;
-
-var nativeWeakMap = isCallable$i(WeakMap$2) && /native code/.test(inspectSource$3(WeakMap$2));
-
-var shared$3 = shared$5.exports;
-var uid$2 = uid$4;
-
-var keys$1 = shared$3('keys');
-
-var sharedKey$4 = function (key) {
-  return keys$1[key] || (keys$1[key] = uid$2(key));
-};
-
-var hiddenKeys$6 = {};
-
-var NATIVE_WEAK_MAP$1 = nativeWeakMap;
-var global$J = global$$;
-var uncurryThis$v = functionUncurryThis;
-var isObject$g = isObject$l;
-var createNonEnumerableProperty$7 = createNonEnumerableProperty$8;
-var hasOwn$e = hasOwnProperty_1;
-var shared$2 = sharedStore;
-var sharedKey$3 = sharedKey$4;
-var hiddenKeys$5 = hiddenKeys$6;
-
-var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-var TypeError$g = global$J.TypeError;
-var WeakMap$1 = global$J.WeakMap;
-var set$1, get, has;
-
-var enforce = function (it) {
-  return has(it) ? get(it) : set$1(it, {});
-};
-
-var getterFor = function (TYPE) {
-  return function (it) {
-    var state;
-    if (!isObject$g(it) || (state = get(it)).type !== TYPE) {
-      throw TypeError$g('Incompatible receiver, ' + TYPE + ' required');
-    } return state;
-  };
-};
-
-if (NATIVE_WEAK_MAP$1 || shared$2.state) {
-  var store = shared$2.state || (shared$2.state = new WeakMap$1());
-  var wmget = uncurryThis$v(store.get);
-  var wmhas = uncurryThis$v(store.has);
-  var wmset = uncurryThis$v(store.set);
-  set$1 = function (it, metadata) {
-    if (wmhas(store, it)) throw new TypeError$g(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    wmset(store, it, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return wmget(store, it) || {};
-  };
-  has = function (it) {
-    return wmhas(store, it);
-  };
-} else {
-  var STATE = sharedKey$3('state');
-  hiddenKeys$5[STATE] = true;
-  set$1 = function (it, metadata) {
-    if (hasOwn$e(it, STATE)) throw new TypeError$g(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    createNonEnumerableProperty$7(it, STATE, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return hasOwn$e(it, STATE) ? it[STATE] : {};
-  };
-  has = function (it) {
-    return hasOwn$e(it, STATE);
-  };
-}
-
-var internalState = {
-  set: set$1,
-  get: get,
-  has: has,
-  enforce: enforce,
-  getterFor: getterFor
-};
-
-var DESCRIPTORS$c = descriptors;
-var hasOwn$d = hasOwnProperty_1;
-
-var FunctionPrototype$2 = Function.prototype;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS$c && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn$d(FunctionPrototype$2, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS$c || (DESCRIPTORS$c && getDescriptor(FunctionPrototype$2, 'name').configurable));
-
-var functionName = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-var global$I = global$$;
-var isCallable$h = isCallable$p;
-var hasOwn$c = hasOwnProperty_1;
-var createNonEnumerableProperty$6 = createNonEnumerableProperty$8;
-var setGlobal$1 = setGlobal$3;
-var inspectSource$2 = inspectSource$4;
-var InternalStateModule$7 = internalState;
-var CONFIGURABLE_FUNCTION_NAME$1 = functionName.CONFIGURABLE;
-
-var getInternalState$8 = InternalStateModule$7.get;
-var enforceInternalState$2 = InternalStateModule$7.enforce;
-var TEMPLATE = String(String).split('String');
-
-(redefine$d.exports = function (O, key, value, options) {
-  var unsafe = options ? !!options.unsafe : false;
-  var simple = options ? !!options.enumerable : false;
-  var noTargetGet = options ? !!options.noTargetGet : false;
-  var name = options && options.name !== undefined ? options.name : key;
-  var state;
-  if (isCallable$h(value)) {
-    if (String(name).slice(0, 7) === 'Symbol(') {
-      name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
-    }
-    if (!hasOwn$c(value, 'name') || (CONFIGURABLE_FUNCTION_NAME$1 && value.name !== name)) {
-      createNonEnumerableProperty$6(value, 'name', name);
-    }
-    state = enforceInternalState$2(value);
-    if (!state.source) {
-      state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
-    }
-  }
-  if (O === global$I) {
-    if (simple) O[key] = value;
-    else setGlobal$1(key, value);
-    return;
-  } else if (!unsafe) {
-    delete O[key];
-  } else if (!noTargetGet && O[key]) {
-    simple = true;
-  }
-  if (simple) O[key] = value;
-  else createNonEnumerableProperty$6(O, key, value);
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-})(Function.prototype, 'toString', function toString() {
-  return isCallable$h(this) && getInternalState$8(this).source || inspectSource$2(this);
-});
-
-var objectGetOwnPropertyNames = {};
-
-var ceil = Math.ceil;
-var floor$2 = Math.floor;
-
-// `ToIntegerOrInfinity` abstract operation
-// https://tc39.es/ecma262/#sec-tointegerorinfinity
-var toIntegerOrInfinity$5 = function (argument) {
-  var number = +argument;
-  // eslint-disable-next-line no-self-compare -- safe
-  return number !== number || number === 0 ? 0 : (number > 0 ? floor$2 : ceil)(number);
-};
-
-var toIntegerOrInfinity$4 = toIntegerOrInfinity$5;
-
-var max$4 = Math.max;
-var min$5 = Math.min;
-
-// Helper for a popular repeating case of the spec:
-// Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-var toAbsoluteIndex$4 = function (index, length) {
-  var integer = toIntegerOrInfinity$4(index);
-  return integer < 0 ? max$4(integer + length, 0) : min$5(integer, length);
-};
-
-var toIntegerOrInfinity$3 = toIntegerOrInfinity$5;
-
-var min$4 = Math.min;
-
-// `ToLength` abstract operation
-// https://tc39.es/ecma262/#sec-tolength
-var toLength$6 = function (argument) {
-  return argument > 0 ? min$4(toIntegerOrInfinity$3(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
-};
-
-var toLength$5 = toLength$6;
-
-// `LengthOfArrayLike` abstract operation
-// https://tc39.es/ecma262/#sec-lengthofarraylike
-var lengthOfArrayLike$9 = function (obj) {
-  return toLength$5(obj.length);
-};
-
-var toIndexedObject$9 = toIndexedObject$b;
-var toAbsoluteIndex$3 = toAbsoluteIndex$4;
-var lengthOfArrayLike$8 = lengthOfArrayLike$9;
-
-// `Array.prototype.{ indexOf, includes }` methods implementation
-var createMethod$3 = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIndexedObject$9($this);
-    var length = lengthOfArrayLike$8(O);
-    var index = toAbsoluteIndex$3(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (IS_INCLUDES && el != el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare -- NaN check
-      if (value != value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) {
-      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-var arrayIncludes = {
-  // `Array.prototype.includes` method
-  // https://tc39.es/ecma262/#sec-array.prototype.includes
-  includes: createMethod$3(true),
-  // `Array.prototype.indexOf` method
-  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-  indexOf: createMethod$3(false)
-};
-
-var uncurryThis$u = functionUncurryThis;
-var hasOwn$b = hasOwnProperty_1;
-var toIndexedObject$8 = toIndexedObject$b;
-var indexOf$1 = arrayIncludes.indexOf;
-var hiddenKeys$4 = hiddenKeys$6;
-
-var push$6 = uncurryThis$u([].push);
-
-var objectKeysInternal = function (object, names) {
-  var O = toIndexedObject$8(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) !hasOwn$b(hiddenKeys$4, key) && hasOwn$b(O, key) && push$6(result, key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (hasOwn$b(O, key = names[i++])) {
-    ~indexOf$1(result, key) || push$6(result, key);
-  }
-  return result;
-};
-
-// IE8- don't enum bug keys
-var enumBugKeys$3 = [
-  'constructor',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toLocaleString',
-  'toString',
-  'valueOf'
-];
-
-var internalObjectKeys$1 = objectKeysInternal;
-var enumBugKeys$2 = enumBugKeys$3;
-
-var hiddenKeys$3 = enumBugKeys$2.concat('length', 'prototype');
-
-// `Object.getOwnPropertyNames` method
-// https://tc39.es/ecma262/#sec-object.getownpropertynames
-// eslint-disable-next-line es/no-object-getownpropertynames -- safe
-objectGetOwnPropertyNames.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return internalObjectKeys$1(O, hiddenKeys$3);
-};
-
-var objectGetOwnPropertySymbols = {};
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
-objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
-
-var getBuiltIn$8 = getBuiltIn$b;
-var uncurryThis$t = functionUncurryThis;
-var getOwnPropertyNamesModule$2 = objectGetOwnPropertyNames;
-var getOwnPropertySymbolsModule$1 = objectGetOwnPropertySymbols;
-var anObject$j = anObject$l;
-
-var concat$2 = uncurryThis$t([].concat);
-
-// all object keys, includes non-enumerable and symbols
-var ownKeys$3 = getBuiltIn$8('Reflect', 'ownKeys') || function ownKeys(it) {
-  var keys = getOwnPropertyNamesModule$2.f(anObject$j(it));
-  var getOwnPropertySymbols = getOwnPropertySymbolsModule$1.f;
-  return getOwnPropertySymbols ? concat$2(keys, getOwnPropertySymbols(it)) : keys;
-};
-
-var hasOwn$a = hasOwnProperty_1;
-var ownKeys$2 = ownKeys$3;
-var getOwnPropertyDescriptorModule$2 = objectGetOwnPropertyDescriptor;
-var definePropertyModule$5 = objectDefineProperty;
-
-var copyConstructorProperties$2 = function (target, source, exceptions) {
-  var keys = ownKeys$2(source);
-  var defineProperty = definePropertyModule$5.f;
-  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule$2.f;
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!hasOwn$a(target, key) && !(exceptions && hasOwn$a(exceptions, key))) {
-      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
-    }
-  }
-};
-
-var fails$s = fails$z;
-var isCallable$g = isCallable$p;
-
-var replacement = /#|\.prototype\./;
-
-var isForced$4 = function (feature, detection) {
-  var value = data$1[normalize(feature)];
-  return value == POLYFILL ? true
-    : value == NATIVE ? false
-    : isCallable$g(detection) ? fails$s(detection)
-    : !!detection;
-};
-
-var normalize = isForced$4.normalize = function (string) {
-  return String(string).replace(replacement, '.').toLowerCase();
-};
-
-var data$1 = isForced$4.data = {};
-var NATIVE = isForced$4.NATIVE = 'N';
-var POLYFILL = isForced$4.POLYFILL = 'P';
-
-var isForced_1 = isForced$4;
-
-var global$H = global$$;
-var getOwnPropertyDescriptor$2 = objectGetOwnPropertyDescriptor.f;
-var createNonEnumerableProperty$5 = createNonEnumerableProperty$8;
-var redefine$c = redefine$d.exports;
-var setGlobal = setGlobal$3;
-var copyConstructorProperties$1 = copyConstructorProperties$2;
-var isForced$3 = isForced_1;
-
-/*
-  options.target      - name of the target object
-  options.global      - target is the global object
-  options.stat        - export as static methods of target
-  options.proto       - export as prototype methods of target
-  options.real        - real prototype method for the `pure` version
-  options.forced      - export even if the native feature is available
-  options.bind        - bind methods to the target, required for the `pure` version
-  options.wrap        - wrap constructors to preventing global pollution, required for the `pure` version
-  options.unsafe      - use the simple assignment of property instead of delete + defineProperty
-  options.sham        - add a flag to not completely full polyfills
-  options.enumerable  - export as enumerable property
-  options.noTargetGet - prevent calling a getter on target
-  options.name        - the .name of the function if it does not match the key
-*/
-var _export = function (options, source) {
-  var TARGET = options.target;
-  var GLOBAL = options.global;
-  var STATIC = options.stat;
-  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
-  if (GLOBAL) {
-    target = global$H;
-  } else if (STATIC) {
-    target = global$H[TARGET] || setGlobal(TARGET, {});
-  } else {
-    target = (global$H[TARGET] || {}).prototype;
-  }
-  if (target) for (key in source) {
-    sourceProperty = source[key];
-    if (options.noTargetGet) {
-      descriptor = getOwnPropertyDescriptor$2(target, key);
-      targetProperty = descriptor && descriptor.value;
-    } else targetProperty = target[key];
-    FORCED = isForced$3(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
-    // contained in target
-    if (!FORCED && targetProperty !== undefined) {
-      if (typeof sourceProperty == typeof targetProperty) continue;
-      copyConstructorProperties$1(sourceProperty, targetProperty);
-    }
-    // add a flag to not completely full polyfills
-    if (options.sham || (targetProperty && targetProperty.sham)) {
-      createNonEnumerableProperty$5(sourceProperty, 'sham', true);
-    }
-    // extend global
-    redefine$c(target, key, sourceProperty, options);
-  }
-};
-
-var defineProperty$9 = objectDefineProperty.f;
-var hasOwn$9 = hasOwnProperty_1;
-var wellKnownSymbol$o = wellKnownSymbol$q;
-
-var TO_STRING_TAG$3 = wellKnownSymbol$o('toStringTag');
-
-var setToStringTag$6 = function (target, TAG, STATIC) {
-  if (target && !STATIC) target = target.prototype;
-  if (target && !hasOwn$9(target, TO_STRING_TAG$3)) {
-    defineProperty$9(target, TO_STRING_TAG$3, { configurable: true, value: TAG });
-  }
-};
-
-var $$u = _export;
-var global$G = global$$;
-var setToStringTag$5 = setToStringTag$6;
-
-$$u({ global: true }, { Reflect: {} });
-
-// Reflect[@@toStringTag] property
-// https://tc39.es/ecma262/#sec-reflect-@@tostringtag
-setToStringTag$5(global$G.Reflect, 'Reflect', true);
-
-var NATIVE_BIND$2 = functionBindNative;
-
-var FunctionPrototype$1 = Function.prototype;
-var apply$6 = FunctionPrototype$1.apply;
-var call$f = FunctionPrototype$1.call;
-
-// eslint-disable-next-line es/no-reflect -- safe
-var functionApply = typeof Reflect == 'object' && Reflect.apply || (NATIVE_BIND$2 ? call$f.bind(apply$6) : function () {
-  return call$f.apply(apply$6, arguments);
-});
-
-var uncurryThis$s = functionUncurryThis;
-
-var arraySlice$6 = uncurryThis$s([].slice);
-
-var global$F = global$$;
-var uncurryThis$r = functionUncurryThis;
-var aCallable$5 = aCallable$7;
-var isObject$f = isObject$l;
-var hasOwn$8 = hasOwnProperty_1;
-var arraySlice$5 = arraySlice$6;
-var NATIVE_BIND$1 = functionBindNative;
-
-var Function$2 = global$F.Function;
-var concat$1 = uncurryThis$r([].concat);
-var join = uncurryThis$r([].join);
-var factories = {};
-
-var construct$1 = function (C, argsLength, args) {
-  if (!hasOwn$8(factories, argsLength)) {
-    for (var list = [], i = 0; i < argsLength; i++) list[i] = 'a[' + i + ']';
-    factories[argsLength] = Function$2('C,a', 'return new C(' + join(list, ',') + ')');
-  } return factories[argsLength](C, args);
-};
-
-// `Function.prototype.bind` method implementation
-// https://tc39.es/ecma262/#sec-function.prototype.bind
-var functionBind = NATIVE_BIND$1 ? Function$2.bind : function bind(that /* , ...args */) {
-  var F = aCallable$5(this);
-  var Prototype = F.prototype;
-  var partArgs = arraySlice$5(arguments, 1);
-  var boundFunction = function bound(/* args... */) {
-    var args = concat$1(partArgs, arraySlice$5(arguments));
-    return this instanceof boundFunction ? construct$1(F, args.length, args) : F.apply(that, args);
-  };
-  if (isObject$f(Prototype)) boundFunction.prototype = Prototype;
-  return boundFunction;
-};
-
-var wellKnownSymbol$n = wellKnownSymbol$q;
-
-var TO_STRING_TAG$2 = wellKnownSymbol$n('toStringTag');
-var test$1 = {};
-
-test$1[TO_STRING_TAG$2] = 'z';
-
-var toStringTagSupport = String(test$1) === '[object z]';
-
-var global$E = global$$;
-var TO_STRING_TAG_SUPPORT$2 = toStringTagSupport;
-var isCallable$f = isCallable$p;
-var classofRaw = classofRaw$1;
-var wellKnownSymbol$m = wellKnownSymbol$q;
-
-var TO_STRING_TAG$1 = wellKnownSymbol$m('toStringTag');
-var Object$2 = global$E.Object;
-
-// ES3 wrong here
-var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (error) { /* empty */ }
-};
-
-// getting tag from ES6+ `Object.prototype.toString`
-var classof$d = TO_STRING_TAG_SUPPORT$2 ? classofRaw : function (it) {
-  var O, tag, result;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (tag = tryGet(O = Object$2(it), TO_STRING_TAG$1)) == 'string' ? tag
-    // builtinTag case
-    : CORRECT_ARGUMENTS ? classofRaw(O)
-    // ES3 arguments fallback
-    : (result = classofRaw(O)) == 'Object' && isCallable$f(O.callee) ? 'Arguments' : result;
-};
-
-var uncurryThis$q = functionUncurryThis;
-var fails$r = fails$z;
-var isCallable$e = isCallable$p;
-var classof$c = classof$d;
-var getBuiltIn$7 = getBuiltIn$b;
-var inspectSource$1 = inspectSource$4;
-
-var noop = function () { /* empty */ };
-var empty = [];
-var construct = getBuiltIn$7('Reflect', 'construct');
-var constructorRegExp = /^\s*(?:class|function)\b/;
-var exec$4 = uncurryThis$q(constructorRegExp.exec);
-var INCORRECT_TO_STRING = !constructorRegExp.exec(noop);
-
-var isConstructorModern = function isConstructor(argument) {
-  if (!isCallable$e(argument)) return false;
-  try {
-    construct(noop, empty, argument);
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
-
-var isConstructorLegacy = function isConstructor(argument) {
-  if (!isCallable$e(argument)) return false;
-  switch (classof$c(argument)) {
-    case 'AsyncFunction':
-    case 'GeneratorFunction':
-    case 'AsyncGeneratorFunction': return false;
-  }
-  try {
-    // we can't check .prototype since constructors produced by .bind haven't it
-    // `Function#toString` throws on some built-it function in some legacy engines
-    // (for example, `DOMQuad` and similar in FF41-)
-    return INCORRECT_TO_STRING || !!exec$4(constructorRegExp, inspectSource$1(argument));
-  } catch (error) {
-    return true;
-  }
-};
-
-isConstructorLegacy.sham = true;
-
-// `IsConstructor` abstract operation
-// https://tc39.es/ecma262/#sec-isconstructor
-var isConstructor$4 = !construct || fails$r(function () {
-  var called;
-  return isConstructorModern(isConstructorModern.call)
-    || !isConstructorModern(Object)
-    || !isConstructorModern(function () { called = true; })
-    || called;
-}) ? isConstructorLegacy : isConstructorModern;
-
-var global$D = global$$;
-var isConstructor$3 = isConstructor$4;
-var tryToString$2 = tryToString$4;
-
-var TypeError$f = global$D.TypeError;
-
-// `Assert: IsConstructor(argument) is true`
-var aConstructor$2 = function (argument) {
-  if (isConstructor$3(argument)) return argument;
-  throw TypeError$f(tryToString$2(argument) + ' is not a constructor');
-};
-
-var objectDefineProperties = {};
-
-var internalObjectKeys = objectKeysInternal;
-var enumBugKeys$1 = enumBugKeys$3;
-
-// `Object.keys` method
-// https://tc39.es/ecma262/#sec-object.keys
-// eslint-disable-next-line es/no-object-keys -- safe
-var objectKeys$2 = Object.keys || function keys(O) {
-  return internalObjectKeys(O, enumBugKeys$1);
-};
-
-var DESCRIPTORS$b = descriptors;
-var V8_PROTOTYPE_DEFINE_BUG = v8PrototypeDefineBug;
-var definePropertyModule$4 = objectDefineProperty;
-var anObject$i = anObject$l;
-var toIndexedObject$7 = toIndexedObject$b;
-var objectKeys$1 = objectKeys$2;
-
-// `Object.defineProperties` method
-// https://tc39.es/ecma262/#sec-object.defineproperties
-// eslint-disable-next-line es/no-object-defineproperties -- safe
-objectDefineProperties.f = DESCRIPTORS$b && !V8_PROTOTYPE_DEFINE_BUG ? Object.defineProperties : function defineProperties(O, Properties) {
-  anObject$i(O);
-  var props = toIndexedObject$7(Properties);
-  var keys = objectKeys$1(Properties);
-  var length = keys.length;
-  var index = 0;
-  var key;
-  while (length > index) definePropertyModule$4.f(O, key = keys[index++], props[key]);
-  return O;
-};
-
-var getBuiltIn$6 = getBuiltIn$b;
-
-var html$2 = getBuiltIn$6('document', 'documentElement');
-
-/* global ActiveXObject -- old IE, WSH */
-
-var anObject$h = anObject$l;
-var definePropertiesModule$1 = objectDefineProperties;
-var enumBugKeys = enumBugKeys$3;
-var hiddenKeys$2 = hiddenKeys$6;
-var html$1 = html$2;
-var documentCreateElement$1 = documentCreateElement$2;
-var sharedKey$2 = sharedKey$4;
-
-var GT = '>';
-var LT = '<';
-var PROTOTYPE$1 = 'prototype';
-var SCRIPT = 'script';
-var IE_PROTO$1 = sharedKey$2('IE_PROTO');
-
-var EmptyConstructor = function () { /* empty */ };
-
-var scriptTag = function (content) {
-  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
-};
-
-// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
-var NullProtoObjectViaActiveX = function (activeXDocument) {
-  activeXDocument.write(scriptTag(''));
-  activeXDocument.close();
-  var temp = activeXDocument.parentWindow.Object;
-  activeXDocument = null; // avoid memory leak
-  return temp;
-};
-
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
-var NullProtoObjectViaIFrame = function () {
-  // Thrash, waste and sodomy: IE GC bug
-  var iframe = documentCreateElement$1('iframe');
-  var JS = 'java' + SCRIPT + ':';
-  var iframeDocument;
-  iframe.style.display = 'none';
-  html$1.appendChild(iframe);
-  // https://github.com/zloirock/core-js/issues/475
-  iframe.src = String(JS);
-  iframeDocument = iframe.contentWindow.document;
-  iframeDocument.open();
-  iframeDocument.write(scriptTag('document.F=Object'));
-  iframeDocument.close();
-  return iframeDocument.F;
-};
-
-// Check for document.domain and active x support
-// No need to use active x approach when document.domain is not set
-// see https://github.com/es-shims/es5-shim/issues/150
-// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
-// avoid IE GC bug
-var activeXDocument;
-var NullProtoObject = function () {
-  try {
-    activeXDocument = new ActiveXObject('htmlfile');
-  } catch (error) { /* ignore */ }
-  NullProtoObject = typeof document != 'undefined'
-    ? document.domain && activeXDocument
-      ? NullProtoObjectViaActiveX(activeXDocument) // old IE
-      : NullProtoObjectViaIFrame()
-    : NullProtoObjectViaActiveX(activeXDocument); // WSH
-  var length = enumBugKeys.length;
-  while (length--) delete NullProtoObject[PROTOTYPE$1][enumBugKeys[length]];
-  return NullProtoObject();
-};
-
-hiddenKeys$2[IE_PROTO$1] = true;
-
-// `Object.create` method
-// https://tc39.es/ecma262/#sec-object.create
-var objectCreate = Object.create || function create(O, Properties) {
-  var result;
-  if (O !== null) {
-    EmptyConstructor[PROTOTYPE$1] = anObject$h(O);
-    result = new EmptyConstructor();
-    EmptyConstructor[PROTOTYPE$1] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
-    result[IE_PROTO$1] = O;
-  } else result = NullProtoObject();
-  return Properties === undefined ? result : definePropertiesModule$1.f(result, Properties);
-};
-
-var $$t = _export;
-var getBuiltIn$5 = getBuiltIn$b;
-var apply$5 = functionApply;
-var bind$8 = functionBind;
-var aConstructor$1 = aConstructor$2;
-var anObject$g = anObject$l;
-var isObject$e = isObject$l;
-var create$4 = objectCreate;
-var fails$q = fails$z;
-
-var nativeConstruct = getBuiltIn$5('Reflect', 'construct');
-var ObjectPrototype$2 = Object.prototype;
-var push$5 = [].push;
-
-// `Reflect.construct` method
-// https://tc39.es/ecma262/#sec-reflect.construct
-// MS Edge supports only 2 arguments and argumentsList argument is optional
-// FF Nightly sets third argument as `new.target`, but does not create `this` from it
-var NEW_TARGET_BUG = fails$q(function () {
-  function F() { /* empty */ }
-  return !(nativeConstruct(function () { /* empty */ }, [], F) instanceof F);
-});
-
-var ARGS_BUG = !fails$q(function () {
-  nativeConstruct(function () { /* empty */ });
-});
-
-var FORCED$6 = NEW_TARGET_BUG || ARGS_BUG;
-
-$$t({ target: 'Reflect', stat: true, forced: FORCED$6, sham: FORCED$6 }, {
-  construct: function construct(Target, args /* , newTarget */) {
-    aConstructor$1(Target);
-    anObject$g(args);
-    var newTarget = arguments.length < 3 ? Target : aConstructor$1(arguments[2]);
-    if (ARGS_BUG && !NEW_TARGET_BUG) return nativeConstruct(Target, args, newTarget);
-    if (Target == newTarget) {
-      // w/o altered newTarget, optimization for 0-4 arguments
-      switch (args.length) {
-        case 0: return new Target();
-        case 1: return new Target(args[0]);
-        case 2: return new Target(args[0], args[1]);
-        case 3: return new Target(args[0], args[1], args[2]);
-        case 4: return new Target(args[0], args[1], args[2], args[3]);
-      }
-      // w/o altered newTarget, lot of arguments case
-      var $args = [null];
-      apply$5(push$5, $args, args);
-      return new (apply$5(bind$8, Target, $args))();
-    }
-    // with altered newTarget, not support built-in constructors
-    var proto = newTarget.prototype;
-    var instance = create$4(isObject$e(proto) ? proto : ObjectPrototype$2);
-    var result = apply$5(Target, instance, args);
-    return isObject$e(result) ? result : instance;
-  }
-});
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return self;
-}
-
-function _setPrototypeOf(o, p) {
-  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-    o.__proto__ = p;
-    return o;
-  };
-
-  return _setPrototypeOf(o, p);
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function");
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      writable: true,
-      configurable: true
-    }
-  });
-  Object.defineProperty(subClass, "prototype", {
-    writable: false
-  });
-  if (superClass) _setPrototypeOf(subClass, superClass);
-}
-
-function _typeof$1(obj) {
-  "@babel/helpers - typeof";
-
-  return _typeof$1 = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
-    return typeof obj;
-  } : function (obj) {
-    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-  }, _typeof$1(obj);
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (call && (_typeof$1(call) === "object" || typeof call === "function")) {
-    return call;
-  } else if (call !== void 0) {
-    throw new TypeError("Derived constructors may only return object or undefined");
-  }
-
-  return _assertThisInitialized(self);
-}
-
-function _getPrototypeOf(o) {
-  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-    return o.__proto__ || Object.getPrototypeOf(o);
-  };
-  return _getPrototypeOf(o);
-}
-
-function _classApplyDescriptorSet$2(receiver, descriptor, value) {
-  if (descriptor.set) {
-    descriptor.set.call(receiver, value);
-  } else {
-    if (!descriptor.writable) {
-      throw new TypeError("attempted to set read only private field");
-    }
-
-    descriptor.value = value;
-  }
-}
-
-function _classExtractFieldDescriptor(receiver, privateMap, action) {
-  if (!privateMap.has(receiver)) {
-    throw new TypeError("attempted to " + action + " private field on non-instance");
-  }
-
-  return privateMap.get(receiver);
-}
-
-function _classPrivateFieldSet(receiver, privateMap, value) {
-  var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set");
-  _classApplyDescriptorSet$2(receiver, descriptor, value);
-  return value;
-}
-
-function _classApplyDescriptorGet$4(receiver, descriptor) {
-  if (descriptor.get) {
-    return descriptor.get.call(receiver);
-  }
-
-  return descriptor.value;
-}
-
-function _classPrivateFieldGet(receiver, privateMap) {
-  var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get");
-  return _classApplyDescriptorGet$4(receiver, descriptor);
-}
-
-var wellKnownSymbol$l = wellKnownSymbol$q;
-var create$3 = objectCreate;
-var definePropertyModule$3 = objectDefineProperty;
-
-var UNSCOPABLES = wellKnownSymbol$l('unscopables');
-var ArrayPrototype$1 = Array.prototype;
-
-// Array.prototype[@@unscopables]
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-if (ArrayPrototype$1[UNSCOPABLES] == undefined) {
-  definePropertyModule$3.f(ArrayPrototype$1, UNSCOPABLES, {
-    configurable: true,
-    value: create$3(null)
-  });
-}
-
-// add a key to Array.prototype[@@unscopables]
-var addToUnscopables$3 = function (key) {
-  ArrayPrototype$1[UNSCOPABLES][key] = true;
-};
-
-var iterators = {};
-
-var fails$p = fails$z;
-
-var correctPrototypeGetter = !fails$p(function () {
-  function F() { /* empty */ }
-  F.prototype.constructor = null;
-  // eslint-disable-next-line es/no-object-getprototypeof -- required for testing
-  return Object.getPrototypeOf(new F()) !== F.prototype;
-});
-
-var global$C = global$$;
-var hasOwn$7 = hasOwnProperty_1;
-var isCallable$d = isCallable$p;
-var toObject$8 = toObject$a;
-var sharedKey$1 = sharedKey$4;
-var CORRECT_PROTOTYPE_GETTER = correctPrototypeGetter;
-
-var IE_PROTO = sharedKey$1('IE_PROTO');
-var Object$1 = global$C.Object;
-var ObjectPrototype$1 = Object$1.prototype;
-
-// `Object.getPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.getprototypeof
-var objectGetPrototypeOf = CORRECT_PROTOTYPE_GETTER ? Object$1.getPrototypeOf : function (O) {
-  var object = toObject$8(O);
-  if (hasOwn$7(object, IE_PROTO)) return object[IE_PROTO];
-  var constructor = object.constructor;
-  if (isCallable$d(constructor) && object instanceof constructor) {
-    return constructor.prototype;
-  } return object instanceof Object$1 ? ObjectPrototype$1 : null;
-};
-
-var fails$o = fails$z;
-var isCallable$c = isCallable$p;
-var getPrototypeOf$1 = objectGetPrototypeOf;
-var redefine$b = redefine$d.exports;
-var wellKnownSymbol$k = wellKnownSymbol$q;
-
-var ITERATOR$5 = wellKnownSymbol$k('iterator');
-var BUGGY_SAFARI_ITERATORS$1 = false;
-
-// `%IteratorPrototype%` object
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-var IteratorPrototype$2, PrototypeOfArrayIteratorPrototype, arrayIterator;
-
-/* eslint-disable es/no-array-prototype-keys -- safe */
-if ([].keys) {
-  arrayIterator = [].keys();
-  // Safari 8 has buggy iterators w/o `next`
-  if (!('next' in arrayIterator)) BUGGY_SAFARI_ITERATORS$1 = true;
-  else {
-    PrototypeOfArrayIteratorPrototype = getPrototypeOf$1(getPrototypeOf$1(arrayIterator));
-    if (PrototypeOfArrayIteratorPrototype !== Object.prototype) IteratorPrototype$2 = PrototypeOfArrayIteratorPrototype;
-  }
-}
-
-var NEW_ITERATOR_PROTOTYPE = IteratorPrototype$2 == undefined || fails$o(function () {
-  var test = {};
-  // FF44- legacy iterators case
-  return IteratorPrototype$2[ITERATOR$5].call(test) !== test;
-});
-
-if (NEW_ITERATOR_PROTOTYPE) IteratorPrototype$2 = {};
-
-// `%IteratorPrototype%[@@iterator]()` method
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
-if (!isCallable$c(IteratorPrototype$2[ITERATOR$5])) {
-  redefine$b(IteratorPrototype$2, ITERATOR$5, function () {
-    return this;
-  });
-}
-
-var iteratorsCore = {
-  IteratorPrototype: IteratorPrototype$2,
-  BUGGY_SAFARI_ITERATORS: BUGGY_SAFARI_ITERATORS$1
-};
-
-var IteratorPrototype$1 = iteratorsCore.IteratorPrototype;
-var create$2 = objectCreate;
-var createPropertyDescriptor$2 = createPropertyDescriptor$5;
-var setToStringTag$4 = setToStringTag$6;
-var Iterators$4 = iterators;
-
-var returnThis$1 = function () { return this; };
-
-var createIteratorConstructor$2 = function (IteratorConstructor, NAME, next, ENUMERABLE_NEXT) {
-  var TO_STRING_TAG = NAME + ' Iterator';
-  IteratorConstructor.prototype = create$2(IteratorPrototype$1, { next: createPropertyDescriptor$2(+!ENUMERABLE_NEXT, next) });
-  setToStringTag$4(IteratorConstructor, TO_STRING_TAG, false);
-  Iterators$4[TO_STRING_TAG] = returnThis$1;
-  return IteratorConstructor;
-};
-
-var global$B = global$$;
-var isCallable$b = isCallable$p;
-
-var String$3 = global$B.String;
-var TypeError$e = global$B.TypeError;
-
-var aPossiblePrototype$1 = function (argument) {
-  if (typeof argument == 'object' || isCallable$b(argument)) return argument;
-  throw TypeError$e("Can't set " + String$3(argument) + ' as a prototype');
-};
-
-/* eslint-disable no-proto -- safe */
-
-var uncurryThis$p = functionUncurryThis;
-var anObject$f = anObject$l;
-var aPossiblePrototype = aPossiblePrototype$1;
-
-// `Object.setPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.setprototypeof
-// Works with __proto__ only. Old v8 can't work with null proto objects.
-// eslint-disable-next-line es/no-object-setprototypeof -- safe
-var objectSetPrototypeOf = Object.setPrototypeOf || ('__proto__' in {} ? function () {
-  var CORRECT_SETTER = false;
-  var test = {};
-  var setter;
-  try {
-    // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-    setter = uncurryThis$p(Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set);
-    setter(test, []);
-    CORRECT_SETTER = test instanceof Array;
-  } catch (error) { /* empty */ }
-  return function setPrototypeOf(O, proto) {
-    anObject$f(O);
-    aPossiblePrototype(proto);
-    if (CORRECT_SETTER) setter(O, proto);
-    else O.__proto__ = proto;
-    return O;
-  };
-}() : undefined);
-
-var $$s = _export;
-var call$e = functionCall;
-var FunctionName = functionName;
-var isCallable$a = isCallable$p;
-var createIteratorConstructor$1 = createIteratorConstructor$2;
-var getPrototypeOf = objectGetPrototypeOf;
-var setPrototypeOf$2 = objectSetPrototypeOf;
-var setToStringTag$3 = setToStringTag$6;
-var createNonEnumerableProperty$4 = createNonEnumerableProperty$8;
-var redefine$a = redefine$d.exports;
-var wellKnownSymbol$j = wellKnownSymbol$q;
-var Iterators$3 = iterators;
-var IteratorsCore = iteratorsCore;
-
-var PROPER_FUNCTION_NAME$2 = FunctionName.PROPER;
-var CONFIGURABLE_FUNCTION_NAME = FunctionName.CONFIGURABLE;
-var IteratorPrototype = IteratorsCore.IteratorPrototype;
-var BUGGY_SAFARI_ITERATORS = IteratorsCore.BUGGY_SAFARI_ITERATORS;
-var ITERATOR$4 = wellKnownSymbol$j('iterator');
-var KEYS = 'keys';
-var VALUES = 'values';
-var ENTRIES = 'entries';
-
-var returnThis = function () { return this; };
-
-var defineIterator$3 = function (Iterable, NAME, IteratorConstructor, next, DEFAULT, IS_SET, FORCED) {
-  createIteratorConstructor$1(IteratorConstructor, NAME, next);
-
-  var getIterationMethod = function (KIND) {
-    if (KIND === DEFAULT && defaultIterator) return defaultIterator;
-    if (!BUGGY_SAFARI_ITERATORS && KIND in IterablePrototype) return IterablePrototype[KIND];
-    switch (KIND) {
-      case KEYS: return function keys() { return new IteratorConstructor(this, KIND); };
-      case VALUES: return function values() { return new IteratorConstructor(this, KIND); };
-      case ENTRIES: return function entries() { return new IteratorConstructor(this, KIND); };
-    } return function () { return new IteratorConstructor(this); };
-  };
-
-  var TO_STRING_TAG = NAME + ' Iterator';
-  var INCORRECT_VALUES_NAME = false;
-  var IterablePrototype = Iterable.prototype;
-  var nativeIterator = IterablePrototype[ITERATOR$4]
-    || IterablePrototype['@@iterator']
-    || DEFAULT && IterablePrototype[DEFAULT];
-  var defaultIterator = !BUGGY_SAFARI_ITERATORS && nativeIterator || getIterationMethod(DEFAULT);
-  var anyNativeIterator = NAME == 'Array' ? IterablePrototype.entries || nativeIterator : nativeIterator;
-  var CurrentIteratorPrototype, methods, KEY;
-
-  // fix native
-  if (anyNativeIterator) {
-    CurrentIteratorPrototype = getPrototypeOf(anyNativeIterator.call(new Iterable()));
-    if (CurrentIteratorPrototype !== Object.prototype && CurrentIteratorPrototype.next) {
-      if (getPrototypeOf(CurrentIteratorPrototype) !== IteratorPrototype) {
-        if (setPrototypeOf$2) {
-          setPrototypeOf$2(CurrentIteratorPrototype, IteratorPrototype);
-        } else if (!isCallable$a(CurrentIteratorPrototype[ITERATOR$4])) {
-          redefine$a(CurrentIteratorPrototype, ITERATOR$4, returnThis);
-        }
-      }
-      // Set @@toStringTag to native iterators
-      setToStringTag$3(CurrentIteratorPrototype, TO_STRING_TAG, true);
-    }
-  }
-
-  // fix Array.prototype.{ values, @@iterator }.name in V8 / FF
-  if (PROPER_FUNCTION_NAME$2 && DEFAULT == VALUES && nativeIterator && nativeIterator.name !== VALUES) {
-    if (CONFIGURABLE_FUNCTION_NAME) {
-      createNonEnumerableProperty$4(IterablePrototype, 'name', VALUES);
-    } else {
-      INCORRECT_VALUES_NAME = true;
-      defaultIterator = function values() { return call$e(nativeIterator, this); };
-    }
-  }
-
-  // export additional methods
-  if (DEFAULT) {
-    methods = {
-      values: getIterationMethod(VALUES),
-      keys: IS_SET ? defaultIterator : getIterationMethod(KEYS),
-      entries: getIterationMethod(ENTRIES)
-    };
-    if (FORCED) for (KEY in methods) {
-      if (BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME || !(KEY in IterablePrototype)) {
-        redefine$a(IterablePrototype, KEY, methods[KEY]);
-      }
-    } else $$s({ target: NAME, proto: true, forced: BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME }, methods);
-  }
-
-  // define iterator
-  if (IterablePrototype[ITERATOR$4] !== defaultIterator) {
-    redefine$a(IterablePrototype, ITERATOR$4, defaultIterator, { name: DEFAULT });
-  }
-  Iterators$3[NAME] = defaultIterator;
-
-  return methods;
-};
-
-var toIndexedObject$6 = toIndexedObject$b;
-var addToUnscopables$2 = addToUnscopables$3;
-var Iterators$2 = iterators;
-var InternalStateModule$6 = internalState;
-var defineProperty$8 = objectDefineProperty.f;
-var defineIterator$2 = defineIterator$3;
-var DESCRIPTORS$a = descriptors;
-
-var ARRAY_ITERATOR = 'Array Iterator';
-var setInternalState$6 = InternalStateModule$6.set;
-var getInternalState$7 = InternalStateModule$6.getterFor(ARRAY_ITERATOR);
-
-// `Array.prototype.entries` method
-// https://tc39.es/ecma262/#sec-array.prototype.entries
-// `Array.prototype.keys` method
-// https://tc39.es/ecma262/#sec-array.prototype.keys
-// `Array.prototype.values` method
-// https://tc39.es/ecma262/#sec-array.prototype.values
-// `Array.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-array.prototype-@@iterator
-// `CreateArrayIterator` internal method
-// https://tc39.es/ecma262/#sec-createarrayiterator
-var es_array_iterator = defineIterator$2(Array, 'Array', function (iterated, kind) {
-  setInternalState$6(this, {
-    type: ARRAY_ITERATOR,
-    target: toIndexedObject$6(iterated), // target
-    index: 0,                          // next index
-    kind: kind                         // kind
-  });
-// `%ArrayIteratorPrototype%.next` method
-// https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next
-}, function () {
-  var state = getInternalState$7(this);
-  var target = state.target;
-  var kind = state.kind;
-  var index = state.index++;
-  if (!target || index >= target.length) {
-    state.target = undefined;
-    return { value: undefined, done: true };
-  }
-  if (kind == 'keys') return { value: index, done: false };
-  if (kind == 'values') return { value: target[index], done: false };
-  return { value: [index, target[index]], done: false };
-}, 'values');
-
-// argumentsList[@@iterator] is %ArrayProto_values%
-// https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-// https://tc39.es/ecma262/#sec-createmappedargumentsobject
-var values = Iterators$2.Arguments = Iterators$2.Array;
-
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables$2('keys');
-addToUnscopables$2('values');
-addToUnscopables$2('entries');
-
-// V8 ~ Chrome 45- bug
-if (DESCRIPTORS$a && values.name !== 'values') try {
-  defineProperty$8(values, 'name', { value: 'values' });
-} catch (error) { /* empty */ }
-
-var TO_STRING_TAG_SUPPORT$1 = toStringTagSupport;
-var classof$b = classof$d;
-
-// `Object.prototype.toString` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.tostring
-var objectToString = TO_STRING_TAG_SUPPORT$1 ? {}.toString : function toString() {
-  return '[object ' + classof$b(this) + ']';
-};
-
-var TO_STRING_TAG_SUPPORT = toStringTagSupport;
-var redefine$9 = redefine$d.exports;
-var toString$e = objectToString;
-
-// `Object.prototype.toString` method
-// https://tc39.es/ecma262/#sec-object.prototype.tostring
-if (!TO_STRING_TAG_SUPPORT) {
-  redefine$9(Object.prototype, 'toString', toString$e, { unsafe: true });
-}
-
-var global$A = global$$;
-var classof$a = classof$d;
-
-var String$2 = global$A.String;
-
-var toString$d = function (argument) {
-  if (classof$a(argument) === 'Symbol') throw TypeError('Cannot convert a Symbol value to a string');
-  return String$2(argument);
-};
-
-var uncurryThis$o = functionUncurryThis;
-var toIntegerOrInfinity$2 = toIntegerOrInfinity$5;
-var toString$c = toString$d;
-var requireObjectCoercible$7 = requireObjectCoercible$a;
-
-var charAt$6 = uncurryThis$o(''.charAt);
-var charCodeAt$1 = uncurryThis$o(''.charCodeAt);
-var stringSlice$7 = uncurryThis$o(''.slice);
-
-var createMethod$2 = function (CONVERT_TO_STRING) {
-  return function ($this, pos) {
-    var S = toString$c(requireObjectCoercible$7($this));
-    var position = toIntegerOrInfinity$2(pos);
-    var size = S.length;
-    var first, second;
-    if (position < 0 || position >= size) return CONVERT_TO_STRING ? '' : undefined;
-    first = charCodeAt$1(S, position);
-    return first < 0xD800 || first > 0xDBFF || position + 1 === size
-      || (second = charCodeAt$1(S, position + 1)) < 0xDC00 || second > 0xDFFF
-        ? CONVERT_TO_STRING
-          ? charAt$6(S, position)
-          : first
-        : CONVERT_TO_STRING
-          ? stringSlice$7(S, position, position + 2)
-          : (first - 0xD800 << 10) + (second - 0xDC00) + 0x10000;
-  };
-};
-
-var stringMultibyte = {
-  // `String.prototype.codePointAt` method
-  // https://tc39.es/ecma262/#sec-string.prototype.codepointat
-  codeAt: createMethod$2(false),
-  // `String.prototype.at` method
-  // https://github.com/mathiasbynens/String.prototype.at
-  charAt: createMethod$2(true)
-};
-
-var charAt$5 = stringMultibyte.charAt;
-var toString$b = toString$d;
-var InternalStateModule$5 = internalState;
-var defineIterator$1 = defineIterator$3;
-
-var STRING_ITERATOR = 'String Iterator';
-var setInternalState$5 = InternalStateModule$5.set;
-var getInternalState$6 = InternalStateModule$5.getterFor(STRING_ITERATOR);
-
-// `String.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-string.prototype-@@iterator
-defineIterator$1(String, 'String', function (iterated) {
-  setInternalState$5(this, {
-    type: STRING_ITERATOR,
-    string: toString$b(iterated),
-    index: 0
-  });
-// `%StringIteratorPrototype%.next` method
-// https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next
-}, function next() {
-  var state = getInternalState$6(this);
-  var string = state.string;
-  var index = state.index;
-  var point;
-  if (index >= string.length) return { value: undefined, done: true };
-  point = charAt$5(string, index);
-  state.index += point.length;
-  return { value: point, done: false };
-});
-
-var redefine$8 = redefine$d.exports;
-
-var redefineAll$4 = function (target, src, options) {
-  for (var key in src) redefine$8(target, key, src[key], options);
-  return target;
-};
-
-var internalMetadata = {exports: {}};
-
-var objectGetOwnPropertyNamesExternal = {};
-
-var toPropertyKey$1 = toPropertyKey$4;
-var definePropertyModule$2 = objectDefineProperty;
-var createPropertyDescriptor$1 = createPropertyDescriptor$5;
-
-var createProperty$6 = function (object, key, value) {
-  var propertyKey = toPropertyKey$1(key);
-  if (propertyKey in object) definePropertyModule$2.f(object, propertyKey, createPropertyDescriptor$1(0, value));
-  else object[propertyKey] = value;
-};
-
-var global$z = global$$;
-var toAbsoluteIndex$2 = toAbsoluteIndex$4;
-var lengthOfArrayLike$7 = lengthOfArrayLike$9;
-var createProperty$5 = createProperty$6;
-
-var Array$5 = global$z.Array;
-var max$3 = Math.max;
-
-var arraySliceSimple = function (O, start, end) {
-  var length = lengthOfArrayLike$7(O);
-  var k = toAbsoluteIndex$2(start, length);
-  var fin = toAbsoluteIndex$2(end === undefined ? length : end, length);
-  var result = Array$5(max$3(fin - k, 0));
-  for (var n = 0; k < fin; k++, n++) createProperty$5(result, n, O[k]);
-  result.length = n;
-  return result;
-};
-
-/* eslint-disable es/no-object-getownpropertynames -- safe */
-
-var classof$9 = classofRaw$1;
-var toIndexedObject$5 = toIndexedObject$b;
-var $getOwnPropertyNames$1 = objectGetOwnPropertyNames.f;
-var arraySlice$4 = arraySliceSimple;
-
-var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
-  ? Object.getOwnPropertyNames(window) : [];
-
-var getWindowNames = function (it) {
-  try {
-    return $getOwnPropertyNames$1(it);
-  } catch (error) {
-    return arraySlice$4(windowNames);
-  }
-};
-
-// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-objectGetOwnPropertyNamesExternal.f = function getOwnPropertyNames(it) {
-  return windowNames && classof$9(it) == 'Window'
-    ? getWindowNames(it)
-    : $getOwnPropertyNames$1(toIndexedObject$5(it));
-};
-
-// FF26- bug: ArrayBuffers are non-extensible, but Object.isExtensible does not report it
-var fails$n = fails$z;
-
-var arrayBufferNonExtensible = fails$n(function () {
-  if (typeof ArrayBuffer == 'function') {
-    var buffer = new ArrayBuffer(8);
-    // eslint-disable-next-line es/no-object-isextensible, es/no-object-defineproperty -- safe
-    if (Object.isExtensible(buffer)) Object.defineProperty(buffer, 'a', { value: 8 });
-  }
-});
-
-var fails$m = fails$z;
-var isObject$d = isObject$l;
-var classof$8 = classofRaw$1;
-var ARRAY_BUFFER_NON_EXTENSIBLE = arrayBufferNonExtensible;
-
-// eslint-disable-next-line es/no-object-isextensible -- safe
-var $isExtensible = Object.isExtensible;
-var FAILS_ON_PRIMITIVES$2 = fails$m(function () { $isExtensible(1); });
-
-// `Object.isExtensible` method
-// https://tc39.es/ecma262/#sec-object.isextensible
-var objectIsExtensible = (FAILS_ON_PRIMITIVES$2 || ARRAY_BUFFER_NON_EXTENSIBLE) ? function isExtensible(it) {
-  if (!isObject$d(it)) return false;
-  if (ARRAY_BUFFER_NON_EXTENSIBLE && classof$8(it) == 'ArrayBuffer') return false;
-  return $isExtensible ? $isExtensible(it) : true;
-} : $isExtensible;
-
-var fails$l = fails$z;
-
-var freezing = !fails$l(function () {
-  // eslint-disable-next-line es/no-object-isextensible, es/no-object-preventextensions -- required for testing
-  return Object.isExtensible(Object.preventExtensions({}));
-});
-
-var $$r = _export;
-var uncurryThis$n = functionUncurryThis;
-var hiddenKeys$1 = hiddenKeys$6;
-var isObject$c = isObject$l;
-var hasOwn$6 = hasOwnProperty_1;
-var defineProperty$7 = objectDefineProperty.f;
-var getOwnPropertyNamesModule$1 = objectGetOwnPropertyNames;
-var getOwnPropertyNamesExternalModule = objectGetOwnPropertyNamesExternal;
-var isExtensible$1 = objectIsExtensible;
-var uid$1 = uid$4;
-var FREEZING = freezing;
-
-var REQUIRED = false;
-var METADATA = uid$1('meta');
-var id$1 = 0;
-
-var setMetadata = function (it) {
-  defineProperty$7(it, METADATA, { value: {
-    objectID: 'O' + id$1++, // object ID
-    weakData: {}          // weak collections IDs
-  } });
-};
-
-var fastKey$1 = function (it, create) {
-  // return a primitive with prefix
-  if (!isObject$c(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
-  if (!hasOwn$6(it, METADATA)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible$1(it)) return 'F';
-    // not necessary to add metadata
-    if (!create) return 'E';
-    // add missing metadata
-    setMetadata(it);
-  // return object ID
-  } return it[METADATA].objectID;
-};
-
-var getWeakData$1 = function (it, create) {
-  if (!hasOwn$6(it, METADATA)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible$1(it)) return true;
-    // not necessary to add metadata
-    if (!create) return false;
-    // add missing metadata
-    setMetadata(it);
-  // return the store of weak collections IDs
-  } return it[METADATA].weakData;
-};
-
-// add metadata on freeze-family methods calling
-var onFreeze = function (it) {
-  if (FREEZING && REQUIRED && isExtensible$1(it) && !hasOwn$6(it, METADATA)) setMetadata(it);
-  return it;
-};
-
-var enable = function () {
-  meta.enable = function () { /* empty */ };
-  REQUIRED = true;
-  var getOwnPropertyNames = getOwnPropertyNamesModule$1.f;
-  var splice = uncurryThis$n([].splice);
-  var test = {};
-  test[METADATA] = 1;
-
-  // prevent exposing of metadata key
-  if (getOwnPropertyNames(test).length) {
-    getOwnPropertyNamesModule$1.f = function (it) {
-      var result = getOwnPropertyNames(it);
-      for (var i = 0, length = result.length; i < length; i++) {
-        if (result[i] === METADATA) {
-          splice(result, i, 1);
-          break;
-        }
-      } return result;
-    };
-
-    $$r({ target: 'Object', stat: true, forced: true }, {
-      getOwnPropertyNames: getOwnPropertyNamesExternalModule.f
-    });
-  }
-};
-
-var meta = internalMetadata.exports = {
-  enable: enable,
-  fastKey: fastKey$1,
-  getWeakData: getWeakData$1,
-  onFreeze: onFreeze
-};
-
-hiddenKeys$1[METADATA] = true;
-
-var uncurryThis$m = functionUncurryThis;
-var aCallable$4 = aCallable$7;
-var NATIVE_BIND = functionBindNative;
-
-var bind$7 = uncurryThis$m(uncurryThis$m.bind);
-
-// optional / simple context binding
-var functionBindContext = function (fn, that) {
-  aCallable$4(fn);
-  return that === undefined ? fn : NATIVE_BIND ? bind$7(fn, that) : function (/* ...args */) {
-    return fn.apply(that, arguments);
-  };
-};
-
-var wellKnownSymbol$i = wellKnownSymbol$q;
-var Iterators$1 = iterators;
-
-var ITERATOR$3 = wellKnownSymbol$i('iterator');
-var ArrayPrototype = Array.prototype;
-
-// check on default Array iterator
-var isArrayIteratorMethod$2 = function (it) {
-  return it !== undefined && (Iterators$1.Array === it || ArrayPrototype[ITERATOR$3] === it);
-};
-
-var classof$7 = classof$d;
-var getMethod$5 = getMethod$7;
-var Iterators = iterators;
-var wellKnownSymbol$h = wellKnownSymbol$q;
-
-var ITERATOR$2 = wellKnownSymbol$h('iterator');
-
-var getIteratorMethod$3 = function (it) {
-  if (it != undefined) return getMethod$5(it, ITERATOR$2)
-    || getMethod$5(it, '@@iterator')
-    || Iterators[classof$7(it)];
-};
-
-var global$y = global$$;
-var call$d = functionCall;
-var aCallable$3 = aCallable$7;
-var anObject$e = anObject$l;
-var tryToString$1 = tryToString$4;
-var getIteratorMethod$2 = getIteratorMethod$3;
-
-var TypeError$d = global$y.TypeError;
-
-var getIterator$2 = function (argument, usingIterator) {
-  var iteratorMethod = arguments.length < 2 ? getIteratorMethod$2(argument) : usingIterator;
-  if (aCallable$3(iteratorMethod)) return anObject$e(call$d(iteratorMethod, argument));
-  throw TypeError$d(tryToString$1(argument) + ' is not iterable');
-};
-
-var call$c = functionCall;
-var anObject$d = anObject$l;
-var getMethod$4 = getMethod$7;
-
-var iteratorClose$2 = function (iterator, kind, value) {
-  var innerResult, innerError;
-  anObject$d(iterator);
-  try {
-    innerResult = getMethod$4(iterator, 'return');
-    if (!innerResult) {
-      if (kind === 'throw') throw value;
-      return value;
-    }
-    innerResult = call$c(innerResult, iterator);
-  } catch (error) {
-    innerError = true;
-    innerResult = error;
-  }
-  if (kind === 'throw') throw value;
-  if (innerError) throw innerResult;
-  anObject$d(innerResult);
-  return value;
-};
-
-var global$x = global$$;
-var bind$6 = functionBindContext;
-var call$b = functionCall;
-var anObject$c = anObject$l;
-var tryToString = tryToString$4;
-var isArrayIteratorMethod$1 = isArrayIteratorMethod$2;
-var lengthOfArrayLike$6 = lengthOfArrayLike$9;
-var isPrototypeOf$6 = objectIsPrototypeOf;
-var getIterator$1 = getIterator$2;
-var getIteratorMethod$1 = getIteratorMethod$3;
-var iteratorClose$1 = iteratorClose$2;
-
-var TypeError$c = global$x.TypeError;
-
-var Result = function (stopped, result) {
-  this.stopped = stopped;
-  this.result = result;
-};
-
-var ResultPrototype = Result.prototype;
-
-var iterate$4 = function (iterable, unboundFunction, options) {
-  var that = options && options.that;
-  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
-  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
-  var INTERRUPTED = !!(options && options.INTERRUPTED);
-  var fn = bind$6(unboundFunction, that);
-  var iterator, iterFn, index, length, result, next, step;
-
-  var stop = function (condition) {
-    if (iterator) iteratorClose$1(iterator, 'normal', condition);
-    return new Result(true, condition);
-  };
-
-  var callFn = function (value) {
-    if (AS_ENTRIES) {
-      anObject$c(value);
-      return INTERRUPTED ? fn(value[0], value[1], stop) : fn(value[0], value[1]);
-    } return INTERRUPTED ? fn(value, stop) : fn(value);
-  };
-
-  if (IS_ITERATOR) {
-    iterator = iterable;
-  } else {
-    iterFn = getIteratorMethod$1(iterable);
-    if (!iterFn) throw TypeError$c(tryToString(iterable) + ' is not iterable');
-    // optimisation for array iterators
-    if (isArrayIteratorMethod$1(iterFn)) {
-      for (index = 0, length = lengthOfArrayLike$6(iterable); length > index; index++) {
-        result = callFn(iterable[index]);
-        if (result && isPrototypeOf$6(ResultPrototype, result)) return result;
-      } return new Result(false);
-    }
-    iterator = getIterator$1(iterable, iterFn);
-  }
-
-  next = iterator.next;
-  while (!(step = call$b(next, iterator)).done) {
-    try {
-      result = callFn(step.value);
-    } catch (error) {
-      iteratorClose$1(iterator, 'throw', error);
-    }
-    if (typeof result == 'object' && result && isPrototypeOf$6(ResultPrototype, result)) return result;
-  } return new Result(false);
-};
-
-var global$w = global$$;
-var isPrototypeOf$5 = objectIsPrototypeOf;
-
-var TypeError$b = global$w.TypeError;
-
-var anInstance$4 = function (it, Prototype) {
-  if (isPrototypeOf$5(Prototype, it)) return it;
-  throw TypeError$b('Incorrect invocation');
-};
-
-var wellKnownSymbol$g = wellKnownSymbol$q;
-
-var ITERATOR$1 = wellKnownSymbol$g('iterator');
-var SAFE_CLOSING = false;
-
-try {
-  var called = 0;
-  var iteratorWithReturn = {
-    next: function () {
-      return { done: !!called++ };
-    },
-    'return': function () {
-      SAFE_CLOSING = true;
-    }
-  };
-  iteratorWithReturn[ITERATOR$1] = function () {
-    return this;
-  };
-  // eslint-disable-next-line es/no-array-from, no-throw-literal -- required for testing
-  Array.from(iteratorWithReturn, function () { throw 2; });
-} catch (error) { /* empty */ }
-
-var checkCorrectnessOfIteration$3 = function (exec, SKIP_CLOSING) {
-  if (!SKIP_CLOSING && !SAFE_CLOSING) return false;
-  var ITERATION_SUPPORT = false;
-  try {
-    var object = {};
-    object[ITERATOR$1] = function () {
-      return {
-        next: function () {
-          return { done: ITERATION_SUPPORT = true };
-        }
-      };
-    };
-    exec(object);
-  } catch (error) { /* empty */ }
-  return ITERATION_SUPPORT;
-};
-
-var isCallable$9 = isCallable$p;
-var isObject$b = isObject$l;
-var setPrototypeOf$1 = objectSetPrototypeOf;
-
-// makes subclassing work correct for wrapped built-ins
-var inheritIfRequired$2 = function ($this, dummy, Wrapper) {
-  var NewTarget, NewTargetPrototype;
-  if (
-    // it can work only with native `setPrototypeOf`
-    setPrototypeOf$1 &&
-    // we haven't completely correct pre-ES6 way for getting `new.target`, so use this
-    isCallable$9(NewTarget = dummy.constructor) &&
-    NewTarget !== Wrapper &&
-    isObject$b(NewTargetPrototype = NewTarget.prototype) &&
-    NewTargetPrototype !== Wrapper.prototype
-  ) setPrototypeOf$1($this, NewTargetPrototype);
-  return $this;
-};
-
-var $$q = _export;
-var global$v = global$$;
-var uncurryThis$l = functionUncurryThis;
-var isForced$2 = isForced_1;
-var redefine$7 = redefine$d.exports;
-var InternalMetadataModule$1 = internalMetadata.exports;
-var iterate$3 = iterate$4;
-var anInstance$3 = anInstance$4;
-var isCallable$8 = isCallable$p;
-var isObject$a = isObject$l;
-var fails$k = fails$z;
-var checkCorrectnessOfIteration$2 = checkCorrectnessOfIteration$3;
-var setToStringTag$2 = setToStringTag$6;
-var inheritIfRequired$1 = inheritIfRequired$2;
-
-var collection$3 = function (CONSTRUCTOR_NAME, wrapper, common) {
-  var IS_MAP = CONSTRUCTOR_NAME.indexOf('Map') !== -1;
-  var IS_WEAK = CONSTRUCTOR_NAME.indexOf('Weak') !== -1;
-  var ADDER = IS_MAP ? 'set' : 'add';
-  var NativeConstructor = global$v[CONSTRUCTOR_NAME];
-  var NativePrototype = NativeConstructor && NativeConstructor.prototype;
-  var Constructor = NativeConstructor;
-  var exported = {};
-
-  var fixMethod = function (KEY) {
-    var uncurriedNativeMethod = uncurryThis$l(NativePrototype[KEY]);
-    redefine$7(NativePrototype, KEY,
-      KEY == 'add' ? function add(value) {
-        uncurriedNativeMethod(this, value === 0 ? 0 : value);
-        return this;
-      } : KEY == 'delete' ? function (key) {
-        return IS_WEAK && !isObject$a(key) ? false : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : KEY == 'get' ? function get(key) {
-        return IS_WEAK && !isObject$a(key) ? undefined : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : KEY == 'has' ? function has(key) {
-        return IS_WEAK && !isObject$a(key) ? false : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : function set(key, value) {
-        uncurriedNativeMethod(this, key === 0 ? 0 : key, value);
-        return this;
-      }
-    );
-  };
-
-  var REPLACE = isForced$2(
-    CONSTRUCTOR_NAME,
-    !isCallable$8(NativeConstructor) || !(IS_WEAK || NativePrototype.forEach && !fails$k(function () {
-      new NativeConstructor().entries().next();
-    }))
-  );
-
-  if (REPLACE) {
-    // create collection constructor
-    Constructor = common.getConstructor(wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER);
-    InternalMetadataModule$1.enable();
-  } else if (isForced$2(CONSTRUCTOR_NAME, true)) {
-    var instance = new Constructor();
-    // early implementations not supports chaining
-    var HASNT_CHAINING = instance[ADDER](IS_WEAK ? {} : -0, 1) != instance;
-    // V8 ~ Chromium 40- weak-collections throws on primitives, but should return false
-    var THROWS_ON_PRIMITIVES = fails$k(function () { instance.has(1); });
-    // most early implementations doesn't supports iterables, most modern - not close it correctly
-    // eslint-disable-next-line no-new -- required for testing
-    var ACCEPT_ITERABLES = checkCorrectnessOfIteration$2(function (iterable) { new NativeConstructor(iterable); });
-    // for early implementations -0 and +0 not the same
-    var BUGGY_ZERO = !IS_WEAK && fails$k(function () {
-      // V8 ~ Chromium 42- fails only with 5+ elements
-      var $instance = new NativeConstructor();
-      var index = 5;
-      while (index--) $instance[ADDER](index, index);
-      return !$instance.has(-0);
-    });
-
-    if (!ACCEPT_ITERABLES) {
-      Constructor = wrapper(function (dummy, iterable) {
-        anInstance$3(dummy, NativePrototype);
-        var that = inheritIfRequired$1(new NativeConstructor(), dummy, Constructor);
-        if (iterable != undefined) iterate$3(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-        return that;
-      });
-      Constructor.prototype = NativePrototype;
-      NativePrototype.constructor = Constructor;
-    }
-
-    if (THROWS_ON_PRIMITIVES || BUGGY_ZERO) {
-      fixMethod('delete');
-      fixMethod('has');
-      IS_MAP && fixMethod('get');
-    }
-
-    if (BUGGY_ZERO || HASNT_CHAINING) fixMethod(ADDER);
-
-    // weak collections should not contains .clear method
-    if (IS_WEAK && NativePrototype.clear) delete NativePrototype.clear;
-  }
-
-  exported[CONSTRUCTOR_NAME] = Constructor;
-  $$q({ global: true, forced: Constructor != NativeConstructor }, exported);
-
-  setToStringTag$2(Constructor, CONSTRUCTOR_NAME);
-
-  if (!IS_WEAK) common.setStrong(Constructor, CONSTRUCTOR_NAME, IS_MAP);
-
-  return Constructor;
-};
-
-var classof$6 = classofRaw$1;
-
-// `IsArray` abstract operation
-// https://tc39.es/ecma262/#sec-isarray
-// eslint-disable-next-line es/no-array-isarray -- safe
-var isArray$4 = Array.isArray || function isArray(argument) {
-  return classof$6(argument) == 'Array';
-};
-
-var global$u = global$$;
-var isArray$3 = isArray$4;
-var isConstructor$2 = isConstructor$4;
-var isObject$9 = isObject$l;
-var wellKnownSymbol$f = wellKnownSymbol$q;
-
-var SPECIES$6 = wellKnownSymbol$f('species');
-var Array$4 = global$u.Array;
-
-// a part of `ArraySpeciesCreate` abstract operation
-// https://tc39.es/ecma262/#sec-arrayspeciescreate
-var arraySpeciesConstructor$1 = function (originalArray) {
-  var C;
-  if (isArray$3(originalArray)) {
-    C = originalArray.constructor;
-    // cross-realm fallback
-    if (isConstructor$2(C) && (C === Array$4 || isArray$3(C.prototype))) C = undefined;
-    else if (isObject$9(C)) {
-      C = C[SPECIES$6];
-      if (C === null) C = undefined;
-    }
-  } return C === undefined ? Array$4 : C;
-};
-
-var arraySpeciesConstructor = arraySpeciesConstructor$1;
-
-// `ArraySpeciesCreate` abstract operation
-// https://tc39.es/ecma262/#sec-arrayspeciescreate
-var arraySpeciesCreate$3 = function (originalArray, length) {
-  return new (arraySpeciesConstructor(originalArray))(length === 0 ? 0 : length);
-};
-
-var bind$5 = functionBindContext;
-var uncurryThis$k = functionUncurryThis;
-var IndexedObject$1 = indexedObject;
-var toObject$7 = toObject$a;
-var lengthOfArrayLike$5 = lengthOfArrayLike$9;
-var arraySpeciesCreate$2 = arraySpeciesCreate$3;
-
-var push$4 = uncurryThis$k([].push);
-
-// `Array.prototype.{ forEach, map, filter, some, every, find, findIndex, filterReject }` methods implementation
-var createMethod$1 = function (TYPE) {
-  var IS_MAP = TYPE == 1;
-  var IS_FILTER = TYPE == 2;
-  var IS_SOME = TYPE == 3;
-  var IS_EVERY = TYPE == 4;
-  var IS_FIND_INDEX = TYPE == 6;
-  var IS_FILTER_REJECT = TYPE == 7;
-  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
-  return function ($this, callbackfn, that, specificCreate) {
-    var O = toObject$7($this);
-    var self = IndexedObject$1(O);
-    var boundFunction = bind$5(callbackfn, that);
-    var length = lengthOfArrayLike$5(self);
-    var index = 0;
-    var create = specificCreate || arraySpeciesCreate$2;
-    var target = IS_MAP ? create($this, length) : IS_FILTER || IS_FILTER_REJECT ? create($this, 0) : undefined;
-    var value, result;
-    for (;length > index; index++) if (NO_HOLES || index in self) {
-      value = self[index];
-      result = boundFunction(value, index, O);
-      if (TYPE) {
-        if (IS_MAP) target[index] = result; // map
-        else if (result) switch (TYPE) {
-          case 3: return true;              // some
-          case 5: return value;             // find
-          case 6: return index;             // findIndex
-          case 2: push$4(target, value);      // filter
-        } else switch (TYPE) {
-          case 4: return false;             // every
-          case 7: push$4(target, value);      // filterReject
-        }
-      }
-    }
-    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : target;
-  };
-};
-
-var arrayIteration = {
-  // `Array.prototype.forEach` method
-  // https://tc39.es/ecma262/#sec-array.prototype.foreach
-  forEach: createMethod$1(0),
-  // `Array.prototype.map` method
-  // https://tc39.es/ecma262/#sec-array.prototype.map
-  map: createMethod$1(1),
-  // `Array.prototype.filter` method
-  // https://tc39.es/ecma262/#sec-array.prototype.filter
-  filter: createMethod$1(2),
-  // `Array.prototype.some` method
-  // https://tc39.es/ecma262/#sec-array.prototype.some
-  some: createMethod$1(3),
-  // `Array.prototype.every` method
-  // https://tc39.es/ecma262/#sec-array.prototype.every
-  every: createMethod$1(4),
-  // `Array.prototype.find` method
-  // https://tc39.es/ecma262/#sec-array.prototype.find
-  find: createMethod$1(5),
-  // `Array.prototype.findIndex` method
-  // https://tc39.es/ecma262/#sec-array.prototype.findIndex
-  findIndex: createMethod$1(6),
-  // `Array.prototype.filterReject` method
-  // https://github.com/tc39/proposal-array-filtering
-  filterReject: createMethod$1(7)
-};
-
-var uncurryThis$j = functionUncurryThis;
-var redefineAll$3 = redefineAll$4;
-var getWeakData = internalMetadata.exports.getWeakData;
-var anObject$b = anObject$l;
-var isObject$8 = isObject$l;
-var anInstance$2 = anInstance$4;
-var iterate$2 = iterate$4;
-var ArrayIterationModule = arrayIteration;
-var hasOwn$5 = hasOwnProperty_1;
-var InternalStateModule$4 = internalState;
-
-var setInternalState$4 = InternalStateModule$4.set;
-var internalStateGetterFor$1 = InternalStateModule$4.getterFor;
-var find = ArrayIterationModule.find;
-var findIndex = ArrayIterationModule.findIndex;
-var splice = uncurryThis$j([].splice);
-var id = 0;
-
-// fallback for uncaught frozen keys
-var uncaughtFrozenStore = function (store) {
-  return store.frozen || (store.frozen = new UncaughtFrozenStore());
-};
-
-var UncaughtFrozenStore = function () {
-  this.entries = [];
-};
-
-var findUncaughtFrozen = function (store, key) {
-  return find(store.entries, function (it) {
-    return it[0] === key;
-  });
-};
-
-UncaughtFrozenStore.prototype = {
-  get: function (key) {
-    var entry = findUncaughtFrozen(this, key);
-    if (entry) return entry[1];
-  },
-  has: function (key) {
-    return !!findUncaughtFrozen(this, key);
-  },
-  set: function (key, value) {
-    var entry = findUncaughtFrozen(this, key);
-    if (entry) entry[1] = value;
-    else this.entries.push([key, value]);
-  },
-  'delete': function (key) {
-    var index = findIndex(this.entries, function (it) {
-      return it[0] === key;
-    });
-    if (~index) splice(this.entries, index, 1);
-    return !!~index;
-  }
-};
-
-var collectionWeak$2 = {
-  getConstructor: function (wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER) {
-    var Constructor = wrapper(function (that, iterable) {
-      anInstance$2(that, Prototype);
-      setInternalState$4(that, {
-        type: CONSTRUCTOR_NAME,
-        id: id++,
-        frozen: undefined
-      });
-      if (iterable != undefined) iterate$2(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-    });
-
-    var Prototype = Constructor.prototype;
-
-    var getInternalState = internalStateGetterFor$1(CONSTRUCTOR_NAME);
-
-    var define = function (that, key, value) {
-      var state = getInternalState(that);
-      var data = getWeakData(anObject$b(key), true);
-      if (data === true) uncaughtFrozenStore(state).set(key, value);
-      else data[state.id] = value;
-      return that;
-    };
-
-    redefineAll$3(Prototype, {
-      // `{ WeakMap, WeakSet }.prototype.delete(key)` methods
-      // https://tc39.es/ecma262/#sec-weakmap.prototype.delete
-      // https://tc39.es/ecma262/#sec-weakset.prototype.delete
-      'delete': function (key) {
-        var state = getInternalState(this);
-        if (!isObject$8(key)) return false;
-        var data = getWeakData(key);
-        if (data === true) return uncaughtFrozenStore(state)['delete'](key);
-        return data && hasOwn$5(data, state.id) && delete data[state.id];
-      },
-      // `{ WeakMap, WeakSet }.prototype.has(key)` methods
-      // https://tc39.es/ecma262/#sec-weakmap.prototype.has
-      // https://tc39.es/ecma262/#sec-weakset.prototype.has
-      has: function has(key) {
-        var state = getInternalState(this);
-        if (!isObject$8(key)) return false;
-        var data = getWeakData(key);
-        if (data === true) return uncaughtFrozenStore(state).has(key);
-        return data && hasOwn$5(data, state.id);
-      }
-    });
-
-    redefineAll$3(Prototype, IS_MAP ? {
-      // `WeakMap.prototype.get(key)` method
-      // https://tc39.es/ecma262/#sec-weakmap.prototype.get
-      get: function get(key) {
-        var state = getInternalState(this);
-        if (isObject$8(key)) {
-          var data = getWeakData(key);
-          if (data === true) return uncaughtFrozenStore(state).get(key);
-          return data ? data[state.id] : undefined;
-        }
-      },
-      // `WeakMap.prototype.set(key, value)` method
-      // https://tc39.es/ecma262/#sec-weakmap.prototype.set
-      set: function set(key, value) {
-        return define(this, key, value);
-      }
-    } : {
-      // `WeakSet.prototype.add(value)` method
-      // https://tc39.es/ecma262/#sec-weakset.prototype.add
-      add: function add(value) {
-        return define(this, value, true);
-      }
-    });
-
-    return Constructor;
-  }
-};
-
-var global$t = global$$;
-var uncurryThis$i = functionUncurryThis;
-var redefineAll$2 = redefineAll$4;
-var InternalMetadataModule = internalMetadata.exports;
-var collection$2 = collection$3;
-var collectionWeak$1 = collectionWeak$2;
-var isObject$7 = isObject$l;
-var isExtensible = objectIsExtensible;
-var enforceInternalState$1 = internalState.enforce;
-var NATIVE_WEAK_MAP = nativeWeakMap;
-
-var IS_IE11 = !global$t.ActiveXObject && 'ActiveXObject' in global$t;
-var InternalWeakMap;
-
-var wrapper = function (init) {
-  return function WeakMap() {
-    return init(this, arguments.length ? arguments[0] : undefined);
-  };
-};
-
-// `WeakMap` constructor
-// https://tc39.es/ecma262/#sec-weakmap-constructor
-var $WeakMap = collection$2('WeakMap', wrapper, collectionWeak$1);
-
-// IE11 WeakMap frozen keys fix
-// We can't use feature detection because it crash some old IE builds
-// https://github.com/zloirock/core-js/issues/485
-if (NATIVE_WEAK_MAP && IS_IE11) {
-  InternalWeakMap = collectionWeak$1.getConstructor(wrapper, 'WeakMap', true);
-  InternalMetadataModule.enable();
-  var WeakMapPrototype = $WeakMap.prototype;
-  var nativeDelete = uncurryThis$i(WeakMapPrototype['delete']);
-  var nativeHas = uncurryThis$i(WeakMapPrototype.has);
-  var nativeGet = uncurryThis$i(WeakMapPrototype.get);
-  var nativeSet = uncurryThis$i(WeakMapPrototype.set);
-  redefineAll$2(WeakMapPrototype, {
-    'delete': function (key) {
-      if (isObject$7(key) && !isExtensible(key)) {
-        var state = enforceInternalState$1(this);
-        if (!state.frozen) state.frozen = new InternalWeakMap();
-        return nativeDelete(this, key) || state.frozen['delete'](key);
-      } return nativeDelete(this, key);
-    },
-    has: function has(key) {
-      if (isObject$7(key) && !isExtensible(key)) {
-        var state = enforceInternalState$1(this);
-        if (!state.frozen) state.frozen = new InternalWeakMap();
-        return nativeHas(this, key) || state.frozen.has(key);
-      } return nativeHas(this, key);
-    },
-    get: function get(key) {
-      if (isObject$7(key) && !isExtensible(key)) {
-        var state = enforceInternalState$1(this);
-        if (!state.frozen) state.frozen = new InternalWeakMap();
-        return nativeHas(this, key) ? nativeGet(this, key) : state.frozen.get(key);
-      } return nativeGet(this, key);
-    },
-    set: function set(key, value) {
-      if (isObject$7(key) && !isExtensible(key)) {
-        var state = enforceInternalState$1(this);
-        if (!state.frozen) state.frozen = new InternalWeakMap();
-        nativeHas(this, key) ? nativeSet(this, key, value) : state.frozen.set(key, value);
-      } else nativeSet(this, key, value);
-      return this;
-    }
-  });
-}
-
-// iterable DOM collections
-// flag - `iterable` interface - 'entries', 'keys', 'values', 'forEach' methods
-var domIterables = {
-  CSSRuleList: 0,
-  CSSStyleDeclaration: 0,
-  CSSValueList: 0,
-  ClientRectList: 0,
-  DOMRectList: 0,
-  DOMStringList: 0,
-  DOMTokenList: 1,
-  DataTransferItemList: 0,
-  FileList: 0,
-  HTMLAllCollection: 0,
-  HTMLCollection: 0,
-  HTMLFormElement: 0,
-  HTMLSelectElement: 0,
-  MediaList: 0,
-  MimeTypeArray: 0,
-  NamedNodeMap: 0,
-  NodeList: 1,
-  PaintRequestList: 0,
-  Plugin: 0,
-  PluginArray: 0,
-  SVGLengthList: 0,
-  SVGNumberList: 0,
-  SVGPathSegList: 0,
-  SVGPointList: 0,
-  SVGStringList: 0,
-  SVGTransformList: 0,
-  SourceBufferList: 0,
-  StyleSheetList: 0,
-  TextTrackCueList: 0,
-  TextTrackList: 0,
-  TouchList: 0
-};
-
-// in old WebKit versions, `element.classList` is not an instance of global `DOMTokenList`
-var documentCreateElement = documentCreateElement$2;
-
-var classList = documentCreateElement('span').classList;
-var DOMTokenListPrototype$2 = classList && classList.constructor && classList.constructor.prototype;
-
-var domTokenListPrototype = DOMTokenListPrototype$2 === Object.prototype ? undefined : DOMTokenListPrototype$2;
-
-var global$s = global$$;
-var DOMIterables$1 = domIterables;
-var DOMTokenListPrototype$1 = domTokenListPrototype;
-var ArrayIteratorMethods = es_array_iterator;
-var createNonEnumerableProperty$3 = createNonEnumerableProperty$8;
-var wellKnownSymbol$e = wellKnownSymbol$q;
-
-var ITERATOR = wellKnownSymbol$e('iterator');
-var TO_STRING_TAG = wellKnownSymbol$e('toStringTag');
-var ArrayValues = ArrayIteratorMethods.values;
-
-var handlePrototype$1 = function (CollectionPrototype, COLLECTION_NAME) {
-  if (CollectionPrototype) {
-    // some Chrome versions have non-configurable methods on DOMTokenList
-    if (CollectionPrototype[ITERATOR] !== ArrayValues) try {
-      createNonEnumerableProperty$3(CollectionPrototype, ITERATOR, ArrayValues);
-    } catch (error) {
-      CollectionPrototype[ITERATOR] = ArrayValues;
-    }
-    if (!CollectionPrototype[TO_STRING_TAG]) {
-      createNonEnumerableProperty$3(CollectionPrototype, TO_STRING_TAG, COLLECTION_NAME);
-    }
-    if (DOMIterables$1[COLLECTION_NAME]) for (var METHOD_NAME in ArrayIteratorMethods) {
-      // some Chrome versions have non-configurable methods on DOMTokenList
-      if (CollectionPrototype[METHOD_NAME] !== ArrayIteratorMethods[METHOD_NAME]) try {
-        createNonEnumerableProperty$3(CollectionPrototype, METHOD_NAME, ArrayIteratorMethods[METHOD_NAME]);
-      } catch (error) {
-        CollectionPrototype[METHOD_NAME] = ArrayIteratorMethods[METHOD_NAME];
-      }
-    }
-  }
-};
-
-for (var COLLECTION_NAME$1 in DOMIterables$1) {
-  handlePrototype$1(global$s[COLLECTION_NAME$1] && global$s[COLLECTION_NAME$1].prototype, COLLECTION_NAME$1);
-}
-
-handlePrototype$1(DOMTokenListPrototype$1, 'DOMTokenList');
-
-function _isNativeFunction(fn) {
-  return Function.toString.call(fn).indexOf("[native code]") !== -1;
-}
-
-function _isNativeReflectConstruct$x() {
-  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-  if (Reflect.construct.sham) return false;
-  if (typeof Proxy === "function") return true;
-
-  try {
-    Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function _construct(Parent, args, Class) {
-  if (_isNativeReflectConstruct$x()) {
-    _construct = Reflect.construct;
-  } else {
-    _construct = function _construct(Parent, args, Class) {
-      var a = [null];
-      a.push.apply(a, args);
-      var Constructor = Function.bind.apply(Parent, a);
-      var instance = new Constructor();
-      if (Class) _setPrototypeOf(instance, Class.prototype);
-      return instance;
-    };
-  }
-
-  return _construct.apply(null, arguments);
-}
-
-function _wrapNativeSuper(Class) {
-  var _cache = typeof Map === "function" ? new Map() : undefined;
-
-  _wrapNativeSuper = function _wrapNativeSuper(Class) {
-    if (Class === null || !_isNativeFunction(Class)) return Class;
-
-    if (typeof Class !== "function") {
-      throw new TypeError("Super expression must either be null or a function");
-    }
-
-    if (typeof _cache !== "undefined") {
-      if (_cache.has(Class)) return _cache.get(Class);
-
-      _cache.set(Class, Wrapper);
-    }
-
-    function Wrapper() {
-      return _construct(Class, arguments, _getPrototypeOf(this).constructor);
-    }
-
-    Wrapper.prototype = Object.create(Class.prototype, {
-      constructor: {
-        value: Wrapper,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-    return _setPrototypeOf(Wrapper, Class);
-  };
-
-  return _wrapNativeSuper(Class);
-}
-
-function _createSuper$w(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$w(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$w() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-var NotFoundError = /*#__PURE__*/function (_Error) {
-  _inherits(NotFoundError, _Error);
-
-  var _super = _createSuper$w(NotFoundError);
-
-  function NotFoundError(message) {
-    _classCallCheck(this, NotFoundError);
-
-    return _super.call(this, message);
-  }
-
-  return NotFoundError;
-}( /*#__PURE__*/_wrapNativeSuper(Error));
-
-function _superPropBase(object, property) {
-  while (!Object.prototype.hasOwnProperty.call(object, property)) {
-    object = _getPrototypeOf(object);
-    if (object === null) break;
-  }
-
-  return object;
-}
-
-function _get() {
-  if (typeof Reflect !== "undefined" && Reflect.get) {
-    _get = Reflect.get;
-  } else {
-    _get = function _get(target, property, receiver) {
-      var base = _superPropBase(target, property);
-      if (!base) return;
-      var desc = Object.getOwnPropertyDescriptor(base, property);
-
-      if (desc.get) {
-        return desc.get.call(arguments.length < 3 ? target : receiver);
-      }
-
-      return desc.value;
-    };
-  }
-
-  return _get.apply(this, arguments);
-}
-
-var fails$j = fails$z;
-var wellKnownSymbol$d = wellKnownSymbol$q;
-var V8_VERSION$2 = engineV8Version;
-
-var SPECIES$5 = wellKnownSymbol$d('species');
-
-var arrayMethodHasSpeciesSupport$5 = function (METHOD_NAME) {
-  // We can't use this feature detection in V8 since it causes
-  // deoptimization and serious performance degradation
-  // https://github.com/zloirock/core-js/issues/677
-  return V8_VERSION$2 >= 51 || !fails$j(function () {
-    var array = [];
-    var constructor = array.constructor = {};
-    constructor[SPECIES$5] = function () {
-      return { foo: 1 };
-    };
-    return array[METHOD_NAME](Boolean).foo !== 1;
-  });
-};
-
-var $$p = _export;
-var global$r = global$$;
-var fails$i = fails$z;
-var isArray$2 = isArray$4;
-var isObject$6 = isObject$l;
-var toObject$6 = toObject$a;
-var lengthOfArrayLike$4 = lengthOfArrayLike$9;
-var createProperty$4 = createProperty$6;
-var arraySpeciesCreate$1 = arraySpeciesCreate$3;
-var arrayMethodHasSpeciesSupport$4 = arrayMethodHasSpeciesSupport$5;
-var wellKnownSymbol$c = wellKnownSymbol$q;
-var V8_VERSION$1 = engineV8Version;
-
-var IS_CONCAT_SPREADABLE = wellKnownSymbol$c('isConcatSpreadable');
-var MAX_SAFE_INTEGER$1 = 0x1FFFFFFFFFFFFF;
-var MAXIMUM_ALLOWED_INDEX_EXCEEDED = 'Maximum allowed index exceeded';
-var TypeError$a = global$r.TypeError;
-
-// We can't use this feature detection in V8 since it causes
-// deoptimization and serious performance degradation
-// https://github.com/zloirock/core-js/issues/679
-var IS_CONCAT_SPREADABLE_SUPPORT = V8_VERSION$1 >= 51 || !fails$i(function () {
-  var array = [];
-  array[IS_CONCAT_SPREADABLE] = false;
-  return array.concat()[0] !== array;
-});
-
-var SPECIES_SUPPORT = arrayMethodHasSpeciesSupport$4('concat');
-
-var isConcatSpreadable = function (O) {
-  if (!isObject$6(O)) return false;
-  var spreadable = O[IS_CONCAT_SPREADABLE];
-  return spreadable !== undefined ? !!spreadable : isArray$2(O);
-};
-
-var FORCED$5 = !IS_CONCAT_SPREADABLE_SUPPORT || !SPECIES_SUPPORT;
-
-// `Array.prototype.concat` method
-// https://tc39.es/ecma262/#sec-array.prototype.concat
-// with adding support of @@isConcatSpreadable and @@species
-$$p({ target: 'Array', proto: true, forced: FORCED$5 }, {
-  // eslint-disable-next-line no-unused-vars -- required for `.length`
-  concat: function concat(arg) {
-    var O = toObject$6(this);
-    var A = arraySpeciesCreate$1(O, 0);
-    var n = 0;
-    var i, k, length, len, E;
-    for (i = -1, length = arguments.length; i < length; i++) {
-      E = i === -1 ? O : arguments[i];
-      if (isConcatSpreadable(E)) {
-        len = lengthOfArrayLike$4(E);
-        if (n + len > MAX_SAFE_INTEGER$1) throw TypeError$a(MAXIMUM_ALLOWED_INDEX_EXCEEDED);
-        for (k = 0; k < len; k++, n++) if (k in E) createProperty$4(A, n, E[k]);
-      } else {
-        if (n >= MAX_SAFE_INTEGER$1) throw TypeError$a(MAXIMUM_ALLOWED_INDEX_EXCEEDED);
-        createProperty$4(A, n++, E);
-      }
-    }
-    A.length = n;
-    return A;
-  }
-});
-
-var anObject$a = anObject$l;
-
-// `RegExp.prototype.flags` getter implementation
-// https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
-var regexpFlags$1 = function () {
-  var that = anObject$a(this);
-  var result = '';
-  if (that.global) result += 'g';
-  if (that.ignoreCase) result += 'i';
-  if (that.multiline) result += 'm';
-  if (that.dotAll) result += 's';
-  if (that.unicode) result += 'u';
-  if (that.sticky) result += 'y';
-  return result;
-};
-
-var uncurryThis$h = functionUncurryThis;
-var PROPER_FUNCTION_NAME$1 = functionName.PROPER;
-var redefine$6 = redefine$d.exports;
-var anObject$9 = anObject$l;
-var isPrototypeOf$4 = objectIsPrototypeOf;
-var $toString$1 = toString$d;
-var fails$h = fails$z;
-var regExpFlags$2 = regexpFlags$1;
-
-var TO_STRING = 'toString';
-var RegExpPrototype$5 = RegExp.prototype;
-var n$ToString = RegExpPrototype$5[TO_STRING];
-var getFlags$2 = uncurryThis$h(regExpFlags$2);
-
-var NOT_GENERIC = fails$h(function () { return n$ToString.call({ source: 'a', flags: 'b' }) != '/a/b'; });
-// FF44- RegExp#toString has a wrong name
-var INCORRECT_NAME = PROPER_FUNCTION_NAME$1 && n$ToString.name != TO_STRING;
-
-// `RegExp.prototype.toString` method
-// https://tc39.es/ecma262/#sec-regexp.prototype.tostring
-if (NOT_GENERIC || INCORRECT_NAME) {
-  redefine$6(RegExp.prototype, TO_STRING, function toString() {
-    var R = anObject$9(this);
-    var p = $toString$1(R.source);
-    var rf = R.flags;
-    var f = $toString$1(rf === undefined && isPrototypeOf$4(RegExpPrototype$5, R) && !('flags' in RegExpPrototype$5) ? getFlags$2(R) : rf);
-    return '/' + p + '/' + f;
-  }, { unsafe: true });
-}
-
-var $$o = _export;
-var global$q = global$$;
-var getBuiltIn$4 = getBuiltIn$b;
-var apply$4 = functionApply;
-var uncurryThis$g = functionUncurryThis;
-var fails$g = fails$z;
-
-var Array$3 = global$q.Array;
-var $stringify$1 = getBuiltIn$4('JSON', 'stringify');
-var exec$3 = uncurryThis$g(/./.exec);
-var charAt$4 = uncurryThis$g(''.charAt);
-var charCodeAt = uncurryThis$g(''.charCodeAt);
-var replace$5 = uncurryThis$g(''.replace);
-var numberToString = uncurryThis$g(1.0.toString);
-
-var tester$1 = /[\uD800-\uDFFF]/g;
-var low = /^[\uD800-\uDBFF]$/;
-var hi = /^[\uDC00-\uDFFF]$/;
-
-var fix = function (match, offset, string) {
-  var prev = charAt$4(string, offset - 1);
-  var next = charAt$4(string, offset + 1);
-  if ((exec$3(low, match) && !exec$3(hi, next)) || (exec$3(hi, match) && !exec$3(low, prev))) {
-    return '\\u' + numberToString(charCodeAt(match, 0), 16);
-  } return match;
-};
-
-var FORCED$4 = fails$g(function () {
-  return $stringify$1('\uDF06\uD834') !== '"\\udf06\\ud834"'
-    || $stringify$1('\uDEAD') !== '"\\udead"';
-});
-
-if ($stringify$1) {
-  // `JSON.stringify` method
-  // https://tc39.es/ecma262/#sec-json.stringify
-  // https://github.com/tc39/proposal-well-formed-stringify
-  $$o({ target: 'JSON', stat: true, forced: FORCED$4 }, {
-    // eslint-disable-next-line no-unused-vars -- required for `.length`
-    stringify: function stringify(it, replacer, space) {
-      for (var i = 0, l = arguments.length, args = Array$3(l); i < l; i++) args[i] = arguments[i];
-      var result = apply$4($stringify$1, null, args);
-      return typeof result == 'string' ? replace$5(result, tester$1, fix) : result;
-    }
-  });
-}
-
-var global$p = global$$;
-
-var nativePromiseConstructor = global$p.Promise;
-
-var getBuiltIn$3 = getBuiltIn$b;
-var definePropertyModule$1 = objectDefineProperty;
-var wellKnownSymbol$b = wellKnownSymbol$q;
-var DESCRIPTORS$9 = descriptors;
-
-var SPECIES$4 = wellKnownSymbol$b('species');
-
-var setSpecies$3 = function (CONSTRUCTOR_NAME) {
-  var Constructor = getBuiltIn$3(CONSTRUCTOR_NAME);
-  var defineProperty = definePropertyModule$1.f;
-
-  if (DESCRIPTORS$9 && Constructor && !Constructor[SPECIES$4]) {
-    defineProperty(Constructor, SPECIES$4, {
-      configurable: true,
-      get: function () { return this; }
-    });
-  }
-};
-
-var anObject$8 = anObject$l;
-var aConstructor = aConstructor$2;
-var wellKnownSymbol$a = wellKnownSymbol$q;
-
-var SPECIES$3 = wellKnownSymbol$a('species');
-
-// `SpeciesConstructor` abstract operation
-// https://tc39.es/ecma262/#sec-speciesconstructor
-var speciesConstructor$4 = function (O, defaultConstructor) {
-  var C = anObject$8(O).constructor;
-  var S;
-  return C === undefined || (S = anObject$8(C)[SPECIES$3]) == undefined ? defaultConstructor : aConstructor(S);
-};
-
-var global$o = global$$;
-
-var TypeError$9 = global$o.TypeError;
-
-var validateArgumentsLength$1 = function (passed, required) {
-  if (passed < required) throw TypeError$9('Not enough arguments');
-  return passed;
-};
-
-var userAgent$4 = engineUserAgent;
-
-var engineIsIos = /(?:ipad|iphone|ipod).*applewebkit/i.test(userAgent$4);
-
-var classof$5 = classofRaw$1;
-var global$n = global$$;
-
-var engineIsNode = classof$5(global$n.process) == 'process';
-
-var global$m = global$$;
-var apply$3 = functionApply;
-var bind$4 = functionBindContext;
-var isCallable$7 = isCallable$p;
-var hasOwn$4 = hasOwnProperty_1;
-var fails$f = fails$z;
-var html = html$2;
-var arraySlice$3 = arraySlice$6;
-var createElement = documentCreateElement$2;
-var validateArgumentsLength = validateArgumentsLength$1;
-var IS_IOS$1 = engineIsIos;
-var IS_NODE$2 = engineIsNode;
-
-var set = global$m.setImmediate;
-var clear = global$m.clearImmediate;
-var process$3 = global$m.process;
-var Dispatch = global$m.Dispatch;
-var Function$1 = global$m.Function;
-var MessageChannel$1 = global$m.MessageChannel;
-var String$1 = global$m.String;
-var counter = 0;
-var queue$1 = {};
-var ONREADYSTATECHANGE = 'onreadystatechange';
-var location, defer, channel, port;
-
-try {
-  // Deno throws a ReferenceError on `location` access without `--location` flag
-  location = global$m.location;
-} catch (error) { /* empty */ }
-
-var run = function (id) {
-  if (hasOwn$4(queue$1, id)) {
-    var fn = queue$1[id];
-    delete queue$1[id];
-    fn();
-  }
-};
-
-var runner = function (id) {
-  return function () {
-    run(id);
-  };
-};
-
-var listener = function (event) {
-  run(event.data);
-};
-
-var post = function (id) {
-  // old engines have not location.origin
-  global$m.postMessage(String$1(id), location.protocol + '//' + location.host);
-};
-
-// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
-if (!set || !clear) {
-  set = function setImmediate(handler) {
-    validateArgumentsLength(arguments.length, 1);
-    var fn = isCallable$7(handler) ? handler : Function$1(handler);
-    var args = arraySlice$3(arguments, 1);
-    queue$1[++counter] = function () {
-      apply$3(fn, undefined, args);
-    };
-    defer(counter);
-    return counter;
-  };
-  clear = function clearImmediate(id) {
-    delete queue$1[id];
-  };
-  // Node.js 0.8-
-  if (IS_NODE$2) {
-    defer = function (id) {
-      process$3.nextTick(runner(id));
-    };
-  // Sphere (JS game engine) Dispatch API
-  } else if (Dispatch && Dispatch.now) {
-    defer = function (id) {
-      Dispatch.now(runner(id));
-    };
-  // Browsers with MessageChannel, includes WebWorkers
-  // except iOS - https://github.com/zloirock/core-js/issues/624
-  } else if (MessageChannel$1 && !IS_IOS$1) {
-    channel = new MessageChannel$1();
-    port = channel.port2;
-    channel.port1.onmessage = listener;
-    defer = bind$4(port.postMessage, port);
-  // Browsers with postMessage, skip WebWorkers
-  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
-  } else if (
-    global$m.addEventListener &&
-    isCallable$7(global$m.postMessage) &&
-    !global$m.importScripts &&
-    location && location.protocol !== 'file:' &&
-    !fails$f(post)
-  ) {
-    defer = post;
-    global$m.addEventListener('message', listener, false);
-  // IE8-
-  } else if (ONREADYSTATECHANGE in createElement('script')) {
-    defer = function (id) {
-      html.appendChild(createElement('script'))[ONREADYSTATECHANGE] = function () {
-        html.removeChild(this);
-        run(id);
-      };
-    };
-  // Rest old browsers
-  } else {
-    defer = function (id) {
-      setTimeout(runner(id), 0);
-    };
-  }
-}
-
-var task$1 = {
-  set: set,
-  clear: clear
-};
-
-var userAgent$3 = engineUserAgent;
-var global$l = global$$;
-
-var engineIsIosPebble = /ipad|iphone|ipod/i.test(userAgent$3) && global$l.Pebble !== undefined;
-
-var userAgent$2 = engineUserAgent;
-
-var engineIsWebosWebkit = /web0s(?!.*chrome)/i.test(userAgent$2);
-
-var global$k = global$$;
-var bind$3 = functionBindContext;
-var getOwnPropertyDescriptor$1 = objectGetOwnPropertyDescriptor.f;
-var macrotask = task$1.set;
-var IS_IOS = engineIsIos;
-var IS_IOS_PEBBLE = engineIsIosPebble;
-var IS_WEBOS_WEBKIT = engineIsWebosWebkit;
-var IS_NODE$1 = engineIsNode;
-
-var MutationObserver = global$k.MutationObserver || global$k.WebKitMutationObserver;
-var document$2 = global$k.document;
-var process$2 = global$k.process;
-var Promise$1 = global$k.Promise;
-// Node.js 11 shows ExperimentalWarning on getting `queueMicrotask`
-var queueMicrotaskDescriptor = getOwnPropertyDescriptor$1(global$k, 'queueMicrotask');
-var queueMicrotask = queueMicrotaskDescriptor && queueMicrotaskDescriptor.value;
-
-var flush, head, last, notify$1, toggle, node, promise, then;
-
-// modern engines have queueMicrotask method
-if (!queueMicrotask) {
-  flush = function () {
-    var parent, fn;
-    if (IS_NODE$1 && (parent = process$2.domain)) parent.exit();
-    while (head) {
-      fn = head.fn;
-      head = head.next;
-      try {
-        fn();
-      } catch (error) {
-        if (head) notify$1();
-        else last = undefined;
-        throw error;
-      }
-    } last = undefined;
-    if (parent) parent.enter();
-  };
-
-  // browsers with MutationObserver, except iOS - https://github.com/zloirock/core-js/issues/339
-  // also except WebOS Webkit https://github.com/zloirock/core-js/issues/898
-  if (!IS_IOS && !IS_NODE$1 && !IS_WEBOS_WEBKIT && MutationObserver && document$2) {
-    toggle = true;
-    node = document$2.createTextNode('');
-    new MutationObserver(flush).observe(node, { characterData: true });
-    notify$1 = function () {
-      node.data = toggle = !toggle;
-    };
-  // environments with maybe non-completely correct, but existent Promise
-  } else if (!IS_IOS_PEBBLE && Promise$1 && Promise$1.resolve) {
-    // Promise.resolve without an argument throws an error in LG WebOS 2
-    promise = Promise$1.resolve(undefined);
-    // workaround of WebKit ~ iOS Safari 10.1 bug
-    promise.constructor = Promise$1;
-    then = bind$3(promise.then, promise);
-    notify$1 = function () {
-      then(flush);
-    };
-  // Node.js without promises
-  } else if (IS_NODE$1) {
-    notify$1 = function () {
-      process$2.nextTick(flush);
-    };
-  // for other environments - macrotask based on:
-  // - setImmediate
-  // - MessageChannel
-  // - window.postMessag
-  // - onreadystatechange
-  // - setTimeout
-  } else {
-    // strange IE + webpack dev server bug - use .bind(global)
-    macrotask = bind$3(macrotask, global$k);
-    notify$1 = function () {
-      macrotask(flush);
-    };
-  }
-}
-
-var microtask$1 = queueMicrotask || function (fn) {
-  var task = { fn: fn, next: undefined };
-  if (last) last.next = task;
-  if (!head) {
-    head = task;
-    notify$1();
-  } last = task;
-};
-
-var newPromiseCapability$2 = {};
-
-var aCallable$2 = aCallable$7;
-
-var PromiseCapability = function (C) {
-  var resolve, reject;
-  this.promise = new C(function ($$resolve, $$reject) {
-    if (resolve !== undefined || reject !== undefined) throw TypeError('Bad Promise constructor');
-    resolve = $$resolve;
-    reject = $$reject;
-  });
-  this.resolve = aCallable$2(resolve);
-  this.reject = aCallable$2(reject);
-};
-
-// `NewPromiseCapability` abstract operation
-// https://tc39.es/ecma262/#sec-newpromisecapability
-newPromiseCapability$2.f = function (C) {
-  return new PromiseCapability(C);
-};
-
-var anObject$7 = anObject$l;
-var isObject$5 = isObject$l;
-var newPromiseCapability$1 = newPromiseCapability$2;
-
-var promiseResolve$2 = function (C, x) {
-  anObject$7(C);
-  if (isObject$5(x) && x.constructor === C) return x;
-  var promiseCapability = newPromiseCapability$1.f(C);
-  var resolve = promiseCapability.resolve;
-  resolve(x);
-  return promiseCapability.promise;
-};
-
-var global$j = global$$;
-
-var hostReportErrors$1 = function (a, b) {
-  var console = global$j.console;
-  if (console && console.error) {
-    arguments.length == 1 ? console.error(a) : console.error(a, b);
-  }
-};
-
-var perform$1 = function (exec) {
-  try {
-    return { error: false, value: exec() };
-  } catch (error) {
-    return { error: true, value: error };
-  }
-};
-
-var Queue$1 = function () {
-  this.head = null;
-  this.tail = null;
-};
-
-Queue$1.prototype = {
-  add: function (item) {
-    var entry = { item: item, next: null };
-    if (this.head) this.tail.next = entry;
-    else this.head = entry;
-    this.tail = entry;
-  },
-  get: function () {
-    var entry = this.head;
-    if (entry) {
-      this.head = entry.next;
-      if (this.tail === entry) this.tail = null;
-      return entry.item;
-    }
-  }
-};
-
-var queue = Queue$1;
-
-var engineIsBrowser = typeof window == 'object';
-
-var $$n = _export;
-var global$i = global$$;
-var getBuiltIn$2 = getBuiltIn$b;
-var call$a = functionCall;
-var NativePromise$1 = nativePromiseConstructor;
-var redefine$5 = redefine$d.exports;
-var redefineAll$1 = redefineAll$4;
-var setPrototypeOf = objectSetPrototypeOf;
-var setToStringTag$1 = setToStringTag$6;
-var setSpecies$2 = setSpecies$3;
-var aCallable$1 = aCallable$7;
-var isCallable$6 = isCallable$p;
-var isObject$4 = isObject$l;
-var anInstance$1 = anInstance$4;
-var inspectSource = inspectSource$4;
-var iterate$1 = iterate$4;
-var checkCorrectnessOfIteration$1 = checkCorrectnessOfIteration$3;
-var speciesConstructor$3 = speciesConstructor$4;
-var task = task$1.set;
-var microtask = microtask$1;
-var promiseResolve$1 = promiseResolve$2;
-var hostReportErrors = hostReportErrors$1;
-var newPromiseCapabilityModule = newPromiseCapability$2;
-var perform = perform$1;
-var Queue = queue;
-var InternalStateModule$3 = internalState;
-var isForced$1 = isForced_1;
-var wellKnownSymbol$9 = wellKnownSymbol$q;
-var IS_BROWSER = engineIsBrowser;
-var IS_NODE = engineIsNode;
-var V8_VERSION = engineV8Version;
-
-var SPECIES$2 = wellKnownSymbol$9('species');
-var PROMISE = 'Promise';
-
-var getInternalState$5 = InternalStateModule$3.getterFor(PROMISE);
-var setInternalState$3 = InternalStateModule$3.set;
-var getInternalPromiseState = InternalStateModule$3.getterFor(PROMISE);
-var NativePromisePrototype = NativePromise$1 && NativePromise$1.prototype;
-var PromiseConstructor = NativePromise$1;
-var PromisePrototype = NativePromisePrototype;
-var TypeError$8 = global$i.TypeError;
-var document$1 = global$i.document;
-var process$1 = global$i.process;
-var newPromiseCapability = newPromiseCapabilityModule.f;
-var newGenericPromiseCapability = newPromiseCapability;
-
-var DISPATCH_EVENT = !!(document$1 && document$1.createEvent && global$i.dispatchEvent);
-var NATIVE_REJECTION_EVENT = isCallable$6(global$i.PromiseRejectionEvent);
-var UNHANDLED_REJECTION = 'unhandledrejection';
-var REJECTION_HANDLED = 'rejectionhandled';
-var PENDING = 0;
-var FULFILLED = 1;
-var REJECTED = 2;
-var HANDLED = 1;
-var UNHANDLED = 2;
-var SUBCLASSING = false;
-
-var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
-
-var FORCED$3 = isForced$1(PROMISE, function () {
-  var PROMISE_CONSTRUCTOR_SOURCE = inspectSource(PromiseConstructor);
-  var GLOBAL_CORE_JS_PROMISE = PROMISE_CONSTRUCTOR_SOURCE !== String(PromiseConstructor);
-  // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
-  // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-  // We can't detect it synchronously, so just check versions
-  if (!GLOBAL_CORE_JS_PROMISE && V8_VERSION === 66) return true;
-  // We can't use @@species feature detection in V8 since it causes
-  // deoptimization and performance degradation
-  // https://github.com/zloirock/core-js/issues/679
-  if (V8_VERSION >= 51 && /native code/.test(PROMISE_CONSTRUCTOR_SOURCE)) return false;
-  // Detect correctness of subclassing with @@species support
-  var promise = new PromiseConstructor(function (resolve) { resolve(1); });
-  var FakePromise = function (exec) {
-    exec(function () { /* empty */ }, function () { /* empty */ });
-  };
-  var constructor = promise.constructor = {};
-  constructor[SPECIES$2] = FakePromise;
-  SUBCLASSING = promise.then(function () { /* empty */ }) instanceof FakePromise;
-  if (!SUBCLASSING) return true;
-  // Unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-  return !GLOBAL_CORE_JS_PROMISE && IS_BROWSER && !NATIVE_REJECTION_EVENT;
-});
-
-var INCORRECT_ITERATION$1 = FORCED$3 || !checkCorrectnessOfIteration$1(function (iterable) {
-  PromiseConstructor.all(iterable)['catch'](function () { /* empty */ });
-});
-
-// helpers
-var isThenable = function (it) {
-  var then;
-  return isObject$4(it) && isCallable$6(then = it.then) ? then : false;
-};
-
-var callReaction = function (reaction, state) {
-  var value = state.value;
-  var ok = state.state == FULFILLED;
-  var handler = ok ? reaction.ok : reaction.fail;
-  var resolve = reaction.resolve;
-  var reject = reaction.reject;
-  var domain = reaction.domain;
-  var result, then, exited;
-  try {
-    if (handler) {
-      if (!ok) {
-        if (state.rejection === UNHANDLED) onHandleUnhandled(state);
-        state.rejection = HANDLED;
-      }
-      if (handler === true) result = value;
-      else {
-        if (domain) domain.enter();
-        result = handler(value); // can throw
-        if (domain) {
-          domain.exit();
-          exited = true;
-        }
-      }
-      if (result === reaction.promise) {
-        reject(TypeError$8('Promise-chain cycle'));
-      } else if (then = isThenable(result)) {
-        call$a(then, result, resolve, reject);
-      } else resolve(result);
-    } else reject(value);
-  } catch (error) {
-    if (domain && !exited) domain.exit();
-    reject(error);
-  }
-};
-
-var notify = function (state, isReject) {
-  if (state.notified) return;
-  state.notified = true;
-  microtask(function () {
-    var reactions = state.reactions;
-    var reaction;
-    while (reaction = reactions.get()) {
-      callReaction(reaction, state);
-    }
-    state.notified = false;
-    if (isReject && !state.rejection) onUnhandled(state);
-  });
-};
-
-var dispatchEvent = function (name, promise, reason) {
-  var event, handler;
-  if (DISPATCH_EVENT) {
-    event = document$1.createEvent('Event');
-    event.promise = promise;
-    event.reason = reason;
-    event.initEvent(name, false, true);
-    global$i.dispatchEvent(event);
-  } else event = { promise: promise, reason: reason };
-  if (!NATIVE_REJECTION_EVENT && (handler = global$i['on' + name])) handler(event);
-  else if (name === UNHANDLED_REJECTION) hostReportErrors('Unhandled promise rejection', reason);
-};
-
-var onUnhandled = function (state) {
-  call$a(task, global$i, function () {
-    var promise = state.facade;
-    var value = state.value;
-    var IS_UNHANDLED = isUnhandled(state);
-    var result;
-    if (IS_UNHANDLED) {
-      result = perform(function () {
-        if (IS_NODE) {
-          process$1.emit('unhandledRejection', value, promise);
-        } else dispatchEvent(UNHANDLED_REJECTION, promise, value);
-      });
-      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
-      state.rejection = IS_NODE || isUnhandled(state) ? UNHANDLED : HANDLED;
-      if (result.error) throw result.value;
-    }
-  });
-};
-
-var isUnhandled = function (state) {
-  return state.rejection !== HANDLED && !state.parent;
-};
-
-var onHandleUnhandled = function (state) {
-  call$a(task, global$i, function () {
-    var promise = state.facade;
-    if (IS_NODE) {
-      process$1.emit('rejectionHandled', promise);
-    } else dispatchEvent(REJECTION_HANDLED, promise, state.value);
-  });
-};
-
-var bind$2 = function (fn, state, unwrap) {
-  return function (value) {
-    fn(state, value, unwrap);
-  };
-};
-
-var internalReject = function (state, value, unwrap) {
-  if (state.done) return;
-  state.done = true;
-  if (unwrap) state = unwrap;
-  state.value = value;
-  state.state = REJECTED;
-  notify(state, true);
-};
-
-var internalResolve = function (state, value, unwrap) {
-  if (state.done) return;
-  state.done = true;
-  if (unwrap) state = unwrap;
-  try {
-    if (state.facade === value) throw TypeError$8("Promise can't be resolved itself");
-    var then = isThenable(value);
-    if (then) {
-      microtask(function () {
-        var wrapper = { done: false };
-        try {
-          call$a(then, value,
-            bind$2(internalResolve, wrapper, state),
-            bind$2(internalReject, wrapper, state)
-          );
-        } catch (error) {
-          internalReject(wrapper, error, state);
-        }
-      });
-    } else {
-      state.value = value;
-      state.state = FULFILLED;
-      notify(state, false);
-    }
-  } catch (error) {
-    internalReject({ done: false }, error, state);
-  }
-};
-
-// constructor polyfill
-if (FORCED$3) {
-  // 25.4.3.1 Promise(executor)
-  PromiseConstructor = function Promise(executor) {
-    anInstance$1(this, PromisePrototype);
-    aCallable$1(executor);
-    call$a(Internal, this);
-    var state = getInternalState$5(this);
-    try {
-      executor(bind$2(internalResolve, state), bind$2(internalReject, state));
-    } catch (error) {
-      internalReject(state, error);
-    }
-  };
-  PromisePrototype = PromiseConstructor.prototype;
-  // eslint-disable-next-line no-unused-vars -- required for `.length`
-  Internal = function Promise(executor) {
-    setInternalState$3(this, {
-      type: PROMISE,
-      done: false,
-      notified: false,
-      parent: false,
-      reactions: new Queue(),
-      rejection: false,
-      state: PENDING,
-      value: undefined
-    });
-  };
-  Internal.prototype = redefineAll$1(PromisePrototype, {
-    // `Promise.prototype.then` method
-    // https://tc39.es/ecma262/#sec-promise.prototype.then
-    // eslint-disable-next-line unicorn/no-thenable -- safe
-    then: function then(onFulfilled, onRejected) {
-      var state = getInternalPromiseState(this);
-      var reaction = newPromiseCapability(speciesConstructor$3(this, PromiseConstructor));
-      state.parent = true;
-      reaction.ok = isCallable$6(onFulfilled) ? onFulfilled : true;
-      reaction.fail = isCallable$6(onRejected) && onRejected;
-      reaction.domain = IS_NODE ? process$1.domain : undefined;
-      if (state.state == PENDING) state.reactions.add(reaction);
-      else microtask(function () {
-        callReaction(reaction, state);
-      });
-      return reaction.promise;
-    },
-    // `Promise.prototype.catch` method
-    // https://tc39.es/ecma262/#sec-promise.prototype.catch
-    'catch': function (onRejected) {
-      return this.then(undefined, onRejected);
-    }
-  });
-  OwnPromiseCapability = function () {
-    var promise = new Internal();
-    var state = getInternalState$5(promise);
-    this.promise = promise;
-    this.resolve = bind$2(internalResolve, state);
-    this.reject = bind$2(internalReject, state);
-  };
-  newPromiseCapabilityModule.f = newPromiseCapability = function (C) {
-    return C === PromiseConstructor || C === PromiseWrapper
-      ? new OwnPromiseCapability(C)
-      : newGenericPromiseCapability(C);
-  };
-
-  if (isCallable$6(NativePromise$1) && NativePromisePrototype !== Object.prototype) {
-    nativeThen = NativePromisePrototype.then;
-
-    if (!SUBCLASSING) {
-      // make `Promise#then` return a polyfilled `Promise` for native promise-based APIs
-      redefine$5(NativePromisePrototype, 'then', function then(onFulfilled, onRejected) {
-        var that = this;
-        return new PromiseConstructor(function (resolve, reject) {
-          call$a(nativeThen, that, resolve, reject);
-        }).then(onFulfilled, onRejected);
-      // https://github.com/zloirock/core-js/issues/640
-      }, { unsafe: true });
-
-      // makes sure that native promise-based APIs `Promise#catch` properly works with patched `Promise#then`
-      redefine$5(NativePromisePrototype, 'catch', PromisePrototype['catch'], { unsafe: true });
-    }
-
-    // make `.constructor === Promise` work for native promise-based APIs
-    try {
-      delete NativePromisePrototype.constructor;
-    } catch (error) { /* empty */ }
-
-    // make `instanceof Promise` work for native promise-based APIs
-    if (setPrototypeOf) {
-      setPrototypeOf(NativePromisePrototype, PromisePrototype);
-    }
-  }
-}
-
-$$n({ global: true, wrap: true, forced: FORCED$3 }, {
-  Promise: PromiseConstructor
-});
-
-setToStringTag$1(PromiseConstructor, PROMISE, false);
-setSpecies$2(PROMISE);
-
-PromiseWrapper = getBuiltIn$2(PROMISE);
-
-// statics
-$$n({ target: PROMISE, stat: true, forced: FORCED$3 }, {
-  // `Promise.reject` method
-  // https://tc39.es/ecma262/#sec-promise.reject
-  reject: function reject(r) {
-    var capability = newPromiseCapability(this);
-    call$a(capability.reject, undefined, r);
-    return capability.promise;
-  }
-});
-
-$$n({ target: PROMISE, stat: true, forced: FORCED$3 }, {
-  // `Promise.resolve` method
-  // https://tc39.es/ecma262/#sec-promise.resolve
-  resolve: function resolve(x) {
-    return promiseResolve$1(this, x);
-  }
-});
-
-$$n({ target: PROMISE, stat: true, forced: INCORRECT_ITERATION$1 }, {
-  // `Promise.all` method
-  // https://tc39.es/ecma262/#sec-promise.all
-  all: function all(iterable) {
-    var C = this;
-    var capability = newPromiseCapability(C);
-    var resolve = capability.resolve;
-    var reject = capability.reject;
-    var result = perform(function () {
-      var $promiseResolve = aCallable$1(C.resolve);
-      var values = [];
-      var counter = 0;
-      var remaining = 1;
-      iterate$1(iterable, function (promise) {
-        var index = counter++;
-        var alreadyCalled = false;
-        remaining++;
-        call$a($promiseResolve, C, promise).then(function (value) {
-          if (alreadyCalled) return;
-          alreadyCalled = true;
-          values[index] = value;
-          --remaining || resolve(values);
-        }, reject);
-      });
-      --remaining || resolve(values);
-    });
-    if (result.error) reject(result.value);
-    return capability.promise;
-  },
-  // `Promise.race` method
-  // https://tc39.es/ecma262/#sec-promise.race
-  race: function race(iterable) {
-    var C = this;
-    var capability = newPromiseCapability(C);
-    var reject = capability.reject;
-    var result = perform(function () {
-      var $promiseResolve = aCallable$1(C.resolve);
-      iterate$1(iterable, function (promise) {
-        call$a($promiseResolve, C, promise).then(capability.resolve, reject);
-      });
-    });
-    if (result.error) reject(result.value);
-    return capability.promise;
-  }
-});
-
-var fails$e = fails$z;
-var global$h = global$$;
-
-// babel-minify and Closure Compiler transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError
-var $RegExp$2 = global$h.RegExp;
-
-var UNSUPPORTED_Y$3 = fails$e(function () {
-  var re = $RegExp$2('a', 'y');
-  re.lastIndex = 2;
-  return re.exec('abcd') != null;
-});
-
-// UC Browser bug
-// https://github.com/zloirock/core-js/issues/1008
-var MISSED_STICKY$2 = UNSUPPORTED_Y$3 || fails$e(function () {
-  return !$RegExp$2('a', 'y').sticky;
-});
-
-var BROKEN_CARET = UNSUPPORTED_Y$3 || fails$e(function () {
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=773687
-  var re = $RegExp$2('^r', 'gy');
-  re.lastIndex = 2;
-  return re.exec('str') != null;
-});
-
-var regexpStickyHelpers = {
-  BROKEN_CARET: BROKEN_CARET,
-  MISSED_STICKY: MISSED_STICKY$2,
-  UNSUPPORTED_Y: UNSUPPORTED_Y$3
-};
-
-var fails$d = fails$z;
-var global$g = global$$;
-
-// babel-minify and Closure Compiler transpiles RegExp('.', 's') -> /./s and it causes SyntaxError
-var $RegExp$1 = global$g.RegExp;
-
-var regexpUnsupportedDotAll = fails$d(function () {
-  var re = $RegExp$1('.', 's');
-  return !(re.dotAll && re.exec('\n') && re.flags === 's');
-});
-
-var fails$c = fails$z;
-var global$f = global$$;
-
-// babel-minify and Closure Compiler transpiles RegExp('(?<a>b)', 'g') -> /(?<a>b)/g and it causes SyntaxError
-var $RegExp = global$f.RegExp;
-
-var regexpUnsupportedNcg = fails$c(function () {
-  var re = $RegExp('(?<a>b)', 'g');
-  return re.exec('b').groups.a !== 'b' ||
-    'b'.replace(re, '$<a>c') !== 'bc';
-});
-
-/* eslint-disable regexp/no-empty-capturing-group, regexp/no-empty-group, regexp/no-lazy-ends -- testing */
-/* eslint-disable regexp/no-useless-quantifier -- testing */
-var call$9 = functionCall;
-var uncurryThis$f = functionUncurryThis;
-var toString$a = toString$d;
-var regexpFlags = regexpFlags$1;
-var stickyHelpers$2 = regexpStickyHelpers;
-var shared$1 = shared$5.exports;
-var create$1 = objectCreate;
-var getInternalState$4 = internalState.get;
-var UNSUPPORTED_DOT_ALL$2 = regexpUnsupportedDotAll;
-var UNSUPPORTED_NCG$1 = regexpUnsupportedNcg;
-
-var nativeReplace = shared$1('native-string-replace', String.prototype.replace);
-var nativeExec = RegExp.prototype.exec;
-var patchedExec = nativeExec;
-var charAt$3 = uncurryThis$f(''.charAt);
-var indexOf = uncurryThis$f(''.indexOf);
-var replace$4 = uncurryThis$f(''.replace);
-var stringSlice$6 = uncurryThis$f(''.slice);
-
-var UPDATES_LAST_INDEX_WRONG = (function () {
-  var re1 = /a/;
-  var re2 = /b*/g;
-  call$9(nativeExec, re1, 'a');
-  call$9(nativeExec, re2, 'a');
-  return re1.lastIndex !== 0 || re2.lastIndex !== 0;
-})();
-
-var UNSUPPORTED_Y$2 = stickyHelpers$2.BROKEN_CARET;
-
-// nonparticipating capturing group, copied from es5-shim's String#split patch.
-var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
-
-var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED || UNSUPPORTED_Y$2 || UNSUPPORTED_DOT_ALL$2 || UNSUPPORTED_NCG$1;
-
-if (PATCH) {
-  patchedExec = function exec(string) {
-    var re = this;
-    var state = getInternalState$4(re);
-    var str = toString$a(string);
-    var raw = state.raw;
-    var result, reCopy, lastIndex, match, i, object, group;
-
-    if (raw) {
-      raw.lastIndex = re.lastIndex;
-      result = call$9(patchedExec, raw, str);
-      re.lastIndex = raw.lastIndex;
-      return result;
-    }
-
-    var groups = state.groups;
-    var sticky = UNSUPPORTED_Y$2 && re.sticky;
-    var flags = call$9(regexpFlags, re);
-    var source = re.source;
-    var charsAdded = 0;
-    var strCopy = str;
-
-    if (sticky) {
-      flags = replace$4(flags, 'y', '');
-      if (indexOf(flags, 'g') === -1) {
-        flags += 'g';
-      }
-
-      strCopy = stringSlice$6(str, re.lastIndex);
-      // Support anchored sticky behavior.
-      if (re.lastIndex > 0 && (!re.multiline || re.multiline && charAt$3(str, re.lastIndex - 1) !== '\n')) {
-        source = '(?: ' + source + ')';
-        strCopy = ' ' + strCopy;
-        charsAdded++;
-      }
-      // ^(? + rx + ) is needed, in combination with some str slicing, to
-      // simulate the 'y' flag.
-      reCopy = new RegExp('^(?:' + source + ')', flags);
-    }
-
-    if (NPCG_INCLUDED) {
-      reCopy = new RegExp('^' + source + '$(?!\\s)', flags);
-    }
-    if (UPDATES_LAST_INDEX_WRONG) lastIndex = re.lastIndex;
-
-    match = call$9(nativeExec, sticky ? reCopy : re, strCopy);
-
-    if (sticky) {
-      if (match) {
-        match.input = stringSlice$6(match.input, charsAdded);
-        match[0] = stringSlice$6(match[0], charsAdded);
-        match.index = re.lastIndex;
-        re.lastIndex += match[0].length;
-      } else re.lastIndex = 0;
-    } else if (UPDATES_LAST_INDEX_WRONG && match) {
-      re.lastIndex = re.global ? match.index + match[0].length : lastIndex;
-    }
-    if (NPCG_INCLUDED && match && match.length > 1) {
-      // Fix browsers whose `exec` methods don't consistently return `undefined`
-      // for NPCG, like IE8. NOTE: This doesn' work for /(.?)?/
-      call$9(nativeReplace, match[0], reCopy, function () {
-        for (i = 1; i < arguments.length - 2; i++) {
-          if (arguments[i] === undefined) match[i] = undefined;
-        }
-      });
-    }
-
-    if (match && groups) {
-      match.groups = object = create$1(null);
-      for (i = 0; i < groups.length; i++) {
-        group = groups[i];
-        object[group[0]] = match[group[1]];
-      }
-    }
-
-    return match;
-  };
-}
-
-var regexpExec$3 = patchedExec;
-
-var $$m = _export;
-var exec$2 = regexpExec$3;
-
-// `RegExp.prototype.exec` method
-// https://tc39.es/ecma262/#sec-regexp.prototype.exec
-$$m({ target: 'RegExp', proto: true, forced: /./.exec !== exec$2 }, {
-  exec: exec$2
-});
-
-// TODO: Remove from `core-js@4` since it's moved to entry points
-
-var uncurryThis$e = functionUncurryThis;
-var redefine$4 = redefine$d.exports;
-var regexpExec$2 = regexpExec$3;
-var fails$b = fails$z;
-var wellKnownSymbol$8 = wellKnownSymbol$q;
-var createNonEnumerableProperty$2 = createNonEnumerableProperty$8;
-
-var SPECIES$1 = wellKnownSymbol$8('species');
-var RegExpPrototype$4 = RegExp.prototype;
-
-var fixRegexpWellKnownSymbolLogic = function (KEY, exec, FORCED, SHAM) {
-  var SYMBOL = wellKnownSymbol$8(KEY);
-
-  var DELEGATES_TO_SYMBOL = !fails$b(function () {
-    // String methods call symbol-named RegEp methods
-    var O = {};
-    O[SYMBOL] = function () { return 7; };
-    return ''[KEY](O) != 7;
-  });
-
-  var DELEGATES_TO_EXEC = DELEGATES_TO_SYMBOL && !fails$b(function () {
-    // Symbol-named RegExp methods call .exec
-    var execCalled = false;
-    var re = /a/;
-
-    if (KEY === 'split') {
-      // We can't use real regex here since it causes deoptimization
-      // and serious performance degradation in V8
-      // https://github.com/zloirock/core-js/issues/306
-      re = {};
-      // RegExp[@@split] doesn't call the regex's exec method, but first creates
-      // a new one. We need to return the patched regex when creating the new one.
-      re.constructor = {};
-      re.constructor[SPECIES$1] = function () { return re; };
-      re.flags = '';
-      re[SYMBOL] = /./[SYMBOL];
-    }
-
-    re.exec = function () { execCalled = true; return null; };
-
-    re[SYMBOL]('');
-    return !execCalled;
-  });
-
-  if (
-    !DELEGATES_TO_SYMBOL ||
-    !DELEGATES_TO_EXEC ||
-    FORCED
-  ) {
-    var uncurriedNativeRegExpMethod = uncurryThis$e(/./[SYMBOL]);
-    var methods = exec(SYMBOL, ''[KEY], function (nativeMethod, regexp, str, arg2, forceStringMethod) {
-      var uncurriedNativeMethod = uncurryThis$e(nativeMethod);
-      var $exec = regexp.exec;
-      if ($exec === regexpExec$2 || $exec === RegExpPrototype$4.exec) {
-        if (DELEGATES_TO_SYMBOL && !forceStringMethod) {
-          // The native String method already delegates to @@method (this
-          // polyfilled function), leasing to infinite recursion.
-          // We avoid it by directly calling the native @@method method.
-          return { done: true, value: uncurriedNativeRegExpMethod(regexp, str, arg2) };
-        }
-        return { done: true, value: uncurriedNativeMethod(str, regexp, arg2) };
-      }
-      return { done: false };
-    });
-
-    redefine$4(String.prototype, KEY, methods[0]);
-    redefine$4(RegExpPrototype$4, SYMBOL, methods[1]);
-  }
-
-  if (SHAM) createNonEnumerableProperty$2(RegExpPrototype$4[SYMBOL], 'sham', true);
-};
-
-var charAt$2 = stringMultibyte.charAt;
-
-// `AdvanceStringIndex` abstract operation
-// https://tc39.es/ecma262/#sec-advancestringindex
-var advanceStringIndex$4 = function (S, index, unicode) {
-  return index + (unicode ? charAt$2(S, index).length : 1);
-};
-
-var uncurryThis$d = functionUncurryThis;
-var toObject$5 = toObject$a;
-
-var floor$1 = Math.floor;
-var charAt$1 = uncurryThis$d(''.charAt);
-var replace$3 = uncurryThis$d(''.replace);
-var stringSlice$5 = uncurryThis$d(''.slice);
-var SUBSTITUTION_SYMBOLS = /\$([$&'`]|\d{1,2}|<[^>]*>)/g;
-var SUBSTITUTION_SYMBOLS_NO_NAMED = /\$([$&'`]|\d{1,2})/g;
-
-// `GetSubstitution` abstract operation
-// https://tc39.es/ecma262/#sec-getsubstitution
-var getSubstitution$1 = function (matched, str, position, captures, namedCaptures, replacement) {
-  var tailPos = position + matched.length;
-  var m = captures.length;
-  var symbols = SUBSTITUTION_SYMBOLS_NO_NAMED;
-  if (namedCaptures !== undefined) {
-    namedCaptures = toObject$5(namedCaptures);
-    symbols = SUBSTITUTION_SYMBOLS;
-  }
-  return replace$3(replacement, symbols, function (match, ch) {
-    var capture;
-    switch (charAt$1(ch, 0)) {
-      case '$': return '$';
-      case '&': return matched;
-      case '`': return stringSlice$5(str, 0, position);
-      case "'": return stringSlice$5(str, tailPos);
-      case '<':
-        capture = namedCaptures[stringSlice$5(ch, 1, -1)];
-        break;
-      default: // \d\d?
-        var n = +ch;
-        if (n === 0) return match;
-        if (n > m) {
-          var f = floor$1(n / 10);
-          if (f === 0) return match;
-          if (f <= m) return captures[f - 1] === undefined ? charAt$1(ch, 1) : captures[f - 1] + charAt$1(ch, 1);
-          return match;
-        }
-        capture = captures[n - 1];
-    }
-    return capture === undefined ? '' : capture;
-  });
-};
-
-var global$e = global$$;
-var call$8 = functionCall;
-var anObject$6 = anObject$l;
-var isCallable$5 = isCallable$p;
-var classof$4 = classofRaw$1;
-var regexpExec$1 = regexpExec$3;
-
-var TypeError$7 = global$e.TypeError;
-
-// `RegExpExec` abstract operation
-// https://tc39.es/ecma262/#sec-regexpexec
-var regexpExecAbstract = function (R, S) {
-  var exec = R.exec;
-  if (isCallable$5(exec)) {
-    var result = call$8(exec, R, S);
-    if (result !== null) anObject$6(result);
-    return result;
-  }
-  if (classof$4(R) === 'RegExp') return call$8(regexpExec$1, R, S);
-  throw TypeError$7('RegExp#exec called on incompatible receiver');
-};
-
-var apply$2 = functionApply;
-var call$7 = functionCall;
-var uncurryThis$c = functionUncurryThis;
-var fixRegExpWellKnownSymbolLogic$2 = fixRegexpWellKnownSymbolLogic;
-var fails$a = fails$z;
-var anObject$5 = anObject$l;
-var isCallable$4 = isCallable$p;
-var toIntegerOrInfinity$1 = toIntegerOrInfinity$5;
-var toLength$4 = toLength$6;
-var toString$9 = toString$d;
-var requireObjectCoercible$6 = requireObjectCoercible$a;
-var advanceStringIndex$3 = advanceStringIndex$4;
-var getMethod$3 = getMethod$7;
-var getSubstitution = getSubstitution$1;
-var regExpExec$3 = regexpExecAbstract;
-var wellKnownSymbol$7 = wellKnownSymbol$q;
-
-var REPLACE = wellKnownSymbol$7('replace');
-var max$2 = Math.max;
-var min$3 = Math.min;
-var concat = uncurryThis$c([].concat);
-var push$3 = uncurryThis$c([].push);
-var stringIndexOf$3 = uncurryThis$c(''.indexOf);
-var stringSlice$4 = uncurryThis$c(''.slice);
-
-var maybeToString = function (it) {
-  return it === undefined ? it : String(it);
-};
-
-// IE <= 11 replaces $0 with the whole match, as if it was $&
-// https://stackoverflow.com/questions/6024666/getting-ie-to-replace-a-regex-with-the-literal-string-0
-var REPLACE_KEEPS_$0 = (function () {
-  // eslint-disable-next-line regexp/prefer-escape-replacement-dollar-char -- required for testing
-  return 'a'.replace(/./, '$0') === '$0';
-})();
-
-// Safari <= 13.0.3(?) substitutes nth capture where n>m with an empty string
-var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = (function () {
-  if (/./[REPLACE]) {
-    return /./[REPLACE]('a', '$0') === '';
-  }
-  return false;
-})();
-
-var REPLACE_SUPPORTS_NAMED_GROUPS = !fails$a(function () {
-  var re = /./;
-  re.exec = function () {
-    var result = [];
-    result.groups = { a: '7' };
-    return result;
-  };
-  // eslint-disable-next-line regexp/no-useless-dollar-replacements -- false positive
-  return ''.replace(re, '$<a>') !== '7';
-});
-
-// @@replace logic
-fixRegExpWellKnownSymbolLogic$2('replace', function (_, nativeReplace, maybeCallNative) {
-  var UNSAFE_SUBSTITUTE = REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE ? '$' : '$0';
-
-  return [
-    // `String.prototype.replace` method
-    // https://tc39.es/ecma262/#sec-string.prototype.replace
-    function replace(searchValue, replaceValue) {
-      var O = requireObjectCoercible$6(this);
-      var replacer = searchValue == undefined ? undefined : getMethod$3(searchValue, REPLACE);
-      return replacer
-        ? call$7(replacer, searchValue, O, replaceValue)
-        : call$7(nativeReplace, toString$9(O), searchValue, replaceValue);
-    },
-    // `RegExp.prototype[@@replace]` method
-    // https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
-    function (string, replaceValue) {
-      var rx = anObject$5(this);
-      var S = toString$9(string);
-
-      if (
-        typeof replaceValue == 'string' &&
-        stringIndexOf$3(replaceValue, UNSAFE_SUBSTITUTE) === -1 &&
-        stringIndexOf$3(replaceValue, '$<') === -1
-      ) {
-        var res = maybeCallNative(nativeReplace, rx, S, replaceValue);
-        if (res.done) return res.value;
-      }
-
-      var functionalReplace = isCallable$4(replaceValue);
-      if (!functionalReplace) replaceValue = toString$9(replaceValue);
-
-      var global = rx.global;
-      if (global) {
-        var fullUnicode = rx.unicode;
-        rx.lastIndex = 0;
-      }
-      var results = [];
-      while (true) {
-        var result = regExpExec$3(rx, S);
-        if (result === null) break;
-
-        push$3(results, result);
-        if (!global) break;
-
-        var matchStr = toString$9(result[0]);
-        if (matchStr === '') rx.lastIndex = advanceStringIndex$3(S, toLength$4(rx.lastIndex), fullUnicode);
-      }
-
-      var accumulatedResult = '';
-      var nextSourcePosition = 0;
-      for (var i = 0; i < results.length; i++) {
-        result = results[i];
-
-        var matched = toString$9(result[0]);
-        var position = max$2(min$3(toIntegerOrInfinity$1(result.index), S.length), 0);
-        var captures = [];
-        // NOTE: This is equivalent to
-        //   captures = result.slice(1).map(maybeToString)
-        // but for some reason `nativeSlice.call(result, 1, result.length)` (called in
-        // the slice polyfill when slicing native arrays) "doesn't work" in safari 9 and
-        // causes a crash (https://pastebin.com/N21QzeQA) when trying to debug it.
-        for (var j = 1; j < result.length; j++) push$3(captures, maybeToString(result[j]));
-        var namedCaptures = result.groups;
-        if (functionalReplace) {
-          var replacerArgs = concat([matched], captures, position, S);
-          if (namedCaptures !== undefined) push$3(replacerArgs, namedCaptures);
-          var replacement = toString$9(apply$2(replaceValue, undefined, replacerArgs));
-        } else {
-          replacement = getSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
-        }
-        if (position >= nextSourcePosition) {
-          accumulatedResult += stringSlice$4(S, nextSourcePosition, position) + replacement;
-          nextSourcePosition = position + matched.length;
-        }
-      }
-      return accumulatedResult + stringSlice$4(S, nextSourcePosition);
-    }
-  ];
-}, !REPLACE_SUPPORTS_NAMED_GROUPS || !REPLACE_KEEPS_$0 || REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE);
-
-var $$l = _export;
-var NativePromise = nativePromiseConstructor;
-var fails$9 = fails$z;
-var getBuiltIn$1 = getBuiltIn$b;
-var isCallable$3 = isCallable$p;
-var speciesConstructor$2 = speciesConstructor$4;
-var promiseResolve = promiseResolve$2;
-var redefine$3 = redefine$d.exports;
-
-// Safari bug https://bugs.webkit.org/show_bug.cgi?id=200829
-var NON_GENERIC = !!NativePromise && fails$9(function () {
-  // eslint-disable-next-line unicorn/no-thenable -- required for testing
-  NativePromise.prototype['finally'].call({ then: function () { /* empty */ } }, function () { /* empty */ });
-});
-
-// `Promise.prototype.finally` method
-// https://tc39.es/ecma262/#sec-promise.prototype.finally
-$$l({ target: 'Promise', proto: true, real: true, forced: NON_GENERIC }, {
-  'finally': function (onFinally) {
-    var C = speciesConstructor$2(this, getBuiltIn$1('Promise'));
-    var isFunction = isCallable$3(onFinally);
-    return this.then(
-      isFunction ? function (x) {
-        return promiseResolve(C, onFinally()).then(function () { return x; });
-      } : onFinally,
-      isFunction ? function (e) {
-        return promiseResolve(C, onFinally()).then(function () { throw e; });
-      } : onFinally
-    );
-  }
-});
-
-// makes sure that native promise-based APIs `Promise#finally` properly works with patched `Promise#then`
-if (isCallable$3(NativePromise)) {
-  var method = getBuiltIn$1('Promise').prototype['finally'];
-  if (NativePromise.prototype['finally'] !== method) {
-    redefine$3(NativePromise.prototype, 'finally', method, { unsafe: true });
-  }
-}
-
-var $$k = _export;
-var toObject$4 = toObject$a;
-var nativeKeys = objectKeys$2;
-var fails$8 = fails$z;
-
-var FAILS_ON_PRIMITIVES$1 = fails$8(function () { nativeKeys(1); });
-
-// `Object.keys` method
-// https://tc39.es/ecma262/#sec-object.keys
-$$k({ target: 'Object', stat: true, forced: FAILS_ON_PRIMITIVES$1 }, {
-  keys: function keys(it) {
-    return nativeKeys(toObject$4(it));
-  }
-});
-
-var wellKnownSymbolWrapped = {};
-
-var wellKnownSymbol$6 = wellKnownSymbol$q;
-
-wellKnownSymbolWrapped.f = wellKnownSymbol$6;
-
-var global$d = global$$;
-
-var path$1 = global$d;
-
-var path = path$1;
-var hasOwn$3 = hasOwnProperty_1;
-var wrappedWellKnownSymbolModule$1 = wellKnownSymbolWrapped;
-var defineProperty$6 = objectDefineProperty.f;
-
-var defineWellKnownSymbol$2 = function (NAME) {
-  var Symbol = path.Symbol || (path.Symbol = {});
-  if (!hasOwn$3(Symbol, NAME)) defineProperty$6(Symbol, NAME, {
-    value: wrappedWellKnownSymbolModule$1.f(NAME)
-  });
-};
-
-var $$j = _export;
-var global$c = global$$;
-var getBuiltIn = getBuiltIn$b;
-var apply$1 = functionApply;
-var call$6 = functionCall;
-var uncurryThis$b = functionUncurryThis;
-var DESCRIPTORS$8 = descriptors;
-var NATIVE_SYMBOL$1 = nativeSymbol;
-var fails$7 = fails$z;
-var hasOwn$2 = hasOwnProperty_1;
-var isArray$1 = isArray$4;
-var isCallable$2 = isCallable$p;
-var isObject$3 = isObject$l;
-var isPrototypeOf$3 = objectIsPrototypeOf;
-var isSymbol = isSymbol$3;
-var anObject$4 = anObject$l;
-var toObject$3 = toObject$a;
-var toIndexedObject$4 = toIndexedObject$b;
-var toPropertyKey = toPropertyKey$4;
-var $toString = toString$d;
-var createPropertyDescriptor = createPropertyDescriptor$5;
-var nativeObjectCreate = objectCreate;
-var objectKeys = objectKeys$2;
-var getOwnPropertyNamesModule = objectGetOwnPropertyNames;
-var getOwnPropertyNamesExternal = objectGetOwnPropertyNamesExternal;
-var getOwnPropertySymbolsModule = objectGetOwnPropertySymbols;
-var getOwnPropertyDescriptorModule$1 = objectGetOwnPropertyDescriptor;
-var definePropertyModule = objectDefineProperty;
-var definePropertiesModule = objectDefineProperties;
-var propertyIsEnumerableModule = objectPropertyIsEnumerable;
-var arraySlice$2 = arraySlice$6;
-var redefine$2 = redefine$d.exports;
-var shared = shared$5.exports;
-var sharedKey = sharedKey$4;
-var hiddenKeys = hiddenKeys$6;
-var uid = uid$4;
-var wellKnownSymbol$5 = wellKnownSymbol$q;
-var wrappedWellKnownSymbolModule = wellKnownSymbolWrapped;
-var defineWellKnownSymbol$1 = defineWellKnownSymbol$2;
-var setToStringTag = setToStringTag$6;
-var InternalStateModule$2 = internalState;
-var $forEach$1 = arrayIteration.forEach;
-
-var HIDDEN = sharedKey('hidden');
-var SYMBOL = 'Symbol';
-var PROTOTYPE = 'prototype';
-var TO_PRIMITIVE = wellKnownSymbol$5('toPrimitive');
-
-var setInternalState$2 = InternalStateModule$2.set;
-var getInternalState$3 = InternalStateModule$2.getterFor(SYMBOL);
-
-var ObjectPrototype = Object[PROTOTYPE];
-var $Symbol = global$c.Symbol;
-var SymbolPrototype$1 = $Symbol && $Symbol[PROTOTYPE];
-var TypeError$6 = global$c.TypeError;
-var QObject = global$c.QObject;
-var $stringify = getBuiltIn('JSON', 'stringify');
-var nativeGetOwnPropertyDescriptor$1 = getOwnPropertyDescriptorModule$1.f;
-var nativeDefineProperty = definePropertyModule.f;
-var nativeGetOwnPropertyNames = getOwnPropertyNamesExternal.f;
-var nativePropertyIsEnumerable = propertyIsEnumerableModule.f;
-var push$2 = uncurryThis$b([].push);
-
-var AllSymbols = shared('symbols');
-var ObjectPrototypeSymbols = shared('op-symbols');
-var StringToSymbolRegistry = shared('string-to-symbol-registry');
-var SymbolToStringRegistry = shared('symbol-to-string-registry');
-var WellKnownSymbolsStore = shared('wks');
-
-// Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
-var USE_SETTER = !QObject || !QObject[PROTOTYPE] || !QObject[PROTOTYPE].findChild;
-
-// fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
-var setSymbolDescriptor = DESCRIPTORS$8 && fails$7(function () {
-  return nativeObjectCreate(nativeDefineProperty({}, 'a', {
-    get: function () { return nativeDefineProperty(this, 'a', { value: 7 }).a; }
-  })).a != 7;
-}) ? function (O, P, Attributes) {
-  var ObjectPrototypeDescriptor = nativeGetOwnPropertyDescriptor$1(ObjectPrototype, P);
-  if (ObjectPrototypeDescriptor) delete ObjectPrototype[P];
-  nativeDefineProperty(O, P, Attributes);
-  if (ObjectPrototypeDescriptor && O !== ObjectPrototype) {
-    nativeDefineProperty(ObjectPrototype, P, ObjectPrototypeDescriptor);
-  }
-} : nativeDefineProperty;
-
-var wrap = function (tag, description) {
-  var symbol = AllSymbols[tag] = nativeObjectCreate(SymbolPrototype$1);
-  setInternalState$2(symbol, {
-    type: SYMBOL,
-    tag: tag,
-    description: description
-  });
-  if (!DESCRIPTORS$8) symbol.description = description;
-  return symbol;
-};
-
-var $defineProperty = function defineProperty(O, P, Attributes) {
-  if (O === ObjectPrototype) $defineProperty(ObjectPrototypeSymbols, P, Attributes);
-  anObject$4(O);
-  var key = toPropertyKey(P);
-  anObject$4(Attributes);
-  if (hasOwn$2(AllSymbols, key)) {
-    if (!Attributes.enumerable) {
-      if (!hasOwn$2(O, HIDDEN)) nativeDefineProperty(O, HIDDEN, createPropertyDescriptor(1, {}));
-      O[HIDDEN][key] = true;
-    } else {
-      if (hasOwn$2(O, HIDDEN) && O[HIDDEN][key]) O[HIDDEN][key] = false;
-      Attributes = nativeObjectCreate(Attributes, { enumerable: createPropertyDescriptor(0, false) });
-    } return setSymbolDescriptor(O, key, Attributes);
-  } return nativeDefineProperty(O, key, Attributes);
-};
-
-var $defineProperties = function defineProperties(O, Properties) {
-  anObject$4(O);
-  var properties = toIndexedObject$4(Properties);
-  var keys = objectKeys(properties).concat($getOwnPropertySymbols(properties));
-  $forEach$1(keys, function (key) {
-    if (!DESCRIPTORS$8 || call$6($propertyIsEnumerable, properties, key)) $defineProperty(O, key, properties[key]);
-  });
-  return O;
-};
-
-var $create = function create(O, Properties) {
-  return Properties === undefined ? nativeObjectCreate(O) : $defineProperties(nativeObjectCreate(O), Properties);
-};
-
-var $propertyIsEnumerable = function propertyIsEnumerable(V) {
-  var P = toPropertyKey(V);
-  var enumerable = call$6(nativePropertyIsEnumerable, this, P);
-  if (this === ObjectPrototype && hasOwn$2(AllSymbols, P) && !hasOwn$2(ObjectPrototypeSymbols, P)) return false;
-  return enumerable || !hasOwn$2(this, P) || !hasOwn$2(AllSymbols, P) || hasOwn$2(this, HIDDEN) && this[HIDDEN][P]
-    ? enumerable : true;
-};
-
-var $getOwnPropertyDescriptor = function getOwnPropertyDescriptor(O, P) {
-  var it = toIndexedObject$4(O);
-  var key = toPropertyKey(P);
-  if (it === ObjectPrototype && hasOwn$2(AllSymbols, key) && !hasOwn$2(ObjectPrototypeSymbols, key)) return;
-  var descriptor = nativeGetOwnPropertyDescriptor$1(it, key);
-  if (descriptor && hasOwn$2(AllSymbols, key) && !(hasOwn$2(it, HIDDEN) && it[HIDDEN][key])) {
-    descriptor.enumerable = true;
-  }
-  return descriptor;
-};
-
-var $getOwnPropertyNames = function getOwnPropertyNames(O) {
-  var names = nativeGetOwnPropertyNames(toIndexedObject$4(O));
-  var result = [];
-  $forEach$1(names, function (key) {
-    if (!hasOwn$2(AllSymbols, key) && !hasOwn$2(hiddenKeys, key)) push$2(result, key);
-  });
-  return result;
-};
-
-var $getOwnPropertySymbols = function getOwnPropertySymbols(O) {
-  var IS_OBJECT_PROTOTYPE = O === ObjectPrototype;
-  var names = nativeGetOwnPropertyNames(IS_OBJECT_PROTOTYPE ? ObjectPrototypeSymbols : toIndexedObject$4(O));
-  var result = [];
-  $forEach$1(names, function (key) {
-    if (hasOwn$2(AllSymbols, key) && (!IS_OBJECT_PROTOTYPE || hasOwn$2(ObjectPrototype, key))) {
-      push$2(result, AllSymbols[key]);
-    }
-  });
-  return result;
-};
-
-// `Symbol` constructor
-// https://tc39.es/ecma262/#sec-symbol-constructor
-if (!NATIVE_SYMBOL$1) {
-  $Symbol = function Symbol() {
-    if (isPrototypeOf$3(SymbolPrototype$1, this)) throw TypeError$6('Symbol is not a constructor');
-    var description = !arguments.length || arguments[0] === undefined ? undefined : $toString(arguments[0]);
-    var tag = uid(description);
-    var setter = function (value) {
-      if (this === ObjectPrototype) call$6(setter, ObjectPrototypeSymbols, value);
-      if (hasOwn$2(this, HIDDEN) && hasOwn$2(this[HIDDEN], tag)) this[HIDDEN][tag] = false;
-      setSymbolDescriptor(this, tag, createPropertyDescriptor(1, value));
-    };
-    if (DESCRIPTORS$8 && USE_SETTER) setSymbolDescriptor(ObjectPrototype, tag, { configurable: true, set: setter });
-    return wrap(tag, description);
-  };
-
-  SymbolPrototype$1 = $Symbol[PROTOTYPE];
-
-  redefine$2(SymbolPrototype$1, 'toString', function toString() {
-    return getInternalState$3(this).tag;
-  });
-
-  redefine$2($Symbol, 'withoutSetter', function (description) {
-    return wrap(uid(description), description);
-  });
-
-  propertyIsEnumerableModule.f = $propertyIsEnumerable;
-  definePropertyModule.f = $defineProperty;
-  definePropertiesModule.f = $defineProperties;
-  getOwnPropertyDescriptorModule$1.f = $getOwnPropertyDescriptor;
-  getOwnPropertyNamesModule.f = getOwnPropertyNamesExternal.f = $getOwnPropertyNames;
-  getOwnPropertySymbolsModule.f = $getOwnPropertySymbols;
-
-  wrappedWellKnownSymbolModule.f = function (name) {
-    return wrap(wellKnownSymbol$5(name), name);
-  };
-
-  if (DESCRIPTORS$8) {
-    // https://github.com/tc39/proposal-Symbol-description
-    nativeDefineProperty(SymbolPrototype$1, 'description', {
-      configurable: true,
-      get: function description() {
-        return getInternalState$3(this).description;
-      }
-    });
-    {
-      redefine$2(ObjectPrototype, 'propertyIsEnumerable', $propertyIsEnumerable, { unsafe: true });
-    }
-  }
-}
-
-$$j({ global: true, wrap: true, forced: !NATIVE_SYMBOL$1, sham: !NATIVE_SYMBOL$1 }, {
-  Symbol: $Symbol
-});
-
-$forEach$1(objectKeys(WellKnownSymbolsStore), function (name) {
-  defineWellKnownSymbol$1(name);
-});
-
-$$j({ target: SYMBOL, stat: true, forced: !NATIVE_SYMBOL$1 }, {
-  // `Symbol.for` method
-  // https://tc39.es/ecma262/#sec-symbol.for
-  'for': function (key) {
-    var string = $toString(key);
-    if (hasOwn$2(StringToSymbolRegistry, string)) return StringToSymbolRegistry[string];
-    var symbol = $Symbol(string);
-    StringToSymbolRegistry[string] = symbol;
-    SymbolToStringRegistry[symbol] = string;
-    return symbol;
-  },
-  // `Symbol.keyFor` method
-  // https://tc39.es/ecma262/#sec-symbol.keyfor
-  keyFor: function keyFor(sym) {
-    if (!isSymbol(sym)) throw TypeError$6(sym + ' is not a symbol');
-    if (hasOwn$2(SymbolToStringRegistry, sym)) return SymbolToStringRegistry[sym];
-  },
-  useSetter: function () { USE_SETTER = true; },
-  useSimple: function () { USE_SETTER = false; }
-});
-
-$$j({ target: 'Object', stat: true, forced: !NATIVE_SYMBOL$1, sham: !DESCRIPTORS$8 }, {
-  // `Object.create` method
-  // https://tc39.es/ecma262/#sec-object.create
-  create: $create,
-  // `Object.defineProperty` method
-  // https://tc39.es/ecma262/#sec-object.defineproperty
-  defineProperty: $defineProperty,
-  // `Object.defineProperties` method
-  // https://tc39.es/ecma262/#sec-object.defineproperties
-  defineProperties: $defineProperties,
-  // `Object.getOwnPropertyDescriptor` method
-  // https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
-  getOwnPropertyDescriptor: $getOwnPropertyDescriptor
-});
-
-$$j({ target: 'Object', stat: true, forced: !NATIVE_SYMBOL$1 }, {
-  // `Object.getOwnPropertyNames` method
-  // https://tc39.es/ecma262/#sec-object.getownpropertynames
-  getOwnPropertyNames: $getOwnPropertyNames,
-  // `Object.getOwnPropertySymbols` method
-  // https://tc39.es/ecma262/#sec-object.getownpropertysymbols
-  getOwnPropertySymbols: $getOwnPropertySymbols
-});
-
-// Chrome 38 and 39 `Object.getOwnPropertySymbols` fails on primitives
-// https://bugs.chromium.org/p/v8/issues/detail?id=3443
-$$j({ target: 'Object', stat: true, forced: fails$7(function () { getOwnPropertySymbolsModule.f(1); }) }, {
-  getOwnPropertySymbols: function getOwnPropertySymbols(it) {
-    return getOwnPropertySymbolsModule.f(toObject$3(it));
-  }
-});
-
-// `JSON.stringify` method behavior with symbols
-// https://tc39.es/ecma262/#sec-json.stringify
-if ($stringify) {
-  var FORCED_JSON_STRINGIFY = !NATIVE_SYMBOL$1 || fails$7(function () {
-    var symbol = $Symbol();
-    // MS Edge converts symbol values to JSON as {}
-    return $stringify([symbol]) != '[null]'
-      // WebKit converts symbol values to JSON as null
-      || $stringify({ a: symbol }) != '{}'
-      // V8 throws on boxed symbols
-      || $stringify(Object(symbol)) != '{}';
-  });
-
-  $$j({ target: 'JSON', stat: true, forced: FORCED_JSON_STRINGIFY }, {
-    // eslint-disable-next-line no-unused-vars -- required for `.length`
-    stringify: function stringify(it, replacer, space) {
-      var args = arraySlice$2(arguments);
-      var $replacer = replacer;
-      if (!isObject$3(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
-      if (!isArray$1(replacer)) replacer = function (key, value) {
-        if (isCallable$2($replacer)) value = call$6($replacer, this, key, value);
-        if (!isSymbol(value)) return value;
-      };
-      args[1] = replacer;
-      return apply$1($stringify, null, args);
-    }
-  });
-}
-
-// `Symbol.prototype[@@toPrimitive]` method
-// https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive
-if (!SymbolPrototype$1[TO_PRIMITIVE]) {
-  var valueOf = SymbolPrototype$1.valueOf;
-  // eslint-disable-next-line no-unused-vars -- required for .length
-  redefine$2(SymbolPrototype$1, TO_PRIMITIVE, function (hint) {
-    // TODO: improve hint logic
-    return call$6(valueOf, this);
-  });
-}
-// `Symbol.prototype[@@toStringTag]` property
-// https://tc39.es/ecma262/#sec-symbol.prototype-@@tostringtag
-setToStringTag($Symbol, SYMBOL);
-
-hiddenKeys[HIDDEN] = true;
-
-var $$i = _export;
-var $filter = arrayIteration.filter;
-var arrayMethodHasSpeciesSupport$3 = arrayMethodHasSpeciesSupport$5;
-
-var HAS_SPECIES_SUPPORT$3 = arrayMethodHasSpeciesSupport$3('filter');
-
-// `Array.prototype.filter` method
-// https://tc39.es/ecma262/#sec-array.prototype.filter
-// with adding support of @@species
-$$i({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT$3 }, {
-  filter: function filter(callbackfn /* , thisArg */) {
-    return $filter(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-
-var $$h = _export;
-var fails$6 = fails$z;
-var toIndexedObject$3 = toIndexedObject$b;
-var nativeGetOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
-var DESCRIPTORS$7 = descriptors;
-
-var FAILS_ON_PRIMITIVES = fails$6(function () { nativeGetOwnPropertyDescriptor(1); });
-var FORCED$2 = !DESCRIPTORS$7 || FAILS_ON_PRIMITIVES;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-$$h({ target: 'Object', stat: true, forced: FORCED$2, sham: !DESCRIPTORS$7 }, {
-  getOwnPropertyDescriptor: function getOwnPropertyDescriptor(it, key) {
-    return nativeGetOwnPropertyDescriptor(toIndexedObject$3(it), key);
-  }
-});
-
-var fails$5 = fails$z;
-
-var arrayMethodIsStrict$3 = function (METHOD_NAME, argument) {
-  var method = [][METHOD_NAME];
-  return !!method && fails$5(function () {
-    // eslint-disable-next-line no-useless-call,no-throw-literal -- required for testing
-    method.call(null, argument || function () { throw 1; }, 1);
-  });
-};
-
-var $forEach = arrayIteration.forEach;
-var arrayMethodIsStrict$2 = arrayMethodIsStrict$3;
-
-var STRICT_METHOD$2 = arrayMethodIsStrict$2('forEach');
-
-// `Array.prototype.forEach` method implementation
-// https://tc39.es/ecma262/#sec-array.prototype.foreach
-var arrayForEach = !STRICT_METHOD$2 ? function forEach(callbackfn /* , thisArg */) {
-  return $forEach(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-// eslint-disable-next-line es/no-array-prototype-foreach -- safe
-} : [].forEach;
-
-var global$b = global$$;
-var DOMIterables = domIterables;
-var DOMTokenListPrototype = domTokenListPrototype;
-var forEach = arrayForEach;
-var createNonEnumerableProperty$1 = createNonEnumerableProperty$8;
-
-var handlePrototype = function (CollectionPrototype) {
-  // some Chrome versions have non-configurable methods on DOMTokenList
-  if (CollectionPrototype && CollectionPrototype.forEach !== forEach) try {
-    createNonEnumerableProperty$1(CollectionPrototype, 'forEach', forEach);
-  } catch (error) {
-    CollectionPrototype.forEach = forEach;
-  }
-};
-
-for (var COLLECTION_NAME in DOMIterables) {
-  if (DOMIterables[COLLECTION_NAME]) {
-    handlePrototype(global$b[COLLECTION_NAME] && global$b[COLLECTION_NAME].prototype);
-  }
-}
-
-handlePrototype(DOMTokenListPrototype);
-
-var $$g = _export;
-var DESCRIPTORS$6 = descriptors;
-var ownKeys$1 = ownKeys$3;
-var toIndexedObject$2 = toIndexedObject$b;
-var getOwnPropertyDescriptorModule = objectGetOwnPropertyDescriptor;
-var createProperty$3 = createProperty$6;
-
-// `Object.getOwnPropertyDescriptors` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
-$$g({ target: 'Object', stat: true, sham: !DESCRIPTORS$6 }, {
-  getOwnPropertyDescriptors: function getOwnPropertyDescriptors(object) {
-    var O = toIndexedObject$2(object);
-    var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
-    var keys = ownKeys$1(O);
-    var result = {};
-    var index = 0;
-    var key, descriptor;
-    while (keys.length > index) {
-      descriptor = getOwnPropertyDescriptor(O, key = keys[index++]);
-      if (descriptor !== undefined) createProperty$3(result, key, descriptor);
-    }
-    return result;
-  }
-});
-
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
-
-function _classPrivateFieldInitSpec$a(obj, privateMap, value) { _checkPrivateRedeclaration$c(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$c(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-var _eventListeners = /*#__PURE__*/new WeakMap();
-
-var EventHarness = /*#__PURE__*/function () {
-  function EventHarness() {
-    _classCallCheck(this, EventHarness);
-
-    _classPrivateFieldInitSpec$a(this, _eventListeners, {
-      writable: true,
-      value: []
-    });
-  }
-
-  _createClass(EventHarness, [{
-    key: "bindListener",
-    value:
     /**
      *
      * @param {string} eventName
@@ -4887,23 +106,22 @@ var EventHarness = /*#__PURE__*/function () {
      * @deprecated use addListener instead
      * @return {number} handle
      */
-    function bindListener(eventName, obj, method, constructionParam) {
-      _classPrivateFieldSet(this, _eventListeners, _classPrivateFieldGet(this, _eventListeners) || []);
+    bindListener (eventName, obj, method, constructionParam) {
+        this.#eventListeners = this.#eventListeners || [];
 
-      var handlerFunction = function handlerFunction(context, eventName, invocationParam) {
-        return method.call(obj, context, eventName, invocationParam, constructionParam);
-      };
+        const handlerFunction =
+            function(context, eventName, invocationParam) {
+                return method.call(obj, context, eventName, invocationParam, constructionParam);
+            };
 
-      if (_classPrivateFieldGet(this, _eventListeners)[eventName]) {
-        return _classPrivateFieldGet(this, _eventListeners)[eventName].push(handlerFunction) - 1;
-      } else {
-        _classPrivateFieldGet(this, _eventListeners)[eventName] = [handlerFunction];
-        return 0; // first element in array
-      }
-    }
-  }, {
-    key: "addListener",
-    value:
+        if (this.#eventListeners[eventName]) {
+            return (this.#eventListeners[eventName].push(handlerFunction))-1;
+        } else {
+            this.#eventListeners[eventName] = [handlerFunction];
+            return 0; // first element in array
+        }
+    };
+
     /**
      *
      * @param {string} eventName
@@ -4911,80 +129,70 @@ var EventHarness = /*#__PURE__*/function () {
      * @param {*=} constructionParam
      * @return {number} handle
      */
-    function addListener(eventName, handler) {
-      var constructionParam = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    addListener (eventName, handler, constructionParam = {}) {
+        this.#eventListeners = this.#eventListeners || [];
 
-      _classPrivateFieldSet(this, _eventListeners, _classPrivateFieldGet(this, _eventListeners) || []);
+        const handlerFunction =
+            function(context, eventName, invocationParam = {}) {
+                return handler({context, eventName, ...invocationParam, ...constructionParam});
+            };
 
-      var handlerFunction = function handlerFunction(context, eventName) {
-        var invocationParam = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-        return handler(_objectSpread(_objectSpread({
-          context: context,
-          eventName: eventName
-        }, invocationParam), constructionParam));
-      };
+        if (this.#eventListeners[eventName]) {
+            return (this.#eventListeners[eventName].push(handlerFunction)) - 1;
+        } else {
+            this.#eventListeners[eventName] = [handlerFunction];
+            return 0; // first element in array
+        }
+    };
 
-      if (_classPrivateFieldGet(this, _eventListeners)[eventName]) {
-        return _classPrivateFieldGet(this, _eventListeners)[eventName].push(handlerFunction) - 1;
-      } else {
-        _classPrivateFieldGet(this, _eventListeners)[eventName] = [handlerFunction];
-        return 0; // first element in array
-      }
-    }
-  }, {
-    key: "removeListener",
-    value:
     /**
      *
      * @param {string} eventName
      * @param {number} handle
      * @returns undefined
      */
-    function removeListener(eventName, handle) {
-      if (_classPrivateFieldGet(this, _eventListeners)[eventName] && _classPrivateFieldGet(this, _eventListeners)[eventName][handle]) {
-        delete _classPrivateFieldGet(this, _eventListeners)[eventName][handle];
-      } else {
-        console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
-      }
+    removeListener(eventName, handle) {
+        if (this.#eventListeners[eventName] && this.#eventListeners[eventName][handle]) {
+            delete this.#eventListeners[eventName][handle];
+        } else {
+            console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
+        }
+        return undefined;
+    };
 
-      return undefined;
-    }
-  }, {
-    key: "destructor",
-    value:
     /**
      *
      */
-    function destructor() {
-      _classPrivateFieldSet(this, _eventListeners, null);
-    }
-  }, {
-    key: "fireEvent",
-    value:
+    destructor() {
+        this.#eventListeners = null;
+    };
+
     /**
      *
      * @param {string} eventName
      * @param {Object=} param optional parameter to pass on to listener
      * @return void
      */
-    function fireEvent(eventName, param) {
-      //console.log('fire event "' + eventName + '" called by '+this.fire_event.caller.caller+' invoked by '+this.fire_event.caller.caller.caller+' instigated by '+this.fire_event.caller.caller.caller.caller);
-      if (_classPrivateFieldGet(this, _eventListeners)) {
-        for (var f in _classPrivateFieldGet(this, _eventListeners)[eventName]) {
-          if (_classPrivateFieldGet(this, _eventListeners)[eventName].hasOwnProperty(f)) {
-            if (_classPrivateFieldGet(this, _eventListeners)[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
-              break;
+    fireEvent (eventName, param) {
+        //console.log('fire event "' + eventName + '" called by '+this.fire_event.caller.caller+' invoked by '+this.fire_event.caller.caller.caller+' instigated by '+this.fire_event.caller.caller.caller.caller);
+
+        if (this.#eventListeners) {
+            for (let f in this.#eventListeners[eventName]) {
+                if (this.#eventListeners[eventName].hasOwnProperty(f)) {
+                    if (this.#eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
+                        break;
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  }]);
+    };
+}
 
-  return EventHarness;
-}();
+var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-_defineProperty(EventHarness, "STOP_PROPAGATION", 'STOP_PROPAGATION');
+function commonjsRequire (path) {
+	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
+}
 
 var localforage$1 = {exports: {}};
 
@@ -7806,135 +3014,139 @@ module.exports = localforage_js;
 
 var localforage = localforage$1.exports;
 
-function _createSuper$v(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$v(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uuid)}
 
-function _isNativeReflectConstruct$v() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-function uuid(a) {
-  return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid);
-}
 /**
  * regex used to validate AppObject external ids
  * (UUID form is 8 digits followed by three groups of 4 digits followed by a group of 12)
  */
+const UUID_REGEX = /^[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$/;
 
-var UUID_REGEX = /^[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$/;
-var SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
-var SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
-var Model = /*#__PURE__*/function (_EventHarness) {
-  _inherits(Model, _EventHarness);
+const SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
+const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
 
-  var _super = _createSuper$v(Model);
-
-  function Model() {
-    var _this;
-
-    _classCallCheck(this, Model);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "_id", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "_savedRemotely", false);
-
-    _defineProperty(_assertThisInitialized(_this), "_savedLocally", false);
-
-    _defineProperty(_assertThisInitialized(_this), "deleted", false);
-
-    _defineProperty(_assertThisInitialized(_this), "createdStamp", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "modifiedStamp", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "projectId", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "isPristine", false);
-
-    _this.createdStamp = Math.floor(Date.now() / 1000);
-    return _this;
-  }
-  /**
-   * returns true if either remote or local copy is missing
-   *
-   * @returns {boolean}
-   */
-
-
-  _createClass(Model, [{
-    key: "savedRemotely",
-    set:
+class Model extends EventHarness {
     /**
      * @type {string}
      */
+    _id;
 
     /**
      * set if the object has been posted to the server
      *
      * @type {boolean}
      */
+    _savedRemotely = false;
+
+    static EVENT_SAVED_REMOTELY = 'savedremotely';
 
     /**
      *
      * @param {Boolean} savedFlag
      */
-    function set(savedFlag) {
-      if (this._savedRemotely !== savedFlag) {
-        this._savedRemotely = !!savedFlag;
+    set savedRemotely(savedFlag) {
+        if (this._savedRemotely !== savedFlag) {
+            this._savedRemotely = !!savedFlag;
 
-        if (this._savedRemotely) {
-          this.fireEvent(Model.EVENT_SAVED_REMOTELY, {
-            id: this.id
-          });
+            if (this._savedRemotely) {
+                this.fireEvent(Model.EVENT_SAVED_REMOTELY, {id : this.id});
+            }
         }
-      }
     }
+
     /**
      * set if the object has been added to a temporary store (e.g. indexedDb)
      *
      * @type {boolean}
      */
+    _savedLocally = false;
 
-  }, {
-    key: "unsaved",
-    value: function unsaved() {
-      return !(this._savedLocally && this._savedRemotely);
+    /**
+     *
+     * @type {boolean}
+     */
+    deleted = false;
+
+    /**
+     * unix timestamp
+     * Provided that the created stamp is < the modified stamp then the externally assigned creation stamp will be used
+     *
+     * @type {number}
+     */
+    createdStamp;
+
+    /**
+     * unix timestamp
+     * modified stamp is generally server assigned - rather than using a potentially discrepant client clock
+     * this may increase synchrony and trust between distributed clients
+     *
+     * @type {number}
+     */
+    modifiedStamp;
+
+    /**
+     * DDb AppProject id
+     *
+     * @type {number}
+     */
+    projectId;
+
+    /**
+     * paired with isNew this marks records that have never been edited
+     *
+     * @type {boolean}
+     */
+    isPristine = false;
+
+    constructor() {
+        super();
+
+        this.createdStamp = Math.floor(Date.now() / 1000);
     }
+
+    /**
+     * returns true if either remote or local copy is missing
+     *
+     * @returns {boolean}
+     */
+    unsaved() {
+        return !(this._savedLocally && this._savedRemotely);
+    }
+
     /**
      * string
      */
+    get id() {
+        if (!this._id) {
+            this._id = uuid();
+        } else if (this._id === 'undefined') {
+            console.error("id is literal 'undefined', am forcing new id");
+            this._id = uuid();
+        }
 
-  }, {
-    key: "id",
-    get: function get() {
-      if (!this._id) {
-        this._id = uuid();
-      } else if (this._id === 'undefined') {
-        console.error("id is literal 'undefined', am forcing new id");
-        this._id = uuid();
-      }
-
-      return this._id;
+        return this._id;
     }
+
     /**
      *
      * @param {string} newId
      */
-    ,
-    set: function set(newId) {
-      // only allow an id to be set if not present already
-      if (this._id && newId !== this._id) {
-        throw new Error("Occurrence id has already been set, when trying to set new id '".concat(newId, "'."));
-      }
+    set id(newId) {
+        // only allow an id to be set if not present already
 
-      this._id = newId;
+        if (this._id && newId !== this._id) {
+            throw new Error(`Occurrence id has already been set, when trying to set new id '${newId}'.`);
+        }
+        this._id = newId;
     }
+
     /**
      *
      * @type {Array.<function>}
      * @private
      */
+    static _tasks = [];
 
-  }, {
-    key: "queuePost",
-    value:
     /**
      * Add a post request to the queue
      * Requests run in sequence.
@@ -7945,39 +3157,42 @@ var Model = /*#__PURE__*/function (_EventHarness) {
      * @param formData
      * @returns {Promise}
      */
-    function queuePost(formData) {
-      var _this2 = this;
+    queuePost(formData) {
+        return new Promise((resolve, reject) => {
+            /**
+             * @returns {Promise}
+             */
+            const task = () => {
+                console.log({'posting form data': formData});
+                return this.post(formData).then(resolve, reject);
+            };
 
-      return new Promise(function (resolve, reject) {
-        /**
-         * @returns {Promise}
-         */
-        var task = function task() {
-          console.log({
-            'posting form data': formData
-          });
-          return _this2.post(formData).then(resolve, reject);
-        };
+            Model._tasks.push(task);
 
-        Model._tasks.push(task);
-
-        if (Model._tasks.length > 1) {
-          console.log("Added post request to the queue.");
-        } else {
-          console.log("No pending tasks, starting post request immediately.");
-          task().finally(Model._next);
-        }
-      });
+            if (Model._tasks.length > 1) {
+                console.log(`Added post request to the queue.`);
+            } else {
+                console.log(`No pending tasks, starting post request immediately.`);
+                task().finally(Model._next);
+            }
+        });
     }
+
     /**
      *
      * @returns {Promise}
      * @private
      */
+    static _next() {
+        Model._tasks.shift(); // save is done
 
-  }, {
-    key: "post",
-    value:
+        if (Model._tasks.length) {
+            // run the next task
+            console.log('Running the next task.');
+            return Model._tasks[0]().finally(Model._next);
+        }
+    }
+
     /**
      * if not securely saved then makes a post to /save<object>
      *
@@ -7993,226 +3208,182 @@ var Model = /*#__PURE__*/function (_EventHarness) {
      * @param {FormData} formData
      * @returns {Promise}
      */
-    function post(formData) {
-      var _this3 = this;
+    post(formData) {
+        return fetch(this.SAVE_ENDPOINT, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                // need to find out whether this was a local store in indexedDb by the service worker
+                // or a server-side save
 
-      return fetch(this.SAVE_ENDPOINT, {
-        method: 'POST',
-        body: formData
-      }).then(function (response) {
-        if (response.ok) {
-          // need to find out whether this was a local store in indexedDb by the service worker
-          // or a server-side save
-          // to do that need to decode the json response
-          // which can only be done once, so need to clone first
-          var clonedResponse = response.clone();
-          return clonedResponse.json().then(function (responseData) {
-            /** @param {{saveState : string, created : number, modified : number}} responseData */
-            console.log({
-              'returned to client after save': responseData
-            });
+                // to do that need to decode the json response
+                // which can only be done once, so need to clone first
+                const clonedResponse = response.clone();
+                return clonedResponse.json().then((responseData) => {
+                    /** @param {{saveState : string, created : number, modified : number}} responseData */
 
-            switch (responseData.saveState) {
-              case SAVE_STATE_SERVER:
-                _this3._savedLocally = true; //this._savedRemotely = true;
+                    console.log({'returned to client after save' : responseData});
 
-                _this3.savedRemotely = true;
-                break;
+                    switch (responseData.saveState) {
+                        case SAVE_STATE_SERVER:
+                            this._savedLocally = true;
+                            //this._savedRemotely = true;
+                            this.savedRemotely = true;
+                            break;
 
-              case SAVE_STATE_LOCAL:
-                _this3._savedLocally = true; //this._savedRemotely = false;
+                        case SAVE_STATE_LOCAL:
+                            this._savedLocally = true;
+                            //this._savedRemotely = false;
+                            this.savedRemotely = false;
+                            break;
 
-                _this3.savedRemotely = false;
-                break;
+                        default:
+                            console.log(`Unrecognised save state '${responseData.saveState}'`);
+                    }
 
-              default:
-                console.log("Unrecognised save state '".concat(responseData.saveState, "'"));
+                    this.createdStamp = parseInt(responseData.created, 10);
+                    this.modifiedStamp = parseInt(responseData.modified, 10);
+
+                    // return the json version of the original response as a promise
+                    return response.json(); // assign appropriate JSON type to the response
+                });
+            } else {
+                // try instead to write the data to local storage
+
+                console.log('Save failed, presumably service worker is missing and there is no network connection. Should write to IndexedDb here.');
+                return Promise.reject('IndexedDb storage not yet implemented');
             }
-
-            _this3.createdStamp = parseInt(responseData.created, 10);
-            _this3.modifiedStamp = parseInt(responseData.modified, 10); // return the json version of the original response as a promise
-
-            return response.json(); // assign appropriate JSON type to the response
-          });
-        } else {
-          // try instead to write the data to local storage
-          console.log('Save failed, presumably service worker is missing and there is no network connection. Should write to IndexedDb here.');
-          return Promise.reject('IndexedDb storage not yet implemented');
-        }
-      });
+        });
     }
+
     /**
      *
      * @param {string} id
      * @param {(Survey|Occurrence|OccurrenceImage)} modelObject
      * @returns {Promise}
      */
+    static retrieveFromLocal(id, modelObject) {
+        return localforage.getItem(`${modelObject.TYPE}.${id}`)
+            .then((descriptor) => {
+                if (descriptor) {
+                    modelObject.id = id;
+                    modelObject._parseDescriptor(descriptor);
 
-  }, {
-    key: "_parseDescriptor",
-    value:
+                    return modelObject;
+                } else {
+                    return Promise.reject(`Failed to retrieve ${modelObject.TYPE}.${id} locally`);
+                }
+            });
+    }
+
     /**
      *
      * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
      */
-    function _parseDescriptor(descriptor) {
-      this._parseAttributes(descriptor.attributes);
-
-      this._parseSavedState(descriptor.saveState);
-
-      this.deleted = descriptor.deleted === true || descriptor.deleted === 'true'; // cast stringified boolean to true boolean
-
-      this.createdStamp = parseInt(descriptor.created, 10); //this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : this.createdStamp; // avoids NaN
-
-      this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : 0; // avoids NaN
-
-      this.projectId = parseInt(descriptor.projectId, 10);
+    _parseDescriptor(descriptor) {
+        this._parseAttributes(descriptor.attributes);
+        this._parseSavedState(descriptor.saveState);
+        this.deleted = (descriptor.deleted === true) || (descriptor.deleted === 'true'); // cast stringified boolean to true boolean
+        this.createdStamp = parseInt(descriptor.created, 10);
+        //this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : this.createdStamp; // avoids NaN
+        this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : 0; // avoids NaN
+        this.projectId = parseInt(descriptor.projectId, 10);
     }
+
     /**
      *
      * @param {Object.<string, {}>|string|Array} attributes
      */
+    _parseAttributes(attributes) {
+        if (typeof attributes === 'string') {
+            attributes = JSON.parse(attributes);
+        }
 
-  }, {
-    key: "_parseAttributes",
-    value: function _parseAttributes(attributes) {
-      if (typeof attributes === 'string') {
-        attributes = JSON.parse(attributes);
-      }
+        if (Array.isArray(attributes)) {
+            // problematic bug, where empty attributes come back as an array rather than as an object
 
-      if (Array.isArray(attributes)) {
-        // problematic bug, where empty attributes come back as an array rather than as an object
-        console.log('Attributes were spuriously represented as an array rather than as an empty object');
-        this.attributes = {};
-      } else {
-        this.attributes = attributes;
-      }
+            console.log('Attributes were spuriously represented as an array rather than as an empty object');
+            this.attributes = {};
+        } else {
+            this.attributes = attributes;
+        }
     }
+
     /**
      *
      * @param {string} saveState
      */
+    _parseSavedState(saveState) {
+        switch (saveState) {
+            case SAVE_STATE_LOCAL:
+                //this._savedRemotely = false;
+                this.savedRemotely = false;
+                this._savedLocally = true;
+                break;
 
-  }, {
-    key: "_parseSavedState",
-    value: function _parseSavedState(saveState) {
-      switch (saveState) {
-        case SAVE_STATE_LOCAL:
-          //this._savedRemotely = false;
-          this.savedRemotely = false;
-          this._savedLocally = true;
-          break;
+            case SAVE_STATE_SERVER:
+                //this._savedRemotely = true;
+                this.savedRemotely = true;
+                this._savedLocally = true;
+                break;
 
-        case SAVE_STATE_SERVER:
-          //this._savedRemotely = true;
-          this.savedRemotely = true;
-          this._savedLocally = true;
-          break;
-
-        default:
-          throw new Error("Unrecognised saved state '".concat(saveState));
-      }
+            default:
+                throw new Error(`Unrecognised saved state '${saveState}`);
+        }
     }
+
     /**
      * update modified stamp to current time
      */
+    touch() {
+        this.modifiedStamp = Math.floor(Date.now() / 1000);
 
-  }, {
-    key: "touch",
-    value: function touch() {
-      this.modifiedStamp = Math.floor(Date.now() / 1000);
+        if (this.isPristine) {
+            this.isPristine = false;
+            this.createdStamp = this.modifiedStamp;
+        }
 
-      if (this.isPristine) {
-        this.isPristine = false;
-        this.createdStamp = this.modifiedStamp;
-      }
-
-      this._savedLocally = false; //this._savedRemotely = false;
-
-      this.savedRemotely = false;
+        this._savedLocally = false;
+        //this._savedRemotely = false;
+        this.savedRemotely = false;
     }
+
     /**
      *
      * @param {{}} formSectionProperties
      * @return {{requiredFieldsPresent: boolean, validity: Object.<string, boolean>}}
      */
+    evaluateCompletionStatus(formSectionProperties) {
+        const validity = {};
+        let requiredFieldsPresent = true;
 
-  }, {
-    key: "evaluateCompletionStatus",
-    value: function evaluateCompletionStatus(formSectionProperties) {
-      var validity = {};
-      var requiredFieldsPresent = true;
+        for (let key in formSectionProperties) {
+            if (formSectionProperties.hasOwnProperty(key)) {
+                let property = formSectionProperties[key];
 
-      for (var key in formSectionProperties) {
-        if (formSectionProperties.hasOwnProperty(key)) {
-          var property = formSectionProperties[key];
-          validity[key] = property.validator ? property.validator(key, property, this.attributes) : property.field.isValid(key, property, this.attributes);
+                validity[key] = property.validator ?
+                    property.validator(key, property, this.attributes)
+                    :
+                    property.field.isValid(key, property, this.attributes);
 
-          if (null !== validity[key]) {
-            // validity can be 'null' in which case field was optional and not assessed
-            requiredFieldsPresent = requiredFieldsPresent && validity[key];
-          }
+                if (null !== validity[key]) {
+                    // validity can be 'null' in which case field was optional and not assessed
+                    requiredFieldsPresent = requiredFieldsPresent && validity[key];
+                }
+            }
         }
-      }
 
-      return {
-        requiredFieldsPresent: requiredFieldsPresent,
-        validity: validity
-      };
+        return {
+            requiredFieldsPresent,
+            validity
+        };
     }
-  }], [{
-    key: "_next",
-    value: function _next() {
-      Model._tasks.shift(); // save is done
+}
 
+class TaxonError extends Error {
 
-      if (Model._tasks.length) {
-        // run the next task
-        console.log('Running the next task.');
-        return Model._tasks[0]().finally(Model._next);
-      }
-    }
-  }, {
-    key: "retrieveFromLocal",
-    value: function retrieveFromLocal(id, modelObject) {
-      return localforage.getItem("".concat(modelObject.TYPE, ".").concat(id)).then(function (descriptor) {
-        if (descriptor) {
-          modelObject.id = id;
-
-          modelObject._parseDescriptor(descriptor);
-
-          return modelObject;
-        } else {
-          return Promise.reject("Failed to retrieve ".concat(modelObject.TYPE, ".").concat(id, " locally"));
-        }
-      });
-    }
-  }]);
-
-  return Model;
-}(EventHarness);
-
-_defineProperty(Model, "EVENT_SAVED_REMOTELY", 'savedremotely');
-
-_defineProperty(Model, "_tasks", []);
-
-function _createSuper$u(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$u(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$u() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-var TaxonError = /*#__PURE__*/function (_Error) {
-  _inherits(TaxonError, _Error);
-
-  var _super = _createSuper$u(TaxonError);
-
-  function TaxonError() {
-    _classCallCheck(this, TaxonError);
-
-    return _super.apply(this, arguments);
-  }
-
-  return TaxonError;
-}( /*#__PURE__*/_wrapNativeSuper(Error));
+}
 
 /**
  *
@@ -8220,377 +3391,358 @@ var TaxonError = /*#__PURE__*/function (_Error) {
  * @returns {string}
  */
 function escapeHTML(text) {
-  try {
-    // IE (even v 11) sometimes fails here with 'Unknown runtime error', see http://blog.rakeshpai.me/2007/02/ies-unknown-runtime-error-when-using.html
-    var textArea = document.createElement('textarea');
-    textArea.innerHTML = text;
-    return textArea.innerHTML.replace(/"/g, '&quot;');
-  } catch (e) {
-    var pre = document.createElement('pre');
-    pre.appendChild(document.createTextNode(text));
-    return pre.innerHTML.replace(/"/g, '&quot;');
-  }
+    try {
+        // IE (even v 11) sometimes fails here with 'Unknown runtime error', see http://blog.rakeshpai.me/2007/02/ies-unknown-runtime-error-when-using.html
+        const textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        return textArea.innerHTML.replace(/"/g, '&quot;');
+    } catch (e) {
+        const pre = document.createElement('pre');
+        pre.appendChild(document.createTextNode(text));
+        return pre.innerHTML.replace(/"/g, '&quot;');
+    }
 }
+
+//import BsbiDb from "BsbiDb";
 
 /**
  * @external BsbiDb
  */
 
-var Taxon = /*#__PURE__*/function () {
-  function Taxon() {
-    _classCallCheck(this, Taxon);
+class Taxon {
+    /**
+     * @typedef RawTaxon
+     * @type {array}
+     * @property {string} 0 - nameString
+     * @property {(string|number)} 1 - canonical
+     * @property {string} 2 hybridCanonical, raw entry is 0 if canonical == hybridCanonical
+     * @property {(string|number)} 3 acceptedEntityId or 0 if name is accepted
+     * @property {string} 4 qualifier
+     * @property {string} 5 authority
+     * @property {string} 6 vernacular
+     * @property {string} 7 vernacularRoot
+     * @property {number} 8 used
+     * @property {number} 9 sortOrder
+     * @property {Array.<string>} 10 parentIds
+     */
 
-    _defineProperty(this, "id", void 0);
-
-    _defineProperty(this, "nameString", '');
-
-    _defineProperty(this, "canonical", '');
-
-    _defineProperty(this, "hybridCanonical", '');
-
-    _defineProperty(this, "acceptedEntityId", '');
-
-    _defineProperty(this, "qualifier", '');
-
-    _defineProperty(this, "authority", '');
-
-    _defineProperty(this, "vernacular", '');
-
-    _defineProperty(this, "vernacularRoot", '');
-
-    _defineProperty(this, "used", void 0);
-
-    _defineProperty(this, "sortOrder", void 0);
-
-    _defineProperty(this, "parentIds", []);
-  }
-
-  _createClass(Taxon, [{
-    key: "formattedHTML",
-    value:
     /**
      *
-     * @param {boolean} vernacularMatched
-     * @returns {string}
+     * @type {Object.<string, RawTaxon>}
      */
-    function formattedHTML(vernacularMatched) {
-      var acceptedTaxon;
+    static rawTaxa; // = BsbiDb.TaxonNames;
 
-      if (this.id !== this.acceptedEntityId) {
-        acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
-      }
+    /**
+     * @type {string}
+     */
+    id;
 
-      if (Taxon.showVernacular) {
-        if (vernacularMatched) {
-          return acceptedTaxon ? "<q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q><wbr> <span class=\"italictaxon\">").concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>") + " = <span class=\"italictaxon\">".concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <span class=\"taxon-qualifier\">".concat(acceptedTaxon.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q><wbr> <span class=\"italictaxon\">").concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>");
-        } else {
-          return acceptedTaxon ? "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(this.authority, "</span>").concat(this.vernacular ? " <wbr><q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q>") : '', " = <span class=\"italictaxon\">").concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <span class=\"taxon-qualifier\">".concat(acceptedTaxon.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>").concat(this.vernacular ? " <wbr><q class=\"taxon-vernacular\">".concat(escapeHTML(this.vernacular), "</q>") : '');
-        }
-      } else {
-        return acceptedTaxon ? "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(this.authority, "</span>") + " = <span class=\"italictaxon\">".concat(acceptedTaxon.nameString).concat(acceptedTaxon.qualifier ? " <span class=\"taxon-qualifier\">".concat(acceptedTaxon.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(acceptedTaxon.authority), "</span>") : "<span class=\"italictaxon\">".concat(this.nameString).concat(this.qualifier ? " <span class=\"taxon-qualifier\">".concat(this.qualifier, "</span>") : '', "</span> <span class=\"taxauthority\">").concat(escapeHTML(this.authority), "</span>");
-      }
-    }
-  }], [{
-    key: "fromId",
-    value:
+    /**
+     *
+     * @type {string}
+     */
+    nameString = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    canonical = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    hybridCanonical = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    acceptedEntityId = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    qualifier = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    authority = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    vernacular = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    vernacularRoot = '';
+
+    /**
+     * @type {boolean}
+     */
+    used;
+
+    /**
+     * @type {number}
+     */
+    sortOrder;
+
+    /**
+     *
+     * @type {Array.<string>}
+     */
+    parentIds = [];
+
+    /**
+     *
+     * @type {boolean}
+     */
+    static showVernacular = true;
+
     /**
      *
      * @param {string} id
      * @returns {Taxon}
      * @throws {TaxonError}
      */
-    function fromId(id) {
-      if (!Taxon.rawTaxa) {
-        // may not yet have been initialised due to deferred loading
-        if (BsbiDb.TaxonNames) {
-          Taxon.rawTaxa = BsbiDb.TaxonNames;
-        } else {
-          throw new TaxonError("Taxon.fromId() called before taxon list has loaded.");
+    static fromId (id) {
+        if (!Taxon.rawTaxa) {
+            // may not yet have been initialised due to deferred loading
+
+            if (BsbiDb.TaxonNames) {
+                Taxon.rawTaxa = BsbiDb.TaxonNames;
+            } else {
+                throw new TaxonError(`Taxon.fromId() called before taxon list has loaded.`);
+            }
         }
-      }
 
-      if (!Taxon.rawTaxa.hasOwnProperty(id)) {
-        throw new TaxonError("Taxon id '".concat(id, "' not found."));
-      }
+        if (!Taxon.rawTaxa.hasOwnProperty(id)) {
+            throw new TaxonError(`Taxon id '${id}' not found.`);
+        }
 
-      var raw = Taxon.rawTaxa[id];
-      var taxon = new Taxon();
-      taxon.id = id;
-      taxon.nameString = raw[0];
-      taxon.canonical = raw[1] || raw[0]; // raw entry is blank if namesString == canonical
+        const raw = Taxon.rawTaxa[id];
 
-      taxon.hybridCanonical = raw[2] || taxon.canonical; // raw entry is blank if canonical == hybridCanonical
+        const taxon = new Taxon;
 
-      taxon.acceptedEntityId = raw[3] || id;
-      taxon.qualifier = raw[4];
-      taxon.authority = raw[5];
-      taxon.vernacular = raw[6];
-      taxon.vernacularRoot = raw[7];
-      taxon.used = raw[8];
-      taxon.sortOrder = raw[9];
-      taxon.parentIds = raw[10];
-      return taxon;
-    }
-  }]);
+        taxon.id = id;
+        taxon.nameString = raw[0];
+        taxon.canonical = raw[1] || raw[0]; // raw entry is blank if namesString == canonical
+        taxon.hybridCanonical = raw[2] || taxon.canonical; // raw entry is blank if canonical == hybridCanonical
+        taxon.acceptedEntityId = raw[3] || id;
+        taxon.qualifier = raw[4];
+        taxon.authority = raw[5];
+        taxon.vernacular = raw[6];
+        taxon.vernacularRoot = raw[7];
+        taxon.used = raw[8];
+        taxon.sortOrder = raw[9];
+        taxon.parentIds = raw[10];
 
-  return Taxon;
-}();
-
-_defineProperty(Taxon, "rawTaxa", void 0);
-
-_defineProperty(Taxon, "showVernacular", true);
-
-// a string of all valid unicode whitespaces
-var whitespaces$2 = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' +
-  '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-var uncurryThis$a = functionUncurryThis;
-var requireObjectCoercible$5 = requireObjectCoercible$a;
-var toString$8 = toString$d;
-var whitespaces$1 = whitespaces$2;
-
-var replace$2 = uncurryThis$a(''.replace);
-var whitespace = '[' + whitespaces$1 + ']';
-var ltrim = RegExp('^' + whitespace + whitespace + '*');
-var rtrim = RegExp(whitespace + whitespace + '*$');
-
-// `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
-var createMethod = function (TYPE) {
-  return function ($this) {
-    var string = toString$8(requireObjectCoercible$5($this));
-    if (TYPE & 1) string = replace$2(string, ltrim, '');
-    if (TYPE & 2) string = replace$2(string, rtrim, '');
-    return string;
-  };
-};
-
-var stringTrim = {
-  // `String.prototype.{ trimLeft, trimStart }` methods
-  // https://tc39.es/ecma262/#sec-string.prototype.trimstart
-  start: createMethod(1),
-  // `String.prototype.{ trimRight, trimEnd }` methods
-  // https://tc39.es/ecma262/#sec-string.prototype.trimend
-  end: createMethod(2),
-  // `String.prototype.trim` method
-  // https://tc39.es/ecma262/#sec-string.prototype.trim
-  trim: createMethod(3)
-};
-
-var PROPER_FUNCTION_NAME = functionName.PROPER;
-var fails$4 = fails$z;
-var whitespaces = whitespaces$2;
-
-var non = '\u200B\u0085\u180E';
-
-// check that a method works with the correct list
-// of whitespaces and has a correct name
-var stringTrimForced = function (METHOD_NAME) {
-  return fails$4(function () {
-    return !!whitespaces[METHOD_NAME]()
-      || non[METHOD_NAME]() !== non
-      || (PROPER_FUNCTION_NAME && whitespaces[METHOD_NAME].name !== METHOD_NAME);
-  });
-};
-
-var $$f = _export;
-var $trim = stringTrim.trim;
-var forcedStringTrimMethod$1 = stringTrimForced;
-
-// `String.prototype.trim` method
-// https://tc39.es/ecma262/#sec-string.prototype.trim
-$$f({ target: 'String', proto: true, forced: forcedStringTrimMethod$1('trim') }, {
-  trim: function trim() {
-    return $trim(this);
-  }
-});
-
-function _createSuper$t(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$t(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$t() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classStaticPrivateFieldSpecSet$1(receiver, classConstructor, descriptor, value) { _classCheckPrivateStaticAccess$3(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$3(descriptor, "set"); _classApplyDescriptorSet$1(receiver, descriptor, value); return value; }
-
-function _classApplyDescriptorSet$1(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
-
-function _classStaticPrivateFieldSpecGet$3(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess$3(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$3(descriptor, "get"); return _classApplyDescriptorGet$3(receiver, descriptor); }
-
-function _classCheckPrivateStaticFieldDescriptor$3(descriptor, action) { if (descriptor === undefined) { throw new TypeError("attempted to " + action + " private static field before its declaration"); } }
-
-function _classCheckPrivateStaticAccess$3(receiver, classConstructor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } }
-
-function _classApplyDescriptorGet$3(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
-var FormField = /*#__PURE__*/function (_EventHarness) {
-  _inherits(FormField, _EventHarness);
-
-  var _super = _createSuper$t(FormField);
-
-  /**
-   * overall wrapped field element (not necessarily the form element itself)
-   *
-   * @type {HTMLElement}
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   * validation message - displayed if field is not valid
-   * HTML string
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @param {{[label] : string, [helpText]: string, [validationMessage]: string, [completion]: string}} [params]
-   */
-  function FormField(params) {
-    var _this;
-
-    _classCallCheck(this, FormField);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "_value", null);
-
-    _defineProperty(_assertThisInitialized(_this), "_fieldEl", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "label", 'field label');
-
-    _defineProperty(_assertThisInitialized(_this), "helpText", '');
-
-    _defineProperty(_assertThisInitialized(_this), "validationMessage", '');
-
-    _defineProperty(_assertThisInitialized(_this), "completion", FormField.COMPLETION_OPTIONAL);
-
-    _defineProperty(_assertThisInitialized(_this), "parentForm", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "attributeName", void 0);
-
-    if (params) {
-      if (params.label) {
-        _this.label = params.label;
-      }
-
-      if (params.helpText) {
-        _this.helpText = params.helpText;
-      }
-
-      if (params.validationMessage) {
-        _this.validationMessage = params.validationMessage;
-      }
-
-      if (params.completion) {
-        // @see COMPLETION_COMPULSORY, COMPLETION_DESIRED, COMPLETION_OPTIONAL
-        _this.completion = params.completion;
-      }
+        return taxon;
     }
 
-    return _this;
-  }
+    /**
+     *
+     * @param {boolean} vernacularMatched
+     * @returns {string}
+     */
+    formattedHTML(vernacularMatched) {
+        let acceptedTaxon;
+        if (this.id !== this.acceptedEntityId) {
+            acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
+        }
 
-  _createClass(FormField, [{
-    key: "value",
-    get: function get() {
-      return this._value;
+        if (Taxon.showVernacular) {
+            if (vernacularMatched) {
+                return (acceptedTaxon) ?
+                    `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>` +
+                        ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    :
+                    `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
+                    ;
+            } else {
+                return (acceptedTaxon) ?
+                    `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''
+                        } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    :
+                    `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''}`
+                    ;
+            }
+        } else {
+            return (acceptedTaxon) ?
+                `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>` +
+                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                :
+                `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
+                ;
+        }
     }
+}
+
+class FormField extends EventHarness {
+
+    _value = null;
+
+    /**
+     * overall wrapped field element (not necessarily the form element itself)
+     *
+     * @type {HTMLElement}
+     */
+    _fieldEl;
+
+    /**
+     *
+     * @type {string}
+     */
+    label = 'field label';
+
+    /**
+     *
+     * @type {string}
+     */
+    helpText = '';
+
+    /**
+     * validation message - displayed if field is not valid
+     * HTML string
+     *
+     * @type {string}
+     */
+    validationMessage = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    static COMPLETION_COMPULSORY = 'compulsory';
+    static COMPLETION_DESIRED = 'desired';
+    static COMPLETION_OPTIONAL = 'optional';
+
+    /**
+     *
+     * @type {string}
+     */
+    completion = FormField.COMPLETION_OPTIONAL;
+
+    static #fieldIdIndex = 1;
+
+    static EVENT_CHANGE = 'fieldChange';
+
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [validationMessage]: string, [completion]: string}} [params]
+     */
+    constructor (params) {
+        super();
+
+        if (params) {
+            if (params.label) {
+                this.label = params.label;
+            }
+
+            if (params.helpText) {
+                this.helpText = params.helpText;
+            }
+
+            if (params.validationMessage) {
+                this.validationMessage = params.validationMessage;
+            }
+
+            if (params.completion) {
+                // @see COMPLETION_COMPULSORY, COMPLETION_DESIRED, COMPLETION_OPTIONAL
+                this.completion = params.completion;
+            }
+        }
+    }
+
+    static get nextId() {
+        return `field${FormField.#fieldIdIndex++}`;
+    }
+
+    get value() {
+        return this._value;
+    }
+
     /**
      * @abstract
      * @param value
      */
-    ,
-    set: function set(value) {}
-  }, {
-    key: "fieldElement",
-    get: function get() {
-      if (!this._fieldEl) {
-        this.buildField();
-      }
+    set value(value) {
 
-      return this._fieldEl;
     }
+
+    get fieldElement() {
+        if (!this._fieldEl) {
+            this.buildField();
+        }
+
+        return this._fieldEl;
+    }
+
     /**
      * @type {Form}
      */
+    parentForm;
 
-  }, {
-    key: "addField",
-    value:
+    /**
+     * @type {string}
+     */
+    attributeName;
+
     /**
      *
      * @param {HTMLElement} contentContainer
      */
-    function addField(contentContainer) {
-      // const formEl = this.parentForm.formElement;
-      //
-      // formEl.appendChild(this.fieldElement);
-      contentContainer.appendChild(this.fieldElement);
+    addField(contentContainer) {
+        // const formEl = this.parentForm.formElement;
+        //
+        // formEl.appendChild(this.fieldElement);
+
+        contentContainer.appendChild(this.fieldElement);
     }
+
     /**
      *
      * @param {boolean} isValid
      */
+    markValidity(isValid) {
 
-  }, {
-    key: "markValidity",
-    value: function markValidity(isValid) {}
+    }
+
     /**
      *
      * @param {HTMLInputElement} inputElement
      * @returns {string}
      */
-
-  }], [{
-    key: "nextId",
-    get: function get() {
-      var _FormField$fieldIdInd;
-
-      return "field".concat((_classStaticPrivateFieldSpecSet$1(FormField, FormField, _fieldIdIndex, (_FormField$fieldIdInd = +_classStaticPrivateFieldSpecGet$3(FormField, FormField, _fieldIdIndex)) + 1), _FormField$fieldIdInd));
+    static cleanRawInput(inputElement) {
+        return inputElement.value.trim().replace(/\s\s+/g, ' ');
     }
-  }, {
-    key: "cleanRawInput",
-    value: function cleanRawInput(inputElement) {
-      return inputElement.value.trim().replace(/\s\s+/g, ' ');
-    }
+
     /**
      *
      * @param {string} text
      * @returns {string}
      */
-
-  }, {
-    key: "cleanRawString",
-    value: function cleanRawString(text) {
-      return text.trim().replace(/\s\s+/g, ' ');
+    static cleanRawString(text) {
+        return text.trim().replace(/\s\s+/g, ' ');
     }
+
     /**
      *
      * @param value
      * @returns {boolean}
      */
-
-  }, {
-    key: "isEmpty",
-    value: function isEmpty(value) {
-      return value === '' || value === undefined || value === null;
+    static isEmpty(value) {
+        return value === '' || value === undefined || value === null;
     }
+
     /**
      *
      * @param {string} key
@@ -8598,20 +3750,23 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
      * @param attributes attributes of the model object
      * @return {(boolean|null)} returns null if validity was not assessed
      */
+    static isValid(key, property, attributes) {
+        //console.log(`FormField isValid for '${key}'`);
 
-  }, {
-    key: "isValid",
-    value: function isValid(key, property, attributes) {
-      //console.log(`FormField isValid for '${key}'`);
-      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
-        // test whether required field is missing
-        return !(!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key]));
-      } // field is present or optional
-      // report as valid unless content is corrupt
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is missing
+            return !(!attributes.hasOwnProperty(key) ||
+                property.field.isEmpty(attributes[key])
+            );
+        }
+        // field is present or optional
+        // report as valid unless content is corrupt
 
-
-      return null; // field not assessed
+        return null; // field not assessed
     }
+
     /**
      *
      * @param {string} key
@@ -8619,22 +3774,21 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
      * @param attributes attributes of the model object
      * @return {string}
      */
+    static summarise(key, property, attributes) {
+        if (property.summary && (!property.summary.hasOwnProperty('summarise') || true === property.summary.summarise)) {
+            // test is that summary spec object exists and doesn't have the summarise flag set to false
+            // return property.field.summariseImpl(key, property, attributes);
 
-  }, {
-    key: "summarise",
-    value: function summarise(key, property, attributes) {
-      if (property.summary && (!property.summary.hasOwnProperty('summarise') || true === property.summary.summarise)) {
-        // test is that summary spec object exists and doesn't have the summarise flag set to false
-        // return property.field.summariseImpl(key, property, attributes);
-        if (property.summarise) {
-          return property.summarise(key, property, attributes);
+            if (property.summarise) {
+                return property.summarise(key, property, attributes);
+            } else {
+                return property.field.summariseImpl(key, property, attributes);
+            }
         } else {
-          return property.field.summariseImpl(key, property, attributes);
+            return '';
         }
-      } else {
-        return '';
-      }
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -8643,395 +3797,348 @@ var FormField = /*#__PURE__*/function (_EventHarness) {
      * @param {{}} attributes attributes of the model object
      * @returns {string}
      */
-
-  }, {
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      return '';
+    static summariseImpl(key, property, attributes) {
+        return '';
     }
-  }]);
+}
 
-  return FormField;
-}(EventHarness);
+class Form extends EventHarness {
 
-_defineProperty(FormField, "COMPLETION_COMPULSORY", 'compulsory');
+    static CHANGE_EVENT = 'change';
 
-_defineProperty(FormField, "COMPLETION_DESIRED", 'desired');
+    /**
+     * Fired instead of EVENT_INITIALISED for a newly created entry
+     * @type {string}
+     */
+    static EVENT_INITIALISE_NEW = 'initialisenew';
 
-_defineProperty(FormField, "COMPLETION_OPTIONAL", 'optional');
+    /**
+     * Fired after the model content has been applied to a form
+     * @type {string}
+     */
+    static EVENT_INITIALISED = 'initialised';
 
-var _fieldIdIndex = {
-  writable: true,
-  value: 1
-};
+    static EVENT_CAMERA = 'cameraimage';
 
-_defineProperty(FormField, "EVENT_CHANGE", 'fieldChange');
+    /**
+     * @type {HTMLElement}
+     */
+    #formEl;
 
-function _createSuper$s(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$s(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+    /**
+     *
+     * @type {number}
+     */
+    static #formSerial = 0;
 
-function _isNativeReflectConstruct$s() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+    /**
+     *
+     * @protected
+     * @type {string}
+     */
+    _formId;
 
-function _classPrivateFieldInitSpec$9(obj, privateMap, value) { _checkPrivateRedeclaration$b(obj, privateMap); privateMap.set(obj, value); }
+    /**
+     * container into which field contents should be inserted
+     *
+     * @protected
+     * @type {HTMLElement}
+     */
+    _formContentContainer;
 
-function _checkPrivateRedeclaration$b(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+    /**
+     * @type {Object.<string, FormField>}
+     */
+    fields;
 
-function _classStaticPrivateFieldSpecSet(receiver, classConstructor, descriptor, value) { _classCheckPrivateStaticAccess$2(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$2(descriptor, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
+    /**
+     * if set then form should be validated whenever it changes
+     *
+     * @type {boolean}
+     */
+    liveValidation = false;
 
-function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
+    /**
+     * set if all required form fields are complete and valid
+     * (starting point is null while form is empty - so that the first validation check results in a validation change event firing)
+     *
+     * @type {(boolean|null)}
+     */
+    isValid = null;
 
-function _classStaticPrivateFieldSpecGet$2(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess$2(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$2(descriptor, "get"); return _classApplyDescriptorGet$2(receiver, descriptor); }
+    /**
+     *
+     * @type {string|null}
+     */
+    nextButtonId = null;
 
-function _classCheckPrivateStaticFieldDescriptor$2(descriptor, action) { if (descriptor === undefined) { throw new TypeError("attempted to " + action + " private static field before its declaration"); } }
+    /**
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _formFieldsBuilt = false;
 
-function _classCheckPrivateStaticAccess$2(receiver, classConstructor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } }
+    static EVENT_VALIDATION_STATE_CHANGE = 'validationstatechange';
 
-function _classApplyDescriptorGet$2(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
-
-var _formEl = /*#__PURE__*/new WeakMap();
-
-var Form = /*#__PURE__*/function (_EventHarness) {
-  _inherits(Form, _EventHarness);
-
-  var _super = _createSuper$s(Form);
-
-  function Form() {
-    var _this;
-
-    _classCallCheck(this, Form);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _classPrivateFieldInitSpec$9(_assertThisInitialized(_this), _formEl, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_formId", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "_formContentContainer", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "fields", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "liveValidation", false);
-
-    _defineProperty(_assertThisInitialized(_this), "isValid", null);
-
-    _defineProperty(_assertThisInitialized(_this), "nextButtonId", null);
-
-    _defineProperty(_assertThisInitialized(_this), "_formFieldsBuilt", false);
-
-    return _this;
-  }
-
-  _createClass(Form, [{
-    key: "formElement",
-    get:
     /**
      *
      * @returns {HTMLElement}
      */
-    function get() {
-      var _this2 = this;
+    get formElement() {
+        if (!this.#formEl) {
+            this.#formEl = document.createElement('form');
+            this.#formEl.id = this._formId = `form${Form.#formSerial++}`;
+            this.#formEl.noValidate = true; // bootstrap overrides browser-based validation
 
-      if (!_classPrivateFieldGet(this, _formEl)) {
-        var _Form$formSerial;
+            if (this.liveValidation) {
+                this.#formEl.className = 'needs-validation';
+            }
 
-        _classPrivateFieldSet(this, _formEl, document.createElement('form'));
+            this.buildContentContainer(this.#formEl);
+            //this._formContentContainer = this.#formEl; // currently the form doesn't have any inner liner elements
 
-        _classPrivateFieldGet(this, _formEl).id = this._formId = "form".concat((_classStaticPrivateFieldSpecSet(Form, Form, _formSerial, (_Form$formSerial = +_classStaticPrivateFieldSpecGet$2(Form, Form, _formSerial)) + 1), _Form$formSerial));
-        _classPrivateFieldGet(this, _formEl).noValidate = true; // bootstrap overrides browser-based validation
-
-        if (this.liveValidation) {
-          _classPrivateFieldGet(this, _formEl).className = 'needs-validation';
+            this.#formEl.addEventListener('change', (event) => {
+                this.changeHandler(event);
+            }, {capture: false});
         }
 
-        this.buildContentContainer(_classPrivateFieldGet(this, _formEl)); //this._formContentContainer = this.#formEl; // currently the form doesn't have any inner liner elements
-
-        _classPrivateFieldGet(this, _formEl).addEventListener('change', function (event) {
-          _this2.changeHandler(event);
-        }, {
-          capture: false
-        });
-      }
-
-      return _classPrivateFieldGet(this, _formEl);
+        return this.#formEl;
     }
+
     /**
      * sets this._formContentContainer to the container that should contain the form fields
      *
      * if no wrapper then can re-use the outer container id (this.#formEl
      */
+    buildContentContainer(outerContainer) {
+        this._formContentContainer = outerContainer; // default form doesn't have any inner liner elements
 
-  }, {
-    key: "buildContentContainer",
-    value: function buildContentContainer(outerContainer) {
-      this._formContentContainer = outerContainer; // default form doesn't have any inner liner elements
+        return this._formContentContainer
+    }
 
-      return this._formContentContainer;
+    changeHandler(params) {
+        console.log({'form change event' : params});
     }
-  }, {
-    key: "changeHandler",
-    value: function changeHandler(params) {
-      console.log({
-        'form change event': params
-      });
-    }
-  }, {
-    key: "destructor",
-    value: function destructor() {
-      _get(_getPrototypeOf(Form.prototype), "destructor", this).call(this);
 
-      _classPrivateFieldSet(this, _formEl, null);
+    destructor() {
+        super.destructor();
+        this.#formEl = null;
     }
-  }, {
-    key: "buildFormFields",
-    value:
+
+    static #idIndex = 0;
+
+    static get nextId() {
+        return `id${Form.#idIndex++}`;
+    }
+
+    static COMPLETION_STATUS_UNSTARTED = 'unstarted';
+    static COMPLETION_STATUS_COMPLETE = 'complete';
+    static COMPLETION_STATUS_IN_PROGRESS = 'inProgress';
+
     /**
      *
      */
-    function buildFormFields() {
-      this.initialiseFormFields();
+    buildFormFields() {
+        this.initialiseFormFields();
 
-      for (var key in this.fields) {
-        if (this.fields.hasOwnProperty(key)) {
-          var field = this.fields[key];
-          field.parentForm = this;
-          field.attributeName = key; //this._formContentContainer.appendChild(field.fieldElement);
+        for (let key in this.fields) {
+            if (this.fields.hasOwnProperty(key)) {
+                let field = this.fields[key];
 
-          field.addField(this._formContentContainer);
-          field.addListener(FormField.EVENT_CHANGE, this.changeHandler.bind(this));
+                field.parentForm = this;
+                field.attributeName = key;
+                //this._formContentContainer.appendChild(field.fieldElement);
+
+                field.addField(this._formContentContainer);
+
+                field.addListener(FormField.EVENT_CHANGE, this.changeHandler.bind(this));
+            }
         }
-      }
 
-      this._formFieldsBuilt = true;
+        this._formFieldsBuilt = true;
     }
+
     /**
      * called after a form change once the model has been updated
      * validation is only applied if the form is subject to live validation
      */
+    conditionallyValidateForm() {
+        console.log('called conditionallyValidateForm');
 
-  }, {
-    key: "conditionallyValidateForm",
-    value: function conditionallyValidateForm() {
-      console.log('called conditionallyValidateForm');
-
-      if (this.liveValidation) {
-        console.log('doing validation conditionallyValidateForm');
-        this.validateForm();
-      }
+        if (this.liveValidation) {
+            console.log('doing validation conditionallyValidateForm');
+            this.validateForm();
+        }
     }
+
     /**
      * similar to validateForm but does not update form validity UI
      * @returns {boolean}
      */
+    testRequiredComplete() {
+        const validityResult =  this.model.evaluateCompletionStatus(this.getFormSectionProperties()).requiredFieldsPresent;
 
-  }, {
-    key: "testRequiredComplete",
-    value: function testRequiredComplete() {
-      var validityResult = this.model.evaluateCompletionStatus(this.getFormSectionProperties()).requiredFieldsPresent;
+        if (this.isValid !== validityResult) {
+            this.isValid = validityResult;
 
-      if (this.isValid !== validityResult) {
-        this.isValid = validityResult;
-        this.fireEvent(Form.EVENT_VALIDATION_STATE_CHANGE, {
-          isValid: this.isValid
-        });
-      }
+            this.fireEvent(Form.EVENT_VALIDATION_STATE_CHANGE, {isValid : this.isValid});
+        }
 
-      return validityResult;
+        return validityResult;
     }
+
     /**
      *
      * @returns {boolean}
      */
-
-  }, {
-    key: "validateForm",
-    value: function validateForm() {
-      if (this.liveValidation) {
-        this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
-      }
-
-      var validationResult = this.model.evaluateCompletionStatus(this.getFormSectionProperties());
-
-      for (var key in this.fields) {
-        if (this.fields.hasOwnProperty(key)) {
-          var field = this.fields[key];
-          field.markValidity(validationResult.validity[key]);
+    validateForm() {
+        if (this.liveValidation) {
+            this.formElement.classList.add('needs-validation'); // add a bootstrap class marking that the form should be subject to validation
         }
-      }
+        const validationResult = this.model.evaluateCompletionStatus(this.getFormSectionProperties());
 
-      if (this.isValid !== validationResult.requiredFieldsPresent) {
-        this.isValid = validationResult.requiredFieldsPresent;
-        this.fireEvent(Form.EVENT_VALIDATION_STATE_CHANGE, {
-          isValid: this.isValid
-        });
-      }
+        for (let key in this.fields) {
+            if (this.fields.hasOwnProperty(key)) {
+                let field = this.fields[key];
 
-      return validationResult.requiredFieldsPresent;
+                field.markValidity(validationResult.validity[key]);
+            }
+        }
+
+        if (this.isValid !== validationResult.requiredFieldsPresent) {
+            this.isValid = validationResult.requiredFieldsPresent;
+
+            this.fireEvent(Form.EVENT_VALIDATION_STATE_CHANGE, {isValid : this.isValid});
+        }
+        return validationResult.requiredFieldsPresent;
     }
+
     /**
      * fills in the form fields based on the model
      */
+    populateFormContent() {
+        if (this._formFieldsBuilt) {
+            // throw new Error("populateFormContent shouldn't be called until fields have been initialised");
 
-  }, {
-    key: "populateFormContent",
-    value: function populateFormContent() {
-      if (this._formFieldsBuilt) {
-        // throw new Error("populateFormContent shouldn't be called until fields have been initialised");
-        var model = this.model;
+            const model = this.model;
+            for (let key in this.fields) {
+                if (this.fields.hasOwnProperty(key)) {
+                    let field = this.fields[key];
+                    field.value = model.attributes[key]; // value setter will update the field
+                }
+            }
 
-        for (var key in this.fields) {
-          if (this.fields.hasOwnProperty(key)) {
-            var field = this.fields[key];
-            field.value = model.attributes[key]; // value setter will update the field
-          }
+            this.conditionallyValidateForm();
         }
-
-        this.conditionallyValidateForm();
-      }
     }
+
     /**
      * @abstract
      */
+    updateModelFromContent() {
 
-  }, {
-    key: "updateModelFromContent",
-    value: function updateModelFromContent() {}
-  }], [{
-    key: "nextId",
-    get: function get() {
-      var _Form$idIndex;
-
-      return "id".concat((_classStaticPrivateFieldSpecSet(Form, Form, _idIndex, (_Form$idIndex = +_classStaticPrivateFieldSpecGet$2(Form, Form, _idIndex)) + 1), _Form$idIndex));
     }
-  }]);
+}
 
-  return Form;
-}(EventHarness);
+class Occurrence extends Model {
 
-_defineProperty(Form, "CHANGE_EVENT", 'change');
+    /**
+     *
+     * @type {Object.<string, *>}
+     */
+    attributes = {
+        // taxon: {
+        //     taxonId: '',
+        //     taxonName: '',
+        //     vernacularMatch: false
+        // }
+    };
 
-_defineProperty(Form, "EVENT_INITIALISE_NEW", 'initialisenew');
+    // /**
+    //  * set if the image has been posted to the server
+    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedRemotely = false;
 
-_defineProperty(Form, "EVENT_INITIALISED", 'initialised');
+    // /**
+    //  * set if the image has been added to a temporary store (e.g. indexedDb)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedLocally = false;
 
-_defineProperty(Form, "EVENT_CAMERA", 'cameraimage');
+    SAVE_ENDPOINT = '/saveoccurrence.php';
 
-var _formSerial = {
-  writable: true,
-  value: 0
-};
+    TYPE = 'occurrence';
 
-_defineProperty(Form, "EVENT_VALIDATION_STATE_CHANGE", 'validationstatechange');
+    /**
+     * fired from Occurrence when the object's contents have been modified
+     *
+     * @type {string}
+     */
+    static EVENT_MODIFIED = 'modified';
 
-var _idIndex = {
-  writable: true,
-  value: 0
-};
+    /**
+     * set if this is a new entry (before user has moved on to the next entry)
+     * influences whether form validation errors are displayed
+     *
+     * @type {boolean}
+     */
+    isNew = false;
 
-_defineProperty(Form, "COMPLETION_STATUS_UNSTARTED", 'unstarted');
-
-_defineProperty(Form, "COMPLETION_STATUS_COMPLETE", 'complete');
-
-_defineProperty(Form, "COMPLETION_STATUS_IN_PROGRESS", 'inProgress');
-
-function _createSuper$r(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$r(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$r() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var Occurrence = /*#__PURE__*/function (_Model) {
-  _inherits(Occurrence, _Model);
-
-  var _super = _createSuper$r(Occurrence);
-
-  function Occurrence() {
-    var _this;
-
-    _classCallCheck(this, Occurrence);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this), "attributes", {// taxon: {
-      //     taxonId: '',
-      //     taxonName: '',
-      //     vernacularMatch: false
-      // }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "SAVE_ENDPOINT", '/saveoccurrence.php');
-
-    _defineProperty(_assertThisInitialized(_this), "TYPE", 'occurrence');
-
-    _defineProperty(_assertThisInitialized(_this), "isNew", false);
-
-    return _this;
-  }
-
-  _createClass(Occurrence, [{
-    key: "taxon",
-    get:
     /**
      *
      * @returns {(Taxon|null)} returns null for unmatched taxa specified by name
      */
-    function get() {
-      return this.attributes.taxon && this.attributes.taxon.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
-    }
-  }, {
-    key: "setForm",
-    value:
+    get taxon() {
+        return this.attributes.taxon && this.attributes.taxon.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
+    };
+
     /**
      *
      * @param {OccurrenceForm} form
      * @returns {OccurrenceForm}
      */
-    function setForm(form) {
-      form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
+    setForm(form) {
+        form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
 
-      if (!this.isNew) {
-        form.liveValidation = true;
-      }
-
-      return form;
+        if (!this.isNew) {
+            form.liveValidation = true;
+        }
+        return form;
     }
+
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
      *
      * @param {{form: Form}} params
      */
+    formChangedHandler(params) {
+        console.log('Occurrence change handler invoked.');
 
-  }, {
-    key: "formChangedHandler",
-    value: function formChangedHandler(params) {
-      console.log('Occurrence change handler invoked.'); // read new values
-      // then fire it's own change event (Occurrence.EVENT_MODIFIED)
+        // read new values
+        // then fire it's own change event (Occurrence.EVENT_MODIFIED)
+        params.form.updateModelFromContent();
 
-      params.form.updateModelFromContent(); // refresh the form's validation state
+        // refresh the form's validation state
+        params.form.conditionallyValidateForm();
 
-      params.form.conditionallyValidateForm();
-      this.touch();
-      this.fireEvent(Occurrence.EVENT_MODIFIED, {
-        occurrenceId: this.id
-      });
-    }
-  }, {
-    key: "delete",
-    value: function _delete() {
-      if (!this.deleted) {
         this.touch();
-        this.deleted = true;
-        this.fireEvent(Occurrence.EVENT_MODIFIED, {
-          occurrenceId: this.id
-        });
-      }
+        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId : this.id});
     }
+
+    delete() {
+        if (!this.deleted) {
+            this.touch();
+            this.deleted = true;
+
+            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId : this.id});
+        }
+    }
+
     /**
      * if not securely saved then makes a post to /saveoccurrence.php
      *
@@ -9047,411 +4154,330 @@ var Occurrence = /*#__PURE__*/function (_Model) {
      * @param {string} surveyId
      * @returns {Promise}
      */
+    save(surveyId) {
+        if (!this._savedRemotely) {
+            const formData = new FormData;
 
-  }, {
-    key: "save",
-    value: function save(surveyId) {
-      if (!this._savedRemotely) {
-        var formData = new FormData();
+            if (!surveyId && this.surveyId) {
+                surveyId = this.surveyId;
+            }
 
-        if (!surveyId && this.surveyId) {
-          surveyId = this.surveyId;
+            formData.append('type', this.TYPE);
+            formData.append('surveyId', surveyId);
+            formData.append('occurrenceId', this.id);
+            formData.append('id', this.id);
+            formData.append('projectId', this.projectId.toString());
+            formData.append('attributes', JSON.stringify(this.attributes));
+            formData.append('deleted', this.deleted.toString());
+            formData.append('created', this.createdStamp.toString());
+
+            console.log('queueing occurrence post');
+            return this.queuePost(formData);
+        } else {
+            return Promise.reject(`${this.id} has already been saved.`);
         }
-
-        formData.append('type', this.TYPE);
-        formData.append('surveyId', surveyId);
-        formData.append('occurrenceId', this.id);
-        formData.append('id', this.id);
-        formData.append('projectId', this.projectId.toString());
-        formData.append('attributes', JSON.stringify(this.attributes));
-        formData.append('deleted', this.deleted.toString());
-        formData.append('created', this.createdStamp.toString());
-        console.log('queueing occurrence post');
-        return this.queuePost(formData);
-      } else {
-        return Promise.reject("".concat(this.id, " has already been saved."));
-      }
     }
+
     /**
      *
      * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
      */
-
-  }, {
-    key: "_parseDescriptor",
-    value: function _parseDescriptor(descriptor) {
-      _get(_getPrototypeOf(Occurrence.prototype), "_parseDescriptor", this).call(this, descriptor);
-
-      this.surveyId = descriptor.surveyId;
+    _parseDescriptor(descriptor) {
+        super._parseDescriptor(descriptor);
+        this.surveyId = descriptor.surveyId;
     }
-  }]);
-
-  return Occurrence;
-}(Model);
-
-_defineProperty(Occurrence, "EVENT_MODIFIED", 'modified');
-
-function _createSuper$q(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$q(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$q() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+}
 
 /**
  *
  */
-var InternalAppError = /*#__PURE__*/function (_Error) {
-  _inherits(InternalAppError, _Error);
+class InternalAppError extends Error {
 
-  var _super = _createSuper$q(InternalAppError);
+}
 
-  function InternalAppError() {
-    _classCallCheck(this, InternalAppError);
+// MainController
 
-    return _super.apply(this, arguments);
-  }
+class MainController extends AppController {
+    route = '/list/:action/:id';
 
-  return InternalAppError;
-}( /*#__PURE__*/_wrapNativeSuper(Error));
+    static EVENT_SELECT_OCCURRENCE = 'selectoccurrence';
+    static EVENT_SELECT_SURVEY_SECTION = 'selectsurveysection';
+    static EVENT_NEW_RECORD = 'newrecord';
+    static EVENT_DELETE_OCCURRENCE = 'deleteoccurrence';
+    static EVENT_BACK = 'back';
 
-function _createSuper$p(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$p(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$p() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateFieldInitSpec$8(obj, privateMap, value) { _checkPrivateRedeclaration$a(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$a(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-var _currentOccurrenceId = /*#__PURE__*/new WeakMap();
-
-var MainController = /*#__PURE__*/function (_AppController) {
-  _inherits(MainController, _AppController);
-
-  var _super = _createSuper$p(MainController);
-
-  /**
-   *
-   * @param {MainView} view
-   */
-  function MainController(view) {
-    var _this;
-
-    _classCallCheck(this, MainController);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "route", '/list/:action/:id');
-
-    _defineProperty(_assertThisInitialized(_this), "title", 'App homepage');
-
-    _defineProperty(_assertThisInitialized(_this), "app", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "view", void 0);
-
-    _classPrivateFieldInitSpec$8(_assertThisInitialized(_this), _currentOccurrenceId, {
-      writable: true,
-      value: ''
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "needsFullRefresh", true);
-
-    _defineProperty(_assertThisInitialized(_this), "needRightPanelRefresh", true);
-
-    _defineProperty(_assertThisInitialized(_this), "viewSubcontext", '');
-
-    _defineProperty(_assertThisInitialized(_this), "surveySection", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "leftPanelBaseRoute", '');
-
-    _defineProperty(_assertThisInitialized(_this), "viewContexts", {
-      /**
-       * @this {MainController}
-       * @param {({[id] : string}|null)} queryParameters
-       */
-      record: function record(queryParameters) {
-        // if (queryParameters && queryParameters.id) {
-        //     console.log(`in record id ${queryParameters.id}`);
-        // }
-        // console.log({scope: this});
-        this.surveySection = null; // No current survey form section, all should be closed
-
-        if (!queryParameters) {
-          // query parameters can be missing
-          // force a refresh as it cheap to refresh static content and more difficult to detect
-          // if strictly needed.
-          // May have reached this point following deletion of the current record.
-          this.currentOccurrenceId = '';
-          this.needRightPanelRefresh = true;
-        } else if (_classPrivateFieldGet(this, _currentOccurrenceId) !== queryParameters.id) {
-          this.needRightPanelRefresh = true;
-          this.currentOccurrenceId = queryParameters.id ? queryParameters.id : '';
-        } else {
-          this.needRightPanelRefresh = false;
-        }
-
-        this.leftPanelBaseRoute = '/list/record';
-      },
-
-      /**
-       * @this {MainController}
-       * @param {{[section]: string}} queryParameters
-       */
-      survey: function survey(queryParameters) {
-        console.log("in survey section ".concat(queryParameters.section));
-        this.currentOccurrenceId = '';
-        this.needRightPanelRefresh = true;
-        this.surveySection = queryParameters.section;
-        this.leftPanelBaseRoute = "/list/survey/".concat(queryParameters.section);
-      }
-    });
-
-    _this.view = view;
-    view.controller = _assertThisInitialized(_this);
-    _this.handle = AppController.nextHandle;
-    view.addListener(MainController.EVENT_SELECT_OCCURRENCE, _this.occurrenceSelectionHandler.bind(_assertThisInitialized(_this)));
-    view.addListener(MainController.EVENT_SELECT_SURVEY_SECTION, _this.surveyPartSelectionHandler.bind(_assertThisInitialized(_this)));
-    view.addListener(MainController.EVENT_NEW_RECORD, _this.newRecordHandler.bind(_assertThisInitialized(_this)));
-    view.addListener(MainController.EVENT_DELETE_OCCURRENCE, _this.deleteOccurrenceHandler.bind(_assertThisInitialized(_this)));
-    view.addListener(MainController.EVENT_BACK, _this.backHandler.bind(_assertThisInitialized(_this)));
-    view.addListener(MainController.EVENT_NEXT_TO_RECORDS, _this.nextTransitionToRecordsHandler.bind(_assertThisInitialized(_this)));
-    return _this;
-  }
-  /**
-   * handler for event fired on and by view when 'next section' button has been click, leading to the records section
-   * this will expand the list of records, or if none exist, add a first one and open it
-   */
-
-
-  _createClass(MainController, [{
-    key: "occurrences",
-    get:
     /**
      * event fired on and by view when 'next section' button has been click, leading to the records section
      * this will expand the list of records, or if none exist, add a first one and open it
      *
      * @type {string}
      */
+    static EVENT_NEXT_TO_RECORDS = 'nexttorecords';
 
     /**
      * ? should be overridden by child class
      *
      * @type {string}
      */
+    title = 'App homepage';
 
     /**
      * @type {App}
      */
+    app;
 
     /**
      *
      * @type {MainView}
      */
+    view;
 
     /**
      * @type {string}
      */
+    #currentOccurrenceId = '';
 
     /**
      * set if the view needs full layout rendering
      * @todo this should possibly be a view rather than controller property
      * @type {boolean}
      */
+    needsFullRefresh = true;
 
     /**
      * set if the currently displayed occurrence needs revision
      * @todo this should possibly be a view rather than controller property
      * @type {boolean}
      */
+    needRightPanelRefresh = true;
 
     /**
      *
      * @type {string}
      */
+    viewSubcontext = '';
 
     /**
      * Currently displayed survey subsection
      *
      * @type {string|null}
      */
+    surveySection;
 
     /**
      * this is the route that the 'back button' in a right-hand panel view should resolve to
      * @type {string}
      */
+    leftPanelBaseRoute = '';
 
     /**
      * ultimately this getter might be the point at which to apply filters
      *
      * @returns {Map.<string,Occurrence>}
      */
-    function get() {
-      return this.app.occurrences;
+    get occurrences() {
+        return this.app.occurrences;
     }
+
     /**
      *
      * @returns {null|Occurrence}
      */
-
-  }, {
-    key: "currentOccurrence",
-    get: function get() {
-      if (_classPrivateFieldGet(this, _currentOccurrenceId)) {
-        if (this.app.occurrences.has(_classPrivateFieldGet(this, _currentOccurrenceId))) {
-          return this.app.occurrences.get(_classPrivateFieldGet(this, _currentOccurrenceId));
+    get currentOccurrence() {
+        if (this.#currentOccurrenceId) {
+            if (this.app.occurrences.has(this.#currentOccurrenceId)) {
+                return this.app.occurrences.get(this.#currentOccurrenceId);
+            } else {
+                throw new NotFoundError(`Record id '${this.#currentOccurrenceId}' was not found.`);
+            }
         } else {
-          throw new NotFoundError("Record id '".concat(_classPrivateFieldGet(this, _currentOccurrenceId), "' was not found."));
+            return null;
         }
-      } else {
-        return null;
-      }
     }
+
     /**
      *
      * @returns {string}
      */
-
-  }, {
-    key: "currentOccurrenceId",
-    get: function get() {
-      return _classPrivateFieldGet(this, _currentOccurrenceId);
+    get currentOccurrenceId() {
+        return this.#currentOccurrenceId;
     }
+
     /**
      *
      * @param {string} occurrenceId
      */
-    ,
-    set: function set(occurrenceId) {
-      _classPrivateFieldSet(this, _currentOccurrenceId, occurrenceId);
+    set currentOccurrenceId(occurrenceId) {
+        this.#currentOccurrenceId = occurrenceId;
     }
+
     /**
      *
      * @returns {Survey}
      */
-
-  }, {
-    key: "survey",
-    get: function get() {
-      return this.app.currentSurvey;
+    get survey() {
+        return this.app.currentSurvey;
     }
-  }, {
-    key: "nextTransitionToRecordsHandler",
-    value: function nextTransitionToRecordsHandler() {
-      console.log('in nextTransitionToRecordsHandler()');
 
-      if (this.app.haveExtantOccurrences()) {
-        this.app.router.navigate('/list/record/');
-      } else {
-        this.newRecordHandler();
-      }
+    /**
+     *
+     * @param {MainView} view
+     */
+    constructor (view) {
+        super();
+
+        this.view = view;
+        view.controller = this;
+
+        this.handle = AppController.nextHandle;
+
+        view.addListener(MainController.EVENT_SELECT_OCCURRENCE, this.occurrenceSelectionHandler.bind(this));
+        view.addListener(MainController.EVENT_SELECT_SURVEY_SECTION, this.surveyPartSelectionHandler.bind(this));
+        view.addListener(MainController.EVENT_NEW_RECORD, this.newRecordHandler.bind(this));
+        view.addListener(MainController.EVENT_DELETE_OCCURRENCE, this.deleteOccurrenceHandler.bind(this));
+        view.addListener(MainController.EVENT_BACK, this.backHandler.bind(this));
+        view.addListener(MainController.EVENT_NEXT_TO_RECORDS, this.nextTransitionToRecordsHandler.bind(this));
     }
+
+    /**
+     * handler for event fired on and by view when 'next section' button has been click, leading to the records section
+     * this will expand the list of records, or if none exist, add a first one and open it
+     */
+    nextTransitionToRecordsHandler() {
+        console.log('in nextTransitionToRecordsHandler()');
+
+        if (this.app.haveExtantOccurrences()) {
+            this.app.router.navigate('/list/record/');
+        } else {
+            this.newRecordHandler();
+        }
+    }
+
     /**
      *
      * @param {{occurrenceId : string}} parameters
      */
+    deleteOccurrenceHandler(parameters) {
+        console.log({deleting : parameters.occurrenceId});
 
-  }, {
-    key: "deleteOccurrenceHandler",
-    value: function deleteOccurrenceHandler(parameters) {
-      console.log({
-        deleting: parameters.occurrenceId
-      });
-      var occurrence = this.app.occurrences.get(parameters.occurrenceId);
+        const occurrence = this.app.occurrences.get(parameters.occurrenceId);
+        if (!occurrence) {
+            throw new InternalAppError(`Occurrence id '${parameters.occurrenceId}' not found when trying to delete.`);
+        }
 
-      if (!occurrence) {
-        throw new InternalAppError("Occurrence id '".concat(parameters.occurrenceId, "' not found when trying to delete."));
-      }
-
-      occurrence.delete();
-
-      if (this.currentOccurrenceId === parameters.occurrenceId) {
-        this.app.router.navigate("/list/record/");
-      }
+        occurrence.delete();
+        if (this.currentOccurrenceId === parameters.occurrenceId) {
+            this.app.router.navigate(`/list/record/`);
+        }
     }
+
     /**
      *
      * @param {{sectionKey : string}} params
      */
+    surveyPartSelectionHandler (params) {
+        console.log({'In surveyPartSelectionHandler' : params});
 
-  }, {
-    key: "surveyPartSelectionHandler",
-    value: function surveyPartSelectionHandler(params) {
-      console.log({
-        'In surveyPartSelectionHandler': params
-      });
-
-      if (params.sectionKey === 'record') {
-        this.app.router.navigate("/list/record/");
-      } else if (params.sectionKey) {
-        this.app.router.navigate("/list/survey/".concat(params.sectionKey));
-      } else {
-        this.app.router.navigate("/list/");
-      }
+        if (params.sectionKey === 'record') {
+            this.app.router.navigate(`/list/record/`);
+        } else if (params.sectionKey) {
+            this.app.router.navigate(`/list/survey/${params.sectionKey}`);
+        } else {
+            this.app.router.navigate(`/list/`);
+        }
     }
+
     /**
      * may be invoked directly or in response to the Add New Record event
      * therefore assume that the method receives no event parameters
      */
+    newRecordHandler() {
+        const occurrence = this.app.addNewOccurrence();
 
-  }, {
-    key: "newRecordHandler",
-    value: function newRecordHandler() {
-      var occurrence = this.app.addNewOccurrence();
-      this.app.router.navigate("/list/record/".concat(occurrence.id));
+        this.app.router.navigate(`/list/record/${occurrence.id}`);
     }
+
     /**
      *
      * @param {{occurrenceId : string}} params
      */
+    occurrenceSelectionHandler (params) {
+        console.log({'In occurrenceSelectionHandler' : params});
 
-  }, {
-    key: "occurrenceSelectionHandler",
-    value: function occurrenceSelectionHandler(params) {
-      console.log({
-        'In occurrenceSelectionHandler': params
-      });
-
-      if (this.currentOccurrenceId && params.occurrenceId && this.currentOccurrenceId === params.occurrenceId) {
-        console.log("ignoring spurious navigation event for '".concat(params.occurrenceId, "'"));
-      } else {
-        this.app.router.navigate("/list/record/".concat(params.occurrenceId));
-      }
+        if (this.currentOccurrenceId && params.occurrenceId && this.currentOccurrenceId === params.occurrenceId) {
+            console.log(`ignoring spurious navigation event for '${params.occurrenceId}'`);
+        } else {
+            this.app.router.navigate(`/list/record/${params.occurrenceId}`);
+        }
     }
+
     /**
      * registers the default route from this.route
      * or alternatively is overridden in a child class
      *
      * @param {PatchedNavigo} router
      */
+    registerRoute(router) {
+        router.on(
+            '/list',
+            this.mainRouteHandler.bind(this, 'list', '', ''),
+            {
+                before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+                after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+                leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+                already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+            }
+        );
 
-  }, {
-    key: "registerRoute",
-    value: function registerRoute(router) {
-      router.on('/list', this.mainRouteHandler.bind(this, 'list', '', ''), {
-        before: this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        after: this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        leave: this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        already: this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-      });
-      router.on('/list/help', this.mainRouteHandler.bind(this, 'list', '', 'help'));
-      router.on('/list/record/', this.mainRouteHandler.bind(this, 'list', 'record', ''), {
-        before: this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        after: this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        leave: this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        already: this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-      });
-      router.on('/list/record/help', this.mainRouteHandler.bind(this, 'list', 'record', 'help'));
-      router.on('/list/record/:id', this.mainRouteHandler.bind(this, 'list', 'record', 'form'), {
-        before: this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        after: this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        leave: this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        already: this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-      });
-      router.on('/list/survey/:section', this.mainRouteHandler.bind(this, 'list', 'survey', ''), {
-        before: this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        after: this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        leave: this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        already: this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-      });
-      router.on('/list/survey/:section/help', this.mainRouteHandler.bind(this, 'list', 'survey', 'help'));
+        router.on(
+            '/list/help',
+            this.mainRouteHandler.bind(this, 'list', '', 'help')
+        );
+
+        router.on(
+            '/list/record/',
+            this.mainRouteHandler.bind(this, 'list', 'record', ''),
+            {
+                before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+                after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+                leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+                already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+            }
+        );
+
+        router.on(
+            '/list/record/help',
+            this.mainRouteHandler.bind(this, 'list', 'record', 'help')
+        );
+
+        router.on(
+            '/list/record/:id',
+            this.mainRouteHandler.bind(this, 'list', 'record', 'form'),
+            {
+                before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+                after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+                leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+                already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+            }
+        );
+
+        router.on(
+            '/list/survey/:section',
+            this.mainRouteHandler.bind(this, 'list', 'survey', ''),
+            {
+                before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+                after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+                leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+                already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+            }
+        );
+
+        router.on(
+            '/list/survey/:section/help',
+            this.mainRouteHandler.bind(this, 'list', 'survey', 'help')
+        );
     }
+
     /**
      *
      * @param {string} context typically 'list'
@@ -9459,616 +4485,147 @@ var MainController = /*#__PURE__*/function (_AppController) {
      * @param {(''|'help')} rhs
      * @param {Object.<string, string>} queryParameters
      */
+    mainRouteHandler(context, subcontext, rhs, queryParameters) {
+        console.log("reached special route handler for MainController.js");
+        console.log({context: context, params: subcontext, query: queryParameters});
 
-  }, {
-    key: "mainRouteHandler",
-    value: function mainRouteHandler(context, subcontext, rhs, queryParameters) {
-      console.log("reached special route handler for MainController.js");
-      console.log({
-        context: context,
-        params: subcontext,
-        query: queryParameters
-      });
-      this.app.saveRoute();
-
-      try {
-        this.viewSubcontext = subcontext;
-
-        if (subcontext) {
-          this.viewContexts[subcontext].call(this, queryParameters);
-        }
-
-        if (this.app.currentControllerHandle !== this.handle) {
-          // need a complete refresh of the page (the list and any occurrence panel)
-          // console.log(`currentControllerHandle = ${this.app.currentControllerHandle}, handle = ${this.handle}`);
-          this.needsFullRefresh = true;
-          this.needRightPanelRefresh = true;
-          this.app.currentControllerHandle = this.handle;
-        }
-
-        this.view.panelKey = rhs;
-        this.view.display();
-        this.needsFullRefresh = false;
-      } catch (error) {
-        this.error = error;
-        console.log({
-          error: error
-        }); // attempt to carry on regardless to some extent (error should be reported in the view)
-        // but wrap in a further try just in case
+        this.app.saveRoute();
 
         try {
-          this.needsFullRefresh = true;
-          this.view.display();
-        } catch (rethrownError) {
-          console.log({
-            rethrownError: rethrownError
-          });
-          document.body.innerHTML = "<h2>Internal error</h2><p>Please report this problem:</p><p>".concat(rethrownError.message, "</p>");
+            this.viewSubcontext = subcontext;
+
+            if (subcontext) {
+                this.viewContexts[subcontext].call(this, queryParameters);
+            }
+
+            if (this.app.currentControllerHandle !== this.handle) {
+                // need a complete refresh of the page (the list and any occurrence panel)
+
+                // console.log(`currentControllerHandle = ${this.app.currentControllerHandle}, handle = ${this.handle}`);
+
+                this.needsFullRefresh = true;
+                this.needRightPanelRefresh = true;
+
+                this.app.currentControllerHandle = this.handle;
+            }
+
+            this.view.panelKey = rhs;
+            this.view.display();
+            this.needsFullRefresh = false;
+        } catch (error) {
+            this.error = error;
+
+            console.log({error});
+
+            // attempt to carry on regardless to some extent (error should be reported in the view)
+            // but wrap in a further try just in case
+
+            try {
+                this.needsFullRefresh = true;
+                this.view.display();
+            } catch (rethrownError) {
+                console.log({rethrownError});
+                document.body.innerHTML = `<h2>Internal error</h2><p>Please report this problem:</p><p>${rethrownError.message}</p>`;
+            }
         }
-      }
     }
-  }, {
-    key: "backHandler",
-    value: function backHandler() {
-      if (this.app.routeHistory.length >= 2 && this.app.routeHistory[this.app.routeHistory.length - 2].url === this.leftPanelBaseRoute) {
-        this.app.routeHistory.length -= 1;
-        console.log('using standard back navigation');
-        window.history.back(); //console.log('fell through back!');
-      } else {
-        console.log("navigating back using base address '".concat(this.leftPanelBaseRoute, "'"));
-        this.app.router.navigate(this.leftPanelBaseRoute);
-      }
-    }
-  }]);
 
-  return MainController;
-}(AppController);
+    viewContexts = {
+        /**
+         * @this {MainController}
+         * @param {({[id] : string}|null)} queryParameters
+         */
+        record (queryParameters) {
+            // if (queryParameters && queryParameters.id) {
+            //     console.log(`in record id ${queryParameters.id}`);
+            // }
+            // console.log({scope: this});
+            this.surveySection = null; // No current survey form section, all should be closed
 
-_defineProperty(MainController, "EVENT_SELECT_OCCURRENCE", 'selectoccurrence');
+            if (!queryParameters) {
+                // query parameters can be missing
+                // force a refresh as it cheap to refresh static content and more difficult to detect
+                // if strictly needed.
+                // May have reached this point following deletion of the current record.
 
-_defineProperty(MainController, "EVENT_SELECT_SURVEY_SECTION", 'selectsurveysection');
+                this.currentOccurrenceId = '';
+                this.needRightPanelRefresh = true;
+            } else if (this.#currentOccurrenceId !== queryParameters.id) {
+                this.needRightPanelRefresh = true;
 
-_defineProperty(MainController, "EVENT_NEW_RECORD", 'newrecord');
+                this.currentOccurrenceId = queryParameters.id ?
+                     queryParameters.id
+                    :
+                    '';
 
-_defineProperty(MainController, "EVENT_DELETE_OCCURRENCE", 'deleteoccurrence');
+            } else {
+                this.needRightPanelRefresh = false;
+            }
 
-_defineProperty(MainController, "EVENT_BACK", 'back');
+            this.leftPanelBaseRoute = '/list/record';
+        },
 
-_defineProperty(MainController, "EVENT_NEXT_TO_RECORDS", 'nexttorecords');
+        /**
+         * @this {MainController}
+         * @param {{[section]: string}} queryParameters
+         */
+        survey(queryParameters) {
+            console.log(`in survey section ${queryParameters.section}`);
+            this.currentOccurrenceId = '';
+            this.needRightPanelRefresh = true;
+            this.surveySection = queryParameters.section;
 
-function _createSuper$o(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$o(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$o() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var StaticContentController = /*#__PURE__*/function (_AppController) {
-  _inherits(StaticContentController, _AppController);
-
-  var _super = _createSuper$o(StaticContentController);
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   *
-   * @param {Page} view
-   * @param {string} route
-   */
-  function StaticContentController(view, route) {
-    var _this;
-
-    _classCallCheck(this, StaticContentController);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "route", void 0);
-
-    _this.view = view;
-    _this.route = route;
-    _this.handle = AppController.nextHandle;
-    return _this;
-  }
-  /**
-   *
-   * @param {object} params
-   * @param {string} query
-   */
-
-
-  _createClass(StaticContentController, [{
-    key: "routeHandler",
-    value: function routeHandler(params, query) {
-      // console.log("reached route handler for StaticContentController.js");
-      this.app.currentControllerHandle = this.handle;
-      this.view.display();
-    }
-  }]);
-
-  return StaticContentController;
-}(AppController);
-
-var call$5 = functionCall;
-var fixRegExpWellKnownSymbolLogic$1 = fixRegexpWellKnownSymbolLogic;
-var anObject$3 = anObject$l;
-var toLength$3 = toLength$6;
-var toString$7 = toString$d;
-var requireObjectCoercible$4 = requireObjectCoercible$a;
-var getMethod$2 = getMethod$7;
-var advanceStringIndex$2 = advanceStringIndex$4;
-var regExpExec$2 = regexpExecAbstract;
-
-// @@match logic
-fixRegExpWellKnownSymbolLogic$1('match', function (MATCH, nativeMatch, maybeCallNative) {
-  return [
-    // `String.prototype.match` method
-    // https://tc39.es/ecma262/#sec-string.prototype.match
-    function match(regexp) {
-      var O = requireObjectCoercible$4(this);
-      var matcher = regexp == undefined ? undefined : getMethod$2(regexp, MATCH);
-      return matcher ? call$5(matcher, regexp, O) : new RegExp(regexp)[MATCH](toString$7(O));
-    },
-    // `RegExp.prototype[@@match]` method
-    // https://tc39.es/ecma262/#sec-regexp.prototype-@@match
-    function (string) {
-      var rx = anObject$3(this);
-      var S = toString$7(string);
-      var res = maybeCallNative(nativeMatch, rx, S);
-
-      if (res.done) return res.value;
-
-      if (!rx.global) return regExpExec$2(rx, S);
-
-      var fullUnicode = rx.unicode;
-      rx.lastIndex = 0;
-      var A = [];
-      var n = 0;
-      var result;
-      while ((result = regExpExec$2(rx, S)) !== null) {
-        var matchStr = toString$7(result[0]);
-        A[n] = matchStr;
-        if (matchStr === '') rx.lastIndex = advanceStringIndex$2(S, toLength$3(rx.lastIndex), fullUnicode);
-        n++;
-      }
-      return n === 0 ? null : A;
-    }
-  ];
-});
-
-var $$e = _export;
-var global$a = global$$;
-var isArray = isArray$4;
-var isConstructor$1 = isConstructor$4;
-var isObject$2 = isObject$l;
-var toAbsoluteIndex$1 = toAbsoluteIndex$4;
-var lengthOfArrayLike$3 = lengthOfArrayLike$9;
-var toIndexedObject$1 = toIndexedObject$b;
-var createProperty$2 = createProperty$6;
-var wellKnownSymbol$4 = wellKnownSymbol$q;
-var arrayMethodHasSpeciesSupport$2 = arrayMethodHasSpeciesSupport$5;
-var un$Slice = arraySlice$6;
-
-var HAS_SPECIES_SUPPORT$2 = arrayMethodHasSpeciesSupport$2('slice');
-
-var SPECIES = wellKnownSymbol$4('species');
-var Array$2 = global$a.Array;
-var max$1 = Math.max;
-
-// `Array.prototype.slice` method
-// https://tc39.es/ecma262/#sec-array.prototype.slice
-// fallback for not array-like ES3 strings and DOM objects
-$$e({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT$2 }, {
-  slice: function slice(start, end) {
-    var O = toIndexedObject$1(this);
-    var length = lengthOfArrayLike$3(O);
-    var k = toAbsoluteIndex$1(start, length);
-    var fin = toAbsoluteIndex$1(end === undefined ? length : end, length);
-    // inline `ArraySpeciesCreate` for usage native `Array#slice` where it's possible
-    var Constructor, result, n;
-    if (isArray(O)) {
-      Constructor = O.constructor;
-      // cross-realm fallback
-      if (isConstructor$1(Constructor) && (Constructor === Array$2 || isArray(Constructor.prototype))) {
-        Constructor = undefined;
-      } else if (isObject$2(Constructor)) {
-        Constructor = Constructor[SPECIES];
-        if (Constructor === null) Constructor = undefined;
-      }
-      if (Constructor === Array$2 || Constructor === undefined) {
-        return un$Slice(O, k, fin);
-      }
-    }
-    result = new (Constructor === undefined ? Array$2 : Constructor)(max$1(fin - k, 0));
-    for (n = 0; k < fin; k++, n++) if (k in O) createProperty$2(result, n, O[k]);
-    result.length = n;
-    return result;
-  }
-});
-
-var DESCRIPTORS$5 = descriptors;
-var FUNCTION_NAME_EXISTS = functionName.EXISTS;
-var uncurryThis$9 = functionUncurryThis;
-var defineProperty$5 = objectDefineProperty.f;
-
-var FunctionPrototype = Function.prototype;
-var functionToString = uncurryThis$9(FunctionPrototype.toString);
-var nameRE = /function\b(?:\s|\/\*[\S\s]*?\*\/|\/\/[^\n\r]*[\n\r]+)*([^\s(/]*)/;
-var regExpExec$1 = uncurryThis$9(nameRE.exec);
-var NAME = 'name';
-
-// Function instances `.name` property
-// https://tc39.es/ecma262/#sec-function-instances-name
-if (DESCRIPTORS$5 && !FUNCTION_NAME_EXISTS) {
-  defineProperty$5(FunctionPrototype, NAME, {
-    configurable: true,
-    get: function () {
-      try {
-        return regExpExec$1(nameRE, functionToString(this))[1];
-      } catch (error) {
-        return '';
-      }
-    }
-  });
-}
-
-var anObject$2 = anObject$l;
-var iteratorClose = iteratorClose$2;
-
-// call something on iterator step with safe closing on error
-var callWithSafeIterationClosing$1 = function (iterator, fn, value, ENTRIES) {
-  try {
-    return ENTRIES ? fn(anObject$2(value)[0], value[1]) : fn(value);
-  } catch (error) {
-    iteratorClose(iterator, 'throw', error);
-  }
-};
-
-var global$9 = global$$;
-var bind$1 = functionBindContext;
-var call$4 = functionCall;
-var toObject$2 = toObject$a;
-var callWithSafeIterationClosing = callWithSafeIterationClosing$1;
-var isArrayIteratorMethod = isArrayIteratorMethod$2;
-var isConstructor = isConstructor$4;
-var lengthOfArrayLike$2 = lengthOfArrayLike$9;
-var createProperty$1 = createProperty$6;
-var getIterator = getIterator$2;
-var getIteratorMethod = getIteratorMethod$3;
-
-var Array$1 = global$9.Array;
-
-// `Array.from` method implementation
-// https://tc39.es/ecma262/#sec-array.from
-var arrayFrom = function from(arrayLike /* , mapfn = undefined, thisArg = undefined */) {
-  var O = toObject$2(arrayLike);
-  var IS_CONSTRUCTOR = isConstructor(this);
-  var argumentsLength = arguments.length;
-  var mapfn = argumentsLength > 1 ? arguments[1] : undefined;
-  var mapping = mapfn !== undefined;
-  if (mapping) mapfn = bind$1(mapfn, argumentsLength > 2 ? arguments[2] : undefined);
-  var iteratorMethod = getIteratorMethod(O);
-  var index = 0;
-  var length, result, step, iterator, next, value;
-  // if the target is not iterable or it's an array with the default iterator - use a simple case
-  if (iteratorMethod && !(this == Array$1 && isArrayIteratorMethod(iteratorMethod))) {
-    iterator = getIterator(O, iteratorMethod);
-    next = iterator.next;
-    result = IS_CONSTRUCTOR ? new this() : [];
-    for (;!(step = call$4(next, iterator)).done; index++) {
-      value = mapping ? callWithSafeIterationClosing(iterator, mapfn, [step.value, index], true) : step.value;
-      createProperty$1(result, index, value);
-    }
-  } else {
-    length = lengthOfArrayLike$2(O);
-    result = IS_CONSTRUCTOR ? new this(length) : Array$1(length);
-    for (;length > index; index++) {
-      value = mapping ? mapfn(O[index], index) : O[index];
-      createProperty$1(result, index, value);
-    }
-  }
-  result.length = index;
-  return result;
-};
-
-var $$d = _export;
-var from = arrayFrom;
-var checkCorrectnessOfIteration = checkCorrectnessOfIteration$3;
-
-var INCORRECT_ITERATION = !checkCorrectnessOfIteration(function (iterable) {
-  // eslint-disable-next-line es/no-array-from -- required for testing
-  Array.from(iterable);
-});
-
-// `Array.from` method
-// https://tc39.es/ecma262/#sec-array.from
-$$d({ target: 'Array', stat: true, forced: INCORRECT_ITERATION }, {
-  from: from
-});
-
-// TODO: Remove from `core-js@4` since it's moved to entry points
-
-var $$c = _export;
-var global$8 = global$$;
-var call$3 = functionCall;
-var uncurryThis$8 = functionUncurryThis;
-var isCallable$1 = isCallable$p;
-var isObject$1 = isObject$l;
-
-var DELEGATES_TO_EXEC = function () {
-  var execCalled = false;
-  var re = /[ac]/;
-  re.exec = function () {
-    execCalled = true;
-    return /./.exec.apply(this, arguments);
-  };
-  return re.test('abc') === true && execCalled;
-}();
-
-var Error$1 = global$8.Error;
-var un$Test = uncurryThis$8(/./.test);
-
-// `RegExp.prototype.test` method
-// https://tc39.es/ecma262/#sec-regexp.prototype.test
-$$c({ target: 'RegExp', proto: true, forced: !DELEGATES_TO_EXEC }, {
-  test: function (str) {
-    var exec = this.exec;
-    if (!isCallable$1(exec)) return un$Test(this, str);
-    var result = call$3(exec, this, str);
-    if (result !== null && !isObject$1(result)) {
-      throw new Error$1('RegExp exec method returned something other than an Object or null');
-    }
-    return !!result;
-  }
-});
-
-var $$b = _export;
-var DESCRIPTORS$4 = descriptors;
-var global$7 = global$$;
-var uncurryThis$7 = functionUncurryThis;
-var hasOwn$1 = hasOwnProperty_1;
-var isCallable = isCallable$p;
-var isPrototypeOf$2 = objectIsPrototypeOf;
-var toString$6 = toString$d;
-var defineProperty$4 = objectDefineProperty.f;
-var copyConstructorProperties = copyConstructorProperties$2;
-
-var NativeSymbol = global$7.Symbol;
-var SymbolPrototype = NativeSymbol && NativeSymbol.prototype;
-
-if (DESCRIPTORS$4 && isCallable(NativeSymbol) && (!('description' in SymbolPrototype) ||
-  // Safari 12 bug
-  NativeSymbol().description !== undefined
-)) {
-  var EmptyStringDescriptionStore = {};
-  // wrap Symbol constructor for correct work with undefined description
-  var SymbolWrapper = function Symbol() {
-    var description = arguments.length < 1 || arguments[0] === undefined ? undefined : toString$6(arguments[0]);
-    var result = isPrototypeOf$2(SymbolPrototype, this)
-      ? new NativeSymbol(description)
-      // in Edge 13, String(Symbol(undefined)) === 'Symbol(undefined)'
-      : description === undefined ? NativeSymbol() : NativeSymbol(description);
-    if (description === '') EmptyStringDescriptionStore[result] = true;
-    return result;
-  };
-
-  copyConstructorProperties(SymbolWrapper, NativeSymbol);
-  SymbolWrapper.prototype = SymbolPrototype;
-  SymbolPrototype.constructor = SymbolWrapper;
-
-  var NATIVE_SYMBOL = String(NativeSymbol('test')) == 'Symbol(test)';
-  var symbolToString = uncurryThis$7(SymbolPrototype.toString);
-  var symbolValueOf = uncurryThis$7(SymbolPrototype.valueOf);
-  var regexp = /^Symbol\((.*)\)[^)]+$/;
-  var replace$1 = uncurryThis$7(''.replace);
-  var stringSlice$3 = uncurryThis$7(''.slice);
-
-  defineProperty$4(SymbolPrototype, 'description', {
-    configurable: true,
-    get: function description() {
-      var symbol = symbolValueOf(this);
-      var string = symbolToString(symbol);
-      if (hasOwn$1(EmptyStringDescriptionStore, symbol)) return '';
-      var desc = NATIVE_SYMBOL ? stringSlice$3(string, 7, -1) : replace$1(string, regexp, '$1');
-      return desc === '' ? undefined : desc;
-    }
-  });
-
-  $$b({ global: true, forced: true }, {
-    Symbol: SymbolWrapper
-  });
-}
-
-var defineWellKnownSymbol = defineWellKnownSymbol$2;
-
-// `Symbol.iterator` well-known symbol
-// https://tc39.es/ecma262/#sec-symbol.iterator
-defineWellKnownSymbol('iterator');
-
-var isObject = isObject$l;
-var classof$3 = classofRaw$1;
-var wellKnownSymbol$3 = wellKnownSymbol$q;
-
-var MATCH$2 = wellKnownSymbol$3('match');
-
-// `IsRegExp` abstract operation
-// https://tc39.es/ecma262/#sec-isregexp
-var isRegexp = function (it) {
-  var isRegExp;
-  return isObject(it) && ((isRegExp = it[MATCH$2]) !== undefined ? !!isRegExp : classof$3(it) == 'RegExp');
-};
-
-var apply = functionApply;
-var call$2 = functionCall;
-var uncurryThis$6 = functionUncurryThis;
-var fixRegExpWellKnownSymbolLogic = fixRegexpWellKnownSymbolLogic;
-var isRegExp$3 = isRegexp;
-var anObject$1 = anObject$l;
-var requireObjectCoercible$3 = requireObjectCoercible$a;
-var speciesConstructor$1 = speciesConstructor$4;
-var advanceStringIndex$1 = advanceStringIndex$4;
-var toLength$2 = toLength$6;
-var toString$5 = toString$d;
-var getMethod$1 = getMethod$7;
-var arraySlice$1 = arraySliceSimple;
-var callRegExpExec = regexpExecAbstract;
-var regexpExec = regexpExec$3;
-var stickyHelpers$1 = regexpStickyHelpers;
-var fails$3 = fails$z;
-
-var UNSUPPORTED_Y$1 = stickyHelpers$1.UNSUPPORTED_Y;
-var MAX_UINT32 = 0xFFFFFFFF;
-var min$2 = Math.min;
-var $push = [].push;
-var exec$1 = uncurryThis$6(/./.exec);
-var push$1 = uncurryThis$6($push);
-var stringSlice$2 = uncurryThis$6(''.slice);
-
-// Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
-// Weex JS has frozen built-in prototypes, so use try / catch wrapper
-var SPLIT_WORKS_WITH_OVERWRITTEN_EXEC = !fails$3(function () {
-  // eslint-disable-next-line regexp/no-empty-group -- required for testing
-  var re = /(?:)/;
-  var originalExec = re.exec;
-  re.exec = function () { return originalExec.apply(this, arguments); };
-  var result = 'ab'.split(re);
-  return result.length !== 2 || result[0] !== 'a' || result[1] !== 'b';
-});
-
-// @@split logic
-fixRegExpWellKnownSymbolLogic('split', function (SPLIT, nativeSplit, maybeCallNative) {
-  var internalSplit;
-  if (
-    'abbc'.split(/(b)*/)[1] == 'c' ||
-    // eslint-disable-next-line regexp/no-empty-group -- required for testing
-    'test'.split(/(?:)/, -1).length != 4 ||
-    'ab'.split(/(?:ab)*/).length != 2 ||
-    '.'.split(/(.?)(.?)/).length != 4 ||
-    // eslint-disable-next-line regexp/no-empty-capturing-group, regexp/no-empty-group -- required for testing
-    '.'.split(/()()/).length > 1 ||
-    ''.split(/.?/).length
-  ) {
-    // based on es5-shim implementation, need to rework it
-    internalSplit = function (separator, limit) {
-      var string = toString$5(requireObjectCoercible$3(this));
-      var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
-      if (lim === 0) return [];
-      if (separator === undefined) return [string];
-      // If `separator` is not a regex, use native split
-      if (!isRegExp$3(separator)) {
-        return call$2(nativeSplit, string, separator, lim);
-      }
-      var output = [];
-      var flags = (separator.ignoreCase ? 'i' : '') +
-                  (separator.multiline ? 'm' : '') +
-                  (separator.unicode ? 'u' : '') +
-                  (separator.sticky ? 'y' : '');
-      var lastLastIndex = 0;
-      // Make `global` and avoid `lastIndex` issues by working with a copy
-      var separatorCopy = new RegExp(separator.source, flags + 'g');
-      var match, lastIndex, lastLength;
-      while (match = call$2(regexpExec, separatorCopy, string)) {
-        lastIndex = separatorCopy.lastIndex;
-        if (lastIndex > lastLastIndex) {
-          push$1(output, stringSlice$2(string, lastLastIndex, match.index));
-          if (match.length > 1 && match.index < string.length) apply($push, output, arraySlice$1(match, 1));
-          lastLength = match[0].length;
-          lastLastIndex = lastIndex;
-          if (output.length >= lim) break;
+            this.leftPanelBaseRoute = `/list/survey/${queryParameters.section}`;
         }
-        if (separatorCopy.lastIndex === match.index) separatorCopy.lastIndex++; // Avoid an infinite loop
-      }
-      if (lastLastIndex === string.length) {
-        if (lastLength || !exec$1(separatorCopy, '')) push$1(output, '');
-      } else push$1(output, stringSlice$2(string, lastLastIndex));
-      return output.length > lim ? arraySlice$1(output, 0, lim) : output;
     };
-  // Chakra, V8
-  } else if ('0'.split(undefined, 0).length) {
-    internalSplit = function (separator, limit) {
-      return separator === undefined && limit === 0 ? [] : call$2(nativeSplit, this, separator, limit);
-    };
-  } else internalSplit = nativeSplit;
 
-  return [
-    // `String.prototype.split` method
-    // https://tc39.es/ecma262/#sec-string.prototype.split
-    function split(separator, limit) {
-      var O = requireObjectCoercible$3(this);
-      var splitter = separator == undefined ? undefined : getMethod$1(separator, SPLIT);
-      return splitter
-        ? call$2(splitter, separator, O, limit)
-        : call$2(internalSplit, toString$5(O), separator, limit);
-    },
-    // `RegExp.prototype[@@split]` method
-    // https://tc39.es/ecma262/#sec-regexp.prototype-@@split
-    //
-    // NOTE: This cannot be properly polyfilled in engines that don't support
-    // the 'y' flag.
-    function (string, limit) {
-      var rx = anObject$1(this);
-      var S = toString$5(string);
-      var res = maybeCallNative(internalSplit, rx, S, limit, internalSplit !== nativeSplit);
-
-      if (res.done) return res.value;
-
-      var C = speciesConstructor$1(rx, RegExp);
-
-      var unicodeMatching = rx.unicode;
-      var flags = (rx.ignoreCase ? 'i' : '') +
-                  (rx.multiline ? 'm' : '') +
-                  (rx.unicode ? 'u' : '') +
-                  (UNSUPPORTED_Y$1 ? 'g' : 'y');
-
-      // ^(? + rx + ) is needed, in combination with some S slicing, to
-      // simulate the 'y' flag.
-      var splitter = new C(UNSUPPORTED_Y$1 ? '^(?:' + rx.source + ')' : rx, flags);
-      var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
-      if (lim === 0) return [];
-      if (S.length === 0) return callRegExpExec(splitter, S) === null ? [S] : [];
-      var p = 0;
-      var q = 0;
-      var A = [];
-      while (q < S.length) {
-        splitter.lastIndex = UNSUPPORTED_Y$1 ? 0 : q;
-        var z = callRegExpExec(splitter, UNSUPPORTED_Y$1 ? stringSlice$2(S, q) : S);
-        var e;
-        if (
-          z === null ||
-          (e = min$2(toLength$2(splitter.lastIndex + (UNSUPPORTED_Y$1 ? q : 0)), S.length)) === p
-        ) {
-          q = advanceStringIndex$1(S, q, unicodeMatching);
+    backHandler() {
+       if (this.app.routeHistory.length >= 2 && this.app.routeHistory[this.app.routeHistory.length - 2].url === this.leftPanelBaseRoute) {
+            this.app.routeHistory.length -= 1;
+            console.log('using standard back navigation');
+            window.history.back();
+            //console.log('fell through back!');
         } else {
-          push$1(A, stringSlice$2(S, p, q));
-          if (A.length === lim) return A;
-          for (var i = 1; i <= z.length - 1; i++) {
-            push$1(A, z[i]);
-            if (A.length === lim) return A;
-          }
-          q = p = e;
+            console.log(`navigating back using base address '${this.leftPanelBaseRoute}'`);
+            this.app.router.navigate(this.leftPanelBaseRoute);
         }
-      }
-      push$1(A, stringSlice$2(S, p));
-      return A;
     }
-  ];
-}, !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC, UNSUPPORTED_Y$1);
+}
 
-var $$a = _export;
-var uncurryThis$5 = functionUncurryThis;
-var IndexedObject = indexedObject;
-var toIndexedObject = toIndexedObject$b;
-var arrayMethodIsStrict$1 = arrayMethodIsStrict$3;
+// StaticContentController
 
-var un$Join = uncurryThis$5([].join);
+class StaticContentController extends AppController {
+    /**
+     * @type {string}
+     */
+    route;
 
-var ES3_STRINGS = IndexedObject != Object;
-var STRICT_METHOD$1 = arrayMethodIsStrict$1('join', ',');
+    /**
+     *
+     * @param {Page} view
+     * @param {string} route
+     */
+    constructor (view, route) {
+        super();
 
-// `Array.prototype.join` method
-// https://tc39.es/ecma262/#sec-array.prototype.join
-$$a({ target: 'Array', proto: true, forced: ES3_STRINGS || !STRICT_METHOD$1 }, {
-  join: function join(separator) {
-    return un$Join(toIndexedObject(this), separator === undefined ? ',' : separator);
-  }
-});
+        this.view = view;
+        this.route = route;
+
+        this.handle = AppController.nextHandle;
+    }
+
+    /**
+     *
+     * @param {object} params
+     * @param {string} query
+     */
+    routeHandler(params, query) {
+        // console.log("reached route handler for StaticContentController.js");
+
+        this.app.currentControllerHandle = this.handle;
+        this.view.display();
+    }
+}
 
 var newSurveyModal = "<!-- begin: templates/newSurveyModal.html -->\r\n<div class=\"modal fade\" id=\"newsurveymodal\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"newsurveymodalTitle\" aria-hidden=\"true\">\r\n    <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\r\n        <div class=\"modal-content\">\r\n            <div class=\"modal-header\">\r\n                <h5 class=\"modal-title\" id=\"newsurveymodalTitle\">Start a new survey?</h5>\r\n                <button type=\"button\" class=\"close\" data-bs-dismiss=\"modal\" aria-label=\"Close\">\r\n                    <span aria-hidden=\"true\">&times;</span>\r\n                </button>\r\n            </div>\r\n            <div class=\"modal-body\">\r\n                Please confirm that you wish to start a new survey. You only need to do this if you wish to send a set of records from a different locality, otherwise please add more records to your current report.\r\n            </div>\r\n            <div class=\"modal-footer\">\r\n                <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Back</button>\r\n                <button type=\"button\" class=\"btn btn-danger\" data-bs-dismiss=\"modal\" id=\"newsurveymodalconfirmed\">New survey</button>\r\n            </div>\r\n        </div>\r\n    </div>\r\n</div>\r\n<!-- end: templates/newSurveyModal.html -->\r\n";
 
@@ -10078,377 +4635,26 @@ var saveAllSuccessModal = "<!-- begin: templates/syncSuccessModal.html -->\r\n<d
 
 var saveAllFailureModal = "<!-- begin: templates/syncFailureModal.html -->\r\n<div class=\"modal fade\" id=\"saveallfailure\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"saveallfailureTitle\" aria-hidden=\"true\">\r\n    <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\r\n        <div class=\"modal-content\">\r\n            <div class=\"modal-header\">\r\n                <h5 class=\"modal-title\" id=\"saveallfailureTitle\">One or more records could not be saved</h5>\r\n                <button type=\"button\" class=\"close\" data-bs-dismiss=\"modal\" aria-label=\"Close\">\r\n                    <span aria-hidden=\"true\">&times;</span>\r\n                </button>\r\n            </div>\r\n            <div class=\"modal-body\">\r\n                Please check your connection to the network and try again.\r\n            </div>\r\n            <div class=\"modal-footer\">\r\n                <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Close</button>\r\n            </div>\r\n        </div>\r\n    </div>\r\n</div>\r\n<!-- end: templates/syncFailureModal.html -->\r\n";
 
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
-}
+// Page
 
-function _iterableToArrayLimit(arr, i) {
-  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+class Page extends EventHarness {
 
-  if (_i == null) return;
-  var _arr = [];
-  var _n = true;
-  var _d = false;
+    /**
+     * @type {AppController}
+     */
+    controller;
 
-  var _s, _e;
-
-  try {
-    for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
-      _arr.push(_s.value);
-
-      if (i && _arr.length === i) break;
-    }
-  } catch (err) {
-    _d = true;
-    _e = err;
-  } finally {
-    try {
-      if (!_n && _i["return"] != null) _i["return"]();
-    } finally {
-      if (_d) throw _e;
-    }
-  }
-
-  return _arr;
-}
-
-function _arrayLikeToArray$8(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-
-  for (var i = 0, arr2 = new Array(len); i < len; i++) {
-    arr2[i] = arr[i];
-  }
-
-  return arr2;
-}
-
-function _unsupportedIterableToArray$8(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray$8(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$8(o, minLen);
-}
-
-function _nonIterableRest() {
-  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-
-function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$8(arr, i) || _nonIterableRest();
-}
-
-var defineProperty$3 = objectDefineProperty.f;
-var create = objectCreate;
-var redefineAll = redefineAll$4;
-var bind = functionBindContext;
-var anInstance = anInstance$4;
-var iterate = iterate$4;
-var defineIterator = defineIterator$3;
-var setSpecies$1 = setSpecies$3;
-var DESCRIPTORS$3 = descriptors;
-var fastKey = internalMetadata.exports.fastKey;
-var InternalStateModule$1 = internalState;
-
-var setInternalState$1 = InternalStateModule$1.set;
-var internalStateGetterFor = InternalStateModule$1.getterFor;
-
-var collectionStrong$1 = {
-  getConstructor: function (wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER) {
-    var Constructor = wrapper(function (that, iterable) {
-      anInstance(that, Prototype);
-      setInternalState$1(that, {
-        type: CONSTRUCTOR_NAME,
-        index: create(null),
-        first: undefined,
-        last: undefined,
-        size: 0
-      });
-      if (!DESCRIPTORS$3) that.size = 0;
-      if (iterable != undefined) iterate(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-    });
-
-    var Prototype = Constructor.prototype;
-
-    var getInternalState = internalStateGetterFor(CONSTRUCTOR_NAME);
-
-    var define = function (that, key, value) {
-      var state = getInternalState(that);
-      var entry = getEntry(that, key);
-      var previous, index;
-      // change existing entry
-      if (entry) {
-        entry.value = value;
-      // create new entry
-      } else {
-        state.last = entry = {
-          index: index = fastKey(key, true),
-          key: key,
-          value: value,
-          previous: previous = state.last,
-          next: undefined,
-          removed: false
-        };
-        if (!state.first) state.first = entry;
-        if (previous) previous.next = entry;
-        if (DESCRIPTORS$3) state.size++;
-        else that.size++;
-        // add to index
-        if (index !== 'F') state.index[index] = entry;
-      } return that;
-    };
-
-    var getEntry = function (that, key) {
-      var state = getInternalState(that);
-      // fast case
-      var index = fastKey(key);
-      var entry;
-      if (index !== 'F') return state.index[index];
-      // frozen object case
-      for (entry = state.first; entry; entry = entry.next) {
-        if (entry.key == key) return entry;
-      }
-    };
-
-    redefineAll(Prototype, {
-      // `{ Map, Set }.prototype.clear()` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.clear
-      // https://tc39.es/ecma262/#sec-set.prototype.clear
-      clear: function clear() {
-        var that = this;
-        var state = getInternalState(that);
-        var data = state.index;
-        var entry = state.first;
-        while (entry) {
-          entry.removed = true;
-          if (entry.previous) entry.previous = entry.previous.next = undefined;
-          delete data[entry.index];
-          entry = entry.next;
-        }
-        state.first = state.last = undefined;
-        if (DESCRIPTORS$3) state.size = 0;
-        else that.size = 0;
-      },
-      // `{ Map, Set }.prototype.delete(key)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.delete
-      // https://tc39.es/ecma262/#sec-set.prototype.delete
-      'delete': function (key) {
-        var that = this;
-        var state = getInternalState(that);
-        var entry = getEntry(that, key);
-        if (entry) {
-          var next = entry.next;
-          var prev = entry.previous;
-          delete state.index[entry.index];
-          entry.removed = true;
-          if (prev) prev.next = next;
-          if (next) next.previous = prev;
-          if (state.first == entry) state.first = next;
-          if (state.last == entry) state.last = prev;
-          if (DESCRIPTORS$3) state.size--;
-          else that.size--;
-        } return !!entry;
-      },
-      // `{ Map, Set }.prototype.forEach(callbackfn, thisArg = undefined)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.foreach
-      // https://tc39.es/ecma262/#sec-set.prototype.foreach
-      forEach: function forEach(callbackfn /* , that = undefined */) {
-        var state = getInternalState(this);
-        var boundFunction = bind(callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-        var entry;
-        while (entry = entry ? entry.next : state.first) {
-          boundFunction(entry.value, entry.key, this);
-          // revert to the last existing entry
-          while (entry && entry.removed) entry = entry.previous;
-        }
-      },
-      // `{ Map, Set}.prototype.has(key)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.has
-      // https://tc39.es/ecma262/#sec-set.prototype.has
-      has: function has(key) {
-        return !!getEntry(this, key);
-      }
-    });
-
-    redefineAll(Prototype, IS_MAP ? {
-      // `Map.prototype.get(key)` method
-      // https://tc39.es/ecma262/#sec-map.prototype.get
-      get: function get(key) {
-        var entry = getEntry(this, key);
-        return entry && entry.value;
-      },
-      // `Map.prototype.set(key, value)` method
-      // https://tc39.es/ecma262/#sec-map.prototype.set
-      set: function set(key, value) {
-        return define(this, key === 0 ? 0 : key, value);
-      }
-    } : {
-      // `Set.prototype.add(value)` method
-      // https://tc39.es/ecma262/#sec-set.prototype.add
-      add: function add(value) {
-        return define(this, value = value === 0 ? 0 : value, value);
-      }
-    });
-    if (DESCRIPTORS$3) defineProperty$3(Prototype, 'size', {
-      get: function () {
-        return getInternalState(this).size;
-      }
-    });
-    return Constructor;
-  },
-  setStrong: function (Constructor, CONSTRUCTOR_NAME, IS_MAP) {
-    var ITERATOR_NAME = CONSTRUCTOR_NAME + ' Iterator';
-    var getInternalCollectionState = internalStateGetterFor(CONSTRUCTOR_NAME);
-    var getInternalIteratorState = internalStateGetterFor(ITERATOR_NAME);
-    // `{ Map, Set }.prototype.{ keys, values, entries, @@iterator }()` methods
-    // https://tc39.es/ecma262/#sec-map.prototype.entries
-    // https://tc39.es/ecma262/#sec-map.prototype.keys
-    // https://tc39.es/ecma262/#sec-map.prototype.values
-    // https://tc39.es/ecma262/#sec-map.prototype-@@iterator
-    // https://tc39.es/ecma262/#sec-set.prototype.entries
-    // https://tc39.es/ecma262/#sec-set.prototype.keys
-    // https://tc39.es/ecma262/#sec-set.prototype.values
-    // https://tc39.es/ecma262/#sec-set.prototype-@@iterator
-    defineIterator(Constructor, CONSTRUCTOR_NAME, function (iterated, kind) {
-      setInternalState$1(this, {
-        type: ITERATOR_NAME,
-        target: iterated,
-        state: getInternalCollectionState(iterated),
-        kind: kind,
-        last: undefined
-      });
-    }, function () {
-      var state = getInternalIteratorState(this);
-      var kind = state.kind;
-      var entry = state.last;
-      // revert to the last existing entry
-      while (entry && entry.removed) entry = entry.previous;
-      // get next entry
-      if (!state.target || !(state.last = entry = entry ? entry.next : state.state.first)) {
-        // or finish the iteration
-        state.target = undefined;
-        return { value: undefined, done: true };
-      }
-      // return step by kind
-      if (kind == 'keys') return { value: entry.key, done: false };
-      if (kind == 'values') return { value: entry.value, done: false };
-      return { value: [entry.key, entry.value], done: false };
-    }, IS_MAP ? 'entries' : 'values', !IS_MAP, true);
-
-    // `{ Map, Set }.prototype[@@species]` accessors
-    // https://tc39.es/ecma262/#sec-get-map-@@species
-    // https://tc39.es/ecma262/#sec-get-set-@@species
-    setSpecies$1(CONSTRUCTOR_NAME);
-  }
-};
-
-var collection$1 = collection$3;
-var collectionStrong = collectionStrong$1;
-
-// `Map` constructor
-// https://tc39.es/ecma262/#sec-map-objects
-collection$1('Map', function (init) {
-  return function Map() { return init(this, arguments.length ? arguments[0] : undefined); };
-}, collectionStrong);
-
-var $$9 = _export;
-var $includes = arrayIncludes.includes;
-var addToUnscopables$1 = addToUnscopables$3;
-
-// `Array.prototype.includes` method
-// https://tc39.es/ecma262/#sec-array.prototype.includes
-$$9({ target: 'Array', proto: true }, {
-  includes: function includes(el /* , fromIndex = 0 */) {
-    return $includes(this, el, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables$1('includes');
-
-var global$6 = global$$;
-var isRegExp$2 = isRegexp;
-
-var TypeError$5 = global$6.TypeError;
-
-var notARegexp = function (it) {
-  if (isRegExp$2(it)) {
-    throw TypeError$5("The method doesn't accept regular expressions");
-  } return it;
-};
-
-var wellKnownSymbol$2 = wellKnownSymbol$q;
-
-var MATCH$1 = wellKnownSymbol$2('match');
-
-var correctIsRegexpLogic = function (METHOD_NAME) {
-  var regexp = /./;
-  try {
-    '/./'[METHOD_NAME](regexp);
-  } catch (error1) {
-    try {
-      regexp[MATCH$1] = false;
-      return '/./'[METHOD_NAME](regexp);
-    } catch (error2) { /* empty */ }
-  } return false;
-};
-
-var $$8 = _export;
-var uncurryThis$4 = functionUncurryThis;
-var notARegExp$1 = notARegexp;
-var requireObjectCoercible$2 = requireObjectCoercible$a;
-var toString$4 = toString$d;
-var correctIsRegExpLogic$1 = correctIsRegexpLogic;
-
-var stringIndexOf$2 = uncurryThis$4(''.indexOf);
-
-// `String.prototype.includes` method
-// https://tc39.es/ecma262/#sec-string.prototype.includes
-$$8({ target: 'String', proto: true, forced: !correctIsRegExpLogic$1('includes') }, {
-  includes: function includes(searchString /* , position = 0 */) {
-    return !!~stringIndexOf$2(
-      toString$4(requireObjectCoercible$2(this)),
-      toString$4(notARegExp$1(searchString)),
-      arguments.length > 1 ? arguments[1] : undefined
-    );
-  }
-});
-
-function _createSuper$n(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$n(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$n() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var Page = /*#__PURE__*/function (_EventHarness) {
-  _inherits(Page, _EventHarness);
-
-  var _super = _createSuper$n(Page);
-
-  function Page() {
-    var _this;
-
-    _classCallCheck(this, Page);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this), "controller", void 0);
-
-    return _this;
-  }
-
-  _createClass(Page, [{
-    key: "initialise",
-    value:
     /**
      * called once during late-stage app initialisation
      * (NB this may not be the current view when called)
      *
      * an opportunity to register listeners on this.controller.app
      */
-    function initialise() {} // /**
+    initialise() {
+
+    }
+
+    // /**
     //  *
     //  * @param {HTMLElement} containerEl
     //  */
@@ -10456,20 +4662,22 @@ var Page = /*#__PURE__*/function (_EventHarness) {
     //
     // }
 
-  }, {
-    key: "display",
-    value: function display() {
-      console.log('got to view display'); // these serve as hook points for child classes
+    display() {
+        console.log('got to view display');
 
-      this.refreshHeader();
-      this.body();
+        // these serve as hook points for child classes
+        this.refreshHeader();
+        this.body();
     }
-  }, {
-    key: "refreshHeader",
-    value: function refreshHeader() {}
-  }, {
-    key: "body",
-    value: function body() {}
+
+    refreshHeader() {
+
+    }
+
+    body() {
+
+    }
+
     /**
      *
      * @param {{}} descriptor
@@ -10488,84 +4696,84 @@ var Page = /*#__PURE__*/function (_EventHarness) {
      *
      * @returns {HTMLDivElement}
      */
+    accordionItem(descriptor) {
+        let cardContainer = document.createElement('div');
+        cardContainer.id = descriptor.cardId;
+        cardContainer.className = 'accordion-item';
 
-  }, {
-    key: "accordionItem",
-    value: function accordionItem(descriptor) {
-      var cardContainer = document.createElement('div');
-      cardContainer.id = descriptor.cardId;
-      cardContainer.className = 'accordion-item';
-      var cardHeadingEl = cardContainer.appendChild(document.createElement('div'));
-      cardHeadingEl.className = 'accordion-header pointer';
-
-      if (descriptor.cardHeadingId) {
-        cardHeadingEl.id = descriptor.cardHeadingId;
-      }
-
-      var headingEl = cardHeadingEl.appendChild(document.createElement('h2'));
-      headingEl.className = 'mb-0';
-      var buttonEl = headingEl.appendChild(document.createElement('button')); //buttonEl.className = `btn btn-link${(descriptor.collapsed ? ' collapsed' : '')}`;
-
-      buttonEl.className = "accordion-button".concat(descriptor.collapsed ? ' collapsed' : '');
-      buttonEl.setAttribute('data-bs-toggle', 'collapse'); //buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
-
-      if (descriptor.headingButtonId) {
-        buttonEl.id = descriptor.headingButtonId;
-      }
-
-      buttonEl.type = 'button'; //buttonEl.setAttribute('data-bs-toggle', 'collapse');
-
-      if (descriptor.buttonStyleString) {
-        buttonEl.style.cssText = descriptor.buttonStyleString;
-      }
-
-      if (descriptor.cardDescriptionId) {
-        buttonEl.setAttribute('data-bs-target', "#".concat(descriptor.cardDescriptionId));
-        buttonEl.setAttribute('aria-controls', descriptor.cardDescriptionId);
-      }
-
-      buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
-      buttonEl.innerHTML = "<div class=\"material-icons icon-show-collapsed\">expand_more</div><div class=\"material-icons icon-hide-collapsed\">unfold_less</div>".concat(descriptor.headingHTML);
-
-      if (descriptor.headingNonbuttonHTML) {
-        var extraHeadingElement = buttonEl.appendChild(document.createElement('span'));
-        extraHeadingElement.style.display = 'flex';
-        extraHeadingElement.innerHTML = descriptor.headingNonbuttonHTML;
-      }
-
-      if (descriptor.headingValidationWarningHTML) {
-        var headerValidationWarning = cardHeadingEl.appendChild(document.createElement('div'));
-        headerValidationWarning.className = 'card-invalid-feedback';
-        headerValidationWarning.innerHTML = "<small>".concat(descriptor.headingValidationWarningHTML, "</small>");
-      }
-
-      var cardDescriptionEl = cardContainer.appendChild(document.createElement('div'));
-
-      if (descriptor.cardDescriptionId) {
-        cardDescriptionEl.id = descriptor.cardDescriptionId;
-      }
-
-      cardDescriptionEl.className = "accordion-collapse collapse".concat(descriptor.collapsed ? '' : ' show');
-
-      if (descriptor.cardHeadingId) {
-        cardDescriptionEl.setAttribute('aria-labelledby', descriptor.cardHeadingId);
-      }
-
-      cardDescriptionEl.setAttribute('data-bs-parent', "#".concat(descriptor.parentContainerId));
-
-      if (descriptor.dataAttributes) {
-        for (var key in descriptor.dataAttributes) {
-          if (descriptor.dataAttributes.hasOwnProperty(key)) {
-            cardDescriptionEl.setAttribute("data-".concat(key), descriptor.dataAttributes[key]);
-          }
+        let cardHeadingEl = cardContainer.appendChild(document.createElement('div'));
+        cardHeadingEl.className = 'accordion-header pointer';
+        if (descriptor.cardHeadingId) {
+            cardHeadingEl.id = descriptor.cardHeadingId;
         }
-      }
 
-      var cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
-      cardBodyEl.className = 'accordion-body pl-2 pr-2 pl-md-3 pr-md-3';
-      cardBodyEl.appendChild(descriptor.bodyContentElement);
-      return cardContainer;
+        let headingEl = cardHeadingEl.appendChild(document.createElement('h2'));
+        headingEl.className = 'mb-0';
+
+        let buttonEl = headingEl.appendChild(document.createElement('button'));
+        //buttonEl.className = `btn btn-link${(descriptor.collapsed ? ' collapsed' : '')}`;
+        buttonEl.className = `accordion-button${(descriptor.collapsed ? ' collapsed' : '')}`;
+
+        buttonEl.setAttribute('data-bs-toggle', 'collapse');
+        //buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
+
+        if (descriptor.headingButtonId) {
+            buttonEl.id = descriptor.headingButtonId;
+        }
+
+        buttonEl.type = 'button';
+        //buttonEl.setAttribute('data-bs-toggle', 'collapse');
+
+        if (descriptor.buttonStyleString) {
+            buttonEl.style.cssText = descriptor.buttonStyleString;
+        }
+
+        if (descriptor.cardDescriptionId) {
+            buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
+            buttonEl.setAttribute('aria-controls', descriptor.cardDescriptionId);
+        }
+
+        buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
+        buttonEl.innerHTML = `<div class="material-icons icon-show-collapsed">expand_more</div><div class="material-icons icon-hide-collapsed">unfold_less</div>${descriptor.headingHTML}`;
+
+        if (descriptor.headingNonbuttonHTML) {
+            const extraHeadingElement = buttonEl.appendChild(document.createElement('span'));
+            extraHeadingElement.style.display = 'flex';
+            extraHeadingElement.innerHTML = descriptor.headingNonbuttonHTML;
+        }
+
+        if (descriptor.headingValidationWarningHTML) {
+            const headerValidationWarning = cardHeadingEl.appendChild(document.createElement('div'));
+            headerValidationWarning.className = 'card-invalid-feedback';
+            headerValidationWarning.innerHTML = `<small>${descriptor.headingValidationWarningHTML}</small>`;
+        }
+
+        let cardDescriptionEl = cardContainer.appendChild(document.createElement('div'));
+        if (descriptor.cardDescriptionId) {
+            cardDescriptionEl.id = descriptor.cardDescriptionId;
+        }
+        cardDescriptionEl.className = `accordion-collapse collapse${(descriptor.collapsed ? '' : ' show')}`;
+        if (descriptor.cardHeadingId) {
+            cardDescriptionEl.setAttribute('aria-labelledby', descriptor.cardHeadingId);
+        }
+
+        cardDescriptionEl.setAttribute('data-bs-parent', `#${descriptor.parentContainerId}`);
+
+        if (descriptor.dataAttributes) {
+            for (let key in descriptor.dataAttributes) {
+                if (descriptor.dataAttributes.hasOwnProperty(key)) {
+                    cardDescriptionEl.setAttribute(`data-${key}`, descriptor.dataAttributes[key]);
+                }
+            }
+        }
+
+        let cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
+        cardBodyEl.className = 'accordion-body pl-2 pr-2 pl-md-3 pr-md-3';
+        cardBodyEl.appendChild(descriptor.bodyContentElement);
+
+        return cardContainer;
     }
+
     /**
      *
      * @param {{}} descriptor
@@ -10584,224 +4792,194 @@ var Page = /*#__PURE__*/function (_EventHarness) {
      *
      * @returns {HTMLDivElement}
      */
+    card(descriptor) {
+        let cardContainer = document.createElement('div');
+        cardContainer.id = descriptor.cardId;
+        cardContainer.className = 'card';
 
-  }, {
-    key: "card",
-    value: function card(descriptor) {
-      var cardContainer = document.createElement('div');
-      cardContainer.id = descriptor.cardId;
-      cardContainer.className = 'card';
-      var cardHeadingEl = cardContainer.appendChild(document.createElement('div'));
-      cardHeadingEl.className = 'card-header pointer';
-
-      if (descriptor.cardHeadingId) {
-        cardHeadingEl.id = descriptor.cardHeadingId;
-      }
-
-      cardHeadingEl.setAttribute('data-bs-toggle', 'collapse');
-      cardHeadingEl.setAttribute('data-bs-target', "#".concat(descriptor.cardDescriptionId));
-      var headingEl = cardHeadingEl.appendChild(document.createElement('h2'));
-      headingEl.className = 'mb-0';
-      var buttonEl = headingEl.appendChild(document.createElement('button'));
-      buttonEl.className = "btn btn-link".concat(descriptor.collapsed ? ' collapsed' : '');
-
-      if (descriptor.headingButtonId) {
-        buttonEl.id = descriptor.headingButtonId;
-      }
-
-      buttonEl.type = 'button';
-      buttonEl.setAttribute('data-bs-toggle', 'collapse');
-
-      if (descriptor.buttonStyleString) {
-        buttonEl.style.cssText = descriptor.buttonStyleString;
-      }
-
-      if (descriptor.cardDescriptionId) {
-        buttonEl.setAttribute('data-bs-target', "#".concat(descriptor.cardDescriptionId));
-        buttonEl.setAttribute('aria-controls', descriptor.cardDescriptionId);
-      }
-
-      buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
-      buttonEl.innerHTML = "<div class=\"material-icons icon-show-collapsed\">expand_more</div><div class=\"material-icons icon-hide-collapsed\">unfold_less</div>".concat(descriptor.headingHTML);
-
-      if (descriptor.headingNonbuttonHTML) {
-        var extraHeadingElement = headingEl.appendChild(document.createElement('span'));
-        extraHeadingElement.style.display = 'inline-block';
-        extraHeadingElement.innerHTML = descriptor.headingNonbuttonHTML;
-      }
-
-      if (descriptor.headingValidationWarningHTML) {
-        var headerValidationWarning = cardHeadingEl.appendChild(document.createElement('div'));
-        headerValidationWarning.className = 'card-invalid-feedback';
-        headerValidationWarning.innerHTML = "<small>".concat(descriptor.headingValidationWarningHTML, "</small>");
-      }
-
-      var cardDescriptionEl = cardContainer.appendChild(document.createElement('div'));
-
-      if (descriptor.cardDescriptionId) {
-        cardDescriptionEl.id = descriptor.cardDescriptionId;
-      }
-
-      cardDescriptionEl.className = "collapse".concat(descriptor.collapsed ? '' : ' show');
-
-      if (descriptor.cardHeadingId) {
-        cardDescriptionEl.setAttribute('aria-labelledby', descriptor.cardHeadingId);
-      }
-
-      cardDescriptionEl.setAttribute('data-parent', "#".concat(descriptor.parentContainerId));
-
-      if (descriptor.dataAttributes) {
-        for (var key in descriptor.dataAttributes) {
-          if (descriptor.dataAttributes.hasOwnProperty(key)) {
-            cardDescriptionEl.setAttribute("data-".concat(key), descriptor.dataAttributes[key]);
-          }
+        let cardHeadingEl = cardContainer.appendChild(document.createElement('div'));
+        cardHeadingEl.className = 'card-header pointer';
+        if (descriptor.cardHeadingId) {
+            cardHeadingEl.id = descriptor.cardHeadingId;
         }
-      }
-
-      var cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
-      cardBodyEl.className = 'card-body pl-2 pr-2 pl-md-3 pr-md-3';
-      cardBodyEl.appendChild(descriptor.bodyContentElement);
-      return cardContainer; //         `<div class="card-header" id="heading_${occurrence.id}">
-      //   <h2 class="mb-0">
-      //     <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')}" id="headingbutton_${occurrence.id}" type="button" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}" aria-expanded="true" aria-controls="description_${occurrence.id}">
-      //       Heading for (${occurrence.id}, ${taxon.canonical})
-      //     </button>
-      //   </h2>
-      // </div>
-      //
-      // <div id="description_${occurrence.id}" class="collapse${(this.controller.currentOccurrenceId === occurrence.id ? ' show' : '')}" aria-labelledby="heading_${occurrence.id}" data-parent="#occurrenceslist" data-occurrenceId="${occurrence.id}">
-      //   <div class="card-body">
-      //     Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-      //   </div>
-      // </div>`;
-    }
-  }]);
-
-  return Page;
-}(EventHarness);
-
-function _createSuper$m(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$m(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$m() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var NotFoundView = /*#__PURE__*/function (_Page) {
-  _inherits(NotFoundView, _Page);
-
-  var _super = _createSuper$m(NotFoundView);
-
-  function NotFoundView() {
-    _classCallCheck(this, NotFoundView);
-
-    return _super.apply(this, arguments);
-  }
-
-  _createClass(NotFoundView, [{
-    key: "body",
-    value: function body() {
-      // at this point the entire content of #body should be safe to replace
-      var pathPrefix = window.location.pathname.split('/')[1];
-      var bodyEl = document.getElementById('body');
-      bodyEl.innerHTML = "<h2>Page not found</h2><p><a href=\"/".concat(pathPrefix, "/list\">Return to the homepage.</a>");
-    }
-  }]);
-
-  return NotFoundView;
-}(Page);
-
-function _createSuper$l(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$l(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$l() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var SurveyForm = /*#__PURE__*/function (_Form) {
-  _inherits(SurveyForm, _Form);
-
-  var _super = _createSuper$l(SurveyForm);
-
-  /**
-   * sections keyed by numerical order
-   *
-   * @type {Array.<typeof SurveyFormSection>}
-   */
-
-  /**
-   *
-   * @type {Object.<string, typeof SurveyFormSection>}
-   */
-
-  /**
-   * @protected
-   * @type {Survey}
-   */
-
-  /**
-   * @type {typeof SurveyFormSection}
-   */
-  // /**
-  //  * id of this section on the left-pane carousel
-  //  *
-  //  * @type {string|null}
-  //  */
-  // cardId = null;
-
-  /**
-   *
-   * @param {typeof SurveyFormSection} section
-   */
-  function SurveyForm(section) {
-    var _this;
-
-    _classCallCheck(this, SurveyForm);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "_survey", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "section", void 0);
-
-    _this.section = section;
-    return _this;
-  }
-  /**
-   *
-   * @returns {HTMLElement}
-   */
+        cardHeadingEl.setAttribute('data-bs-toggle', 'collapse');
+        cardHeadingEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
 
 
-  _createClass(SurveyForm, [{
-    key: "formElement",
-    get: function get() {
-      var el = _get(_getPrototypeOf(SurveyForm.prototype), "formElement", this);
+        let headingEl = cardHeadingEl.appendChild(document.createElement('h2'));
+        headingEl.className = 'mb-0';
 
-      if (!this._formFieldsBuilt) {
-        this.buildFormFields();
-      }
+        let buttonEl = headingEl.appendChild(document.createElement('button'));
+        buttonEl.className = `btn btn-link${(descriptor.collapsed ? ' collapsed' : '')}`;
 
-      return el;
-    }
-  }, {
-    key: "updateModelFromContent",
-    value: function updateModelFromContent() {
-      console.log('updating survey from SurveyForm content');
-
-      for (var key in this.fields) {
-        if (this.fields.hasOwnProperty(key)) {
-          var field = this.fields[key];
-          this._survey.attributes[key] = field.value;
+        if (descriptor.headingButtonId) {
+            buttonEl.id = descriptor.headingButtonId;
         }
-      }
 
-      console.log({
-        survey: this._survey
-      });
+        buttonEl.type = 'button';
+        buttonEl.setAttribute('data-bs-toggle', 'collapse');
+
+        if (descriptor.buttonStyleString) {
+            buttonEl.style.cssText = descriptor.buttonStyleString;
+        }
+
+        if (descriptor.cardDescriptionId) {
+            buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
+            buttonEl.setAttribute('aria-controls', descriptor.cardDescriptionId);
+        }
+
+        buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
+        buttonEl.innerHTML = `<div class="material-icons icon-show-collapsed">expand_more</div><div class="material-icons icon-hide-collapsed">unfold_less</div>${descriptor.headingHTML}`;
+
+        if (descriptor.headingNonbuttonHTML) {
+            const extraHeadingElement = headingEl.appendChild(document.createElement('span'));
+            extraHeadingElement.style.display = 'inline-block';
+            extraHeadingElement.innerHTML = descriptor.headingNonbuttonHTML;
+        }
+
+        if (descriptor.headingValidationWarningHTML) {
+            const headerValidationWarning = cardHeadingEl.appendChild(document.createElement('div'));
+            headerValidationWarning.className = 'card-invalid-feedback';
+            headerValidationWarning.innerHTML = `<small>${descriptor.headingValidationWarningHTML}</small>`;
+        }
+
+        let cardDescriptionEl = cardContainer.appendChild(document.createElement('div'));
+        if (descriptor.cardDescriptionId) {
+            cardDescriptionEl.id = descriptor.cardDescriptionId;
+        }
+        cardDescriptionEl.className = `collapse${(descriptor.collapsed ? '' : ' show')}`;
+        if (descriptor.cardHeadingId) {
+            cardDescriptionEl.setAttribute('aria-labelledby', descriptor.cardHeadingId);
+        }
+
+        cardDescriptionEl.setAttribute('data-parent', `#${descriptor.parentContainerId}`);
+
+        if (descriptor.dataAttributes) {
+            for (let key in descriptor.dataAttributes) {
+                if (descriptor.dataAttributes.hasOwnProperty(key)) {
+                    cardDescriptionEl.setAttribute(`data-${key}`, descriptor.dataAttributes[key]);
+                }
+            }
+        }
+
+        let cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
+        cardBodyEl.className = 'card-body pl-2 pr-2 pl-md-3 pr-md-3';
+        cardBodyEl.appendChild(descriptor.bodyContentElement);
+
+        return cardContainer;
+
+    //         `<div class="card-header" id="heading_${occurrence.id}">
+    //   <h2 class="mb-0">
+    //     <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')}" id="headingbutton_${occurrence.id}" type="button" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}" aria-expanded="true" aria-controls="description_${occurrence.id}">
+    //       Heading for (${occurrence.id}, ${taxon.canonical})
+    //     </button>
+    //   </h2>
+    // </div>
+    //
+    // <div id="description_${occurrence.id}" class="collapse${(this.controller.currentOccurrenceId === occurrence.id ? ' show' : '')}" aria-labelledby="heading_${occurrence.id}" data-parent="#occurrenceslist" data-occurrenceId="${occurrence.id}">
+    //   <div class="card-body">
+    //     Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+    //   </div>
+    // </div>`;
     }
+}
+
+// not found view
+
+class NotFoundView extends Page {
+    body() {
+        // at this point the entire content of #body should be safe to replace
+
+        let pathPrefix = window.location.pathname.split('/')[1];
+
+        const bodyEl = document.getElementById('body');
+        bodyEl.innerHTML = `<h2>Page not found</h2><p><a href="/${pathPrefix}/list">Return to the homepage.</a>`;
+    }
+}
+
+class SurveyForm extends Form {
+
+    /**
+     * sections keyed by numerical order
+     *
+     * @type {Array.<typeof SurveyFormSection>}
+     */
+    static sections = [];
+
+    /**
+     *
+     * @type {Object.<string, typeof SurveyFormSection>}
+     */
+    static sectionsByKey = {};
+
+    /**
+     * @protected
+     * @type {Survey}
+     */
+    _survey;
+
+    /**
+     * @type {typeof SurveyFormSection}
+     */
+    section;
+
+    // /**
+    //  * id of this section on the left-pane carousel
+    //  *
+    //  * @type {string|null}
+    //  */
+    // cardId = null;
+
+    /**
+     *
+     * @param {typeof SurveyFormSection} section
+     */
+    constructor(section) {
+        super();
+        this.section = section;
+    }
+
+    /**
+     *
+     * @returns {HTMLElement}
+     */
+    get formElement() {
+        let el = super.formElement;
+
+        if (!this._formFieldsBuilt) {
+            this.buildFormFields();
+        }
+
+        return el;
+    }
+
+    updateModelFromContent() {
+        console.log('updating survey from SurveyForm content');
+
+        for (let key in this.fields) {
+            if (this.fields.hasOwnProperty(key)) {
+                let field = this.fields[key];
+
+                this._survey.attributes[key] = field.value;
+            }
+        }
+
+        console.log({survey: this._survey});
+    }
+
     /**
      *
      * @param {Survey} model
      */
-
-  }, {
-    key: "model",
-    get: function get() {
-      return this._survey;
+    set model (model) {
+        this._survey = model;
+        this.populateFormContent();
     }
+
+    get model() {
+        return this._survey;
+    }
+
     /**
      * the change event triggers after a field has changed, before the value has been read back into the model
      *
@@ -10815,1159 +4993,270 @@ var SurveyForm = /*#__PURE__*/function (_Form) {
      *     'eventName' : string
      * }} event
      */
-    ,
-    set: function set(model) {
-      this._survey = model;
-      this.populateFormContent();
-    }
-  }, {
-    key: "changeHandler",
-    value: function changeHandler(event) {
-      console.log({
-        'survey form change event': event
-      }); //this.liveValidation = true; // after the first change start reflecting state
+    changeHandler(event) {
+        console.log({'survey form change event' : event});
+        //this.liveValidation = true; // after the first change start reflecting state
 
-      this.fireEvent(Form.CHANGE_EVENT, {
-        form: this
-      });
+        this.fireEvent(Form.CHANGE_EVENT, {form: this});
     }
-  }, {
-    key: "destructor",
-    value: function destructor() {
-      _get(_getPrototypeOf(SurveyForm.prototype), "destructor", this).call(this);
 
-      this._survey = null;
+    destructor() {
+        super.destructor();
+        this._survey = null;
     }
+
     /**
      *
      * @param {typeof SurveyFormSection} formClass
      */
+    static registerSection(formClass) {
+        SurveyForm.sections[formClass.sectionSortOrder] = formClass;
+        SurveyForm.sectionsByKey[formClass.sectionNavigationKey] = formClass;
+    }
 
-  }, {
-    key: "initialiseFormFields",
-    value:
     /**
      *
      */
-    function initialiseFormFields() {
-      var properties = this.section.properties;
-      this.fields = {};
+    initialiseFormFields() {
+        const properties = this.section.properties;
 
-      for (var key in properties) {
-        if (properties.hasOwnProperty(key)) {
-          // noinspection JSPotentiallyInvalidConstructorUsage
-          this.fields[key] = new properties[key].field(properties[key].attributes);
+        this.fields = {};
+
+        for (let key in properties) {
+            if (properties.hasOwnProperty(key)) {
+                // noinspection JSPotentiallyInvalidConstructorUsage
+                this.fields[key] = new properties[key].field(properties[key].attributes);
+            }
         }
-      }
     }
+
     /**
      *
      * @returns {Object<string, {field: FormField, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>}
      */
-
-  }, {
-    key: "getFormSectionProperties",
-    value: function getFormSectionProperties() {
-      return this.section.properties;
+    getFormSectionProperties() {
+        return this.section.properties;
     }
+
     /**
      *
      * @returns {boolean}
      */
-
-  }, {
-    key: "sectionCompletionRequired",
-    value: function sectionCompletionRequired() {
-      return this.section.completionRequired;
+    sectionCompletionRequired() {
+        return this.section.completionRequired;
     }
-  }], [{
-    key: "registerSection",
-    value: function registerSection(formClass) {
-      SurveyForm.sections[formClass.sectionSortOrder] = formClass;
-      SurveyForm.sectionsByKey[formClass.sectionNavigationKey] = formClass;
-    }
-  }]);
-
-  return SurveyForm;
-}(Form);
-
-_defineProperty(SurveyForm, "sections", []);
-
-_defineProperty(SurveyForm, "sectionsByKey", {});
+}
 
 class S{static tetradOffsets={E:[0,8e3],J:[2e3,8e3],P:[4e3,8e3],U:[6e3,8e3],Z:[8e3,8e3],D:[0,6e3],I:[2e3,6e3],N:[4e3,6e3],T:[6e3,6e3],Y:[8e3,6e3],C:[0,4e3],H:[2e3,4e3],M:[4e3,4e3],S:[6e3,4e3],X:[8e3,4e3],B:[0,2e3],G:[2e3,2e3],L:[4e3,2e3],R:[6e3,2e3],W:[8e3,2e3],A:[0,0],F:[2e3,0],K:[4e3,0],Q:[6e3,0],V:[8e3,0]};static quadrantOffsets={NW:[0,5e3],NE:[5e3,5e3],SW:[0,0],SE:[5e3,0]};static letterMapping={A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,J:8,K:9,L:10,M:11,N:12,O:13,P:14,Q:15,R:16,S:17,T:18,U:19,V:20,W:21,X:22,Y:23,Z:24};static tetradLetters="ABCDEFGHIJKLMNPQRSTUVWXYZ";preciseGridRef="";length=0;hectad="";tetrad="";tetradLetter="";quadrant="";quadrantCode="";gridCoords=null;error=!1;errorMessage="";set_tetrad(){if(this.tetradLetter=S.tetradLetters.substr(5*(Math.floor(this.gridCoords.x%1e4/1e3)>>1)+(Math.floor(this.gridCoords.y%1e4/1e3)>>1),1),!this.tetradLetter)throw new Error("Failed to get tetrad letter when processing '"+this.preciseGridRef+"', easting="+this.gridCoords.x+" northing="+this.gridCoords.y);this.tetrad=this.hectad+this.tetradLetter;}static get_normalized_precision(S,N){return S>2e3?1e4:S>1e3?2e3:S>100?1e3:S>10?100:S>1?10:N||1}}const N=Math.PI/180,t=180/Math.PI;class e{lat;lng;constructor(S,N){this.lat=S,this.lng=N;}static _transform(S,t,T,s,r,a,h,i,o,n,d,M,H,O){const l=1e-6*O;let J=T/Math.sqrt(1-s*(Math.sin(S)*Math.sin(S)));const c=(J+r)*Math.cos(S)*Math.cos(t),g=(J+r)*Math.cos(S)*Math.sin(t),U=((1-s)*J+r)*Math.sin(S),L=d/3600*N,u=M/3600*N,C=H/3600*N,Y=c+c*l-g*C+U*u+i,f=c*C+g+g*l-U*L+o,P=-1*c*u+g*L+U+U*l+n;t=Math.atan(f/Y);const D=Math.sqrt(Y*Y+f*f);S=Math.atan(P/(D*(1-h))),J=a/Math.sqrt(1-h*(Math.sin(S)*Math.sin(S)));let K=1,X=0;for(;K>.001;)X=Math.atan((P+h*J*Math.sin(S))/D),K=Math.abs(X-S),S=X;return new e(S,t)}static _Marc(S,N,t,e){return S*((1+N+5/4*(N*N)+5/4*(N*N*N))*(e-t)-(3*N+N*N*3+21/8*(N*N*N))*Math.sin(e-t)*Math.cos(e+t)+(15/8*(N*N)+15/8*(N*N*N))*Math.sin(2*(e-t))*Math.cos(2*(e+t))-35/24*(N*N*N)*Math.sin(3*(e-t))*Math.cos(3*(e+t)))}}class T extends e{constructor(S,N){super(S,N);}}class s extends e{constructor(S,N){super(S,N);}to_WGS84(){let S=6377563.396,e=.00667054007;const s=this.lat*N,r=Math.sin(s),a=this.lng*N,h=S/Math.sqrt(1-e*(r*r)),i=h*Math.cos(s)*Math.cos(a),o=h*Math.cos(s)*Math.sin(a),n=(1-e)*h*r,d=-204894e-10,M=7.28190110241429e-7,H=119748977294801e-20,O=446.448+i*(1+d)+-M*o+H*n,l=408261589226812e-20*i-124.157+o*(1+d)+-M*n,J=542.06+-H*i+M*o+n*(1+d);S=6378137,e=.00669438003;const c=Math.sqrt(O*O+l*l);let g=Math.atan(J/(c*(1-e)));for(let N=1;N<10;++N){let N=Math.sin(g);g=Math.atan((J+e*(S/Math.sqrt(1-e*(N*N)))*N)/c);}return new T(t*g,t*Math.atan(l/O))}static from_wgs84(S){const e=S.lat*N,T=S.lng*N,r=.00669438037928458,a=.0066705397616,h=20.4894*1e-6;let i=6378137/Math.sqrt(1-r*Math.sin(e)*Math.sin(e));const o=(i+0)*Math.cos(e)*Math.cos(T),n=(i+0)*Math.cos(e)*Math.sin(T),d=((1-r)*i+0)*Math.sin(e),M=-.1502/3600*N,H=-.247/3600*N,O=-.8421/3600*N,l=o+o*h-n*O+d*H-446.448,J=o*O+n+n*h-d*M+125.157,c=-1*o*H+n*M+d+d*h+-542.06,g=Math.atan(J/l),U=Math.sqrt(l*l+J*J);let L=Math.atan(c/(U*(1-a)));i=6377563.396/Math.sqrt(1-a*(Math.sin(L)*Math.sin(L)));let u=1,C=0;for(;u>.001;)C=Math.atan((c+a*i*Math.sin(L))/U),u=Math.abs(C-L),L=C;return new s(L*t,g*t)}}class r extends e{constructor(S,N){super(S,N);}static from_wgs84(S){const T=S.lat*N,s=S.lng*N,a=e._transform(T,s,6378137,.00669438037928458,0,6378388,.0067226700223333,83.901,98.127,118.635,0,0,0,0);return new r(a.lat*t,a.lng*t)}}class a extends e{constructor(S,N){super(S,N);}to_WGS84(){const S=e._transform(this.lat*N,this.lng*N,6377340.189,.00667054015,0,6378137,.00669438037928458,482.53,-130.596,564.557,-1.042,-.214,-.631,-8.15);return new T(S.lat*t,S.lng*t)}static from_wgs84(S){const T=S.lat*N,s=S.lng*N,r=e._transform(T,s,6378137,.00669438037928458,0,6377340.189,.00667054015,-482.53,130.596,-564.557,1.042,.214,.631,8.15);return new a(r.lat*t,r.lng*t)}}class h{x;y;constructor(){}to_latLng(){}to_gridref(S){}static tetradLetters="ABCDEFGHIJKLMNPQRSTUVWXYZ";static tetradLettersRowFirst="AFKQVBGLRWCHMSXDINTYEJPUZ";static from_latlng(S,N){if(N>=-8.74&&S>49.88){let t=new s.from_wgs84(new T(S,N)).to_os_coords();if(t.x>=0&&t.is_gb_hectad())return t}if(N<-5.3&&S>51.34&&N>-11&&S<55.73){let t=new a.from_wgs84(new T(S,N)).to_os_coords();return t.x<0||t.y<0?null:t}{let t=new r.from_wgs84(new T(S,N)).to_os_coords();if(t.x>=5e5&&t.x<6e5&&t.y>=54e5&&t.y<56e5)return t}return null}static calculate_tetrad(S,N){return S>=0&&N>=0?h.tetradLetters.charAt(5*Math.floor(S%1e4/2e3)+Math.floor(N%1e4/2e3)):""}toString(){return this.x+","+this.y}}const i=function(S,N,t,e){let T="00000"+Math.floor(N),s="00000"+Math.floor(t);if(2e3===e)return S+T.charAt(T.length-5)+s.charAt(s.length-5)+h.calculate_tetrad(N,t);if(1e5===e)return S;{5e3===e&&(e=1e4);let N=Math.round(Math.log10(e));return S+(N?T.slice(-5,-N)+s.slice(-5,-N):T.slice(-5)+s.slice(-5))}};class o extends h{country="CI";constructor(S,N){super(),this.x=S,this.y=N;}to_latLng(){var S=.9996,N=.0067226700223333,e=6378388*S,s=6356911.946*S,r=this.x-5e5,a=d(this.y,0,e,0,.0016863406508729017,s),h=e/Math.sqrt(1-N*(Math.sin(a)*Math.sin(a))),i=h*(1-N)/(1-N*Math.sin(a)*Math.sin(a)),o=h/i-1,M=Math.tan(a)*Math.tan(a),H=Math.pow(Math.tan(a),4),O=Math.pow(Math.tan(a),6),l=Math.pow(Math.cos(a),-1),J=Math.tan(a)/(2*i*h),c=Math.tan(a)/(24*i*(h*h*h))*(5+3*M+o-9*o*M),g=Math.tan(a)/(720*i*Math.pow(h,5))*(61+90*M+45*H),U=a-r*r*J+Math.pow(r,4)*c-Math.pow(r,6)*g,L=Math.pow(Math.cos(a),-1)/h,u=l/(h*h*h*6)*(h/i+2*M),C=l/(120*Math.pow(h,5))*(5+28*M+24*H),Y=l/(5040*Math.pow(h,7))*(61+662*M+1320*H+720*O),f=r*L-.0523598775598-r*r*r*u+Math.pow(r,5)*C-Math.pow(r,7)*Y,P=n(U,f);return new T(P.lat*t,P.lng*t)}to_gridref(S){return this.y>=55e5?i("WA",this.x-5e5,this.y-55e5,S||1):this.y<55e5?i("WV",this.x-5e5,this.y-54e5,S||1):null}to_hectad(){return this.y>55e5?"WA"+this.x.toString().substring(1,2)+this.y.toString().substring(2,3):this.y<55e5?"WV"+this.x.toString().substring(1,2)+this.y.toString().substring(2,3):null}}const n=function(S,N){return e._transform(S,N,6378388,.0067226700223333,10,6378137,.00669438037928458,-83.901,-98.127,-118.635,0,0,0,0)},d=function(S,N,t,T,s,r){for(var a=(S-N)/t+T,h=e._Marc(r,s,T,a),i=(S-N-h)/t+a,o=0;Math.abs(S-N-h)>1e-5&&o<20;)o+=1,i=(S-N-h)/t+a,h=e._Marc(r,s,T,i),a=i;return i};class M extends S{country="CI";GridCoords=o;gridCoords=null;constructor(){super(),this.parse_well_formed=this.from_string;}from_string(N){let t,e=N.replace(/[\[\]\s\t.\/-]+/g,"").toUpperCase(),T="";/[ABCDEFGHIJKLMNPQRSTUVWXYZ]$/.test(e)&&(S.quadrantOffsets.hasOwnProperty(e.substr(e.length-2))?(this.quadrantCode=e.substr(e.length-2),e=e.substr(0,e.length-2)):(T=e.substr(e.length-1),e=e.substr(0,e.length-1))),/^(W[AV](?:\d\d){1,5})$/.test(e)?(t=M.gridref_string_to_e_n_l(e))?(this.length=t.length,this.gridCoords=new o(t.e,t.n),this.hectad=this.gridCoords.to_gridref(1e4),1e4===this.length&&(T||this.quadrantCode)?T?(this.preciseGridRef=e+T,this.tetrad=this.hectad+T,this.tetradLetter=T,this.length=2e3,this.gridCoords.x+=S.tetradOffsets[T][0],this.gridCoords.y+=S.tetradOffsets[T][1]):(this.preciseGridRef=e+this.quadrantCode,this.tetradLetter="",this.tetrad="",this.quadrant=this.preciseGridRef,this.length=5e3,this.gridCoords.x+=S.quadrantOffsets[this.quadrantCode][0],this.gridCoords.y+=S.quadrantOffsets[this.quadrantCode][1]):(this.preciseGridRef=e,this.length<=1e3&&this.set_tetrad())):(this.error=!0,this.errorMessage="Grid reference format not understood (odd length)."):(this.error=!0,this.errorMessage="Channel Island grid reference format not understood. ('"+N+"')");}static gridref_string_to_e_n_l(S){let N,t,e,T,s=S.substr(0,2);if("WA"===s)N=55e5;else {if("WV"!==s)return console.log("Bad Channel Island grid letters: '"+s+"'"),!1;N=54e5;}let r=S.substr(2);switch(r.length){case 2:t=1e4*r.charAt(0),e=1e4*r.charAt(1),T=1e4;break;case 4:t=1e3*r.substr(0,2),e=1e3*r.substr(2),T=1e3;break;case 6:t=100*r.substr(0,3),e=100*r.substr(3),T=100;break;case 8:t=10*r.substr(0,4),e=10*r.substr(4),T=10;break;case 10:t=parseInt(r.substr(0,5),10),e=parseInt(r.substr(5),10),T=1;break;default:return console.log("Bad length for Channel Island grid ref '"+S+"'"),!1}return {e:t+5e5,n:e+N,length:T}}}class H extends h{gridCoords=null;constructor(S,N){super(),this.x=S,this.y=N;}country="GB";static gbHectads="SV80SV81SV90SV91SW32SW33SW42SW43SW44SW52SW53SW54SW61SW62SW63SW64SW65SW71SW72SW73SW74SW75SW76SW81SW82SW83SW84SW85SW86SW87SW95SW96SW97SS10SS11SS20SS21SS30SW83SW84SW85SW93SW94SW95SW96SW97SW98SX03SX04SX05SX06SX07SX08SX09SX14SX15SX16SX17SX18SX19SX25SX26SX27SX28SX29SX35SX36SX37SX38SX39SX44SX45SX46SX47SS70SS80SS81SS90SS91ST00ST01ST10ST11ST20ST21ST30SX37SX44SX45SX46SX47SX48SX54SX55SX56SX57SX58SX63SX64SX65SX66SX67SX68SX69SX73SX74SX75SX76SX77SX78SX79SX83SX84SX85SX86SX87SX88SX89SX94SX95SX96SX97SX98SX99SY07SY08SY09SY18SY19SY28SY29SY38SY39SS14SS20SS21SS22SS30SS31SS32SS40SS41SS42SS43SS44SS50SS51SS52SS53SS54SS60SS61SS62SS63SS64SS70SS71SS72SS73SS74SS75SS80SS81SS82SS83SS91SS92ST01ST02SX28SX29SX37SX38SX39SX48SX49SX58SX59SX68SX69SX79SS73SS74SS82SS83SS84SS92SS93SS94ST01ST02ST03ST04ST11ST12ST13ST14ST20ST21ST22ST23ST24ST25ST30ST31ST32ST33ST34ST40ST41ST42ST50ST51ST52ST61ST62ST71ST72ST24ST25ST26ST32ST33ST34ST35ST36ST37ST42ST43ST44ST45ST46ST47ST52ST53ST54ST55ST56ST57ST62ST63ST64ST65ST66ST67ST72ST73ST74ST75ST76ST77ST83ST84ST85ST86SP00SP10ST76ST77ST85ST86ST87ST88ST89ST96ST97ST98ST99SU06SU07SU08SU09SU16SU17SU18SU19SU26SU27SU28SU29SU36SU37ST73ST74ST75ST76ST82ST83ST84ST85ST86ST91ST92ST93ST94ST95ST96SU01SU02SU03SU04SU05SU06SU11SU12SU13SU14SU15SU16SU21SU22SU23SU24SU25SU26SU31SU32SU34SU35SU36ST20ST30ST40ST50ST51ST60ST61ST70ST71ST72ST73ST80ST81ST82ST83ST90ST91ST92SU00SU01SU02SU10SU11SY39SY48SY49SY58SY59SY66SY67SY68SY69SY77SY78SY79SY87SY88SY89SY97SY98SY99SZ07SZ08SZ09SZ28SZ38SZ39SZ47SZ48SZ49SZ57SZ58SZ59SZ68SZ69SU00SU01SU02SU10SU11SU12SU20SU21SU22SU23SU30SU31SU32SU33SU40SU41SU42SU43SU50SU51SU52SU60SU61SU62SU70SU71SU72SZ08SZ09SZ19SZ29SZ38SZ39SZ49SZ59SZ69SZ79SU23SU24SU25SU33SU34SU35SU36SU42SU43SU44SU45SU46SU52SU53SU54SU55SU56SU62SU63SU64SU65SU66SU72SU73SU74SU75SU76SU82SU83SU84SU85SU86SU70SU71SU72SU80SU81SU82SU83SU90SU91SU92SU93SZ79SZ89SZ99TQ00TQ01TQ02TQ03TQ10TQ11TQ12TQ13TQ20TQ21TQ22TQ23TQ30TQ31TQ32TQ20TQ21TQ22TQ23TQ30TQ31TQ32TQ33TQ40TQ41TQ42TQ43TQ44TQ50TQ51TQ52TQ53TQ54TQ60TQ61TQ62TQ63TQ70TQ71TQ72TQ80TQ81TQ82TQ91TQ92TV49TV59TV69TQ65TQ72TQ73TQ74TQ75TQ76TQ77TQ82TQ83TQ84TQ85TQ86TQ87TQ91TQ92TQ93TQ94TQ95TQ96TQ97TR01TR02TR03TR04TR05TR06TR07TR12TR13TR14TR15TR16TR23TR24TR25TR26TR27TR33TR34TR35TR36TR37TR46TR47TQ35TQ36TQ37TQ38TQ43TQ44TQ45TQ46TQ47TQ48TQ53TQ54TQ55TQ56TQ57TQ58TQ63TQ64TQ65TQ66TQ67TQ72TQ73TQ74TQ75TQ76TQ77TQ78TQ87TQ88TQ97SU83SU84SU85SU86SU93SU94SU95SU96SU97TQ03TQ04TQ05TQ06TQ07TQ13TQ14TQ15TQ16TQ17TQ23TQ24TQ25TQ26TQ27TQ33TQ34TQ35TQ36TQ37TQ38TQ43TQ44TQ45TL30TL40TL50TL60TL70TL80TL90TM00TQ38TQ39TQ47TQ48TQ49TQ57TQ58TQ59TQ67TQ68TQ69TQ77TQ78TQ79TQ88TQ89TQ98TQ99TR08TR09TR19TL30TL31TL34TL40TL41TL42TL43TL44TL50TL51TL52TL53TL54TL60TL61TL62TL63TL64TL70TL71TL72TL73TL74TL80TL81TL82TL83TL84TL90TL91TL92TL93TM01TM02TM03TM11TM12TM13TM21TM22TM23TQ49SP81SP90SP91TL00TL01TL02TL10TL11TL12TL13TL20TL21TL22TL23TL24TL30TL31TL32TL33TL34TL41TL42TL43TL44TL51TL52TQ09TQ19TQ29TQ39TL20TL30TQ06TQ07TQ08TQ09TQ16TQ17TQ18TQ19TQ27TQ28TQ29TQ37TQ38TQ39SP20SP30SP40SP41SP50SU19SU26SU27SU28SU29SU36SU37SU38SU39SU46SU47SU48SU49SU56SU57SU58SU59SU66SU67SU68SU69SU76SU77SU78SU86SU87SU88SU96SU97SU98SP10SP20SP21SP22SP23SP30SP31SP32SP33SP34SP40SP41SP42SP43SP44SP45SP50SP51SP52SP53SP54SP60SP61SP62SP63SP70SU29SU39SU49SU57SU58SU59SU67SU68SU69SU77SU78SU79SP51SP53SP60SP61SP62SP63SP64SP70SP71SP72SP73SP74SP80SP81SP82SP83SP84SP85SP90SP91SP92SP93SP94SP95SU78SU79SU88SU89SU97SU98SU99TL00TL01TQ07TQ08TQ09TG40TG50TM03TM04TM05TM06TM07TM13TM14TM15TM16TM17TM23TM24TM25TM26TM27TM28TM33TM34TM35TM36TM37TM38TM39TM44TM45TM46TM47TM48TM49TM57TM58TM59TL64TL65TL66TL67TL68TL74TL75TL76TL77TL78TL83TL84TL85TL86TL87TL88TL93TL94TL95TL96TL97TL98TM03TM04TM05TM06TM07TM08TG00TG01TG02TG03TG04TG10TG11TG12TG13TG14TG20TG21TG22TG23TG24TG30TG31TG32TG33TG40TG41TG42TG50TG51TM07TM08TM09TM17TM18TM19TM27TM28TM29TM38TM39TM49TM59TF40TF41TF42TF50TF51TF52TF53TF60TF61TF62TF63TF64TF70TF71TF72TF73TF74TF80TF81TF82TF83TF84TF90TF91TF92TF93TF94TG00TG01TG02TG03TG04TL49TL59TL68TL69TL78TL79TL87TL88TL89TL98TL99TM07TM08TM09TF20TF30TF31TF40TF41TF50TL15TL19TL23TL24TL25TL26TL28TL29TL33TL34TL35TL36TL37TL38TL39TL44TL45TL46TL47TL48TL49TL54TL55TL56TL57TL58TL59TL63TL64TL65TL66TL67TL68TL69TL75TL76SP91SP92SP93SP94SP95SP96TL01TL02TL03TL04TL05TL06TL07TL11TL12TL13TL14TL15TL16TL23TL24TL25TL06TL07TL08TL09TL15TL16TL17TL18TL19TL25TL26TL27TL28TL29TL36TL37TL38TL39SK90SP43SP44SP45SP46SP53SP54SP55SP56SP57SP58SP63SP64SP65SP66SP67SP68SP73SP74SP75SP76SP77SP78SP79SP84SP85SP86SP87SP88SP89SP95SP96SP97SP98SP99TF00TF10TF20TL06TL07TL08TL09TL18TL19TL29SO70SO71SO80SO81SO82SO83SO90SO91SO92SO93SO94SP00SP01SP02SP03SP04SP10SP11SP12SP13SP14SP15SP20SP21SP22SP23SP24SP25ST99SU09SU19SU29SO50SO51SO60SO61SO62SO63SO70SO71SO72SO73SO80SO81SO82SO83SO90ST57ST58ST59ST66ST67ST68ST69ST76ST77ST78ST79ST87ST88ST89ST98ST99SO10SO11SO20SO21SO22SO23SO30SO31SO32SO40SO41SO42SO50SO51ST18ST19ST27ST28ST29ST37ST38ST39ST47ST48ST49ST58ST59SO22SO23SO24SO25SO26SO32SO33SO34SO35SO36SO37SO41SO42SO43SO44SO45SO46SO47SO51SO52SO53SO54SO55SO56SO57SO61SO62SO63SO64SO65SO66SO73SO74SO75SO76SO56SO64SO65SO66SO67SO72SO73SO74SO75SO76SO77SO78SO82SO83SO84SO85SO86SO87SO88SO93SO94SO95SO96SO97SO98SO99SP03SP04SP05SP06SP07SP08SP13SP14SP16SP17SP18SK10SK20SK30SP04SP05SP06SP07SP08SP09SP14SP15SP16SP17SP18SP19SP22SP23SP24SP25SP26SP27SP28SP29SP33SP34SP35SP36SP37SP38SP39SP44SP45SP46SP47SP48SP49SP55SP56SP57SP58SJ63SJ70SJ71SJ72SJ73SJ74SJ75SJ80SJ81SJ82SJ83SJ84SJ85SJ86SJ90SJ91SJ92SJ93SJ94SJ95SJ96SK00SK01SK02SK03SK04SK05SK06SK10SK11SK12SK13SK14SK15SK16SK20SK21SK22SO77SO78SO79SO88SO89SO98SO99SP08SP09SP19SP29SJ20SJ21SJ22SJ23SJ30SJ31SJ32SJ33SJ34SJ40SJ41SJ42SJ43SJ50SJ51SJ52SJ53SJ54SJ60SJ61SJ62SJ63SJ64SJ70SJ71SJ72SJ73SJ74SJ80SO17SO18SO27SO28SO29SO37SO38SO39SO46SO47SO48SO49SO56SO57SO58SO59SO66SO67SO68SO69SO77SO78SO79SO88SO89SN50SN60SN61SN70SN71SN80SN81SN90SO00SO01SO10SO11SS38SS39SS48SS49SS58SS59SS68SS69SS77SS78SS79SS87SS88SS89SS96SS97SS98SS99ST06ST07ST08ST09ST16ST17ST18ST19ST26ST27ST28SN70SN71SN74SN80SN81SN82SN83SN84SN85SN86SN90SN91SN92SN93SN94SN95SN96SO00SO01SO02SO03SO04SO05SO06SO10SO11SO12SO13SO14SO21SO22SO23SO24SN86SN87SN96SN97SO04SO05SO06SO07SO08SO13SO14SO15SO16SO17SO18SO24SO25SO26SO27SO36SO37SN01SN02SN10SN11SN12SN20SN21SN22SN23SN24SN30SN31SN32SN33SN34SN40SN41SN42SN43SN44SN50SN51SN52SN53SN54SN60SN61SN62SN63SN64SN65SN71SN72SN73SN74SN75SN81SN82SN83SN84SS39SS49SS59SM50SM62SM70SM71SM72SM73SM80SM81SM82SM83SM84SM90SM91SM92SM93SM94SN00SN01SN02SN03SN04SN10SN11SN12SN13SN14SN22SN23SN24SR89SR99SS09SS19SN14SN15SN24SN25SN33SN34SN35SN36SN44SN45SN46SN54SN55SN56SN57SN58SN64SN65SN66SN67SN68SN69SN74SN75SN76SN77SN78SN79SN84SN85SN86SN87SN88SN89SH70SH71SH80SH81SH90SH91SH92SJ00SJ01SJ02SJ03SJ10SJ11SJ12SJ20SJ21SJ22SJ31SN69SN78SN79SN87SN88SN89SN97SN98SN99SO07SO08SO09SO18SO19SO28SO29SO39SH50SH51SH52SH53SH54SH60SH61SH62SH63SH64SH70SH71SH72SH73SH74SH80SH81SH82SH83SH84SH91SH92SH93SH94SH95SJ03SJ04SJ05SJ13SJ14SN59SN69SN79SH12SH13SH22SH23SH24SH32SH33SH34SH43SH44SH45SH46SH53SH54SH55SH56SH57SH64SH65SH66SH67SH74SH75SH76SH77SH78SH84SH85SH86SH87SH88SH74SH75SH76SH77SH84SH85SH86SH87SH88SH94SH95SH96SH97SH98SJ02SJ03SJ04SJ05SJ06SJ07SJ08SJ12SJ13SJ14SJ15SJ16SJ17SJ22SJ23SJ24SJ25SJ26SJ33SJ34SJ35SJ43SJ44SJ45SJ53SJ54SH97SH98SJ06SJ07SJ08SJ15SJ16SJ17SJ18SJ25SJ26SJ27SJ35SJ36SJ37SH27SH28SH29SH36SH37SH38SH39SH46SH47SH48SH49SH56SH57SH58SH59SH67SH68SK81SK82SK83SK84SK85SK86SK87SK90SK91SK92SK93SK94SK95SK96SK97TF00TF01TF02TF03TF04TF05TF06TF07TF10TF11TF12TF13TF14TF15TF16TF17TF20TF21TF22TF23TF24TF25TF30TF31TF32TF33TF34TF41TF42TF43TF44TF52SE60SE70SE71SE80SE81SE82SE90SE91SE92SK78SK79SK87SK88SK89SK97SK98SK99TA00TA01TA02TA10TA11TA12TA20TA21TA30TA31TA40TF07TF08TF09TF15TF16TF17TF18TF19TF24TF25TF26TF27TF28TF29TF33TF34TF35TF36TF37TF38TF39TF43TF44TF45TF46TF47TF48TF49TF54TF55TF56TF57TF58SK20SK21SK30SK31SK32SK40SK41SK42SK43SK50SK51SK52SK60SK61SK62SK70SK71SK72SK73SK74SK80SK81SK82SK83SK84SK90SK91SP39SP48SP49SP57SP58SP59SP68SP69SP78SP79SP89SP99TF00TF01SE60SE70SK42SK43SK44SK45SK46SK52SK53SK54SK55SK56SK57SK58SK59SK62SK63SK64SK65SK66SK67SK68SK69SK72SK73SK74SK75SK76SK77SK78SK79SK84SK85SK86SK87SK88SK89SK97SJ98SJ99SK03SK06SK07SK08SK09SK11SK12SK13SK14SK15SK16SK17SK18SK19SK21SK22SK23SK24SK25SK26SK27SK28SK31SK32SK33SK34SK35SK36SK37SK38SK42SK43SK44SK45SK46SK47SK48SK53SK56SK57SD90SE00SE10SJ18SJ19SJ27SJ28SJ29SJ35SJ36SJ37SJ38SJ39SJ44SJ45SJ46SJ47SJ48SJ54SJ55SJ56SJ57SJ58SJ63SJ64SJ65SJ66SJ67SJ68SJ69SJ74SJ75SJ76SJ77SJ78SJ79SJ85SJ86SJ87SJ88SJ89SJ96SJ97SJ98SJ99SK06SK07SK08SK09SK19SD20SD21SD22SD30SD31SD32SD40SD41SD42SD50SD51SD52SD53SD60SD61SD62SD63SD70SD71SD72SD73SD74SD80SD81SD82SD83SD84SD90SD91SD92SD93SD94SJ29SJ38SJ39SJ48SJ49SJ58SJ59SJ68SJ69SJ79SJ88SJ89SJ99SD22SD23SD32SD33SD34SD35SD36SD42SD43SD44SD45SD46SD47SD52SD53SD54SD55SD56SD57SD63SD64SD65SD66SD67SD68SD73SD78SE53SE54SE62SE63SE64SE65SE72SE73SE74SE75SE76SE82SE83SE84SE85SE86SE87SE92SE93SE94SE95SE96SE97SE98TA02TA03TA04TA05TA06TA07TA08TA12TA13TA14TA15TA16TA17TA18TA21TA22TA23TA24TA26TA27TA31TA32TA33TA41TA42NZ30NZ31NZ40NZ41NZ42NZ50NZ51NZ52NZ60NZ61NZ62NZ70NZ71NZ72NZ80NZ81NZ90NZ91SE37SE38SE39SE46SE47SE48SE49SE55SE56SE57SE58SE59SE64SE65SE66SE67SE68SE69SE75SE76SE77SE78SE79SE86SE87SE88SE89SE97SE98SE99TA08TA09TA18SD84SD90SD91SD92SD93SD94SD95SE00SE01SE02SE03SE04SE10SE11SE12SE13SE14SE20SE21SE22SE23SE30SE31SE32SE33SE40SE41SE42SE50SE51SE52SE60SE61SE62SE70SE71SE72SE81SE82SK18SK19SK28SK29SK38SK39SK47SK48SK49SK57SK58SK59SK69SD54SD55SD64SD65SD66SD67SD68SD73SD74SD75SD76SD77SD78SD84SD85SD86SD87SD88SD94SD95SD96SD97SD98SE04SE05SE06SE07SE13SE14SE15SE16SE17SE23SE24SE25SE26SE27SE32SE33SE34SE35SE36SE37SE42SE43SE44SE45SE46SE52SE53SE54SE55SE56SE62SE63SE64SE65SE72NY72NY80NY81NY82NY90NY91NY92NZ00NZ01NZ02NZ10NZ11NZ20NZ21NZ30NZ31SD68SD69SD78SD79SD88SD89SD97SD98SD99SE07SE08SE09SE17SE18SE19SE27SE28SE29SE36SE37SE38SE39SE46SE47NY73NY74NY82NY83NY84NY92NY93NY94NY95NZ01NZ02NZ03NZ04NZ05NZ11NZ12NZ13NZ14NZ15NZ16NZ20NZ21NZ22NZ23NZ24NZ25NZ26NZ30NZ31NZ32NZ33NZ34NZ35NZ36NZ41NZ42NZ43NZ44NZ45NZ46NZ52NZ53NT60NT70NT80NT90NU00NU10NU20NY58NY59NY64NY65NY66NY67NY68NY69NY74NY75NY76NY77NY78NY79NY84NY85NY86NY87NY88NY89NY94NY95NY96NY97NY98NY99NZ04NZ05NZ06NZ07NZ08NZ09NZ15NZ16NZ17NZ18NZ19NZ26NZ27NZ28NZ29NZ36NZ37NZ38NZ39NT70NT71NT73NT80NT81NT82NT83NT84NT90NT91NT92NT93NT94NT95NU00NU01NU02NU03NU04NU05NU10NU11NU12NU13NU14NU20NU21NU22NU23NZ09NZ19NY20NY21NY30NY31NY40NY41NY42NY50NY51NY52NY53NY60NY61NY62NY63NY70NY71NY72NY73NY80NY81NY82NY83SD16SD17SD18SD19SD26SD27SD28SD29SD36SD37SD38SD39SD46SD47SD48SD49SD57SD58SD59SD67SD68SD69SD78SD79SD89NX90NX91NX92NX93NY00NY01NY02NY03NY04NY05NY10NY11NY12NY13NY14NY15NY16NY20NY21NY22NY23NY24NY25NY26NY31NY32NY33NY34NY35NY36NY37NY41NY42NY43NY44NY45NY46NY47NY48NY52NY53NY54NY55NY56NY57NY58NY62NY63NY64NY65NY66NY67NY68NY73NY74NY75NY84SD08SD09SD17SD18SD19SD28SD29NX30NX40SC16SC17SC26SC27SC28SC36SC37SC38SC39SC47SC48SC49NS60NS61NS70NS71NS72NS80NS81NS90NT00NT01NT10NT11NT20NT21NT30NX69NX78NX79NX88NX89NX96NX97NX98NX99NY05NY06NY07NY08NY09NY16NY17NY18NY19NY26NY27NY28NY29NY36NY37NY38NY39NY47NY48NY49NS50NS60NX36NX37NX38NX45NX46NX47NX48NX49NX54NX55NX56NX57NX58NX59NX64NX65NX66NX67NX68NX69NX74NX75NX76NX77NX78NX79NX84NX85NX86NX87NX88NX95NX96NX97NX98NY05NY06NW95NW96NW97NX03NX04NX05NX06NX07NX13NX14NX15NX16NX17NX24NX25NX26NX27NX33NX34NX35NX36NX37NX43NX44NX45NX46NS00NS10NS14NS15NS16NS20NS21NS23NS24NS25NS26NS30NS31NS32NS33NS34NS35NS36NS40NS41NS42NS43NS44NS45NS50NS51NS52NS53NS54NS55NS60NS61NS62NS63NS64NS71NS72NS73NX07NX08NX09NX17NX18NX19NX27NX28NX29NX37NX38NX39NX48NX49NX59NS16NS17NS26NS27NS35NS36NS37NS44NS45NS46NS47NS54NS55NS56NS64NS65NS66NS53NS54NS55NS56NS57NS63NS64NS65NS66NS67NS71NS72NS73NS74NS75NS76NS77NS80NS81NS82NS83NS84NS85NS86NS87NS90NS91NS92NS93NS94NS95NS96NT00NT01NT02NT03NT04NT05NT14NT01NT02NT03NT04NT05NT11NT12NT13NT14NT15NT21NT22NT23NT24NT25NT32NT33NT34NT10NT11NT20NT21NT22NT23NT30NT31NT32NT33NT34NT41NT42NT43NT44NT53NT20NT30NT31NT40NT41NT42NT43NT44NT50NT51NT52NT53NT54NT60NT61NT62NT63NT64NT70NT71NT72NT73NT74NT81NT82NT83NY39NY47NY48NY49NY58NY59NY69NT44NT45NT46NT53NT54NT55NT56NT63NT64NT65NT66NT73NT74NT75NT76NT77NT83NT84NT85NT86NT87NT94NT95NT96NT36NT37NT45NT46NT47NT48NT55NT56NT57NT58NT65NT66NT67NT68NT76NT77NS95NS96NT05NT06NT15NT16NT17NT24NT25NT26NT27NT34NT35NT36NT37NT43NT44NT45NT46NS86NS87NS95NS96NS97NS98NT06NT07NT08NT16NT17NO00NO01NO10NO11NO20NO21NO22NO30NO31NO32NO40NO41NO42NO50NO51NO52NO60NO61NS99NT08NT09NT18NT19NT28NT29NT39NT49NT59NT69NN30NN31NN40NN41NS38NS39NS47NS48NS49NS57NS58NS59NS67NS68NS69NS77NS78NS79NS86NS87NS88NS89NS97NS98NN21NN22NN30NN31NN32NN40NN41NN42NN50NN51NN52NN60NN61NN70NN71NN80NN81NN90NN91NO00NS49NS59NS69NS79NS88NS89NS98NS99NT08NT09NN22NN23NN32NN33NN34NN35NN42NN43NN44NN45NN46NN47NN51NN52NN53NN54NN55NN56NN57NN61NN62NN63NN64NN65NN66NN67NN71NN72NN73NN74NN75NN76NN77NN81NN82NN83NN84NN85NN86NN90NN91NN92NN93NN94NN95NN96NO00NO01NO02NO03NO04NO11NO12NO13NO21NN56NN57NN66NN67NN68NN76NN77NN78NN86NN87NN88NN94NN95NN96NN97NN98NO02NO03NO04NO05NO06NO07NO08NO11NO12NO13NO14NO15NO16NO17NO21NO22NO23NO24NO25NO32NO33NO34NO15NO16NO17NO23NO24NO25NO26NO27NO28NO32NO33NO34NO35NO36NO37NO38NO42NO43NO44NO45NO46NO47NO48NO53NO54NO55NO56NO57NO58NO63NO64NO65NO66NO67NO74NO75NO76NJ60NJ70NJ80NJ90NO57NO58NO66NO67NO68NO69NO76NO77NO78NO79NO86NO87NO88NO89NO99NH90NJ00NJ10NJ11NJ20NJ21NJ30NJ31NJ32NJ40NJ41NJ42NJ50NJ51NJ52NJ60NJ61NJ62NJ70NJ71NJ72NJ80NJ81NJ82NJ90NJ91NJ92NK02NN98NN99NO07NO08NO09NO17NO18NO19NO27NO28NO29NO37NO38NO39NO48NO49NO58NO59NO68NO69NO79NO89NJ31NJ32NJ33NJ34NJ42NJ43NJ44NJ52NJ53NJ54NJ55NJ62NJ63NJ64NJ65NJ72NJ73NJ74NJ75NJ76NJ82NJ83NJ84NJ85NJ86NJ92NJ93NJ94NJ95NJ96NK02NK03NK04NK05NK06NK13NK14NK15NH90NJ00NJ01NJ10NJ11NJ12NJ13NJ14NJ21NJ22NJ23NJ24NJ25NJ32NJ33NJ34NJ35NJ36NJ42NJ43NJ44NJ45NJ46NJ54NJ55NJ56NJ64NJ65NJ66NJ74NJ75NJ76NJ86NN99NH72NH81NH82NH91NH92NH93NH94NH95NH96NJ00NJ01NJ02NJ03NJ04NJ05NJ06NJ11NJ12NJ13NJ14NJ15NJ16NJ17NJ23NJ24NJ25NJ26NJ27NJ34NJ35NJ36NJ45NH01NH02NH10NH11NH12NH13NH14NH20NH21NH22NH23NH24NH30NH31NH32NH33NH34NH40NH41NH42NH43NH44NH50NH51NH52NH53NH54NH60NH61NH62NH63NH64NH70NH71NH72NH73NH74NH75NH80NH81NH82NH83NH84NH85NH90NH91NH92NH93NH94NH95NH96NJ00NJ01NN39NN46NN47NN48NN49NN56NN57NN58NN59NN67NN68NN69NN77NN78NN79NN88NN89NN98NN99NG60NG70NG71NG72NG80NG81NG82NG90NG91NH00NH01NH10NH20NH30NM46NM47NM54NM55NM56NM57NM64NM65NM66NM67NM68NM69NM74NM75NM76NM77NM78NM79NM84NM85NM86NM87NM88NM89NM95NM96NM97NM98NM99NN05NN06NN07NN08NN09NN16NN17NN18NN19NN26NN27NN28NN29NN35NN36NN37NN38NN39NN46NN47NN48NN49NN57NN58NN59NM70NM71NM72NM73NM80NM81NM82NM83NM84NM90NM91NM92NM93NM94NM95NN00NN01NN02NN03NN04NN05NN10NN11NN12NN13NN14NN15NN16NN20NN21NN22NN23NN24NN25NN26NN30NN33NN34NN35NN36NN44NN45NN46NR79NR88NR89NR96NR97NR98NR99NS06NS07NS08NS09NS16NS17NS18NS19NS28NS29NN20NN21NN30NN31NS28NS29NS37NS38NS39NS46NS47NS48NS56NS57NR82NR83NR84NR92NR93NR94NR95NR96NR97NS01NS02NS03NS04NS05NS06NS07NS15NS16NR50NR51NR60NR61NR62NR63NR64NR65NR67NR68NR70NR71NR72NR73NR74NR75NR76NR77NR78NR79NR83NR84NR85NR86NR87NR88NR89NR95NR96NM40NM60NM61NM70NM71NR15NR16NR24NR25NR26NR27NR34NR35NR36NR37NR38NR39NR44NR45NR46NR47NR48NR49NR56NR57NR58NR59NR67NR68NR69NR79NL93NL94NM04NM05NM15NM16NM21NM22NM23NM24NM25NM26NM31NM32NM33NM34NM35NM41NM42NM43NM44NM45NM51NM52NM53NM54NM55NM61NM62NM63NM64NM72NM73NG13NG14NG15NG20NG23NG24NG25NG26NG30NG31NG32NG33NG34NG35NG36NG37NG38NG40NG41NG42NG43NG44NG45NG46NG47NG50NG51NG52NG53NG54NG55NG56NG60NG61NG62NG63NG64NG65NG66NG71NG72NG82NM19NM29NM37NM38NM39NM47NM48NM49NM59NB90NB91NC00NC01NC10NC11NC20NC21NG63NG64NG65NG72NG73NG74NG75NG76NG77NG78NG79NG82NG83NG84NG85NG86NG87NG88NG89NG91NG92NG93NG94NG95NG96NG97NG98NG99NH00NH01NH02NH03NH04NH05NH06NH07NH08NH09NH10NH11NH15NH16NH17NH18NH19NH27NH28NH29NC10NC20NC21NC30NC31NC40NH02NH03NH04NH05NH06NH07NH12NH13NH14NH15NH16NH17NH19NH23NH24NH25NH26NH27NH28NH29NH34NH35NH36NH37NH38NH39NH44NH45NH46NH47NH48NH49NH54NH55NH56NH57NH58NH59NH64NH65NH66NH67NH68NH69NH75NH76NH77NH78NH86NH87NH88NH97NH98NC22NC30NC31NC32NC33NC40NC41NC42NC43NC50NC51NC52NC60NC61NC62NC63NC70NC71NC72NC73NC74NC80NC81NC82NC83NC84NC90NC91NC92NC93ND01ND02NH49NH59NH68NH69NH78NH79NH88NH89NC01NC02NC03NC10NC11NC12NC13NC14NC15NC16NC20NC21NC22NC23NC24NC25NC26NC27NC31NC32NC33NC34NC35NC36NC37NC42NC43NC44NC45NC46NC52NC53NC54NC55NC56NC62NC63NC64NC65NC66NC73NC74NC75NC76NC83NC84NC85NC86NC93NC94NC95NC96NC92NC93NC94NC95NC96ND01ND02ND03ND04ND05ND06ND07ND12ND13ND14ND15ND16ND17ND23ND24ND25ND26ND27ND33ND34ND35ND36ND37ND47HW63HW83HX62NA00NA10NA64NA74NA81NA90NA91NA92NA93NB00NB01NB02NB03NB10NB11NB12NB13NB14NB20NB21NB22NB23NB24NB30NB31NB32NB33NB34NB35NB40NB41NB42NB43NB44NB45NB46NB52NB53NB54NB55NB56NF09NF19NF56NF58NF60NF61NF66NF67NF68NF70NF71NF72NF73NF74NF75NF76NF77NF80NF81NF82NF83NF84NF85NF86NF87NF88NF89NF95NF96NF97NF98NF99NG07NG08NG09NG18NG19NG29NG49NL57NL58NL68NL69NL79HY10HY20HY21HY22HY23HY30HY31HY32HY33HY34HY35HY40HY41HY42HY43HY44HY45HY50HY51HY52HY53HY54HY55HY60HY61HY62HY63HY64HY73HY74HY75ND19ND28ND29ND38ND39ND47ND48ND49ND59HP40HP50HP51HP60HP61HT93HT94HU14HU15HU16HU24HU25HU26HU27HU28HU30HU31HU32HU33HU34HU35HU36HU37HU38HU39HU40HU41HU42HU43HU44HU45HU46HU47HU48HU49HU53HU54HU55HU56HU57HU58HU59HU66HU67HU68HU69HZ16HZ17HZ26HZ27";to_gridref(S){const N=this.x/1e5|0,t=this.y/1e5|0;let e;e=t<5?N<5?"S":"T":t<10?N<5?"N":"O":N<5?"H":"J";let T=65+5*(4-t%5)+N%5;T>=73&&T++;const s=String.fromCharCode(T);return i(e+s,this.x-1e5*N,this.y-1e5*t,S||1)}to_hectad(){const S=this.x/1e5|0,N=this.y/1e5|0;let t;t=N<5?S<5?"S":"T":N<10?S<5?"N":"O":S<5?"H":"J";let e=65+5*(4-N%5)+S%5;return e>=73&&e++,t+String.fromCharCode(e)+((this.x-1e5*S)/1e4|0)+((this.y-1e5*N)/1e4|0)}is_gb_hectad(){return -1!==H.gbHectads.indexOf(this.to_hectad())}to_latLng(){const S=4e5,N=.85521133347722,e=6377563.396,T=.00667054007,r=this.x,a=this.y,h=.0016732203289875;let i,o=(a+1e5)/(.9996012717*e)+N;do{i=a+1e5-6353722.489*(1.0016767257674*(o-N)-.00502807228247412*Math.sin(o-N)*Math.cos(o+N)+(1.875*h*h+1.875*h*h*h)*Math.sin(2*(o-N))*Math.cos(2*(o+N))-35/24*h*h*h*Math.sin(3*(o-N))*Math.cos(3*(o+N))),o+=i/6375020.48098897;}while(i>=.001);const n=Math.sin(o)*Math.sin(o),d=Math.tan(o)*Math.tan(o),M=1/Math.cos(o),H=.9996012717*e*Math.pow(1-T*n,-.5),O=6332495.651423464*Math.pow(1-T*n,-1.5),l=H/O-1,J=Math.tan(o)/(2*O*H),c=Math.tan(o)/(24*O*Math.pow(H,3))*(5+3*d+l-9*d*l),g=Math.tan(o)/(720*O*Math.pow(H,5))*(61+90*d+45*d*d),U=M/H,L=M/(6*H*H*H)*(H/O+2*d),u=M/(120*Math.pow(H,5))*(5+28*d+24*d*d),C=M/(5040*Math.pow(H,7))*(61+662*d+1320*d*d+720*d*d*d),Y=o-J*Math.pow(r-S,2)+c*Math.pow(r-S,4)-g*Math.pow(r-S,6),f=U*(r-S)-.034906585039887-L*Math.pow(r-S,3)+u*Math.pow(r-S,5)-C*Math.pow(r-S,7);return new s(t*Y,t*f).to_WGS84()}}class O extends S{country="GB";GridCoords=H;gridCoords=null;constructor(){super();}parse_well_formed(N){N.length>=5&&/^[A-Z]/.test(N.charAt(4))&&(S.quadrantOffsets.hasOwnProperty(N.substr(N.length-2))?this.quadrantCode=N.substr(N.length-2):this.tetradLetter=N.charAt(4),N=N.substr(0,4)),this.parse_wellformed_gb_gr_string_no_tetrads(N),this.tetradLetter||this.quadrantCode?this.tetradLetter?(this.preciseGridRef=this.tetrad=this.hectad+this.tetradLetter,this.length=2e3,this.gridCoords.x+=S.tetradOffsets[this.tetradLetter][0],this.gridCoords.y+=S.tetradOffsets[this.tetradLetter][1]):(this.preciseGridRef=this.quadrant=N+this.quadrantCode,this.length=5e3,this.gridCoords.x+=S.quadrantOffsets[this.quadrantCode][0],this.gridCoords.y+=S.quadrantOffsets[this.quadrantCode][1]):(this.preciseGridRef=N,this.length<=1e3&&this.set_tetrad());}from_string(N){let t,e=N.replace(/[\[\]\s\t.-]+/g,"").toUpperCase(),T="";if(/[ABCDEFGHIJKLMNPQRSTUVWXYZ]$/.test(e)&&(S.quadrantOffsets.hasOwnProperty(e.substr(e.length-2))?(this.quadrantCode=e.substr(e.length-2),e=e.substr(0,e.length-2)):(T=e.substr(e.length-1),e=e.substr(0,e.length-1))),e===parseInt(e,10).toString()?e=e.substr(0,2)+"/"+e.substr(2):e.length>3&&"/"===e.charAt(2)&&/^[A-Z]{2}$/.test(e.substr(0,2))&&(e=e.replace("/","")),"VC"===e.substr(0,2))this.error=!0,this.errorMessage="Misplaced vice-county code in grid-reference field. ('"+e+"')",this.gridCoords=null,this.length=0;else if(null!==(t=e.match(/^([HJNOST][ABCDEFGHJKLMNOPQRSTUVWXYZ](?:\d\d){1,5})$/)))e=t[0],this.parse_wellformed_gb_gr_string_no_tetrads(e),this.length>0?1e4===this.length&&(T||this.quadrantCode)?T?(this.preciseGridRef=e+T,this.tetradLetter=T,this.tetrad=this.hectad+T,this.length=2e3,this.gridCoords.x+=S.tetradOffsets[T][0],this.gridCoords.y+=S.tetradOffsets[T][1]):(this.preciseGridRef=e+this.quadrantCode,this.tetradLetter="",this.tetrad="",this.quadrant=this.preciseGridRef,this.length=5e3,this.gridCoords.x+=S.quadrantOffsets[this.quadrantCode][0],this.gridCoords.y+=S.quadrantOffsets[this.quadrantCode][1]):(this.preciseGridRef=e,this.length<=1e3&&this.set_tetrad()):(this.error=!0,this.errorMessage="GB grid reference format not understood (strange length).");else if(/^([\d]{2})\/((?:\d\d){1,5})$/.test(e)){switch(this.parse_gr_string_without_tetrads(e),this.length){case 1e4:e=this.gridCoords.to_gridref(1e4),this.hectad=e,T?(e+=T,this.tetradLetter=T,this.tetrad=this.hectad+T,this.length=2e3,this.gridCoords.x+=S.tetradOffsets[T][0],this.gridCoords.y+=S.tetradOffsets[T][1]):this.quadrantCode&&(e+=this.quadrantCode,this.quadrant=e,this.length=5e3,this.gridCoords.x+=S.quadrantOffsets[this.quadrantCode][0],this.gridCoords.y+=S.quadrantOffsets[this.quadrantCode][1]);break;case 1e3:case 100:case 10:case 1:e=this.gridCoords.to_gridref(this.length),this.hectad=this.gridCoords.to_gridref(1e4),this.set_tetrad();break;default:this.error=!0,this.errorMessage="Bad grid square dimension ("+this.length+" m).",this.gridCoords=null,this.length=0;}this.preciseGridRef=e;}else this.gridCoords=null,this.length=0,this.error=!0,this.errorMessage="Grid reference format not understood. ('"+N+"')";}parse_gr_string_without_tetrads(N){let t,e,T,s;if(null!==(t=N.match(/^(\d{2})\/((?:\d\d){1,5})$/))){switch(t[1]){case"57":e=3e5,T=1e6;break;case"67":e=4e5,T=1e6;break;case"58":e=3e5,T=11e5;break;case"68":e=4e5,T=11e5;break;case"69":e=4e5,T=12e5;break;default:e=1e5*N.charAt(0),T=1e5*N.charAt(1);}s=t[2];}else {if(!S.letterMapping.hasOwnProperty(N.charAt(0))||!S.letterMapping.hasOwnProperty(N.charAt(1)))return this.length=0,void(this.gridCoords=null);let t=S.letterMapping[N.charAt(0)],r=S.letterMapping[N.charAt(1)];s=N.substr(2),e=t%5*5e5+r%5*1e5-1e6,T=5e5*-Math.floor(t/5)-1e5*Math.floor(r/5)+19e5;}switch(s.length){case 2:this.gridCoords=new H(e+1e4*s.charAt(0),T+1e4*s.charAt(1)),this.length=1e4;break;case 4:this.gridCoords=new H(e+1e3*Math.floor(s/100),T+s%100*1e3),this.length=1e3;break;case 6:this.gridCoords=new H(e+100*Math.floor(s/1e3),T+s%1e3*100),this.length=100;break;case 8:this.gridCoords=new H(e+10*Math.floor(s/1e4),T+s%1e4*10),this.length=10;break;case 10:this.gridCoords=new H(e+Math.floor(s/1e5),T+s%1e5),this.length=1;break;default:console.log("Bad grid ref length, ref="+N),this.gridCoords=null,this.length=0;}}parse_wellformed_gb_gr_string_no_tetrads(N){let t,e,T,s,r;switch(t=S.letterMapping[N.charAt(0)],e=S.letterMapping[N.charAt(1)],T=N.substr(2),s=t%5*5e5+e%5*1e5-1e6,r=5e5*-Math.floor(t/5)-1e5*Math.floor(e/5)+19e5,T.length){case 2:this.gridCoords=new H(s+1e4*T.charAt(0),r+1e4*T.charAt(1)),this.length=1e4,this.hectad=N;break;case 4:this.gridCoords=new H(s+1e3*Math.floor(T/100),r+T%100*1e3),this.length=1e3,this.hectad=N.substr(0,3)+N.substr(4,1);break;case 6:this.gridCoords=new H(s+100*Math.floor(T/1e3),r+T%1e3*100),this.length=100,this.hectad=N.substr(0,3)+N.substr(5,1);break;case 8:this.gridCoords=new H(s+10*Math.floor(T/1e4),r+T%1e4*10),this.length=10,this.hectad=N.substr(0,3)+N.substr(6,1);break;case 10:this.gridCoords=new H(s+Math.floor(T/1e5),r+T%1e5),this.length=1,this.hectad=N.substr(0,3)+N.substr(7,1);break;default:throw this.gridCoords=null,new Error("Bad grid ref length when parsing supposedly well-formed ref, ref='"+N+"'")}}}class l extends h{country="IE";gridCoords=null;constructor(S,N){super(),this.x=S,this.y=N;}static irishGrid={0:["V","Q","L","F","A"],1:["W","R","M","G","B"],2:["X","S","N","H","C"],3:["Y","T","O","J","D"]};to_latLng(){const S=1.000035,N=6377340.189,e=.0066705402933363,T=.0016732203841521,s=this.x-2e5,r=.0067153352074207,h=(5929615.3530033+(this.y-25e4)/S)/6366691.7742864415,i=h+.002509826623715886*Math.sin(2*h)+36745487490091978e-22*Math.sin(4*h)+151*T*T*T/96*Math.sin(6*h),o=N/Math.sqrt(1-e*Math.sin(i)*Math.sin(i)),n=Math.tan(i)*Math.tan(i),d=r*Math.cos(i)*Math.cos(i),M=N*(1-e)/Math.pow(1-e*Math.sin(i)*Math.sin(i),1.5),H=s/(o*S);let O=i-o*Math.tan(i)/M*(H*H/2-(5+3*n+10*d-4*d*d-9*r)*H*H*H*H/24+(61+90*n+298*d+45*n*n-1.6922644722700164-3*d*d)*H*H*H*H*H*H/720);O*=t;let l=(H-(1+2*n+d)*H*H*H/6+(5-2*d+28*n-3*d*d+8*r+24*n*n)*H*H*H*H*H/120)/Math.cos(i);return l=l*t-8,new a(O,l).to_WGS84()}to_gridref(S){const N=Math.floor(this.x/1e5),t=Math.floor(this.y/1e5);return l.irishGrid[N]&&l.irishGrid[N][t]?i(l.irishGrid[N][t],this.x-1e5*N,this.y-1e5*t,S||1):null}to_hectad(){const S=Math.floor(this.x/1e5),N=Math.floor(this.y/1e5);return l.irishGrid[S]&&l.irishGrid[S][N]?l.irishGrid[S][N]+Math.floor(this.x%1e5/1e4)+Math.floor(this.y%1e5/1e4):""}}class J extends S{constructor(){super(),this.parse_well_formed=this.from_string;}country="IE";GridCoords=l;gridCoords=null;static gridLetter={A:[0,4],B:[1,4],C:[2,4],D:[3,4],F:[0,3],G:[1,3],H:[2,3],J:[3,3],L:[0,2],M:[1,2],N:[2,2],O:[3,2],Q:[0,1],R:[1,1],S:[2,1],T:[3,1],V:[0,0],W:[1,0],X:[2,0],Y:[3,0]};from_string(S){let N=S.replace(/[\[\]\s\t.-]+/g,"").toUpperCase();/[ABCDEFGHIJKLMNPQRSTUVWXYZ]$/.test(N)&&(J.quadrantOffsets.hasOwnProperty(N.substr(N.length-2))?(this.quadrantCode=N.substr(N.length-2),N=N.substr(0,N.length-2)):(this.tetradLetter=N.substr(N.length-1),N=N.substr(0,N.length-1))),this.parse_gr_string_without_tetrads(N),this.length>0?this.tetradLetter||this.quadrantCode?this.tetradLetter?(this.preciseGridRef=this.hectad+this.tetradLetter,this.tetrad=this.preciseGridRef,this.length=2e3,this.gridCoords.x+=J.tetradOffsets[this.tetradLetter][0],this.gridCoords.y+=J.tetradOffsets[this.tetradLetter][1]):(this.preciseGridRef=this.hectad+this.quadrantCode,this.quadrant=this.preciseGridRef,this.length=5e3,this.gridCoords.x+=J.quadrantOffsets[this.quadrantCode][0],this.gridCoords.y+=J.quadrantOffsets[this.quadrantCode][1]):(this.preciseGridRef=N,this.length<=1e3&&this.set_tetrad()):(this.error=!0,this.errorMessage="Irish grid reference format not understood. ('"+S+"')");}static _IE_GRID_LETTERS="VQLFAWRMGBXSNHCYTOJD";parse_gr_string_without_tetrads(S){let N,t,e,T;if(/^\d{2}\/(?:\d\d){1,5}$/.test(S)){if(N=parseInt(S.charAt(0),10),t=parseInt(S.charAt(1),10),N>3||t>4)return console.log("bad grid square, ref='"+S+"' (Ireland)"),this.length=0,!1;e=S.substr(3),T=J._IE_GRID_LETTERS.charAt(5*N+t),N*=1e5,t*=1e5;}else {if(S=S.replace("/",""),!/^[ABCDFGHJLMNOQRSTVWXY](?:\d\d){1,5}$/.test(S))return this.length=0,this.gridCoords=null,!1;if(!S)return console.log("Bad (empty) Irish grid ref"),this.length=0,this.gridCoords=null,!1;{T=S.charAt(0);let e=J._IE_GRID_LETTERS.indexOf(T);if(-1===e)return console.log("Bad grid ref grid-letter, ref='"+S+"' (Ireland)"),this.length=0,this.gridCoords=null,!1;N=1e5*Math.floor(e/5),t=e%5*1e5;}e=S.substr(1);}switch(e.length){case 2:this.gridCoords=new l(N+1e4*e.charAt(0),t+1e4*e.charAt(1)),this.length=1e4,this.hectad=T+e;break;case 4:this.gridCoords=new l(N+1e3*Math.floor(e/100),t+e%100*1e3),this.length=1e3,this.hectad=T+e.charAt(0)+e.charAt(2);break;case 6:this.gridCoords=new l(N+100*Math.floor(e/1e3),t+e%1e3*100),this.length=100,this.hectad=T+e.charAt(0)+e.charAt(3);break;case 8:this.gridCoords=new l(N+10*Math.floor(e/1e4),t+e%1e4*10),this.length=10,this.hectad=T+e.charAt(0)+e.charAt(4);break;case 10:this.gridCoords=new l(N+Math.floor(e/1e5),t+e%1e5),this.length=1,this.hectad=T+e.charAt(0)+e.charAt(5);break;default:return console.log("Bad grid ref length, ref='"+S+"' (Ireland)"),this.length=0,this.gridCoords=null,!1}return !0}}S.from_string=function(S){let N,t=S.replace(/\s+/g,"").toUpperCase();if(!t)return !1;if(/^(?:[BCDFGHJLMNOQRSTVWXY]|[HJNOST][ABCDEFGHJKLMNOPQRSTUVWXYZ]|W[VA])\d{2}(?:[A-Z]|[NS][EW]|(?:\d{2}){0,4})?$/.test(t))return N=/^.\d/.test(t)?new J:"W"===t.charAt(0)?new M:new O,N.parse_well_formed(t),!(!N.length||N.error)&&N;if(N=new O,N.from_string(t),N.length&&!N.error)return N;if("W"===t.charAt(0)){if(N=new M,N.from_string(t),N.length&&!N.error)return N}else if(N=new J,N.from_string(t),N.length&&!N.error)return N;return !1};const c=H,g=(s.prototype.to_os_coords=function(){var S=this.lat*N,t=this.lng*N,T=.9996012717,s=.0066705397616,r=6377563.396*T,a=6356256.91*T,h=Math.sin(S)*Math.sin(S),i=r/Math.sqrt(1-s*h),o=i*(1-s)/(1-s*h),n=i/o-1,d=t- -.03490658503988659,M=i*Math.cos(S),H=Math.pow(Math.cos(S),3),O=Math.tan(S)*Math.tan(S),l=i/6*H*(i/o-O),J=Math.pow(Math.cos(S),5),g=Math.pow(Math.tan(S),4),U=i/120*J*(5-18*O+g+14*n-58*O*n),L=4e5+d*M+Math.pow(d,3)*l+Math.pow(d,5)*U,u=e._Marc(a,.0016732202503250907,.8552113334772214,S)+-1e5,C=i/2*Math.sin(S)*Math.cos(S),Y=i/24*Math.sin(S)*Math.pow(Math.cos(S),3)*(5-Math.pow(Math.tan(S),2)+9*n),f=i/720*Math.sin(S)*J*(61-58*O+g),P=u+d*d*C+Math.pow(d,4)*Y+Math.pow(d,6)*f;return new c(Math.round(L),Math.round(P))},s),U=l,L=(a.prototype.to_os_coords=function(){var S=this.lat*N,t=this.lng*N,T=1.000035,s=.00667054015,r=6377340.189*T,a=6356034.447*T,h=Math.sin(S)*Math.sin(S),i=r/Math.sqrt(1-s*h),o=i*(1-s)/(1-s*h),n=i/o-1,d=t- -.13962634015954636,M=i*Math.cos(S),H=Math.pow(Math.cos(S),3),O=Math.tan(S)*Math.tan(S),l=i/6*H*(i/o-O),J=Math.pow(Math.cos(S),5),c=Math.pow(Math.tan(S),4),g=i/120*J*(5-18*O+c+14*n-58*O*n),L=2e5+d*M+Math.pow(d,3)*l+Math.pow(d,5)*g,u=e._Marc(a,.0016732203841520518,.9337511498169663,S)+25e4,C=i/2*Math.sin(S)*Math.cos(S),Y=i/24*Math.sin(S)*Math.pow(Math.cos(S),3)*(5-Math.pow(Math.tan(S),2)+9*n),f=i/720*Math.sin(S)*J*(61-58*O+c),P=u+d*d*C+Math.pow(d,4)*Y+Math.pow(d,6)*f;return new U(Math.round(L),Math.round(P))},a),u=o,C=(r.prototype.to_os_coords=function(){var S=this.lat*N,t=this.lng*N,T=.9996,s=.0067226700223333,r=6378388*T,a=6356911.946*T,h=Math.sin(S)*Math.sin(S),i=r/Math.sqrt(1-s*h),o=i*(1-s)/(1-s*h),n=i/o-1,d=t- -.0523598775598,M=i*Math.cos(S),H=Math.pow(Math.cos(S),3),O=Math.tan(S)*Math.tan(S),l=i/6*H*(i/o-O),J=Math.pow(Math.cos(S),5),c=Math.pow(Math.tan(S),4),g=i/120*J*(5-18*O+c+14*n-58*O*n),U=5e5+d*M+Math.pow(d,3)*l+Math.pow(d,5)*g,L=e._Marc(a,.0016863406508729017,0,S)+0,C=i/2*Math.sin(S)*Math.cos(S),Y=i/24*Math.sin(S)*Math.pow(Math.cos(S),3)*(5-Math.pow(Math.tan(S),2)+9*n),f=i/720*Math.sin(S)*J*(61-58*O+c),P=L+d*d*C+Math.pow(d,4)*Y+Math.pow(d,6)*f;return new u(Math.round(U),Math.round(P))},r);
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
-var runtime = {exports: {}};
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-(function (module) {
-var runtime = (function (exports) {
-
-  var Op = Object.prototype;
-  var hasOwn = Op.hasOwnProperty;
-  var undefined$1; // More compressible than void 0.
-  var $Symbol = typeof Symbol === "function" ? Symbol : {};
-  var iteratorSymbol = $Symbol.iterator || "@@iterator";
-  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
-  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-
-  function define(obj, key, value) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-    return obj[key];
-  }
-  try {
-    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
-    define({}, "");
-  } catch (err) {
-    define = function(obj, key, value) {
-      return obj[key] = value;
-    };
-  }
-
-  function wrap(innerFn, outerFn, self, tryLocsList) {
-    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
-    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-    var generator = Object.create(protoGenerator.prototype);
-    var context = new Context(tryLocsList || []);
-
-    // The ._invoke method unifies the implementations of the .next,
-    // .throw, and .return methods.
-    generator._invoke = makeInvokeMethod(innerFn, self, context);
-
-    return generator;
-  }
-  exports.wrap = wrap;
-
-  // Try/catch helper to minimize deoptimizations. Returns a completion
-  // record like context.tryEntries[i].completion. This interface could
-  // have been (and was previously) designed to take a closure to be
-  // invoked without arguments, but in all the cases we care about we
-  // already have an existing method we want to call, so there's no need
-  // to create a new function object. We can even get away with assuming
-  // the method takes exactly one argument, since that happens to be true
-  // in every case, so we don't have to touch the arguments object. The
-  // only additional allocation required is the completion record, which
-  // has a stable shape and so hopefully should be cheap to allocate.
-  function tryCatch(fn, obj, arg) {
-    try {
-      return { type: "normal", arg: fn.call(obj, arg) };
-    } catch (err) {
-      return { type: "throw", arg: err };
-    }
-  }
-
-  var GenStateSuspendedStart = "suspendedStart";
-  var GenStateSuspendedYield = "suspendedYield";
-  var GenStateExecuting = "executing";
-  var GenStateCompleted = "completed";
-
-  // Returning this object from the innerFn has the same effect as
-  // breaking out of the dispatch switch statement.
-  var ContinueSentinel = {};
-
-  // Dummy constructor functions that we use as the .constructor and
-  // .constructor.prototype properties for functions that return Generator
-  // objects. For full spec compliance, you may wish to configure your
-  // minifier not to mangle the names of these two functions.
-  function Generator() {}
-  function GeneratorFunction() {}
-  function GeneratorFunctionPrototype() {}
-
-  // This is a polyfill for %IteratorPrototype% for environments that
-  // don't natively support it.
-  var IteratorPrototype = {};
-  define(IteratorPrototype, iteratorSymbol, function () {
-    return this;
-  });
-
-  var getProto = Object.getPrototypeOf;
-  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
-  if (NativeIteratorPrototype &&
-      NativeIteratorPrototype !== Op &&
-      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
-    // This environment has a native %IteratorPrototype%; use it instead
-    // of the polyfill.
-    IteratorPrototype = NativeIteratorPrototype;
-  }
-
-  var Gp = GeneratorFunctionPrototype.prototype =
-    Generator.prototype = Object.create(IteratorPrototype);
-  GeneratorFunction.prototype = GeneratorFunctionPrototype;
-  define(Gp, "constructor", GeneratorFunctionPrototype);
-  define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
-  GeneratorFunction.displayName = define(
-    GeneratorFunctionPrototype,
-    toStringTagSymbol,
-    "GeneratorFunction"
-  );
-
-  // Helper for defining the .next, .throw, and .return methods of the
-  // Iterator interface in terms of a single ._invoke method.
-  function defineIteratorMethods(prototype) {
-    ["next", "throw", "return"].forEach(function(method) {
-      define(prototype, method, function(arg) {
-        return this._invoke(method, arg);
-      });
-    });
-  }
-
-  exports.isGeneratorFunction = function(genFun) {
-    var ctor = typeof genFun === "function" && genFun.constructor;
-    return ctor
-      ? ctor === GeneratorFunction ||
-        // For the native GeneratorFunction constructor, the best we can
-        // do is to check its .name property.
-        (ctor.displayName || ctor.name) === "GeneratorFunction"
-      : false;
-  };
-
-  exports.mark = function(genFun) {
-    if (Object.setPrototypeOf) {
-      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
-    } else {
-      genFun.__proto__ = GeneratorFunctionPrototype;
-      define(genFun, toStringTagSymbol, "GeneratorFunction");
-    }
-    genFun.prototype = Object.create(Gp);
-    return genFun;
-  };
-
-  // Within the body of any async function, `await x` is transformed to
-  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
-  // `hasOwn.call(value, "__await")` to determine if the yielded value is
-  // meant to be awaited.
-  exports.awrap = function(arg) {
-    return { __await: arg };
-  };
-
-  function AsyncIterator(generator, PromiseImpl) {
-    function invoke(method, arg, resolve, reject) {
-      var record = tryCatch(generator[method], generator, arg);
-      if (record.type === "throw") {
-        reject(record.arg);
-      } else {
-        var result = record.arg;
-        var value = result.value;
-        if (value &&
-            typeof value === "object" &&
-            hasOwn.call(value, "__await")) {
-          return PromiseImpl.resolve(value.__await).then(function(value) {
-            invoke("next", value, resolve, reject);
-          }, function(err) {
-            invoke("throw", err, resolve, reject);
-          });
-        }
-
-        return PromiseImpl.resolve(value).then(function(unwrapped) {
-          // When a yielded Promise is resolved, its final value becomes
-          // the .value of the Promise<{value,done}> result for the
-          // current iteration.
-          result.value = unwrapped;
-          resolve(result);
-        }, function(error) {
-          // If a rejected Promise was yielded, throw the rejection back
-          // into the async generator function so it can be handled there.
-          return invoke("throw", error, resolve, reject);
-        });
-      }
-    }
-
-    var previousPromise;
-
-    function enqueue(method, arg) {
-      function callInvokeWithMethodAndArg() {
-        return new PromiseImpl(function(resolve, reject) {
-          invoke(method, arg, resolve, reject);
-        });
-      }
-
-      return previousPromise =
-        // If enqueue has been called before, then we want to wait until
-        // all previous Promises have been resolved before calling invoke,
-        // so that results are always delivered in the correct order. If
-        // enqueue has not been called before, then it is important to
-        // call invoke immediately, without waiting on a callback to fire,
-        // so that the async generator function has the opportunity to do
-        // any necessary setup in a predictable way. This predictability
-        // is why the Promise constructor synchronously invokes its
-        // executor callback, and why async functions synchronously
-        // execute code before the first await. Since we implement simple
-        // async functions in terms of async generators, it is especially
-        // important to get this right, even though it requires care.
-        previousPromise ? previousPromise.then(
-          callInvokeWithMethodAndArg,
-          // Avoid propagating failures to Promises returned by later
-          // invocations of the iterator.
-          callInvokeWithMethodAndArg
-        ) : callInvokeWithMethodAndArg();
-    }
-
-    // Define the unified helper method that is used to implement .next,
-    // .throw, and .return (see defineIteratorMethods).
-    this._invoke = enqueue;
-  }
-
-  defineIteratorMethods(AsyncIterator.prototype);
-  define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
-    return this;
-  });
-  exports.AsyncIterator = AsyncIterator;
-
-  // Note that simple async functions are implemented on top of
-  // AsyncIterator objects; they just return a Promise for the value of
-  // the final result produced by the iterator.
-  exports.async = function(innerFn, outerFn, self, tryLocsList, PromiseImpl) {
-    if (PromiseImpl === void 0) PromiseImpl = Promise;
-
-    var iter = new AsyncIterator(
-      wrap(innerFn, outerFn, self, tryLocsList),
-      PromiseImpl
-    );
-
-    return exports.isGeneratorFunction(outerFn)
-      ? iter // If outerFn is a generator, return the full iterator.
-      : iter.next().then(function(result) {
-          return result.done ? result.value : iter.next();
-        });
-  };
-
-  function makeInvokeMethod(innerFn, self, context) {
-    var state = GenStateSuspendedStart;
-
-    return function invoke(method, arg) {
-      if (state === GenStateExecuting) {
-        throw new Error("Generator is already running");
-      }
-
-      if (state === GenStateCompleted) {
-        if (method === "throw") {
-          throw arg;
-        }
-
-        // Be forgiving, per 25.3.3.3.3 of the spec:
-        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-        return doneResult();
-      }
-
-      context.method = method;
-      context.arg = arg;
-
-      while (true) {
-        var delegate = context.delegate;
-        if (delegate) {
-          var delegateResult = maybeInvokeDelegate(delegate, context);
-          if (delegateResult) {
-            if (delegateResult === ContinueSentinel) continue;
-            return delegateResult;
-          }
-        }
-
-        if (context.method === "next") {
-          // Setting context._sent for legacy support of Babel's
-          // function.sent implementation.
-          context.sent = context._sent = context.arg;
-
-        } else if (context.method === "throw") {
-          if (state === GenStateSuspendedStart) {
-            state = GenStateCompleted;
-            throw context.arg;
-          }
-
-          context.dispatchException(context.arg);
-
-        } else if (context.method === "return") {
-          context.abrupt("return", context.arg);
-        }
-
-        state = GenStateExecuting;
-
-        var record = tryCatch(innerFn, self, context);
-        if (record.type === "normal") {
-          // If an exception is thrown from innerFn, we leave state ===
-          // GenStateExecuting and loop back for another invocation.
-          state = context.done
-            ? GenStateCompleted
-            : GenStateSuspendedYield;
-
-          if (record.arg === ContinueSentinel) {
-            continue;
-          }
-
-          return {
-            value: record.arg,
-            done: context.done
-          };
-
-        } else if (record.type === "throw") {
-          state = GenStateCompleted;
-          // Dispatch the exception by looping back around to the
-          // context.dispatchException(context.arg) call above.
-          context.method = "throw";
-          context.arg = record.arg;
-        }
-      }
-    };
-  }
-
-  // Call delegate.iterator[context.method](context.arg) and handle the
-  // result, either by returning a { value, done } result from the
-  // delegate iterator, or by modifying context.method and context.arg,
-  // setting context.delegate to null, and returning the ContinueSentinel.
-  function maybeInvokeDelegate(delegate, context) {
-    var method = delegate.iterator[context.method];
-    if (method === undefined$1) {
-      // A .throw or .return when the delegate iterator has no .throw
-      // method always terminates the yield* loop.
-      context.delegate = null;
-
-      if (context.method === "throw") {
-        // Note: ["return"] must be used for ES3 parsing compatibility.
-        if (delegate.iterator["return"]) {
-          // If the delegate iterator has a return method, give it a
-          // chance to clean up.
-          context.method = "return";
-          context.arg = undefined$1;
-          maybeInvokeDelegate(delegate, context);
-
-          if (context.method === "throw") {
-            // If maybeInvokeDelegate(context) changed context.method from
-            // "return" to "throw", let that override the TypeError below.
-            return ContinueSentinel;
-          }
-        }
-
-        context.method = "throw";
-        context.arg = new TypeError(
-          "The iterator does not provide a 'throw' method");
-      }
-
-      return ContinueSentinel;
-    }
-
-    var record = tryCatch(method, delegate.iterator, context.arg);
-
-    if (record.type === "throw") {
-      context.method = "throw";
-      context.arg = record.arg;
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    var info = record.arg;
-
-    if (! info) {
-      context.method = "throw";
-      context.arg = new TypeError("iterator result is not an object");
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    if (info.done) {
-      // Assign the result of the finished delegate to the temporary
-      // variable specified by delegate.resultName (see delegateYield).
-      context[delegate.resultName] = info.value;
-
-      // Resume execution at the desired location (see delegateYield).
-      context.next = delegate.nextLoc;
-
-      // If context.method was "throw" but the delegate handled the
-      // exception, let the outer generator proceed normally. If
-      // context.method was "next", forget context.arg since it has been
-      // "consumed" by the delegate iterator. If context.method was
-      // "return", allow the original .return call to continue in the
-      // outer generator.
-      if (context.method !== "return") {
-        context.method = "next";
-        context.arg = undefined$1;
-      }
-
-    } else {
-      // Re-yield the result returned by the delegate method.
-      return info;
-    }
-
-    // The delegate iterator is finished, so forget it and continue with
-    // the outer generator.
-    context.delegate = null;
-    return ContinueSentinel;
-  }
-
-  // Define Generator.prototype.{next,throw,return} in terms of the
-  // unified ._invoke helper method.
-  defineIteratorMethods(Gp);
-
-  define(Gp, toStringTagSymbol, "Generator");
-
-  // A Generator should always return itself as the iterator object when the
-  // @@iterator function is called on it. Some browsers' implementations of the
-  // iterator prototype chain incorrectly implement this, causing the Generator
-  // object to not be returned from this call. This ensures that doesn't happen.
-  // See https://github.com/facebook/regenerator/issues/274 for more details.
-  define(Gp, iteratorSymbol, function() {
-    return this;
-  });
-
-  define(Gp, "toString", function() {
-    return "[object Generator]";
-  });
-
-  function pushTryEntry(locs) {
-    var entry = { tryLoc: locs[0] };
-
-    if (1 in locs) {
-      entry.catchLoc = locs[1];
-    }
-
-    if (2 in locs) {
-      entry.finallyLoc = locs[2];
-      entry.afterLoc = locs[3];
-    }
-
-    this.tryEntries.push(entry);
-  }
-
-  function resetTryEntry(entry) {
-    var record = entry.completion || {};
-    record.type = "normal";
-    delete record.arg;
-    entry.completion = record;
-  }
-
-  function Context(tryLocsList) {
-    // The root entry object (effectively a try statement without a catch
-    // or a finally block) gives us a place to store values thrown from
-    // locations where there is no enclosing try statement.
-    this.tryEntries = [{ tryLoc: "root" }];
-    tryLocsList.forEach(pushTryEntry, this);
-    this.reset(true);
-  }
-
-  exports.keys = function(object) {
-    var keys = [];
-    for (var key in object) {
-      keys.push(key);
-    }
-    keys.reverse();
-
-    // Rather than returning an object with a next method, we keep
-    // things simple and return the next function itself.
-    return function next() {
-      while (keys.length) {
-        var key = keys.pop();
-        if (key in object) {
-          next.value = key;
-          next.done = false;
-          return next;
-        }
-      }
-
-      // To avoid creating an additional object, we just hang the .value
-      // and .done properties off the next function object itself. This
-      // also ensures that the minifier will not anonymize the function.
-      next.done = true;
-      return next;
-    };
-  };
-
-  function values(iterable) {
-    if (iterable) {
-      var iteratorMethod = iterable[iteratorSymbol];
-      if (iteratorMethod) {
-        return iteratorMethod.call(iterable);
-      }
-
-      if (typeof iterable.next === "function") {
-        return iterable;
-      }
-
-      if (!isNaN(iterable.length)) {
-        var i = -1, next = function next() {
-          while (++i < iterable.length) {
-            if (hasOwn.call(iterable, i)) {
-              next.value = iterable[i];
-              next.done = false;
-              return next;
-            }
-          }
-
-          next.value = undefined$1;
-          next.done = true;
-
-          return next;
-        };
-
-        return next.next = next;
-      }
-    }
-
-    // Return an iterator with no values.
-    return { next: doneResult };
-  }
-  exports.values = values;
-
-  function doneResult() {
-    return { value: undefined$1, done: true };
-  }
-
-  Context.prototype = {
-    constructor: Context,
-
-    reset: function(skipTempReset) {
-      this.prev = 0;
-      this.next = 0;
-      // Resetting context._sent for legacy support of Babel's
-      // function.sent implementation.
-      this.sent = this._sent = undefined$1;
-      this.done = false;
-      this.delegate = null;
-
-      this.method = "next";
-      this.arg = undefined$1;
-
-      this.tryEntries.forEach(resetTryEntry);
-
-      if (!skipTempReset) {
-        for (var name in this) {
-          // Not sure about the optimal order of these conditions:
-          if (name.charAt(0) === "t" &&
-              hasOwn.call(this, name) &&
-              !isNaN(+name.slice(1))) {
-            this[name] = undefined$1;
-          }
-        }
-      }
-    },
-
-    stop: function() {
-      this.done = true;
-
-      var rootEntry = this.tryEntries[0];
-      var rootRecord = rootEntry.completion;
-      if (rootRecord.type === "throw") {
-        throw rootRecord.arg;
-      }
-
-      return this.rval;
-    },
-
-    dispatchException: function(exception) {
-      if (this.done) {
-        throw exception;
-      }
-
-      var context = this;
-      function handle(loc, caught) {
-        record.type = "throw";
-        record.arg = exception;
-        context.next = loc;
-
-        if (caught) {
-          // If the dispatched exception was caught by a catch block,
-          // then let that catch block handle the exception normally.
-          context.method = "next";
-          context.arg = undefined$1;
-        }
-
-        return !! caught;
-      }
-
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        var record = entry.completion;
-
-        if (entry.tryLoc === "root") {
-          // Exception thrown outside of any try block that could handle
-          // it, so set the completion value of the entire function to
-          // throw the exception.
-          return handle("end");
-        }
-
-        if (entry.tryLoc <= this.prev) {
-          var hasCatch = hasOwn.call(entry, "catchLoc");
-          var hasFinally = hasOwn.call(entry, "finallyLoc");
-
-          if (hasCatch && hasFinally) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            } else if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-
-          } else if (hasCatch) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            }
-
-          } else if (hasFinally) {
-            if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-
-          } else {
-            throw new Error("try statement without catch or finally");
-          }
-        }
-      }
-    },
-
-    abrupt: function(type, arg) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.tryLoc <= this.prev &&
-            hasOwn.call(entry, "finallyLoc") &&
-            this.prev < entry.finallyLoc) {
-          var finallyEntry = entry;
-          break;
-        }
-      }
-
-      if (finallyEntry &&
-          (type === "break" ||
-           type === "continue") &&
-          finallyEntry.tryLoc <= arg &&
-          arg <= finallyEntry.finallyLoc) {
-        // Ignore the finally entry if control is not jumping to a
-        // location outside the try/catch block.
-        finallyEntry = null;
-      }
-
-      var record = finallyEntry ? finallyEntry.completion : {};
-      record.type = type;
-      record.arg = arg;
-
-      if (finallyEntry) {
-        this.method = "next";
-        this.next = finallyEntry.finallyLoc;
-        return ContinueSentinel;
-      }
-
-      return this.complete(record);
-    },
-
-    complete: function(record, afterLoc) {
-      if (record.type === "throw") {
-        throw record.arg;
-      }
-
-      if (record.type === "break" ||
-          record.type === "continue") {
-        this.next = record.arg;
-      } else if (record.type === "return") {
-        this.rval = this.arg = record.arg;
-        this.method = "return";
-        this.next = "end";
-      } else if (record.type === "normal" && afterLoc) {
-        this.next = afterLoc;
-      }
-
-      return ContinueSentinel;
-    },
-
-    finish: function(finallyLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.finallyLoc === finallyLoc) {
-          this.complete(entry.completion, entry.afterLoc);
-          resetTryEntry(entry);
-          return ContinueSentinel;
-        }
-      }
-    },
-
-    "catch": function(tryLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.tryLoc === tryLoc) {
-          var record = entry.completion;
-          if (record.type === "throw") {
-            var thrown = record.arg;
-            resetTryEntry(entry);
-          }
-          return thrown;
-        }
-      }
-
-      // The context.catch method must only be called with a location
-      // argument that corresponds to a known catch block.
-      throw new Error("illegal catch attempt");
-    },
-
-    delegateYield: function(iterable, resultName, nextLoc) {
-      this.delegate = {
-        iterator: values(iterable),
-        resultName: resultName,
-        nextLoc: nextLoc
-      };
-
-      if (this.method === "next") {
-        // Deliberately forget the last sent value so that we don't
-        // accidentally pass it on to the delegate.
-        this.arg = undefined$1;
-      }
-
-      return ContinueSentinel;
-    }
-  };
-
-  // Regardless of whether this script is executing as a CommonJS module
-  // or not, return the runtime object so that we can declare the variable
-  // regeneratorRuntime in the outer scope, which allows this module to be
-  // injected easily by `bin/regenerator --include-runtime script.js`.
-  return exports;
-
-}(
-  // If this script is executing as a CommonJS module, use module.exports
-  // as the regeneratorRuntime namespace. Otherwise create a new empty
-  // object. Either way, the resulting object will be used to initialize
-  // the regeneratorRuntime variable at the top of this file.
-  module.exports 
-));
-
-try {
-  regeneratorRuntime = runtime;
-} catch (accidentalStrictMode) {
-  // This module should not be running in strict mode, so the above
-  // assignment should always work unless something is misconfigured. Just
-  // in case runtime.js accidentally runs in strict mode, in modern engines
-  // we can explicitly access globalThis. In older engines we can escape
-  // strict mode using a global Function call. This could conceivably fail
-  // if a Content Security Policy forbids using Function, but in that case
-  // the proper solution is to fix the accidental strict mode problem. If
-  // you've misconfigured your bundler to force strict mode and applied a
-  // CSP to forbid Function, and you're not willing to fix either of those
-  // problems, please detail your unique predicament in a GitHub issue.
-  if (typeof globalThis === "object") {
-    globalThis.regeneratorRuntime = runtime;
-  } else {
-    Function("r", "regeneratorRuntime = r")(runtime);
-  }
-}
-}(runtime));
-
-var regenerator = runtime.exports;
-
-function _createSuper$k(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$k(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$k() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 /**
  * Wrapper for GPS access, including support for user-interface nudges
  */
+class GPSRequest extends EventHarness {
 
-var GPSRequest = /*#__PURE__*/function (_EventHarness) {
-  _inherits(GPSRequest, _EventHarness);
+    static DEVICE_TYPE_UNKNOWN = 'unknown';
+    static DEVICE_TYPE_UNCHECKED = 'unchecked';
+    static DEVICE_TYPE_MOBILE = 'mobile';
+    static DEVICE_TYPE_IMMOBILE = 'immobile';
 
-  var _super = _createSuper$k(GPSRequest);
+    static EVENT_GPS_PERMISSION_CHANGE = 'gpspermissionchange';
 
-  function GPSRequest() {
-    _classCallCheck(this, GPSRequest);
-
-    return _super.apply(this, arguments);
-  }
-
-  _createClass(GPSRequest, null, [{
-    key: "getDeviceType",
-    value:
     /**
      * global flag affecting behaviour of some GPS functionality
      * e.g. on a non-mobile device, don't automatically seek GPS locality for new records
      *
      * @type {string}
      */
+    static _deviceType = GPSRequest.DEVICE_TYPE_UNCHECKED;
 
     /**
      * @returns {string}
      */
-    function getDeviceType() {
-      if (GPSRequest._deviceType === GPSRequest.DEVICE_TYPE_UNCHECKED) {
-        if (navigator.userAgentData) {
-          GPSRequest._deviceType = navigator.userAgentData.mobile ? GPSRequest.DEVICE_TYPE_MOBILE : GPSRequest.DEVICE_TYPE_IMMOBILE;
-          console.log("Evaluated device using mobile flag, result: ".concat(GPSRequest._deviceType));
-        } else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
-          // see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
-          console.log("Detected mobile via use-agent string: ".concat(navigator.userAgent));
-          GPSRequest._deviceType = GPSRequest.DEVICE_TYPE_MOBILE;
-        } else {
-          console.log('Flagging device type as unknown.');
-          GPSRequest._deviceType = GPSRequest.DEVICE_TYPE_UNKNOWN;
+    static getDeviceType() {
+        if (GPSRequest._deviceType === GPSRequest.DEVICE_TYPE_UNCHECKED) {
+            if (navigator.userAgentData) {
+                GPSRequest._deviceType = navigator.userAgentData.mobile ?
+                    GPSRequest.DEVICE_TYPE_MOBILE : GPSRequest.DEVICE_TYPE_IMMOBILE;
+                console.log(`Evaluated device using mobile flag, result: ${GPSRequest._deviceType}`);
+            } else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+                // see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
+                console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
+                GPSRequest._deviceType = GPSRequest.DEVICE_TYPE_MOBILE;
+            } else {
+                console.log('Flagging device type as unknown.');
+                GPSRequest._deviceType = GPSRequest.DEVICE_TYPE_UNKNOWN;
+            }
         }
-      }
 
-      return GPSRequest._deviceType;
+        return GPSRequest._deviceType;
     }
-  }, {
-    key: "haveGPSPermission",
-    value:
+
+    static GPS_PERMISSION_UNKNOWN = 'unknown';
+    static GPS_PERMISSION_UNCHECKED = 'unchecked';
+    static GPS_PERMISSION_GRANTED = 'granted';
+    static GPS_PERMISSION_DENIED = 'denied';
+    static GPS_PERMISSION_PROMPT = 'prompt';
+
+    static _gpsPermission = GPSRequest.GPS_PERMISSION_UNCHECKED;
+
+    /**
+     * @type {GPSRequest}
+     */
+    static gpsEventObject;
+
     /**
      * @returns {string} GPSRequest.GPS_PERMISSION_
      */
-    function () {
-      var _haveGPSPermission = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
-        return regenerator.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                if (!(GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED)) {
-                  _context.next = 9;
-                  break;
-                }
+    static async haveGPSPermission() {
+        if (GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED) {
+            GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
+            GPSRequest.gpsEventObject = new GPSRequest();
 
-                GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
+            if (navigator.permissions && navigator.permissions.query) {
+                await navigator.permissions.query({name: 'geolocation'}).then(function (permissionStatus) {
+                    permissionStatus.onchange = function () {
+                        console.log('geolocation permission status has changed to ', this.state);
+                        GPSRequest._gpsPermission = this.state;
+                        GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+                    };
 
-                GPSRequest.gpsEventObject = new GPSRequest();
-
-                if (!(navigator.permissions && navigator.permissions.query)) {
-                  _context.next = 8;
-                  break;
-                }
-
-                _context.next = 6;
-                return navigator.permissions.query({
-                  name: 'geolocation'
-                }).then(function (permissionStatus) {
-                  permissionStatus.onchange = function () {
-                    console.log('geolocation permission status has changed to ', this.state);
-                    GPSRequest._gpsPermission = this.state;
-                    GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
-                  }; //console.log({'GPS permission state': permissionStatus.state});
-
-
-                  //console.log({'GPS permission state': permissionStatus.state});
-                  GPSRequest._gpsPermission = permissionStatus.state;
+                    //console.log({'GPS permission state': permissionStatus.state});
+                    GPSRequest._gpsPermission = permissionStatus.state;
                 });
-
-              case 6:
-                _context.next = 9;
-                break;
-
-              case 8:
+            } else {
                 GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;
-
-              case 9:
-                return _context.abrupt("return", GPSRequest._gpsPermission);
-
-              case 10:
-              case "end":
-                return _context.stop();
             }
-          }
-        }, _callee);
-      }));
+        }
 
-      function haveGPSPermission() {
-        return _haveGPSPermission.apply(this, arguments);
-      }
+        return GPSRequest._gpsPermission;
+    }
 
-      return haveGPSPermission;
-    }()
     /**
      * returns a promise with GPSRequest.GPS_PERMISSION_ parameter
      *
      * @returns {Promise<string>} GPSRequest.GPS_PERMISSION_
      */
+    static haveGPSPermissionPromise() {
+        if (GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED) {
+            GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
 
-  }, {
-    key: "haveGPSPermissionPromise",
-    value: function haveGPSPermissionPromise() {
-      if (GPSRequest._gpsPermission === GPSRequest.GPS_PERMISSION_UNCHECKED) {
-        GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN; // make unknown while checking to avoid any race condition
+            GPSRequest.gpsEventObject = new GPSRequest();
 
-        GPSRequest.gpsEventObject = new GPSRequest();
+            if (navigator.permissions && navigator.permissions.query) {
+                return navigator.permissions.query({name: 'geolocation'}).then(function (permissionStatus) {
+                    permissionStatus.onchange = function () {
+                        console.log('geolocation permission status has changed to ', this.state);
+                        GPSRequest._gpsPermission = this.state;
+                        GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+                    };
 
-        if (navigator.permissions && navigator.permissions.query) {
-          return navigator.permissions.query({
-            name: 'geolocation'
-          }).then(function (permissionStatus) {
-            permissionStatus.onchange = function () {
-              console.log('geolocation permission status has changed to ', this.state);
-              GPSRequest._gpsPermission = this.state;
-              GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
-            }; //console.log({'GPS permission state': permissionStatus.state});
+                    //console.log({'GPS permission state': permissionStatus.state});
+                    GPSRequest._gpsPermission = permissionStatus.state;
+                    return GPSRequest._gpsPermission;
+                })
+            } else {
+                GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;
 
-
-            GPSRequest._gpsPermission = permissionStatus.state;
-            return GPSRequest._gpsPermission;
-          });
+                return new Promise(() => GPSRequest._gpsPermission);
+            }
         } else {
-          GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_UNKNOWN;
-          return new Promise(function () {
-            return GPSRequest._gpsPermission;
-          });
+            return new Promise(() => GPSRequest._gpsPermission);
         }
-      } else {
-        return new Promise(function () {
-          return GPSRequest._gpsPermission;
-        });
-      }
     }
-  }, {
-    key: "_setGPSPermission",
-    value: function _setGPSPermission(state) {
-      if (GPSRequest._gpsPermission !== state) {
-        GPSRequest._gpsPermission = state;
 
-        if (GPSRequest.gpsEventObject) {
-          GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+    static _setGPSPermission(state) {
+        if (GPSRequest._gpsPermission !== state) {
+            GPSRequest._gpsPermission = state;
+
+            if (GPSRequest.gpsEventObject) {
+                GPSRequest.gpsEventObject.fireEvent(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, GPSRequest._gpsPermission);
+            }
         }
-      }
     }
+
     /**
      *
      * @param {string=} gpsPromptBannerId
      * @return Promise
      */
+    static seekGPS (gpsPromptBannerId) {
+        GPSRequest.haveGPSPermission(); // ensures that GPSRequest._gpsPermission is initialised
 
-  }, {
-    key: "seekGPS",
-    value: function seekGPS(gpsPromptBannerId) {
-      GPSRequest.haveGPSPermission(); // ensures that GPSRequest._gpsPermission is initialised
-      // for delayed prompt see Google's UI advice here: https://developers.google.com/web/fundamentals/native-hardware/user-location
+        // for delayed prompt see Google's UI advice here: https://developers.google.com/web/fundamentals/native-hardware/user-location
+        let nudge = gpsPromptBannerId ? document.getElementById(gpsPromptBannerId) : null;
 
-      var nudge = gpsPromptBannerId ? document.getElementById(gpsPromptBannerId) : null;
-      var showNudgeBanner = nudge ? function () {
-        nudge.style.display = "block";
-      } : function () {};
-      var hideNudgeBanner = nudge ? function () {
-        nudge.style.display = "none";
-      } : function () {};
-      var nudgeTimeoutId;
+        let showNudgeBanner = nudge ? function() {
+            nudge.style.display = "block";
+        } : function() {};
 
-      if (nudge && GPSRequest._gpsPermission !== GPSRequest.GPS_PERMISSION_GRANTED) {
-        nudgeTimeoutId = setTimeout(showNudgeBanner, 5000);
-      } else {
-        nudgeTimeoutId = null;
-      }
+        let hideNudgeBanner = nudge ? function() {
+            nudge.style.display = "none";
+        } : function() {};
 
-      return new Promise(function (resolve, reject) {
-        return navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 30 * 1000,
-          // 30 second timeout
-          maximumAge: 20 * 1000 // can use a cached response from up to 20s ago
+        let nudgeTimeoutId;
 
-        });
-      }).then(function (position) {
-        // const latitude  = position.coords.latitude;
-        // const longitude = position.coords.longitude;
-        //
-        //
-        // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-        // const gridRef = gridCoords.to_gridref(1000);
-        //
-        // console.log(`Got grid-ref: ${gridRef}`);
-        // this.value = gridRef;
-        // this.fireEvent(FormField.EVENT_CHANGE);
-        var latitude = position.coords.latitude;
-        var longitude = position.coords.longitude;
-        console.log("Got GPS fix ".concat(latitude, " , ").concat(longitude)); //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
-        // this.processLatLngPosition(
-        //     position.coords.latitude,
-        //     position.coords.longitude,
-        //     position.coords.accuracy * 2
-        // );
-
-        if (nudge) {
-          clearTimeout(nudgeTimeoutId);
-          hideNudgeBanner();
-        } // unsure if this should be set as permission may only have been one-off
-        //GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_GRANTED;
-
-
-        GPSRequest._setGPSPermission(GPSRequest.GPS_PERMISSION_GRANTED);
-
-        return position;
-      }, function (error) {
-        console.log({
-          'gps look-up failed': error
-        });
-
-        switch (error.code) {
-          case error.TIMEOUT:
-          case error.PERMISSION_DENIED:
-            // The user didn't accept the callout
-            nudge && showNudgeBanner();
-            break;
+        if (nudge && GPSRequest._gpsPermission !== GPSRequest.GPS_PERMISSION_GRANTED) {
+            nudgeTimeoutId = setTimeout(showNudgeBanner, 5000);
+        } else {
+            nudgeTimeoutId = null;
         }
 
-        return null;
-      });
+        return new Promise((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy : true,
+                timeout : 30 * 1000, // 30 second timeout
+                maximumAge : 20 * 1000, // can use a cached response from up to 20s ago
+            })
+        ).then((position) => {
+            // const latitude  = position.coords.latitude;
+            // const longitude = position.coords.longitude;
+
+            //
+            //
+            // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+            // const gridRef = gridCoords.to_gridref(1000);
+            //
+            // console.log(`Got grid-ref: ${gridRef}`);
+            // this.value = gridRef;
+            // this.fireEvent(FormField.EVENT_CHANGE);
+
+            const latitude  = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            console.log(`Got GPS fix ${latitude} , ${longitude}`);
+            //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+
+            // this.processLatLngPosition(
+            //     position.coords.latitude,
+            //     position.coords.longitude,
+            //     position.coords.accuracy * 2
+            // );
+
+            if (nudge) {
+                clearTimeout(nudgeTimeoutId);
+                hideNudgeBanner();
+            }
+
+            // unsure if this should be set as permission may only have been one-off
+            //GPSRequest._gpsPermission = GPSRequest.GPS_PERMISSION_GRANTED;
+            GPSRequest._setGPSPermission(GPSRequest.GPS_PERMISSION_GRANTED);
+
+            return position;
+        }, (error) => {
+            console.log({'gps look-up failed' : error});
+
+            switch(error.code) {
+                case error.TIMEOUT:
+                case error.PERMISSION_DENIED:
+                    // The user didn't accept the callout
+                    nudge && showNudgeBanner();
+                    break;
+            }
+
+            return null;
+        });
     }
-  }]);
-
-  return GPSRequest;
-}(EventHarness);
-
-_defineProperty(GPSRequest, "DEVICE_TYPE_UNKNOWN", 'unknown');
-
-_defineProperty(GPSRequest, "DEVICE_TYPE_UNCHECKED", 'unchecked');
-
-_defineProperty(GPSRequest, "DEVICE_TYPE_MOBILE", 'mobile');
-
-_defineProperty(GPSRequest, "DEVICE_TYPE_IMMOBILE", 'immobile');
-
-_defineProperty(GPSRequest, "EVENT_GPS_PERMISSION_CHANGE", 'gpspermissionchange');
-
-_defineProperty(GPSRequest, "_deviceType", GPSRequest.DEVICE_TYPE_UNCHECKED);
-
-_defineProperty(GPSRequest, "GPS_PERMISSION_UNKNOWN", 'unknown');
-
-_defineProperty(GPSRequest, "GPS_PERMISSION_UNCHECKED", 'unchecked');
-
-_defineProperty(GPSRequest, "GPS_PERMISSION_GRANTED", 'granted');
-
-_defineProperty(GPSRequest, "GPS_PERMISSION_DENIED", 'denied');
-
-_defineProperty(GPSRequest, "GPS_PERMISSION_PROMPT", 'prompt');
-
-_defineProperty(GPSRequest, "_gpsPermission", GPSRequest.GPS_PERMISSION_UNCHECKED);
-
-_defineProperty(GPSRequest, "gpsEventObject", void 0);
+}
 
 /**
  *
@@ -11975,441 +5264,421 @@ _defineProperty(GPSRequest, "gpsEventObject", void 0);
  * @returns {boolean}
  */
 function doubleClickIntercepted(event) {
-  if (event.detail && event.detail > 1) {
-    event.preventDefault();
-    event.stopPropagation();
-    return true;
-  }
-
-  return false;
-}
-
-function _createSuper$j(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$j(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$j() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var TextGeorefField = /*#__PURE__*/function (_FormField) {
-  _inherits(TextGeorefField, _FormField);
-
-  var _super = _createSuper$j(TextGeorefField);
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * set if map has a well-defined zoom and centre
-   * (i.e. has been initialised from a typed grid-ref, a manual re-centre or user-click)
-   *
-   * @type {boolean}
-   */
-
-  /**
-   *
-   * @type {{
-   * rawString: string,
-   * precision: number|null,
-   * source: string,
-   * gridRef: string,
-   * latLng: ({lat:number,lng:number}|null)
-   * }}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   * the maximum precision to use for geocoded results
-   *
-   * @type {?int}
-   */
-
-  /**
-   * minimum (least precise) precision (m diameter) to allow
-   *
-   * @type {number}
-   */
-
-  /**
-   * maximum (most precise) precision (m diameter) to allow
-   * @type {number}
-   */
-
-  /**
-   * if set then as well as labelling the GPS button with a symbol, also include text 'GPS'
-   * @type {boolean}
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {boolean}
-   */
-
-  /**
-   *
-   * @type {boolean}
-   */
-  // /**
-  //  * if set (default false) then the field's placeholder changes dynamically, e.g. depending on the surveys base georef.
-  //  *
-  //  * @type {boolean}
-  //  */
-  // dynamicPlaceholderFlag = false;
-
-  /**
-   *
-   * @type {null|string}
-   * @private
-   */
-
-  /**
-   *
-   * @param {{
-   * [label] : string,
-   * [helpText]: string,
-   * [options]: {},
-   * [placeholder]: string,
-   * [type]: string,
-   * [autocomplete]: string,
-   * [baseSquareResolution]: ?number,
-   * [maxResolution]: ?number,
-   * [minResolution]: ?number,
-   * [gpsPermissionPromptText]: string,
-   * [initialiseFromDefaultSurveyGeoref] : boolean,
-   * [gpsTextLabel] : boolean,
-   * [showGPSEnableLinkIfNotActiveOnMobile] : boolean,
-   * }} [params]
-   */
-  function TextGeorefField(params) {
-    var _this;
-
-    _classCallCheck(this, TextGeorefField);
-
-    _this = _super.call(this, params);
-
-    _defineProperty(_assertThisInitialized(_this), "_inputId", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "containerId", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "mapPositionIsCurrent", false);
-
-    _defineProperty(_assertThisInitialized(_this), "_value", {
-      gridRef: '',
-      rawString: '',
-      // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-      source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
-      latLng: null,
-      precision: null
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_inputType", 'text');
-
-    _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
-
-    _defineProperty(_assertThisInitialized(_this), "baseSquareResolution", null);
-
-    _defineProperty(_assertThisInitialized(_this), "minResolution", 2000);
-
-    _defineProperty(_assertThisInitialized(_this), "maxResolution", 10);
-
-    _defineProperty(_assertThisInitialized(_this), "gpsTextLabel", false);
-
-    _defineProperty(_assertThisInitialized(_this), "gpsPermissionsPromptText", '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>');
-
-    _defineProperty(_assertThisInitialized(_this), "initialiseFromDefaultSurveyGeoref", false);
-
-    _defineProperty(_assertThisInitialized(_this), "showGPSEnableLinkIfNotActiveOnMobile", true);
-
-    _defineProperty(_assertThisInitialized(_this), "_gpsPermissionsPromptId", null);
-
-    _defineProperty(_assertThisInitialized(_this), "_seekingGPS", false);
-
-    if (params) {
-      if (params.type) {
-        _this._inputType = params.type;
-      }
-
-      if (params.placeholder) {
-        _this.placeholder = params.placeholder;
-      } // if (params.dynamicPlaceholder) {
-      //     this.dynamicPlaceholder = params.dynamicPlaceholder;
-      // }
-
-
-      if (params.autocomplete) {
-        _this._autocomplete = params.autocomplete;
-      }
-
-      if (params.baseSquareResolution) {
-        _this.baseSquareResolution = params.baseSquareResolution;
-      }
-
-      if (params.maxResolution) {
-        _this.maxResolution = params.maxResolution;
-      }
-
-      if (params.minResolution) {
-        _this.minResolution = params.minResolution;
-      }
-
-      if (params.gpsPermissionPromptText) {
-        _this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
-      }
-
-      if (params.gpsTextLabel) {
-        _this.gpsTextLabel = params.gpsTextLabel;
-      }
-
-      if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
-        _this.initialiseFromDefaultSurveyGeoref = params.initialiseFromDefaultSurveyGeoref;
-      }
-
-      if (params.hasOwnProperty('showGPSEnableLinkIfNotActiveOnMobile')) {
-        _this.showGPSEnableLinkIfNotActiveOnMobile = params.showGPSEnableLinkIfNotActiveOnMobile;
-      }
+    if (event.detail && event.detail > 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
     }
 
-    return _this;
-  }
-  /**
-   *
-   * @param {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}|string|null)} georefSpec
-   */
+    return false;
+}
 
+class TextGeorefField extends FormField {
 
-  _createClass(TextGeorefField, [{
-    key: "value",
-    get:
+    /**
+     * @type {string}
+     */
+    _inputId;
+
+    /**
+     * @type {string}
+     */
+    containerId;
+
+    /**
+     * set if map has a well-defined zoom and centre
+     * (i.e. has been initialised from a typed grid-ref, a manual re-centre or user-click)
+     *
+     * @type {boolean}
+     */
+    mapPositionIsCurrent = false;
+
+    /**
+     *
+     * @type {{
+     * rawString: string,
+     * precision: number|null,
+     * source: string,
+     * gridRef: string,
+     * latLng: ({lat:number,lng:number}|null)
+     * }}
+     * @private
+     */
+    _value = {
+        gridRef: '',
+        rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+        source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+        latLng: null,
+        precision: null
+    };
+
+    static GEOREF_SOURCE_UNKNOWN = 'unknown';
+    static GEOREF_SOURCE_GRIDREF = 'gridref';
+    static GEOREF_SOURCE_MAP = 'map';
+    static GEOREF_SOURCE_GPS = 'gps';
+    static GEOREF_SOURCE_POSTCODE = 'postcode';
+    static GEOREF_SOURCE_PLACE = 'place';
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _inputType = 'text';
+
+    /**
+     *
+     * @type {string}
+     */
+    _autocomplete = '';
+
+    /**
+     * the maximum precision to use for geocoded results
+     *
+     * @type {?int}
+     */
+    baseSquareResolution = null;
+
+    /**
+     * minimum (least precise) precision (m diameter) to allow
+     *
+     * @type {number}
+     */
+    minResolution = 2000;
+
+    /**
+     * maximum (most precise) precision (m diameter) to allow
+     * @type {number}
+     */
+    maxResolution = 10;
+
+    /**
+     * if set then as well as labelling the GPS button with a symbol, also include text 'GPS'
+     * @type {boolean}
+     */
+    gpsTextLabel = false;
+
+    /**
+     *
+     * @type {string}
+     */
+    gpsPermissionsPromptText = '<p class="gps-nudge">Allowing access to GPS will save you time by allowing the app to locate your records automatically.</p>';
+
+    /**
+     *
+     * @type {boolean}
+     */
+    initialiseFromDefaultSurveyGeoref = false;
+
+    /**
+     *
+     * @type {boolean}
+     */
+    showGPSEnableLinkIfNotActiveOnMobile = true;
+
+    // /**
+    //  * if set (default false) then the field's placeholder changes dynamically, e.g. depending on the surveys base georef.
+    //  *
+    //  * @type {boolean}
+    //  */
+    // dynamicPlaceholderFlag = false;
+
+    /**
+     *
+     * @type {null|string}
+     * @private
+     */
+    _gpsPermissionsPromptId = null;
+
+    /**
+     *
+     * @param {{
+     * [label] : string,
+     * [helpText]: string,
+     * [options]: {},
+     * [placeholder]: string,
+     * [type]: string,
+     * [autocomplete]: string,
+     * [baseSquareResolution]: ?number,
+     * [maxResolution]: ?number,
+     * [minResolution]: ?number,
+     * [gpsPermissionPromptText]: string,
+     * [initialiseFromDefaultSurveyGeoref] : boolean,
+     * [gpsTextLabel] : boolean,
+     * [showGPSEnableLinkIfNotActiveOnMobile] : boolean,
+     * }} [params]
+     */
+    constructor (params) {
+        super(params);
+
+        if (params) {
+            if (params.type) {
+                this._inputType = params.type;
+            }
+
+            if (params.placeholder) {
+                this.placeholder = params.placeholder;
+            }
+
+            // if (params.dynamicPlaceholder) {
+            //     this.dynamicPlaceholder = params.dynamicPlaceholder;
+            // }
+
+            if (params.autocomplete) {
+                this._autocomplete = params.autocomplete;
+            }
+
+            if (params.baseSquareResolution) {
+                this.baseSquareResolution = params.baseSquareResolution;
+            }
+
+            if (params.maxResolution) {
+                this.maxResolution = params.maxResolution;
+            }
+
+            if (params.minResolution) {
+                this.minResolution = params.minResolution;
+            }
+
+            if (params.gpsPermissionPromptText) {
+                this.gpsPermissionsPromptText = params.gpsPermissionPromptText;
+            }
+
+            if (params.gpsTextLabel) {
+                this.gpsTextLabel = params.gpsTextLabel;
+            }
+
+            if (params.hasOwnProperty('initialiseFromDefaultSurveyGeoref')) {
+                this.initialiseFromDefaultSurveyGeoref = params.initialiseFromDefaultSurveyGeoref;
+            }
+
+            if (params.hasOwnProperty('showGPSEnableLinkIfNotActiveOnMobile')) {
+                this.showGPSEnableLinkIfNotActiveOnMobile = params.showGPSEnableLinkIfNotActiveOnMobile;
+            }
+        }
+    }
+
+    /**
+     *
+     * @param {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}|string|null)} georefSpec
+     */
+    set value(georefSpec) {
+        //this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+
+        if (georefSpec) {
+            if (typeof (georefSpec) === 'string') {
+                // backward compatible string gridref
+                this._value = {
+                    gridRef: georefSpec,
+                    rawString: georefSpec, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                    source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                    latLng: null,
+                    precision: null
+                };
+            } else {
+                this._value = georefSpec;
+            }
+        } else {
+            this._value = {
+                gridRef: '',
+                rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: null,
+                latLng: null,
+                precision: null
+            };
+        }
+
+        this.updateView();
+    }
+
     /**
      *
      * @returns {{rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: Array|null}}
      */
-    function get() {
-      return this._value;
-    },
-    set: function set(georefSpec) {
-      //this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
-      if (georefSpec) {
-        if (typeof georefSpec === 'string') {
-          // backward compatible string gridref
-          this._value = {
-            gridRef: georefSpec,
-            rawString: georefSpec,
-            // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-            source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
-            latLng: null,
-            precision: null
-          };
-        } else {
-          this._value = georefSpec;
-        }
-      } else {
-        this._value = {
-          gridRef: '',
-          rawString: '',
-          // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-          source: null,
-          latLng: null,
-          precision: null
-        };
-      }
+    get value() {
+        return this._value;
+    }
 
-      this.updateView();
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const inputEl = document.getElementById(this._inputId);
+            inputEl.value = FormField.cleanRawString(this._value.gridRef);
+        }
     }
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var inputEl = document.getElementById(this._inputId);
-        inputEl.value = FormField.cleanRawString(this._value.gridRef);
-      }
-    }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+        // <div class="form-group">
+        //     <label for="{baseId}gridref">Postcode or grid-reference</label>
+        //     <input type="text" class="form-control" id="{baseId}gridref" aria-describedby="{baseId}grHelp" placeholder="Grid-reference or postcode">
+        //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
+        // </div>
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      // <div class="form-group">
-      //     <label for="{baseId}gridref">Postcode or grid-reference</label>
-      //     <input type="text" class="form-control" id="{baseId}gridref" aria-describedby="{baseId}grHelp" placeholder="Grid-reference or postcode">
-      //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
-      // </div>
-      // <div class="form-group">
-      //     <label for="{baseId}gridref">Postcode or grid-reference</label>
-      //     <div class="input-group">
-      //         <input id="{baseId}gridref" aria-describedby="{baseId}grHelp" type="text" class="form-control" placeholder="Grid-reference or postcode" autocomplete="postal-code" required>
-      //         <span class="input-group-btn">
-      //             <button id="gps" type="button" class="btn btn-outline-secondary btn-sm" title="use GPS">
-      //                 <span class="material-icons">gps_not_fixed</span>
-      //             </button>
-      //         </span>
-      //     </div>
-      //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
-      // </div>
-      var container = document.createElement('div');
-      container.className = 'form-group';
-      this.containerId = container.id = FormField.nextId;
-      this._inputId = FormField.nextId;
+        // <div class="form-group">
+        //     <label for="{baseId}gridref">Postcode or grid-reference</label>
+        //     <div class="input-group">
+        //         <input id="{baseId}gridref" aria-describedby="{baseId}grHelp" type="text" class="form-control" placeholder="Grid-reference or postcode" autocomplete="postal-code" required>
+        //         <span class="input-group-btn">
+        //             <button id="gps" type="button" class="btn btn-outline-secondary btn-sm" title="use GPS">
+        //                 <span class="material-icons">gps_not_fixed</span>
+        //             </button>
+        //         </span>
+        //     </div>
+        //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
+        // </div>
 
-      if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
-        // if on a mobile device and GPS is not turned on
-        var gpsEnabledLinkEl = document.createElement('a');
-        gpsEnabledLinkEl.className = 'no-gps-link-prompt'; // will be visible only if document body doesn't have a 'gps-enabled' class
+        const container = document.createElement('div');
+        container.className = 'form-group';
+        this.containerId = container.id = FormField.nextId;
 
-        gpsEnabledLinkEl.href = '#';
-        gpsEnabledLinkEl.innerText = 'Please enable GPS';
-        container.appendChild(gpsEnabledLinkEl);
-        gpsEnabledLinkEl.addEventListener('click', this.gpsButtonClickHandler.bind(this));
-      }
+        this._inputId = FormField.nextId;
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = this._inputId;
-      labelEl.textContent = this.label;
-      var inputGroupEl = container.appendChild(document.createElement('div'));
-      inputGroupEl.className = 'input-group';
-      var inputField = inputGroupEl.appendChild(document.createElement('input'));
-      inputField.className = "form-control";
-      inputField.id = this._inputId;
-      inputField.type = 'text';
+        if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
+            // if on a mobile device and GPS is not turned on
 
-      if (this.placeholder) {
-        inputField.placeholder = this.placeholder;
-      }
+            const gpsEnabledLinkEl = document.createElement('a');
+            gpsEnabledLinkEl.className = 'no-gps-link-prompt'; // will be visible only if document body doesn't have a 'gps-enabled' class
+            gpsEnabledLinkEl.href = '#';
+            gpsEnabledLinkEl.innerText = 'Please enable GPS';
+            container.appendChild(gpsEnabledLinkEl);
 
-      if (this._autocomplete) {
-        inputField.autocomplete = this._autocomplete;
-
-        if ('off' === this._autocomplete) {
-          // browsers tend to ignore autocomplete off, so also assign a random 'name' value
-          inputField.name = uuid();
-        }
-      }
-
-      var buttonContainerEl = inputGroupEl.appendChild(document.createElement('span'));
-      buttonContainerEl.className = 'input-group-btn';
-
-      if (navigator.geolocation) {
-        var gpsButton = buttonContainerEl.appendChild(document.createElement('button'));
-        gpsButton.id = FormField.nextId;
-        gpsButton.type = 'button';
-        gpsButton.className = 'btn btn-outline-secondary btn-sm';
-        gpsButton.title = 'use GPS';
-
-        if (this.gpsTextLabel) {
-          var gpsTextLabel = gpsButton.appendChild(document.createElement('span'));
-          gpsTextLabel.style.verticalAlign = 'middle';
-          gpsTextLabel.innerText = 'GPS ';
+            gpsEnabledLinkEl.addEventListener('click', this.gpsButtonClickHandler.bind(this));
         }
 
-        var buttonIconEl = gpsButton.appendChild(document.createElement('span'));
-        buttonIconEl.className = 'material-icons';
-        buttonIconEl.innerText = 'gps_not_fixed';
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this._inputId;
+        labelEl.textContent = this.label;
 
-        if (this.gpsTextLabel) {
-          buttonIconEl.style.verticalAlign = 'middle';
+        const inputGroupEl = container.appendChild(document.createElement('div'));
+        inputGroupEl.className = 'input-group';
+
+        const inputField = inputGroupEl.appendChild(document.createElement('input'));
+        inputField.className = "form-control";
+        inputField.id = this._inputId;
+        inputField.type = 'text';
+
+        if (this.placeholder) {
+            inputField.placeholder = this.placeholder;
         }
 
-        gpsButton.addEventListener('click', this.gpsButtonClickHandler.bind(this));
-      }
+        if (this._autocomplete) {
+            inputField.autocomplete = this._autocomplete;
 
-      if (this.completion === FormField.COMPLETION_COMPULSORY) {
-        inputField.required = true;
-      }
+            if ('off' === this._autocomplete) {
+                // browsers tend to ignore autocomplete off, so also assign a random 'name' value
+                inputField.name = uuid();
+            }
+        }
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        const buttonContainerEl = inputGroupEl.appendChild(document.createElement('span'));
+        buttonContainerEl.className = 'input-group-btn';
 
-      if (this.gpsPermissionsPromptText && navigator.geolocation) {
-        var gpsPermissionsPromptField = container.appendChild(document.createElement('small'));
-        this._gpsPermissionsPromptId = gpsPermissionsPromptField.id = FormField.nextId;
-        gpsPermissionsPromptField.style.display = 'none'; // hidden initially
+        if (navigator.geolocation) {
+            const gpsButton = buttonContainerEl.appendChild(document.createElement('button'));
+            gpsButton.id = FormField.nextId;
+            gpsButton.type = 'button';
+            gpsButton.className = 'btn btn-outline-secondary btn-sm';
+            gpsButton.title = 'use GPS';
 
-        gpsPermissionsPromptField.innerHTML = this.gpsPermissionsPromptText;
-      }
+            if (this.gpsTextLabel) {
+                const gpsTextLabel = gpsButton.appendChild(document.createElement('span'));
+                gpsTextLabel.style.verticalAlign = 'middle';
+                gpsTextLabel.innerText = 'GPS ';
+            }
 
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
+            const buttonIconEl = gpsButton.appendChild(document.createElement('span'));
+            buttonIconEl.className = 'material-icons';
+            buttonIconEl.innerText = 'gps_not_fixed';
 
-      inputField.addEventListener('change', this.inputChangeHandler.bind(this));
-      this._fieldEl = container;
+            if (this.gpsTextLabel) {
+                buttonIconEl.style.verticalAlign = 'middle';
+            }
+
+            gpsButton.addEventListener('click', this.gpsButtonClickHandler.bind(this));
+        }
+
+        if (this.completion === FormField.COMPLETION_COMPULSORY) {
+            inputField.required = true;
+        }
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        if (this.gpsPermissionsPromptText && navigator.geolocation) {
+            const gpsPermissionsPromptField = container.appendChild(document.createElement('small'));
+            this._gpsPermissionsPromptId = gpsPermissionsPromptField.id = FormField.nextId;
+            gpsPermissionsPromptField.style.display = 'none'; // hidden initially
+            gpsPermissionsPromptField.innerHTML = this.gpsPermissionsPromptText;
+        }
+
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
+
+        inputField.addEventListener('change', this.inputChangeHandler.bind(this));
+
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {(boolean|null)} isValid
      */
+    markValidity(isValid) {
+        const el = document.getElementById(this._inputId);
 
-  }, {
-    key: "markValidity",
-    value: function markValidity(isValid) {
-      var el = document.getElementById(this._inputId);
-
-      if (null === isValid) {
-        el.classList.remove('is-invalid', 'is-valid');
-      } else {
-        el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
-        el.classList.add(isValid ? 'is-valid' : 'is-invalid');
-      }
+        if (null === isValid) {
+            el.classList.remove('is-invalid', 'is-valid');
+        } else {
+            el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
+            el.classList.add(isValid ? 'is-valid' : 'is-invalid');
+        }
     }
-  }, {
-    key: "inputChangeHandler",
-    value: function inputChangeHandler(event) {
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
-      //console.log('got input field change event');
 
-      var rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
-      var gridRefParser = S.from_string(rawValue);
-      this.mapPositionIsCurrent = false; // any linked map ought to be re-centred & zoomed
+    inputChangeHandler (event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      if (gridRefParser) {
-        this.value = {
-          gridRef: gridRefParser.preciseGridRef,
-          rawString: rawValue,
-          // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-          source: TextGeorefField.GEOREF_SOURCE_GRIDREF,
-          latLng: null,
-          precision: null
-        };
-      } else {
-        // should try geo-coding the value
-        this.value = {
-          gridRef: '',
-          rawString: rawValue,
-          // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-          source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
-          latLng: null,
-          precision: null
-        };
-      }
+        //console.log('got input field change event');
 
-      this.fireEvent(FormField.EVENT_CHANGE);
-    } // /**
+        let rawValue = FormField.cleanRawString(document.getElementById(this._inputId).value);
+        const gridRefParser = S.from_string(rawValue);
+
+        this.mapPositionIsCurrent = false; // any linked map ought to be re-centred & zoomed
+
+        if (gridRefParser) {
+            this.value = {
+                gridRef: gridRefParser.preciseGridRef,
+                rawString: rawValue, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: TextGeorefField.GEOREF_SOURCE_GRIDREF,
+                latLng: null,
+                precision: null
+            };
+        } else {
+            // should try geo-coding the value
+
+            this.value = {
+                gridRef: '',
+                rawString: rawValue, // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                latLng: null,
+                precision: null
+            };
+        }
+
+        this.fireEvent(FormField.EVENT_CHANGE);
+    }
+
+    // /**
     //  *
     //  * @param {MouseEvent} event
     //  */
@@ -12439,68 +5708,73 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
      *
      * @param {MouseEvent} event
      */
+    gpsButtonClickHandler (event) {
+        if (doubleClickIntercepted(event)) {
+            return;
+        }
 
-  }, {
-    key: "gpsButtonClickHandler",
-    value: function gpsButtonClickHandler(event) {
-      if (doubleClickIntercepted(event)) {
-        return;
-      }
+        let containerEl = document.getElementById(this.containerId);
 
-      var containerEl = document.getElementById(this.containerId);
-      containerEl.classList.add('gps-active');
-      this.seekGPS().catch(function (error) {
-        console.log({
-          'gps look-up failed, error': error
+        containerEl.classList.add('gps-active');
+        this.seekGPS().catch((error) => {
+            console.log({'gps look-up failed, error' : error});
+        }).finally(() => {
+            containerEl.classList.remove('gps-active');
         });
-      }).finally(function () {
-        containerEl.classList.remove('gps-active');
-      });
-      event.preventDefault();
-      event.stopPropagation();
+
+        event.preventDefault();
+        event.stopPropagation();
     }
-  }, {
-    key: "seekGPS",
-    value:
+
+    _seekingGPS = false;
+
     /**
      *
      * @returns {Promise<unknown>}
      */
-    function seekGPS() {
-      var _this2 = this;
+    seekGPS() {
 
-      if (this._seekingGPS) {
-        // a GPS request is already in progress
-        // don't allow concurrent GPS seek requests
-        return Promise.reject();
-      } else {
-        this._seekingGPS = true;
-        return GPSRequest.seekGPS(this._gpsPermissionsPromptId).then(function (position) {
-          _this2._seekingGPS = false; // const latitude  = position.coords.latitude;
-          // const longitude = position.coords.longitude;
-          // console.log(`Got GPS fix ${latitude} , ${longitude}`);
-          //
-          // const gridCoords = GridCoords.from_latlng(latitude, longitude);
-          // const gridRef = gridCoords.to_gridref(1000);
-          //
-          // console.log(`Got grid-ref: ${gridRef}`);
-          // this.value = gridRef;
-          // this.fireEvent(FormField.EVENT_CHANGE);
-          //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+        if (this._seekingGPS) {
+            // a GPS request is already in progress
+            // don't allow concurrent GPS seek requests
+            return Promise.reject();
+        } else {
+            this._seekingGPS = true;
 
-          console.log({
-            'gps position': position
-          });
-          var accuracy = position.coords.accuracy * 2;
-          _this2.mapPositionIsCurrent = false; // force zoom and re-centre
+            return GPSRequest.seekGPS(this._gpsPermissionsPromptId).then((position) => {
+                this._seekingGPS = false;
+                // const latitude  = position.coords.latitude;
+                // const longitude = position.coords.longitude;
 
-          _this2.processLatLngPosition(position.coords.latitude, position.coords.longitude, accuracy, TextGeorefField.GEOREF_SOURCE_GPS);
-        }, function (error) {
-          _this2._seekingGPS = false;
-          return error;
-        });
-      }
+                // console.log(`Got GPS fix ${latitude} , ${longitude}`);
+                //
+                // const gridCoords = GridCoords.from_latlng(latitude, longitude);
+                // const gridRef = gridCoords.to_gridref(1000);
+                //
+                // console.log(`Got grid-ref: ${gridRef}`);
+                // this.value = gridRef;
+                // this.fireEvent(FormField.EVENT_CHANGE);
+
+                //@todo maybe should prevent use of readings if speed is too great (which might imply use of GPS in a moving vehicle)
+
+                console.log({'gps position': position});
+                let accuracy = position.coords.accuracy * 2;
+
+                this.mapPositionIsCurrent = false; // force zoom and re-centre
+
+                this.processLatLngPosition(
+                    position.coords.latitude,
+                    position.coords.longitude,
+                    accuracy,
+                    TextGeorefField.GEOREF_SOURCE_GPS
+                );
+            }, (error) => {
+                this._seekingGPS = false;
+                return error;
+            });
+        }
     }
+
     /**
      *
      * @param {number} latitude
@@ -12509,37 +5783,33 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
      * @param {string} source
      * @param {string} rawString
      */
+    processLatLngPosition(latitude, longitude, precision, source, rawString = '') {
+        const gridCoords = h.from_latlng(latitude, longitude);
 
-  }, {
-    key: "processLatLngPosition",
-    value: function processLatLngPosition(latitude, longitude, precision, source) {
-      var rawString = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
-      var gridCoords = h.from_latlng(latitude, longitude);
-      var scaledPrecision = S.get_normalized_precision(precision);
+        let scaledPrecision = S.get_normalized_precision(precision);
+        if (this.maxResolution && scaledPrecision < this.maxResolution) {
+            scaledPrecision = this.maxResolution;
+        }
 
-      if (this.maxResolution && scaledPrecision < this.maxResolution) {
-        scaledPrecision = this.maxResolution;
-      }
+        if (this.minResolution && scaledPrecision > this.minResolution) {
+            scaledPrecision = this.minResolution;
+        }
 
-      if (this.minResolution && scaledPrecision > this.minResolution) {
-        scaledPrecision = this.minResolution;
-      }
+        const gridRef = gridCoords.to_gridref(scaledPrecision);
 
-      var gridRef = gridCoords.to_gridref(scaledPrecision);
-      console.log("Got grid-ref: ".concat(gridRef)); //this.value = gridRef;
+        console.log(`Got grid-ref: ${gridRef}`);
+        //this.value = gridRef;
+        this.value = {
+            gridRef: gridRef,
+            rawString: rawString,
+            source: source,
+            latLng: {lat:latitude,lng:longitude},
+            precision: precision
+        };
 
-      this.value = {
-        gridRef: gridRef,
-        rawString: rawString,
-        source: source,
-        latLng: {
-          lat: latitude,
-          lng: longitude
-        },
-        precision: precision
-      };
-      this.fireEvent(FormField.EVENT_CHANGE);
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -12552,23 +5822,21 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
-
-  }], [{
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined && attributes[key].gridRef ? "<span>grid-reference <span class=\"gridref-summary\">".concat(escapeHTML(attributes[key].gridRef.trim()), "</span></span>") : '';
+    static summariseImpl(key, property, attributes) {
+        return (attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined && attributes[key].gridRef) ?
+            `<span>grid-reference <span class="gridref-summary">${escapeHTML(attributes[key].gridRef.trim())}</span></span>`
+            : '';
     }
+
     /**
      *
      * @param value
      * @returns {boolean}
      */
-
-  }, {
-    key: "isEmpty",
-    value: function isEmpty(value) {
-      return !(value && value.gridRef);
+    static isEmpty(value) {
+        return !(value && value.gridRef);
     }
+
     /**
      *
      *
@@ -12577,126 +5845,110 @@ var TextGeorefField = /*#__PURE__*/function (_FormField) {
      * @param attributes
      * @returns {null|boolean}
      */
+    static isValid(key, property, attributes) {
+        //console.log("in TextGeorefField isValid");
 
-  }, {
-    key: "isValid",
-    value: function isValid(key, property, attributes) {
-      //console.log("in TextGeorefField isValid");
-      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
-        // test whether required field is missing
-        if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
-          return false;
-        } else {
-          // check if grid-ref is set
-          var geoRef = attributes[key];
-          console.log({
-            "testing gr validity": geoRef
-          });
-          return !!(geoRef && geoRef.gridRef);
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is missing
+            if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
+                return false;
+            } else {
+                // check if grid-ref is set
+                let geoRef = attributes[key];
+
+                console.log({"testing gr validity" : geoRef});
+
+                return !!(geoRef && geoRef.gridRef);
+            }
         }
-      } // field is present or optional
-      // report as valid unless content is corrupt
+        // field is present or optional
+        // report as valid unless content is corrupt
 
-
-      return null; // field not assessed
+        return null; // field not assessed
     }
-  }]);
+}
 
-  return TextGeorefField;
-}(FormField);
+// a Survey captures the currentSurvey meta data
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_UNKNOWN", 'unknown');
+class Survey extends Model {
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_GRIDREF", 'gridref');
+    /**
+     * fired from Survey when the object's contents have been modified
+     *
+     * @type {string}
+     */
+    static EVENT_MODIFIED = 'modified';
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_MAP", 'map');
+    SAVE_ENDPOINT = '/savesurvey.php';
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_GPS", 'gps');
+    TYPE = 'survey';
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_POSTCODE", 'postcode');
+    /**
+     *
+     * @type {Object.<string, *>}
+     */
+    attributes = {
 
-_defineProperty(TextGeorefField, "GEOREF_SOURCE_PLACE", 'place');
+    };
 
-function _createSuper$i(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$i(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+    /**
+     * if set then provide default values (e.g. GPS look-up of current geo-reference)
+     *
+     * @type {boolean}
+     */
+    isNew = false;
 
-function _isNativeReflectConstruct$i() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var Survey = /*#__PURE__*/function (_Model) {
-  _inherits(Survey, _Model);
+    /**
+     * kludge to flag once the App singleton has set up a listner for changes on the survey
+     * @type {boolean}
+     */
+    hasAppModifiedListener = false;
 
-  var _super = _createSuper$i(Survey);
-
-  function Survey() {
-    var _this;
-
-    _classCallCheck(this, Survey);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this), "SAVE_ENDPOINT", '/savesurvey.php');
-
-    _defineProperty(_assertThisInitialized(_this), "TYPE", 'survey');
-
-    _defineProperty(_assertThisInitialized(_this), "attributes", {});
-
-    _defineProperty(_assertThisInitialized(_this), "isNew", false);
-
-    _defineProperty(_assertThisInitialized(_this), "hasAppModifiedListener", false);
-
-    return _this;
-  }
-
-  _createClass(Survey, [{
-    key: "geoReference",
-    get:
     /**
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
-    function get() {
-      return this.attributes.georef || {
-        gridRef: '',
-        rawString: '',
-        // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-        source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
-        latLng: null,
-        precision: null
-      };
+    get geoReference() {
+        return this.attributes.georef || {
+            gridRef: '',
+            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+            latLng: null,
+            precision: null
+        };
+    };
+
+    get date() {
+        return this.attributes.date || '';
     }
-  }, {
-    key: "date",
-    get: function get() {
-      return this.attributes.date || '';
+
+    get place() {
+        return this.attributes.place || '';
     }
-  }, {
-    key: "place",
-    get: function get() {
-      return this.attributes.place || '';
-    }
+
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
      *
      * @param {{form: SurveyForm}} params
      */
+    formChangedHandler(params) {
+        console.log('Survey change handler invoked.');
 
-  }, {
-    key: "formChangedHandler",
-    value: function formChangedHandler(params) {
-      console.log('Survey change handler invoked.'); // read new values
-      // then fire its own change event (Occurrence.EVENT_MODIFIED)
+        // read new values
+        // then fire its own change event (Occurrence.EVENT_MODIFIED)
+        params.form.updateModelFromContent();
 
-      params.form.updateModelFromContent();
-      console.log('Survey calling conditional validation.'); // refresh the form's validation state
+        console.log('Survey calling conditional validation.');
 
-      params.form.conditionallyValidateForm();
-      this.touch();
-      this.fireEvent(Survey.EVENT_MODIFIED, {
-        surveyId: this.id
-      });
+        // refresh the form's validation state
+        params.form.conditionallyValidateForm();
+
+        this.touch();
+        this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
     }
+
     /**
      * Used for special-case setting of a custom attribute
      * (i.e. not usually one linked to a form)
@@ -12705,37 +5957,31 @@ var Survey = /*#__PURE__*/function (_Model) {
      * @param attributeName
      * @param value
      */
+    setAttribute(attributeName, value) {
+        if (this.attributes[attributeName] !== value) {
+            this.attributes[attributeName] = value;
 
-  }, {
-    key: "setAttribute",
-    value: function setAttribute(attributeName, value) {
-      if (this.attributes[attributeName] !== value) {
-        this.attributes[attributeName] = value;
-        this.touch();
-        this.fireEvent(Survey.EVENT_MODIFIED, {
-          surveyId: this.id
-        });
-      }
+            this.touch();
+            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+        }
     }
+
     /**
      *
      * @param {SurveyForm} form
      */
+    registerForm(form) {
+        form.model = this;
+        form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
 
-  }, {
-    key: "registerForm",
-    value: function registerForm(form) {
-      form.model = this;
-      form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
-
-      if (this.isNew) {
-        form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
-
-        form.liveValidation = false;
-      } else {
-        form.liveValidation = true;
-      }
+        if (this.isNew) {
+            form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+            form.liveValidation = false;
+        } else {
+            form.liveValidation = true;
+        }
     }
+
     /**
      * if not securely saved then makes a post to /savesurvey.php
      *
@@ -12750,98 +5996,69 @@ var Survey = /*#__PURE__*/function (_Model) {
      *
      * @returns {Promise}
      */
+    save() {
+        if (!this._savedRemotely) {
+            const formData = new FormData;
 
-  }, {
-    key: "save",
-    value: function save() {
-      if (!this._savedRemotely) {
-        var formData = new FormData();
-        formData.append('type', this.TYPE);
-        formData.append('surveyId', this.id);
-        formData.append('id', this.id);
-        formData.append('projectId', this.projectId.toString());
-        formData.append('attributes', JSON.stringify(this.attributes));
-        formData.append('deleted', this.deleted.toString());
-        formData.append('created', this.createdStamp.toString());
-        console.log('queueing survey post');
-        return this.queuePost(formData);
-      } else {
-        return Promise.reject("".concat(this.id, " has already been saved."));
-      }
+            formData.append('type', this.TYPE);
+            formData.append('surveyId', this.id);
+            formData.append('id', this.id);
+            formData.append('projectId', this.projectId.toString());
+            formData.append('attributes', JSON.stringify(this.attributes));
+            formData.append('deleted', this.deleted.toString());
+            formData.append('created', this.createdStamp.toString());
+
+            console.log('queueing survey post');
+            return this.queuePost(formData);
+        } else {
+            return Promise.reject(`${this.id} has already been saved.`);
+        }
     }
+
     /**
      *
      * @returns {string} an html-safe string based on the locality and creation date
      */
+    generateSurveyName() {
+        let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
 
-  }, {
-    key: "generateSurveyName",
-    value: function generateSurveyName() {
-      var place = (this.attributes.place || this.attributes.georef && this.attributes.georef.gridRef || '(unlocalised)').trim();
-      var userDate = this.date;
-      var dateString;
+        const userDate = this.date;
+        let dateString;
 
-      if (userDate) {
-        dateString = userDate;
-      } else {
-        var createdDate = new Date(this.createdStamp * 1000);
+        if (userDate) {
+            dateString = userDate;
+        } else {
+            const createdDate = new Date(this.createdStamp * 1000);
 
-        try {
-          // 'default' locale fails on Edge
-          dateString = createdDate.toLocaleString('default', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
-        } catch (e) {
-          dateString = createdDate.toLocaleString('en-GB', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
+            try {
+                // 'default' locale fails on Edge
+                dateString = createdDate.toLocaleString('default', {year: 'numeric', month: 'long', day: 'numeric'});
+            } catch (e) {
+                dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
+            }
         }
-      }
 
-      return "".concat(escapeHTML(place), " ").concat(dateString);
+        return `${escapeHTML(place)} ${dateString}`;
     }
-  }]);
+}
 
-  return Survey;
-}(Model);
+class OccurrenceImage extends Model {
 
-_defineProperty(Survey, "EVENT_MODIFIED", 'modified');
+    /**
+     * raw file object retrieved from a file upload image element
+     *
+     * @type {File}
+     */
+    file;
 
-function _createSuper$h(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$h(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+    /**
+     *
+     * @type {Map.<string, OccurrenceImage>}
+     */
+    static imageCache = new Map;
 
-function _isNativeReflectConstruct$h() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var OccurrenceImage = /*#__PURE__*/function (_Model) {
-  _inherits(OccurrenceImage, _Model);
+    TYPE = 'image';
 
-  var _super = _createSuper$h(OccurrenceImage);
-
-  function OccurrenceImage() {
-    var _this;
-
-    _classCallCheck(this, OccurrenceImage);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this), "file", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "TYPE", 'image');
-
-    _defineProperty(_assertThisInitialized(_this), "SAVE_ENDPOINT", '/saveimage.php');
-
-    return _this;
-  }
-
-  _createClass(OccurrenceImage, [{
-    key: "getUrl",
-    value:
     /**
      * fetches a url of the image
      * this might be a remote url (or one intercepted by a service worker)
@@ -12849,10 +6066,23 @@ var OccurrenceImage = /*#__PURE__*/function (_Model) {
      *
      * @returns {string}
      */
-    function getUrl() {}
-  }, {
-    key: "save",
-    value:
+    getUrl () {
+
+    }
+
+    SAVE_ENDPOINT = '/saveimage.php';
+
+    /**
+     *
+     * @param {File} file
+     */
+    static fromFile(file) {
+        const image = new OccurrenceImage;
+        image.file = file;
+
+        return image;
+    }
+
     /**
      * if not securely saved then makes a post to /saveimage.php
      *
@@ -12870,48 +6100,59 @@ var OccurrenceImage = /*#__PURE__*/function (_Model) {
      * @param {number} projectId
      * @returns {Promise}
      */
-    function save(surveyId, occurrenceId, projectId) {
-      if (!this._savedRemotely) {
-        var formData = new FormData();
-        formData.append('type', this.TYPE);
-        formData.append('surveyId', surveyId ? surveyId : ''); // avoid 'undefined'
+    save(surveyId, occurrenceId, projectId) {
+        if (!this._savedRemotely) {
 
-        formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+            const formData = new FormData;
+            formData.append('type', this.TYPE);
+            formData.append('surveyId', surveyId ? surveyId : ''); // avoid 'undefined'
+            formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+            formData.append('projectId', projectId ? projectId.toString() : '');
+            formData.append('imageId', this.id);
+            formData.append('id', this.id);
+            formData.append('image', this.file);
+            formData.append('deleted', this.deleted.toString());
 
-        formData.append('projectId', projectId ? projectId.toString() : '');
-        formData.append('imageId', this.id);
-        formData.append('id', this.id);
-        formData.append('image', this.file);
-        formData.append('deleted', this.deleted.toString());
-        console.log("queueing image post, image id ".concat(this.id));
-        return this.queuePost(formData);
-      } else {
-        return Promise.reject("".concat(this.id, " has already been saved."));
-      }
+            console.log(`queueing image post, image id ${this.id}`);
+            return this.queuePost(formData);
+        } else {
+            return Promise.reject(`${this.id} has already been saved.`);
+        }
     }
+
     /**
      * fired from Occurrence when the object's contents have been modified
      *
      * @type {string}
      */
+    static EVENT_MODIFIED = 'modified';
 
-  }, {
-    key: "_parseDescriptor",
-    value:
+    /**
+     *
+     * @param id
+     * @returns {OccurrenceImage}
+     */
+    static placeholder(id) {
+        let placeholderObject = new OccurrenceImage;
+        placeholderObject._id = id;
+
+        OccurrenceImage.imageCache.set(id, placeholderObject);
+
+        return placeholderObject;
+    }
+
     /**
      *
      * @param {{surveyId: string, occurrenceId: string, [image]: File}} descriptor
      * @private
      */
-    function _parseDescriptor(descriptor) {
-      _get(_getPrototypeOf(OccurrenceImage.prototype), "_parseDescriptor", this).call(this, descriptor);
-
-      this.surveyId = descriptor.surveyId; // note lower case
-
-      this.occurrenceId = descriptor.occurrenceId; // note lower case
-
-      this.file = descriptor.image;
+    _parseDescriptor(descriptor) {
+        super._parseDescriptor(descriptor);
+        this.surveyId = descriptor.surveyId; // note lower case
+        this.occurrenceId = descriptor.occurrenceId; // note lower case
+        this.file = descriptor.image;
     }
+
     /**
      *
      * @param {string} id
@@ -12920,148 +6161,43 @@ var OccurrenceImage = /*#__PURE__*/function (_Model) {
      * @param {{[className] : string}} [attributes]
      * @return {string}
      */
+    static imageLink(id, width, height, attributes) {
+        width = width || 0;
+        height = height || 0;
 
-  }], [{
-    key: "fromFile",
-    value:
-    /**
-     *
-     * @param {File} file
-     */
-    function fromFile(file) {
-      var image = new OccurrenceImage();
-      image.file = file;
-      return image;
+        let attributesString = '';
+
+        if (attributes.className) {
+            attributesString += ` class="${attributes.className}"`;
+        }
+
+        const renderingConstraint = (width > height) ?
+            `width="${width}"`
+            :
+            `height="${height}"`;
+
+        return `<picture><source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=webp" type="image/webp"><img${attributesString} src="/image.php?imageid=${id}&amp;width=${width}&amp;height=${height}&amp;format=jpeg" ${renderingConstraint} alt="photo"></picture>`;
     }
-  }, {
-    key: "placeholder",
-    value:
-    /**
-     *
-     * @param id
-     * @returns {OccurrenceImage}
-     */
-    function placeholder(id) {
-      var placeholderObject = new OccurrenceImage();
-      placeholderObject._id = id;
-      OccurrenceImage.imageCache.set(id, placeholderObject);
-      return placeholderObject;
-    }
-  }, {
-    key: "imageLink",
-    value: function imageLink(id, width, height, attributes) {
-      width = width || 0;
-      height = height || 0;
-      var attributesString = '';
+}
 
-      if (attributes.className) {
-        attributesString += " class=\"".concat(attributes.className, "\"");
-      }
+// App.js
 
-      var renderingConstraint = width > height ? "width=\"".concat(width, "\"") : "height=\"".concat(height, "\"");
-      return "<picture><source srcset=\"/image.php?imageid=".concat(id, "&amp;height=128&amp;format=webp\" type=\"image/webp\"><img").concat(attributesString, " src=\"/image.php?imageid=").concat(id, "&amp;width=").concat(width, "&amp;height=").concat(height, "&amp;format=jpeg\" ").concat(renderingConstraint, " alt=\"photo\"></picture>");
-    }
-  }]);
-
-  return OccurrenceImage;
-}(Model);
-
-_defineProperty(OccurrenceImage, "imageCache", new Map());
-
-_defineProperty(OccurrenceImage, "EVENT_MODIFIED", 'modified');
-
-function _createForOfIteratorHelper$7(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$7(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray$7(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$7(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$7(o, minLen); }
-
-function _arrayLikeToArray$7(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _createSuper$g(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$g(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$g() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateFieldInitSpec$7(obj, privateMap, value) { _checkPrivateRedeclaration$9(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$9(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-var _router = /*#__PURE__*/new WeakMap();
-
-var _containerEl = /*#__PURE__*/new WeakMap();
-
-var App = /*#__PURE__*/function (_EventHarness) {
-  _inherits(App, _EventHarness);
-
-  var _super = _createSuper$g(App);
-
-  function App() {
-    var _this;
-
-    _classCallCheck(this, App);
-
-    _this = _super.call(this);
-
-    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _router, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$7(_assertThisInitialized(_this), _containerEl, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "controllers", []);
-
-    _defineProperty(_assertThisInitialized(_this), "currentControllerHandle", false);
-
-    _defineProperty(_assertThisInitialized(_this), "routeHistory", []);
-
-    _defineProperty(_assertThisInitialized(_this), "occurrences", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "surveys", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "_currentSurvey", null);
-
-    _defineProperty(_assertThisInitialized(_this), "layout", void 0);
-
-    _this.reset();
-
-    return _this;
-  }
-  /**
-   *
-   * @param {string} name
-   */
-
-
-  _createClass(App, [{
-    key: "currentSurvey",
-    get:
-    /**
-     *
-     * @returns {?Survey}
-     */
-    function get() {
-      return this._currentSurvey;
-    }
-    /**
-     *
-     * @returns {Promise<string | null>}
-     */
-    ,
-    set:
+class App extends EventHarness {
     /**
      * @type {PatchedNavigo}
      */
+    #router;
 
     /**
      * @type {HTMLElement}
      */
+    #containerEl;
 
     /**
      *
      * @type {Array.<AppController>}
      */
+    controllers = [];
 
     /**
      * tracks the handle of the current page controller
@@ -13069,329 +6205,357 @@ var App = /*#__PURE__*/function (_EventHarness) {
      *
      * @type {number|boolean}
      */
+    currentControllerHandle = false;
 
     /**
      *
      * @type {Array.<{url : string}>}
      */
+    routeHistory = [];
 
     /**
      * keyed by occurrence id (a UUID string)
      *
      * @type {Map.<string,Occurrence>}
      */
+    occurrences;
 
     /**
      * keyed by survey id (a UUID string)
      *
      * @type {Map.<string,Survey>}
      */
+    surveys;
 
     /**
      * @type {?Survey}
      */
+    _currentSurvey = null;
 
     /**
      *
      * @param {?Survey} survey
      */
-    function set(survey) {
-      if (this._currentSurvey !== survey) {
-        this._currentSurvey = survey || null;
-        var surveyId = survey ? survey.id : null;
-        localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
-      }
+    set currentSurvey(survey) {
+        if (this._currentSurvey !== survey) {
+            this._currentSurvey = survey || null;
+
+            let surveyId = survey ? survey.id : null;
+            localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
+        }
     }
-  }, {
-    key: "getLastSurveyId",
-    value: function getLastSurveyId() {
-      return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME).catch(function (error) {
-        console.log({
-          'Error retrieving last survey id': error
-        });
-        return Promise.resolve(null);
-      });
+
+    /**
+     *
+     * @returns {?Survey}
+     */
+    get currentSurvey() {
+        return this._currentSurvey;
     }
+
+    /**
+     *
+     * @returns {Promise<string | null>}
+     */
+    getLastSurveyId() {
+        return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME)
+            .catch((error) => {
+                console.log({'Error retrieving last survey id' : error});
+                return Promise.resolve(null);
+            });
+    }
+
     /**
      * @type {Layout}
      */
+    layout;
 
-  }, {
-    key: "setLocalForageName",
-    value: function setLocalForageName(name) {
-      localforage.config({
-        name: name
-      });
+    /**
+     * Event fired when user requests a new blank survey
+     * @type {string}
+     */
+    static EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';
+
+    /**
+     * Event fired when user requests a reset (local clearance) of all surveys
+     * @type {string}
+     */
+    static EVENT_RESET_SURVEYS = 'userresetsurveys';
+
+    /**
+     * Fired after App.currentSurvey has been set to a new blank survey
+     * the survey will be accessible in App.currentSurvey
+     *
+     * @type {string}
+     */
+    static EVENT_NEW_SURVEY = 'newsurvey';
+
+    static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
+
+    static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    /**
+     * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
+     *
+     * @type {string}
+     */
+    static EVENT_SURVEYS_CHANGED = 'surveyschanged';
+
+    /**
+     * Fired after fully-successful sync-all
+     * (or if sync-all resolved with nothing to send)
+     *
+     * @type {string}
+     */
+    static EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
+
+    /**
+     * fired if sync-all called, but one or more objects failed to be saved to the server
+     *
+     * @type {string}
+     */
+    static EVENT_SYNC_ALL_FAILED = 'syncallfailed';
+
+    /**
+     * IndexedDb key used for storing id of current (last accessed) survey (or null)
+     *
+     * @type {string}
+     */
+    static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
+
+    /**
+     *
+     * @type {boolean}
+     */
+    static devMode = false;
+
+    constructor() {
+        super();
+        this.reset();
     }
-  }, {
-    key: "reset",
-    value: function reset() {
-      this.surveys = new Map();
-      this.clearCurrentSurvey();
+
+    /**
+     *
+     * @param {string} name
+     */
+    setLocalForageName(name) {
+        localforage.config({
+            name: name
+        });
     }
+
+    reset() {
+        this.surveys = new Map();
+        this.clearCurrentSurvey();
+    }
+
     /**
      * unset the current survey and its associated list of occurrences
      * called when switching surveys and during startup
      */
-
-  }, {
-    key: "clearCurrentSurvey",
-    value: function clearCurrentSurvey() {
-      this.occurrences = new Map();
-      this.currentSurvey = null;
+    clearCurrentSurvey() {
+        this.occurrences = new Map();
+        this.currentSurvey = null;
     }
+
     /**
      * see https://github.com/krasimir/navigo
      * @param {PatchedNavigo} router
      */
+    set router(router) {
+        this.#router = router;
+    }
 
-  }, {
-    key: "router",
-    get:
     /**
      *
      * @returns {PatchedNavigo}
      */
-    function get() {
-      return _classPrivateFieldGet(this, _router);
-    },
-    set: function set(router) {
-      _classPrivateFieldSet(this, _router, router);
+    get router() {
+        return this.#router;
     }
-  }, {
-    key: "containerId",
-    set: function set(containerId) {
-      var el = document.getElementById(containerId);
 
-      if (!el) {
-        throw new Error("App container '".concat(containerId, "' not found."));
-      } else {
-        _classPrivateFieldSet(this, _containerEl, el);
-      }
+    set containerId(containerId) {
+        const el = document.getElementById(containerId);
+        if (!el) {
+            throw new Error(`App container '${containerId}' not found.`);
+        } else {
+            this.#containerEl = el;
+        }
     }
-  }, {
-    key: "container",
-    get: function get() {
-      return _classPrivateFieldGet(this, _containerEl);
+
+    get container() {
+        return this.#containerEl;
     }
+
     /**
      *
      * @param {AppController} controller
      */
+    registerController(controller) {
+        controller.handle = this.controllers.length;
+        this.controllers[this.controllers.length] = controller;
 
-  }, {
-    key: "registerController",
-    value: function registerController(controller) {
-      controller.handle = this.controllers.length;
-      this.controllers[this.controllers.length] = controller;
-      controller.app = this;
-      controller.registerRoute(_classPrivateFieldGet(this, _router));
+        controller.app = this;
+        controller.registerRoute(this.#router);
     }
-  }, {
-    key: "initialise",
-    value: function initialise() {
-      var _this2 = this;
 
-      //Page.initialise_layout(this.#containerEl);
-      this.layout.initialise();
+    initialise() {
+        //Page.initialise_layout(this.#containerEl);
+        this.layout.initialise();
 
-      _classPrivateFieldGet(this, _router).notFound(function (query) {
-        // called when there is path specified but
-        // there is no route matching
-        console.log("no route found for '".concat(query, "'")); //this.#router.navigate('/list');
+        this.#router.notFound((query) => {
+            // called when there is path specified but
+            // there is no route matching
 
-        var view = new NotFoundView();
-        view.display();
-      }); //default homepage
+            console.log(`no route found for '${query}'`);
+            //this.#router.navigate('/list');
 
+            const view = new NotFoundView();
+            view.display();
+        });
 
-      _classPrivateFieldGet(this, _router).on(function () {
-        // special-case redirect (replacing in history) from '/' to '/list' without updating browser history
-        console.log("redirecting from '/' to '/list'");
+        //default homepage
+        this.#router.on(() => {
+            // special-case redirect (replacing in history) from '/' to '/list' without updating browser history
 
-        _classPrivateFieldGet(_this2, _router).pause(); //if (this.clearCurrentSurvey && this.currentSurvey.isPristine) { // this appears to be a bug 'this.clearCurrentSurvey'
-        // rather than 'this.clearCurrentSurvey()' is nonsensical
-        // and if clearCurrentSurvey() was actually called then the isPristine test would fail (called on null)
+            console.log("redirecting from '/' to '/list'");
 
+            this.#router.pause();
+            //if (this.clearCurrentSurvey && this.currentSurvey.isPristine) { // this appears to be a bug 'this.clearCurrentSurvey'
+            // rather than 'this.clearCurrentSurvey()' is nonsensical
+            // and if clearCurrentSurvey() was actually called then the isPristine test would fail (called on null)
+            if (this.currentSurvey && this.currentSurvey.isPristine) {
+                this.#router.navigate('/list/survey/welcome').resume();
+            } else {
+                this.#router.navigate('/list').resume();
+            }
+            this.#router.resolve();
+        });
 
-        if (_this2.currentSurvey && _this2.currentSurvey.isPristine) {
-          _classPrivateFieldGet(_this2, _router).navigate('/list/survey/welcome').resume();
+        for (let controller of this.controllers) {
+            controller.initialise();
+        }
+    }
+
+    display() {
+        console.log('App display');
+        this.#router.resolve();
+
+        // it's opportune at this point to try to ping the server again to save anything left outstanding
+        this.syncAll();
+    }
+
+    saveRoute() {
+        const lastRoute = this.#router.lastRouteResolved();
+        if (this.routeHistory.length) {
+            if (this.routeHistory[this.routeHistory.length - 1] !== lastRoute) {
+                this.routeHistory[this.routeHistory.length] = lastRoute;
+            }
         } else {
-          _classPrivateFieldGet(_this2, _router).navigate('/list').resume();
+            this.routeHistory[0] = lastRoute;
         }
-
-        _classPrivateFieldGet(_this2, _router).resolve();
-      });
-
-      var _iterator = _createForOfIteratorHelper$7(this.controllers),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var controller = _step.value;
-          controller.initialise();
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
     }
-  }, {
-    key: "display",
-    value: function display() {
-      console.log('App display');
 
-      _classPrivateFieldGet(this, _router).resolve(); // it's opportune at this point to try to ping the server again to save anything left outstanding
-
-
-      this.syncAll();
-    }
-  }, {
-    key: "saveRoute",
-    value: function saveRoute() {
-      var lastRoute = _classPrivateFieldGet(this, _router).lastRouteResolved();
-
-      if (this.routeHistory.length) {
-        if (this.routeHistory[this.routeHistory.length - 1] !== lastRoute) {
-          this.routeHistory[this.routeHistory.length] = lastRoute;
-        }
-      } else {
-        this.routeHistory[0] = lastRoute;
-      }
-    }
     /**
      * mark the current survey and its constituent records as subject to validation checks (not pristine)
      */
-
-  }, {
-    key: "markAllNotPristine",
-    value: function markAllNotPristine() {
-      var _iterator2 = _createForOfIteratorHelper$7(this.occurrences),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var occurrenceTuple = _step2.value;
-          occurrenceTuple[1].isPristine = false;
+    markAllNotPristine() {
+        for (let occurrenceTuple of this.occurrences) {
+            occurrenceTuple[1].isPristine = false;
         }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
     }
+
     /**
      *
      * @param {Layout} layout
      */
-
-  }, {
-    key: "setLayout",
-    value: function setLayout(layout) {
-      this.layout = layout;
-      layout.setApp(this);
+    setLayout(layout) {
+        this.layout = layout;
+        layout.setApp(this);
     }
+
     /**
      *
      * @param {Survey} survey
      */
+    addSurvey(survey) {
+        if (survey.projectId !== this.projectId) {
+            throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
+        }
 
-  }, {
-    key: "addSurvey",
-    value: function addSurvey(survey) {
-      var _this3 = this;
+        //if (!this.surveys.has(survey.id)) {
+        if (!survey.hasAppModifiedListener) {
+            survey.hasAppModifiedListener = true;
 
-      if (survey.projectId !== this.projectId) {
-        throw new Error("Survey project id '".concat(survey.projectId, " does not match with current project ('").concat(this.projectId, "')"));
-      } //if (!this.surveys.has(survey.id)) {
+            console.log("setting survey's modified/save handler");
+            survey.addListener(
+                Survey.EVENT_MODIFIED,
+                () => {
+                    this.fireEvent(App.EVENT_SURVEYS_CHANGED);
+                    return survey.save();
+                }
+            );
+        }
 
-
-      if (!survey.hasAppModifiedListener) {
-        survey.hasAppModifiedListener = true;
-        console.log("setting survey's modified/save handler");
-        survey.addListener(Survey.EVENT_MODIFIED, function () {
-          _this3.fireEvent(App.EVENT_SURVEYS_CHANGED);
-
-          return survey.save();
-        });
-      }
-
-      this.surveys.set(survey.id, survey);
-      this.fireEvent(App.EVENT_SURVEYS_CHANGED);
+        this.surveys.set(survey.id, survey);
+        this.fireEvent(App.EVENT_SURVEYS_CHANGED);
     }
+
     /**
      * tests whether occurrences have been defined, excluding any that have been deleted
      *
      * @returns {boolean}
      */
-
-  }, {
-    key: "haveExtantOccurrences",
-    value: function haveExtantOccurrences() {
-      var _iterator3 = _createForOfIteratorHelper$7(this.occurrences),
-          _step3;
-
-      try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var occurrence = _step3.value;
-
-          if (!occurrence.deleted) {
-            return true;
-          }
+    haveExtantOccurrences() {
+        for (let occurrence of this.occurrences) {
+            if (!occurrence.deleted) {
+                return true;
+            }
         }
-      } catch (err) {
-        _iterator3.e(err);
-      } finally {
-        _iterator3.f();
-      }
-
-      return false;
+        return false;
     }
+
     /**
      *
      * @param {Occurrence} occurrence
      */
-
-  }, {
-    key: "addOccurrence",
-    value: function addOccurrence(occurrence) {
-      var _this4 = this;
-
-      if (!occurrence.surveyId) {
-        throw new InternalAppError('Survey id must set prior to registering occurrence.');
-      }
-
-      if (this.occurrences.size === 0) {
-        // this is the first occurrence added, set the survey creation stamp to match
-        // this avoids anomalies where a 'stale' survey created when the form was first opened but not used sits around
-        // for a protracted period
-        var survey = this.surveys.get(occurrence.surveyId);
-        survey.createdStamp = occurrence.createdStamp;
-      }
-
-      console.log("in addOccurrence setting id '".concat(occurrence.id, "'"));
-      this.occurrences.set(occurrence.id, occurrence);
-      occurrence.addListener(Occurrence.EVENT_MODIFIED, // possibly this should be async, with await on the survey and occurrence save
-      function () {
-        var survey = _this4.surveys.get(occurrence.surveyId);
-
-        if (!survey) {
-          throw new Error("Failed to look up survey id ".concat(occurrence.surveyId));
-        } else {
-          survey.isPristine = false; // need to ensure that currentSurvey is saved before occurrence
-          // rather than using a promise chain here, instead rely on enforced queuing of post requests in Model
-          // otherwise there are problems with queue-jumping (e.g. when an image needs to be saved after both previous requests)
-
-          if (survey.unsaved()) {
-            // noinspection JSIgnoredPromiseFromCall
-            survey.save();
-          }
-
-          occurrence.save(survey.id);
+    addOccurrence(occurrence) {
+        if (!occurrence.surveyId) {
+            throw new InternalAppError('Survey id must set prior to registering occurrence.');
         }
-      });
+
+        if (this.occurrences.size === 0) {
+            // this is the first occurrence added, set the survey creation stamp to match
+            // this avoids anomalies where a 'stale' survey created when the form was first opened but not used sits around
+            // for a protracted period
+
+            const survey = this.surveys.get(occurrence.surveyId);
+            survey.createdStamp = occurrence.createdStamp;
+        }
+        console.log(`in addOccurrence setting id '${occurrence.id}'`);
+        this.occurrences.set(occurrence.id, occurrence);
+
+        occurrence.addListener(Occurrence.EVENT_MODIFIED,
+            // possibly this should be async, with await on the survey and occurrence save
+            () => {
+                const survey = this.surveys.get(occurrence.surveyId);
+                if (!survey) {
+                    throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
+                } else {
+                    survey.isPristine = false;
+
+                    // need to ensure that currentSurvey is saved before occurrence
+                    // rather than using a promise chain here, instead rely on enforced queuing of post requests in Model
+                    // otherwise there are problems with queue-jumping (e.g. when an image needs to be saved after both previous requests)
+                    if (survey.unsaved()) {
+                        // noinspection JSIgnoredPromiseFromCall
+                        survey.save();
+                    }
+                    occurrence.save(survey.id);
+                }
+            });
     }
+
     /**
      * attempts to refresh the state of local storage for the specified survey ids
      * if fetch fails then return a failed promise
@@ -13403,73 +6567,47 @@ var App = /*#__PURE__*/function (_EventHarness) {
      * @param {Array.<string>} surveyIds
      * @return {Promise}
      */
+    refreshFromServer(surveyIds) {
+        console.log({'Refresh from server, ids' : surveyIds});
+        const formData = new FormData;
 
-  }, {
-    key: "refreshFromServer",
-    value: function refreshFromServer(surveyIds) {
-      var _this5 = this;
-
-      console.log({
-        'Refresh from server, ids': surveyIds
-      });
-      var formData = new FormData();
-      var n = 0;
-
-      var _iterator4 = _createForOfIteratorHelper$7(surveyIds),
-          _step4;
-
-      try {
-        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var key = _step4.value;
-
-          if (key && key !== 'undefined') {
-            formData.append("surveyId[".concat(n++, "]"), key);
-          }
-        }
-      } catch (err) {
-        _iterator4.e(err);
-      } finally {
-        _iterator4.f();
-      }
-
-      return fetch(App.LOAD_SURVEYS_ENDPOINT, {
-        method: 'POST',
-        body: formData
-      }).then(function (response) {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return Promise.reject("Invalid response from server when refreshing survey ids");
-        }
-      }).then(function (jsonResponse) {
-        /** @param {{survey : Array.<object>, occurrence: Array.<object>, image: Array.<object>}} jsonResponse */
-        console.log({
-          'refresh from server json response': jsonResponse
-        }); // if external objects newer than local version then place in local storage
-
-        var promises = [];
-
-        for (var type in jsonResponse) {
-          if (jsonResponse.hasOwnProperty(type)) {
-            var _iterator5 = _createForOfIteratorHelper$7(jsonResponse[type]),
-                _step5;
-
-            try {
-              for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-                var object = _step5.value;
-                promises.push(_this5._conditionallyReplaceObject(object));
-              }
-            } catch (err) {
-              _iterator5.e(err);
-            } finally {
-              _iterator5.f();
+        let n = 0;
+        for (let key of surveyIds) {
+            if (key && key !== 'undefined') {
+                formData.append(`surveyId[${n++}]`, key);
             }
-          }
         }
 
-        return Promise.all(promises);
-      });
+        return fetch(App.LOAD_SURVEYS_ENDPOINT, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return Promise.reject(`Invalid response from server when refreshing survey ids`);
+            }
+        }).then((jsonResponse) => {
+            /** @param {{survey : Array.<object>, occurrence: Array.<object>, image: Array.<object>}} jsonResponse */
+
+            console.log({'refresh from server json response' : jsonResponse});
+
+            // if external objects newer than local version then place in local storage
+            const promises = [];
+
+            for (let type in jsonResponse) {
+                if (jsonResponse.hasOwnProperty(type)) {
+                    for (let object of jsonResponse[type]) {
+                        promises.push(this._conditionallyReplaceObject(object));
+                    }
+                }
+            }
+
+
+            return Promise.all(promises);
+        });
     }
+
     /**
      * compare modified stamp of indexeddb and external objects and write external version locally if more recent
      *
@@ -13477,184 +6615,136 @@ var App = /*#__PURE__*/function (_EventHarness) {
      * @returns {Promise}
      * @private
      */
+    _conditionallyReplaceObject(externalVersion) {
+        const objectType = externalVersion.type;
+        const id = externalVersion.id;
+        const key = `${objectType}.${id}`;
 
-  }, {
-    key: "_conditionallyReplaceObject",
-    value: function _conditionallyReplaceObject(externalVersion) {
-      var objectType = externalVersion.type;
-      var id = externalVersion.id;
-      var key = "".concat(objectType, ".").concat(id);
-      return localforage.getItem(key).then(function (localVersion) {
-        if (localVersion) {
-          // compare stamps
-          // if (externalVersion.deleted) {
-          //     // if the external copy is deleted then remove the local copy
-          //     return localforage.removeItem(key);
-          // }
-          if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
-            console.log("Local copy of ".concat(key, " is the same or newer than the server copy. (").concat(localVersion.modified, " >= ").concat(externalVersion.modified, ") "));
-            return Promise.resolve();
-          }
-        } // no local copy or stale copy
-        // so store response locally
+        return localforage.getItem(key)
+            .then((localVersion) => {
+                if (localVersion) {
+                    // compare stamps
 
+                    // if (externalVersion.deleted) {
+                    //     // if the external copy is deleted then remove the local copy
+                    //     return localforage.removeItem(key);
+                    // }
 
-        console.log("Adding or replacing local copy of ".concat(key));
-        return localforage.setItem(key, externalVersion);
-      });
+                    if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
+                        console.log(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
+                        return Promise.resolve();
+                    }
+                }
+
+                // no local copy or stale copy
+                // so store response locally
+                console.log(`Adding or replacing local copy of ${key}`);
+                return localforage.setItem(key, externalVersion);
+            });
     }
+
     /**
      * retrieve the full set of keys from local storage (IndexedDb)
      *
      * @param {{survey: Array.<string>, occurrence : Array.<string>, image: Array.<string>}} storedObjectKeys
      * @returns {Promise}
      */
+    seekKeys(storedObjectKeys) {
+        console.log('starting seekKeys');
+        return localforage.keys().then((keys) => {
+            console.log({"in seekKeys: local forage keys" : keys});
 
-  }, {
-    key: "seekKeys",
-    value: function seekKeys(storedObjectKeys) {
-      console.log('starting seekKeys');
-      return localforage.keys().then(function (keys) {
-        console.log({
-          "in seekKeys: local forage keys": keys
-        });
+            for (let key of keys) {
+                if (key !== App.CURRENT_SURVEY_KEY_NAME) {
+                    let type, id;
 
-        var _iterator6 = _createForOfIteratorHelper$7(keys),
-            _step6;
+                    [type, id] = key.split('.', 2);
 
-        try {
-          for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-            var key = _step6.value;
-
-            if (key !== App.CURRENT_SURVEY_KEY_NAME) {
-              var type = void 0,
-                  id = void 0;
-
-              var _key$split = key.split('.', 2);
-
-              var _key$split2 = _slicedToArray(_key$split, 2);
-
-              type = _key$split2[0];
-              id = _key$split2[1];
-
-              if (storedObjectKeys.hasOwnProperty(type)) {
-                if (!storedObjectKeys[type].includes(id)) {
-                  storedObjectKeys[type].push(id);
+                    if (storedObjectKeys.hasOwnProperty(type)) {
+                        if (!storedObjectKeys[type].includes(id)) {
+                            storedObjectKeys[type].push(id);
+                        }
+                    } else {
+                        console.log(`Unrecognised stored key type '${type}.`);
+                    }
                 }
-              } else {
-                console.log("Unrecognised stored key type '".concat(type, "."));
-              }
             }
-          }
-        } catch (err) {
-          _iterator6.e(err);
-        } finally {
-          _iterator6.f();
-        }
 
-        return storedObjectKeys;
-      });
+            return storedObjectKeys;
+        });
     }
+
     /**
      * @returns {Promise}
      */
+    syncAll() {
+        const storedObjectKeys = {
+            survey : [],
+            occurrence : [],
+            image : []
+        };
 
-  }, {
-    key: "syncAll",
-    value: function syncAll() {
-      var _this6 = this;
+        return this.seekKeys(storedObjectKeys)
+            .then((storedObjectKeys) => {
+                return this._syncLocalUnsaved(storedObjectKeys)
+                    .then((result) => {
+                        this.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
 
-      var storedObjectKeys = {
-        survey: [],
-        occurrence: [],
-        image: []
-      };
-      return this.seekKeys(storedObjectKeys).then(function (storedObjectKeys) {
-        return _this6._syncLocalUnsaved(storedObjectKeys).then(function (result) {
-          _this6.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
-
-          return result;
-        });
-      }, function (failedResult) {
-        console.log("Failed to sync all: ".concat(failedResult));
-
-        _this6.fireEvent(App.EVENT_SYNC_ALL_FAILED);
-
-        return false;
-      });
+                        return result;
+                    });
+            }, (failedResult) => {
+                console.log(`Failed to sync all: ${failedResult}`);
+                this.fireEvent(App.EVENT_SYNC_ALL_FAILED);
+                return false;
+            });
     }
+
     /**
      *
      * @param storedObjectKeys
      * @returns {Promise}
      * @private
      */
+    _syncLocalUnsaved(storedObjectKeys) {
+        // synchronises surveys first, then occurrences, then images from indexedDb
 
-  }, {
-    key: "_syncLocalUnsaved",
-    value: function _syncLocalUnsaved(storedObjectKeys) {
-      // synchronises surveys first, then occurrences, then images from indexedDb
-      var promises = [];
-
-      var _iterator7 = _createForOfIteratorHelper$7(storedObjectKeys.survey),
-          _step7;
-
-      try {
-        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var surveyKey = _step7.value;
-          promises.push(Survey.retrieveFromLocal(surveyKey, new Survey()).then(function (survey) {
-            if (survey.unsaved()) {
-              return survey.save();
-            }
-          }));
+        const promises = [];
+        for(let surveyKey of storedObjectKeys.survey) {
+            promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
+                .then((survey) => {
+                    if (survey.unsaved()) {
+                        return survey.save();
+                    }
+                })
+            );
         }
-      } catch (err) {
-        _iterator7.e(err);
-      } finally {
-        _iterator7.f();
-      }
 
-      var _iterator8 = _createForOfIteratorHelper$7(storedObjectKeys.occurrence),
-          _step8;
-
-      try {
-        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var occurrenceKey = _step8.value;
-          promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence()).then(function (occurrence) {
-            if (occurrence.unsaved()) {
-              return occurrence.save();
-            }
-          }));
+        for(let occurrenceKey of storedObjectKeys.occurrence) {
+            promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                .then((occurrence) => {
+                    if (occurrence.unsaved()) {
+                        return occurrence.save();
+                    }
+                })
+            );
         }
-      } catch (err) {
-        _iterator8.e(err);
-      } finally {
-        _iterator8.f();
-      }
 
-      var _iterator9 = _createForOfIteratorHelper$7(storedObjectKeys.image),
-          _step9;
-
-      try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var imageKey = _step9.value;
-          promises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage()).then(function (image) {
-            if (image.unsaved()) {
-              return image.save();
-            }
-          }));
+        for(let imageKey of storedObjectKeys.image) {
+            promises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
+                .then((image) => {
+                    if (image.unsaved()) {
+                        return image.save();
+                    }
+                })
+            );
         }
-      } catch (err) {
-        _iterator9.e(err);
-      } finally {
-        _iterator9.f();
-      }
 
-      return Promise.all(promises).catch(function (result) {
-        console.log("Save failure: ".concat(result));
-        return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-      });
+        return Promise.all(promises).catch((result) => {
+            console.log(`Save failure: ${result}`);
+            return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
+        });
     }
+
     /**
      * restore previous state, pulling back from local and external store
      * @todo this needs a save phase, so that local changes are saved back to the server
@@ -13662,158 +6752,150 @@ var App = /*#__PURE__*/function (_EventHarness) {
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
      * @return {Promise}
      */
+    restoreOccurrences(targetSurveyId = '') {
 
-  }, {
-    key: "restoreOccurrences",
-    value: function restoreOccurrences() {
-      var _this7 = this;
+        console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
 
-      var targetSurveyId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-      console.log("Invoked restoreOccurrences, target survey id: ".concat(targetSurveyId));
+        if (targetSurveyId === 'undefined') {
+            console.error(`Attempt to restore occurrences for literal 'undefined' survey id.`);
+            targetSurveyId = '';
+        }
 
-      if (targetSurveyId === 'undefined') {
-        console.error("Attempt to restore occurrences for literal 'undefined' survey id.");
-        targetSurveyId = '';
-      }
+        return (targetSurveyId) ?
+            this._restoreOccurrenceImp(targetSurveyId)
+            :
+            this.getLastSurveyId().then(
+                (lastSurveyId) => {
+                    console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
-      return targetSurveyId ? this._restoreOccurrenceImp(targetSurveyId) : this.getLastSurveyId().then(function (lastSurveyId) {
-        console.log("Retrieved last used survey id '".concat(lastSurveyId, "'"));
-        return _this7._restoreOccurrenceImp(lastSurveyId).catch(function () {
-          console.log("Failed to retrieve lastSurveyId ".concat(lastSurveyId, ". Resetting current survey and retrying."));
-          _this7.currentSurvey = null;
-          return _this7._restoreOccurrenceImp();
-        });
-      }, function () {
-        return _this7._restoreOccurrenceImp();
-      });
+                    return this._restoreOccurrenceImp(lastSurveyId).catch(() => {
+                        console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
+
+                        this.currentSurvey = null;
+                        return this._restoreOccurrenceImp();
+                    });
+                },
+                () => this._restoreOccurrenceImp()
+            );
     }
-  }, {
-    key: "_restoreOccurrenceImp",
-    value: function _restoreOccurrenceImp(targetSurveyId) {
-      var _this8 = this;
 
-      // need to check for a special case where restoring a survey that has never been saved even locally
-      // i.e. new and unmodified
-      // only present in current App.surveys
-      // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
-      if (targetSurveyId && this.surveys.has(targetSurveyId)) {
-        var localSurvey = this.surveys.get(targetSurveyId);
+    _restoreOccurrenceImp(targetSurveyId) {
+        // need to check for a special case where restoring a survey that has never been saved even locally
+        // i.e. new and unmodified
+        // only present in current App.surveys
+        // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
+        if (targetSurveyId && this.surveys.has(targetSurveyId)) {
+            const localSurvey = this.surveys.get(targetSurveyId);
 
-        if (localSurvey.isPristine) {
-          this.clearCurrentSurvey(); // clear occurrences from the previous survey
+            if (localSurvey.isPristine) {
+                this.clearCurrentSurvey(); // clear occurrences from the previous survey
 
-          this.currentSurvey = localSurvey;
-          this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-
-          return Promise.resolve();
-        }
-      }
-
-      var storedObjectKeys = {
-        survey: [],
-        occurrence: [],
-        image: []
-      };
-
-      if (targetSurveyId) {
-        storedObjectKeys.survey[0] = targetSurveyId;
-      }
-
-      return this.seekKeys(storedObjectKeys).then(function (storedObjectKeys) {
-        if (storedObjectKeys.survey.length) {
-          return _this8.refreshFromServer(storedObjectKeys.survey).finally(function () {
-            // re-seek keys from indexed db, to take account of any new occurrences received from the server
-            return _this8.seekKeys(storedObjectKeys);
-          });
-        } else {
-          return null;
-        }
-      }).finally(function () {
-        // called regardless of whether a server refresh was successful
-        // storedObjectKeys and indexed db should be as up-to-date as possible
-        console.log({
-          storedObjectKeys: storedObjectKeys
-        });
-
-        if (storedObjectKeys && storedObjectKeys.survey && storedObjectKeys.survey.length) {
-          var surveyFetchingPromises = [];
-          var n = 0;
-
-          var _iterator10 = _createForOfIteratorHelper$7(storedObjectKeys.survey),
-              _step10;
-
-          try {
-            for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-              var surveyKey = _step10.value;
-              // arbitrarily set first survey key as current if a target id hasn't been specified
-              surveyFetchingPromises.push(_this8._restoreSurveyFromLocal(surveyKey, storedObjectKeys, targetSurveyId === surveyKey || !targetSurveyId && n++ === 0));
+                this.currentSurvey = localSurvey;
+                this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                return Promise.resolve();
             }
-          } catch (err) {
-            _iterator10.e(err);
-          } finally {
-            _iterator10.f();
-          }
+        }
 
-          return Promise.all(surveyFetchingPromises).finally(function () {
-            //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
-            if (!_this8.currentSurvey) {
-              // survey doesn't actually exist
-              // this could have happened in an invalid survey id was provided as a targetSurveyId
-              console.log("Failed to retrieve survey id '".concat(targetSurveyId, "'"));
-              return Promise.reject(new Error("Failed to retrieve survey id '".concat(targetSurveyId, "'")));
-            }
+        const storedObjectKeys = {
+            survey: [],
+            occurrence: [],
+            image: []
+        };
 
-            if (_this8.currentSurvey.deleted) {
-              // unusual case where survey is deleted
-              // substitute a new one
-              // this should probably never happen, as items deleted on the server ought to have been
-              // removed locally
-              _this8.setNewSurvey();
+        if (targetSurveyId) {
+            storedObjectKeys.survey[0] = targetSurveyId;
+        }
+
+        return this.seekKeys(storedObjectKeys).then((storedObjectKeys) => {
+            if (storedObjectKeys.survey.length) {
+                return this.refreshFromServer(storedObjectKeys.survey).finally(() => {
+                    // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                    return this.seekKeys(storedObjectKeys);
+                });
             } else {
-              _this8.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-
+                return null;
             }
+        }).finally(() => {
+            // called regardless of whether a server refresh was successful
+            // storedObjectKeys and indexed db should be as up-to-date as possible
 
-            return Promise.resolve();
-          });
-        } else {
-          console.log('no pre-existing surveys, so creating a new one'); // no pre-existing surveys, so create a new one
+            console.log({storedObjectKeys});
 
-          _this8.setNewSurvey();
+            if (storedObjectKeys && storedObjectKeys.survey && storedObjectKeys.survey.length) {
 
-          return Promise.resolve();
-        }
-      });
+                const surveyFetchingPromises = [];
+                let n = 0;
+
+                for (let surveyKey of storedObjectKeys.survey) {
+                    // arbitrarily set first survey key as current if a target id hasn't been specified
+
+                    surveyFetchingPromises.push(
+                        this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0))
+                    );
+                }
+
+                return Promise.all(surveyFetchingPromises)
+                    .finally(() => {
+                        //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
+
+                        if (!this.currentSurvey) {
+                            // survey doesn't actually exist
+                            // this could have happened in an invalid survey id was provided as a targetSurveyId
+                            console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
+                            return Promise.reject(new Error(`Failed to retrieve survey id '${targetSurveyId}'`));
+                        }
+
+                        if (this.currentSurvey.deleted) {
+                            // unusual case where survey is deleted
+                            // substitute a new one
+
+                            // this should probably never happen, as items deleted on the server ought to have been
+                            // removed locally
+                            this.setNewSurvey();
+                        } else {
+                            this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                        }
+                        return Promise.resolve();
+                    });
+            } else {
+                console.log('no pre-existing surveys, so creating a new one');
+                // no pre-existing surveys, so create a new one
+                this.setNewSurvey();
+
+                return Promise.resolve();
+            }
+        });
     }
-  }, {
-    key: "setNewSurvey",
-    value: function setNewSurvey() {
-      this.currentSurvey = new Survey();
-      this.currentSurvey.projectId = this.projectId;
-      this.currentSurvey.isPristine = true;
-      this.currentSurvey.isNew = true;
-      this.fireEvent(App.EVENT_NEW_SURVEY);
-      this.addSurvey(this.currentSurvey);
+
+    setNewSurvey() {
+        this.currentSurvey = new Survey();
+        this.currentSurvey.projectId = this.projectId;
+        this.currentSurvey.isPristine = true;
+        this.currentSurvey.isNew = true;
+
+        this.fireEvent(App.EVENT_NEW_SURVEY);
+
+        this.addSurvey(this.currentSurvey);
     }
+
     /**
      * @return {Occurrence}
      */
+    addNewOccurrence() {
+        const occurrence = new Occurrence();
+        occurrence.surveyId = this.currentSurvey.id;
+        occurrence.projectId = this.projectId;
 
-  }, {
-    key: "addNewOccurrence",
-    value: function addNewOccurrence() {
-      var occurrence = new Occurrence();
-      occurrence.surveyId = this.currentSurvey.id;
-      occurrence.projectId = this.projectId;
-      occurrence.isNew = true;
-      occurrence.isPristine = true;
-      this.addOccurrence(occurrence);
-      this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {
-        occurrenceId: occurrence.id,
-        surveyId: occurrence.surveyId
-      });
-      return occurrence;
+        occurrence.isNew = true;
+        occurrence.isPristine = true;
+
+        this.addOccurrence(occurrence);
+
+        this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
+
+        return occurrence;
     }
+
     /**
      *
      * @param {string} surveyId
@@ -13822,128 +6904,72 @@ var App = /*#__PURE__*/function (_EventHarness) {
      * @returns {Promise}
      * @private
      */
+    _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
+        // retrieve surveys first, then occurrences, then images from indexedDb
 
-  }, {
-    key: "_restoreSurveyFromLocal",
-    value: function _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
-      var _this9 = this;
+        let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
+            console.log(`retrieving local survey ${surveyId}`);
 
-      // retrieve surveys first, then occurrences, then images from indexedDb
-      var promise = Survey.retrieveFromLocal(surveyId, new Survey()).then(function (survey) {
-        console.log("retrieving local survey ".concat(surveyId));
+            if (setAsCurrent) {
+                // the apps occurrences should only relate to the current survey
+                // (the reset are remote or in IndexedDb)
+                this.clearCurrentSurvey();
+
+                this.addSurvey(survey);
+                const occurrenceFetchingPromises = [];
+
+                for (let occurrenceKey of storedObjectKeys.occurrence) {
+                    occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                        .then((occurrence) => {
+                            if (occurrence.surveyId === surveyId) {
+                                console.log(`adding occurrence ${occurrenceKey}`);
+                                this.addOccurrence(occurrence);
+                            }
+                        }));
+                }
+
+                return Promise.all(occurrenceFetchingPromises);
+            } else {
+                // not the current survey, so just add it but don't load occurrences
+                this.addSurvey(survey);
+            }
+        });
 
         if (setAsCurrent) {
-          // the apps occurrences should only relate to the current survey
-          // (the reset are remote or in IndexedDb)
-          _this9.clearCurrentSurvey();
+            promise.finally(() => {
+                //console.log('Reached image fetching part');
+                const imageFetchingPromises = [];
 
-          _this9.addSurvey(survey);
+                for (let occurrenceImageKey of storedObjectKeys.image) {
+                    imageFetchingPromises.push(OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage)
+                        .then((occurrenceImage) => {
+                            console.log(`restoring image id '${occurrenceImageKey}'`);
 
-          var occurrenceFetchingPromises = [];
-
-          var _iterator11 = _createForOfIteratorHelper$7(storedObjectKeys.occurrence),
-              _step11;
-
-          try {
-            var _loop = function _loop() {
-              var occurrenceKey = _step11.value;
-              occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence()).then(function (occurrence) {
-                if (occurrence.surveyId === surveyId) {
-                  console.log("adding occurrence ".concat(occurrenceKey));
-
-                  _this9.addOccurrence(occurrence);
+                            if (occurrenceImage.surveyId === surveyId) {
+                                OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
+                            }
+                        }, (reason) => {
+                            console.log(`Failed to retrieve an image: ${reason}`);
+                        }));
                 }
-              }));
-            };
 
-            for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-              _loop();
-            }
-          } catch (err) {
-            _iterator11.e(err);
-          } finally {
-            _iterator11.f();
-          }
+                this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
-          return Promise.all(occurrenceFetchingPromises);
-        } else {
-          // not the current survey, so just add it but don't load occurrences
-          _this9.addSurvey(survey);
+                return Promise.all(imageFetchingPromises);
+            });
         }
-      });
 
-      if (setAsCurrent) {
-        promise.finally(function () {
-          //console.log('Reached image fetching part');
-          var imageFetchingPromises = [];
-
-          var _iterator12 = _createForOfIteratorHelper$7(storedObjectKeys.image),
-              _step12;
-
-          try {
-            var _loop2 = function _loop2() {
-              var occurrenceImageKey = _step12.value;
-              imageFetchingPromises.push(OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage()).then(function (occurrenceImage) {
-                console.log("restoring image id '".concat(occurrenceImageKey, "'"));
-
-                if (occurrenceImage.surveyId === surveyId) {
-                  OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
-                }
-              }, function (reason) {
-                console.log("Failed to retrieve an image: ".concat(reason));
-              }));
-            };
-
-            for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-              _loop2();
-            }
-          } catch (err) {
-            _iterator12.e(err);
-          } finally {
-            _iterator12.f();
-          }
-
-          _this9.currentSurvey = _this9.surveys.get(storedObjectKeys.survey[0]);
-          return Promise.all(imageFetchingPromises);
-        });
-      }
-
-      return promise;
+        return promise;
     }
+
     /**
      *
      * @returns {Promise<void>}
      */
-
-  }, {
-    key: "clearLocalForage",
-    value: function clearLocalForage() {
-      return localforage.clear();
+    clearLocalForage() {
+        return localforage.clear();
     }
-  }]);
-
-  return App;
-}(EventHarness);
-
-_defineProperty(App, "EVENT_ADD_SURVEY_USER_REQUEST", 'useraddsurveyrequest');
-
-_defineProperty(App, "EVENT_RESET_SURVEYS", 'userresetsurveys');
-
-_defineProperty(App, "EVENT_NEW_SURVEY", 'newsurvey');
-
-_defineProperty(App, "LOAD_SURVEYS_ENDPOINT", '/loadsurveys.php');
-
-_defineProperty(App, "EVENT_OCCURRENCE_ADDED", 'occurrenceadded');
-
-_defineProperty(App, "EVENT_SURVEYS_CHANGED", 'surveyschanged');
-
-_defineProperty(App, "EVENT_ALL_SYNCED_TO_SERVER", 'allsyncedtoserver');
-
-_defineProperty(App, "EVENT_SYNC_ALL_FAILED", 'syncallfailed');
-
-_defineProperty(App, "CURRENT_SURVEY_KEY_NAME", 'currentsurvey');
-
-_defineProperty(App, "devMode", false);
+}
 
 var modal = {exports: {}};
 
@@ -15798,381 +8824,370 @@ var data = {exports: {}};
 
 var Modal = modal.exports;
 
-function _createForOfIteratorHelper$6(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$6(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+// Overall page layout
 
-function _unsupportedIterableToArray$6(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$6(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$6(o, minLen); }
+class Layout extends EventHarness {
 
-function _arrayLikeToArray$6(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _createSuper$f(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$f(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$f() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var Layout = /*#__PURE__*/function (_EventHarness) {
-  _inherits(Layout, _EventHarness);
-
-  var _super = _createSuper$f(Layout);
-
-  /**
-   * @type {App}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * this also needs to be edited in index.html
-   *
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-  function Layout() {
-    var _this;
-
-    _classCallCheck(this, Layout);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "app", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "surveysMenuId", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "newSurveyLabel", 'new survey');
-
-    _defineProperty(_assertThisInitialized(_this), "newSurveyContent", newSurveyModal);
-
-    _defineProperty(_assertThisInitialized(_this), "pathPrefix", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "newSurveyModal", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "resetModal", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "saveAllSuccessModal", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "saveAllFailureModal", void 0);
-
-    _this.pathPrefix = window.location.pathname.split('/')[1];
-    return _this;
-  }
-  /**
-   *
-   * @param {App} app
-   */
-
-
-  _createClass(Layout, [{
-    key: "setApp",
-    value: function setApp(app) {
-      var _this2 = this;
-
-      this.app = app;
-      app.addListener(App.EVENT_SURVEYS_CHANGED, function () {
-        _this2.refreshSurveysMenu();
-      });
-
-      if (navigator.hasOwnProperty('onLine') && navigator.onLine === false) {
-        this.addOfflineFlag();
-      }
-
-      window.addEventListener('online', function () {
-        document.body.classList.remove('offline');
-        app.syncAll(); // possibly not needed but useful as fallback to try to force saving
-      });
-      window.addEventListener('offline', this.addOfflineFlag);
-      this.registerGPSClassMarker(); // const navMain = $("#navbarSupportedContent");
-      // navMain.on("click", "a", null, function () {
-      //     console.log('forced navbar collapse');
-      //     navMain.collapse('hide');
-      // });
-
-      var navEl = document.getElementById('navbarSupportedContent');
-      navEl.addEventListener('click', function (event) {
-        var element = event.target;
-        console.log({
-          'nav content click': event
-        });
-
-        if (element.tagName === 'A') {
-          console.log('forced navbar collapse (inactive)'); //Collapse.getOrCreateInstance(navEl).hide();
-        }
-      });
-    }
-  }, {
-    key: "addOfflineFlag",
-    value: function addOfflineFlag() {
-      document.body.classList.add('offline');
-    }
-  }, {
-    key: "registerGPSClassMarker",
-    value: function registerGPSClassMarker() {
-      if (navigator.geolocation) {
-        GPSRequest.haveGPSPermissionPromise().then(function (permission) {
-          if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
-            document.body.classList.add('gps-enabled');
-          }
-
-          GPSRequest.gpsEventObject.addListener(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, function (permission) {
-            if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
-              document.body.classList.add('gps-enabled');
-            } else {
-              document.body.classList.remove('gps-enabled');
-            }
-          });
-        });
-      }
-    }
-    /**
-     * @type {Modal}
-     */
-
-  }, {
-    key: "initialise",
-    value: function initialise() {
-      var _this3 = this;
-
-      this.refreshSurveysMenu();
-      var modalContent = document.createElement('div');
-      modalContent.innerHTML = this.newSurveyContent;
-      document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
-      modalContent = document.createElement('div');
-      modalContent.innerHTML = resetModal;
-      document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
-      modalContent = document.createElement('div');
-      modalContent.innerHTML = saveAllSuccessModal;
-      document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
-      modalContent = document.createElement('div');
-      modalContent.innerHTML = saveAllFailureModal;
-      document.body.appendChild(modalContent.getElementsByTagName('div')[0]); // register event handlers once the content is likely to be in the DOM
-      //setTimeout(() => {
-
-      this.newSurveyModal = Modal.getOrCreateInstance(document.getElementById(Layout.NEW_SURVEY_MODAL_ID), {});
-      this.resetModal = Modal.getOrCreateInstance(document.getElementById(Layout.RESET_MODAL_ID), {});
-      this.saveAllSuccessModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_SUCCESS_MODAL_ID), {});
-      this.saveAllFailureModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_FAILURE_MODAL_ID), {});
-      document.getElementById("".concat(Layout.NEW_SURVEY_MODAL_ID, "confirmed")).addEventListener('click', function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-
-        if (event.detail < 2) {
-          // only if not a double click
-          // force hide the new survey modal
-          //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal('hide');
-          _this3.newSurveyModal.hide();
-
-          _this3.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
-        }
-      });
-      document.getElementById("".concat(Layout.RESET_MODAL_ID, "confirmed")).addEventListener('click', function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-
-        if (event.detail < 2) {
-          // force hide the new survey modal
-          //$(`#${Layout.RESET_MODAL_ID}`).modal('hide');
-          _this3.resetModal.hide(); // only if not a double click
-
-
-          _this3.app.fireEvent(App.EVENT_RESET_SURVEYS);
-        }
-      }); //}, 100);
-    }
-  }, {
-    key: "refreshSurveysMenu",
-    value: function refreshSurveysMenu() {
-      var surveyMenuContainer = document.getElementById(this.surveysMenuId);
-      var items = this.getSurveyItems();
-      surveyMenuContainer.innerHTML = "<a class=\"dropdown-item\" href=\"/".concat(this.pathPrefix, "/survey/save\" data-navigo=\"survey/save\">save all</a>\n    <div class=\"dropdown-divider\"></div>\n    ").concat(items.join(''), "\n    <div class=\"dropdown-divider\"></div>\n    <a class=\"dropdown-item\" href=\"/").concat(this.pathPrefix, "/survey/new\" data-navigo=\"survey/new\">").concat(this.newSurveyLabel, "</a>\n    <a class=\"dropdown-item\" href=\"/").concat(this.pathPrefix, "/survey/reset\" data-navigo=\"survey/reset\">reset</a>");
-      this.app.router.updatePageLinks();
-    }
-  }, {
-    key: "getSurveyItems",
-    value: function getSurveyItems() {
-      /**
-       *
-       * @type {Array.<string>}
-       */
-      var items = [];
-      var currentSurveyId = this.app.currentSurvey ? this.app.currentSurvey.id : null;
-
-      var _iterator = _createForOfIteratorHelper$6(this.app.surveys),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var surveyTuple = _step.value;
-          var survey = surveyTuple[1];
-          var label = survey.generateSurveyName() + (surveyTuple[0] === currentSurveyId ? ' <span style="color: green">●</span>' : '');
-          items[items.length] = "<a class=\"dropdown-item\" href=\"/".concat(this.pathPrefix, "/survey/add/").concat(surveyTuple[0], "\" data-navigo=\"survey/add/").concat(surveyTuple[0], "\">").concat(label, "</a>");
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-
-      return items;
-    }
-  }]);
-
-  return Layout;
-}(EventHarness);
-
-_defineProperty(Layout, "NEW_SURVEY_MODAL_ID", 'newsurveymodal');
-
-_defineProperty(Layout, "RESET_MODAL_ID", 'resetmodal');
-
-_defineProperty(Layout, "SAVE_ALL_SUCCESS_MODAL_ID", 'saveallsuccess');
-
-_defineProperty(Layout, "SAVE_ALL_FAILURE_MODAL_ID", 'saveallfailure');
-
-function _createSuper$e(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$e(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$e() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var SurveyPickerController = /*#__PURE__*/function (_AppController) {
-  _inherits(SurveyPickerController, _AppController);
-
-  var _super = _createSuper$e(SurveyPickerController);
-
-  /**
-   *
-   * @param {SurveyPickerView} view
-   */
-  function SurveyPickerController(view) {
-    var _this;
-
-    _classCallCheck(this, SurveyPickerController);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "route", '/survey/:action/:id');
-
-    _defineProperty(_assertThisInitialized(_this), "title", 'Survey picker');
-
-    _defineProperty(_assertThisInitialized(_this), "app", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "view", void 0);
-
-    _this.view = view;
-    view.controller = _assertThisInitialized(_this);
-    _this.handle = AppController.nextHandle;
-    return _this;
-  }
-  /**
-   * registers the default route from this.route
-   * or alternatively is overridden in a child class
-   *
-   * @param {PatchedNavigo} router
-   */
-
-
-  _createClass(SurveyPickerController, [{
-    key: "survey",
-    get:
     /**
      * @type {App}
      */
+    app;
+
+    /**
+     * @type {string}
+     */
+    surveysMenuId;
+
+    /**
+     * this also needs to be edited in index.html
+     *
+     * @type {string}
+     */
+    newSurveyLabel = 'new survey';
+
+    newSurveyContent = newSurveyModal;
+
+    static NEW_SURVEY_MODAL_ID = 'newsurveymodal';
+    static RESET_MODAL_ID = 'resetmodal';
+    static SAVE_ALL_SUCCESS_MODAL_ID = 'saveallsuccess';
+    static SAVE_ALL_FAILURE_MODAL_ID = 'saveallfailure';
+
+    /**
+     * @type {string}
+     */
+    pathPrefix;
+
+    constructor() {
+        super();
+
+        this.pathPrefix = window.location.pathname.split('/')[1];
+    }
+
+    /**
+     *
+     * @param {App} app
+     */
+    setApp(app) {
+        this.app = app;
+        app.addListener(App.EVENT_SURVEYS_CHANGED, () => {
+            this.refreshSurveysMenu();
+        });
+
+        if (navigator.hasOwnProperty('onLine') && navigator.onLine === false) {
+            this.addOfflineFlag();
+        }
+
+        window.addEventListener('online',  () => {
+            document.body.classList.remove('offline');
+            app.syncAll(); // possibly not needed but useful as fallback to try to force saving
+        });
+        window.addEventListener('offline', this.addOfflineFlag);
+
+        this.registerGPSClassMarker();
+
+        // const navMain = $("#navbarSupportedContent");
+        // navMain.on("click", "a", null, function () {
+        //     console.log('forced navbar collapse');
+        //     navMain.collapse('hide');
+        // });
+
+        const navEl = document.getElementById('navbarSupportedContent');
+        navEl.addEventListener('click', (event) => {
+            const element = event.target;
+            console.log({'nav content click' : event});
+            if (element.tagName === 'A') {
+                console.log('forced navbar collapse (inactive)');
+                //Collapse.getOrCreateInstance(navEl).hide();
+            }
+        });
+    }
+
+    addOfflineFlag() {
+        document.body.classList.add('offline');
+    }
+
+    registerGPSClassMarker() {
+        if (navigator.geolocation ) {
+
+            GPSRequest.haveGPSPermissionPromise().then((permission) => {
+                    if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
+                        document.body.classList.add('gps-enabled');
+                    }
+
+                    GPSRequest.gpsEventObject.addListener(GPSRequest.EVENT_GPS_PERMISSION_CHANGE, (permission) => {
+                        if (permission === GPSRequest.GPS_PERMISSION_GRANTED) {
+                            document.body.classList.add('gps-enabled');
+                        } else {
+                            document.body.classList.remove('gps-enabled');
+                        }
+                    });
+                }
+            );
+        }
+    }
+
+    /**
+     * @type {Modal}
+     */
+    newSurveyModal;
+
+    /**
+     * @type {Modal}
+     */
+    resetModal;
+
+    /**
+     * @type {Modal}
+     */
+    saveAllSuccessModal;
+
+    /**
+     * @type {Modal}
+     */
+    saveAllFailureModal;
+
+    initialise() {
+        this.refreshSurveysMenu();
+
+        let modalContent = document.createElement('div');
+        modalContent.innerHTML = this.newSurveyContent;
+        document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
+
+        modalContent = document.createElement('div');
+        modalContent.innerHTML = resetModal;
+        document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
+
+        modalContent = document.createElement('div');
+        modalContent.innerHTML = saveAllSuccessModal;
+        document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
+
+        modalContent = document.createElement('div');
+        modalContent.innerHTML = saveAllFailureModal;
+        document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
+
+        // register event handlers once the content is likely to be in the DOM
+        //setTimeout(() => {
+            this.newSurveyModal = Modal.getOrCreateInstance(document.getElementById(Layout.NEW_SURVEY_MODAL_ID), {});
+            this.resetModal = Modal.getOrCreateInstance(document.getElementById(Layout.RESET_MODAL_ID), {});
+            this.saveAllSuccessModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_SUCCESS_MODAL_ID), {});
+            this.saveAllFailureModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_FAILURE_MODAL_ID), {});
+
+            document.getElementById(`${Layout.NEW_SURVEY_MODAL_ID}confirmed`).addEventListener('click', (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+
+                if (event.detail < 2) {
+                    // only if not a double click
+
+                    // force hide the new survey modal
+                    //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal('hide');
+                    this.newSurveyModal.hide();
+
+                    this.app.fireEvent(App.EVENT_ADD_SURVEY_USER_REQUEST);
+                }
+            });
+            document.getElementById(`${Layout.RESET_MODAL_ID}confirmed`).addEventListener('click', (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+
+                if (event.detail < 2) {
+                    // force hide the new survey modal
+                    //$(`#${Layout.RESET_MODAL_ID}`).modal('hide');
+                    this.resetModal.hide();
+
+                    // only if not a double click
+                    this.app.fireEvent(App.EVENT_RESET_SURVEYS);
+                }
+            });
+        //}, 100);
+    }
+
+    refreshSurveysMenu() {
+        const surveyMenuContainer = document.getElementById(this.surveysMenuId);
+        const items = this.getSurveyItems();
+
+        surveyMenuContainer.innerHTML = `<a class="dropdown-item" href="/${this.pathPrefix}/survey/save" data-navigo="survey/save">save all</a>
+    <div class="dropdown-divider"></div>
+    ${items.join('')}
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="/${this.pathPrefix}/survey/new" data-navigo="survey/new">${this.newSurveyLabel}</a>
+    <a class="dropdown-item" href="/${this.pathPrefix}/survey/reset" data-navigo="survey/reset">reset</a>`;
+
+        this.app.router.updatePageLinks();
+    }
+
+    getSurveyItems() {
+        /**
+         *
+         * @type {Array.<string>}
+         */
+        const items = [];
+
+        const currentSurveyId = this.app.currentSurvey ? this.app.currentSurvey.id : null;
+
+        for (const surveyTuple of this.app.surveys) {
+            const survey = surveyTuple[1];
+
+            const label = survey.generateSurveyName() + (surveyTuple[0] === currentSurveyId ? ' <span style="color: green">●</span>' : '');
+            items[items.length] = `<a class="dropdown-item" href="/${this.pathPrefix}/survey/add/${surveyTuple[0]}" data-navigo="survey/add/${surveyTuple[0]}">${label}</a>`;
+        }
+
+        return items;
+    }
+}
+
+// SurveyPickerController
+
+class SurveyPickerController extends AppController {
+    route = '/survey/:action/:id';
+
+    static EVENT_BACK = 'back';
+
+    title = 'Survey picker';
+
+    /**
+     * @type {App}
+     */
+    app;
 
     /**
      *
      * @type {SurveyPickerView}
      */
+    view;
 
     /**
      *
      * @returns {Survey}
      */
-    function get() {
-      return this.app.currentSurvey;
+    get survey() {
+        return this.app.currentSurvey;
     }
-  }, {
-    key: "registerRoute",
-    value: function registerRoute(router) {
-      router.on('/survey', this.mainRouteHandler.bind(this, 'survey', '', ''), {// before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-      });
-      router.on('/survey/new', this.newSurveyHandler.bind(this, 'survey', 'new', ''), {
-        before: this.beforeNewHandler.bind(this)
-      });
-      router.on('/survey/reset', this.mainRouteHandler.bind(this, 'survey', 'reset', ''), {
-        before: this.beforeResetHandler.bind(this)
-      });
-      router.on('/survey/save', this.mainRouteHandler.bind(this, 'survey', 'save', ''), {
-        before: this.beforeSaveAllHandler.bind(this)
-      });
-      router.on('/survey/add/:surveyId', this.addSurveyHandler.bind(this, 'survey', 'add', ''));
-      this.app.addListener(App.EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
-      this.app.addListener(App.EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
+
+    /**
+     *
+     * @param {SurveyPickerView} view
+     */
+    constructor (view) {
+        super();
+
+        this.view = view;
+        view.controller = this;
+
+        this.handle = AppController.nextHandle;
     }
-  }, {
-    key: "beforeNewHandler",
-    value: function beforeNewHandler(done) {
-      //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal();
-      Modal.getOrCreateInstance(Layout.NEW_SURVEY_MODAL_ID).show();
-      this.app.router.pause();
-      console.log({
-        'route history': this.app.routeHistory
-      });
 
-      if (window.history.state) {
-        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-      }
+    /**
+     * registers the default route from this.route
+     * or alternatively is overridden in a child class
+     *
+     * @param {PatchedNavigo} router
+     */
+    registerRoute(router) {
+        router.on(
+            '/survey',
+            this.mainRouteHandler.bind(this, 'survey', '', ''),
+            {
+                // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+                // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+                // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+                // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+            }
+        );
 
-      this.app.router.resume();
-      done(false); // block navigation
+        router.on(
+            '/survey/new',
+            this.newSurveyHandler.bind(this, 'survey', 'new', ''),
+            {
+                before : this.beforeNewHandler.bind(this)
+            }
+        );
+
+        router.on(
+            '/survey/reset',
+            this.mainRouteHandler.bind(this, 'survey', 'reset', ''),
+            {
+                before : this.beforeResetHandler.bind(this)
+            }
+        );
+
+        router.on(
+            '/survey/save',
+            this.mainRouteHandler.bind(this, 'survey', 'save', ''),
+            {
+                before : this.beforeSaveAllHandler.bind(this)
+            }
+        );
+
+        router.on(
+            '/survey/add/:surveyId',
+            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+        );
+
+        this.app.addListener(App.EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
+        this.app.addListener(App.EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
     }
-  }, {
-    key: "beforeResetHandler",
-    value: function beforeResetHandler(done) {
-      //$(`#${Layout.RESET_MODAL_ID}`).modal();
-      Modal.getOrCreateInstance(Layout.RESET_MODAL_ID).show();
-      this.app.router.pause();
 
-      if (window.history.state) {
-        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-      }
+    beforeNewHandler(done) {
+        //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal();
+        Modal.getOrCreateInstance(Layout.NEW_SURVEY_MODAL_ID).show();
 
-      this.app.router.resume();
-      done(false); // block navigation
+        this.app.router.pause();
+
+        console.log({'route history' : this.app.routeHistory});
+
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
+        this.app.router.resume();
+
+        done(false); // block navigation
     }
-  }, {
-    key: "beforeSaveAllHandler",
-    value: function beforeSaveAllHandler(done) {
-      // invoke sync of any/all unsaved data
-      // show pop-ups on success and failure
-      this.app.syncAll().then(function (result) {
-        console.log({
-          'In save all handler, success result': result
+
+    beforeResetHandler(done) {
+        //$(`#${Layout.RESET_MODAL_ID}`).modal();
+        Modal.getOrCreateInstance(Layout.RESET_MODAL_ID).show();
+
+        this.app.router.pause();
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
+        this.app.router.resume();
+
+        done(false); // block navigation
+    }
+
+    beforeSaveAllHandler(done) {
+        // invoke sync of any/all unsaved data
+        // show pop-ups on success and failure
+        this.app.syncAll().then((result) => {
+            console.log({'In save all handler, success result' : result});
+
+            if (Array.isArray(result)) {
+                //$(`#${Layout.SAVE_ALL_SUCCESS_MODAL_ID}`).modal();
+                Modal.getOrCreateInstance(Layout.SAVE_ALL_SUCCESS_MODAL_ID).show();
+            } else {
+                //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
+                Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+            }
+        }, (result) => {
+            console.log({'In save all handler, failure result' : result});
+            //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
+            Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+        }).finally(() => {
+            // stop the spinner
+
         });
 
-        if (Array.isArray(result)) {
-          //$(`#${Layout.SAVE_ALL_SUCCESS_MODAL_ID}`).modal();
-          Modal.getOrCreateInstance(Layout.SAVE_ALL_SUCCESS_MODAL_ID).show();
-        } else {
-          //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
-          Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+        this.app.router.pause();
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
-      }, function (result) {
-        console.log({
-          'In save all handler, failure result': result
-        }); //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
+        this.app.router.resume();
 
-        Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
-      }).finally(function () {// stop the spinner
-      });
-      this.app.router.pause();
-
-      if (window.history.state) {
-        window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-      }
-
-      this.app.router.resume();
-      done(false); // block navigation
+        done(false); // block navigation
     }
+
     /**
      *
      * @param {string} context typically 'survey'
@@ -16180,48 +9195,42 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
      * @param {(''|'help')} rhs currently not used
      * @param {Object.<string, string>} queryParameters surveyId
      */
-
-  }, {
-    key: "newSurveyHandler",
-    value: function newSurveyHandler(context, subcontext, rhs, queryParameters) {// should not get here, as beforeNewHandler ought to have been invoked first
+    newSurveyHandler(context, subcontext, rhs, queryParameters) {
+        // should not get here, as beforeNewHandler ought to have been invoked first
     }
+
     /**
      * called after user has confirmed add new survey dialog box
      *
      */
+    addNewSurveyHandler() {
+        console.log("reached addNewSurveyHandler");
+        this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
-  }, {
-    key: "addNewSurveyHandler",
-    value: function addNewSurveyHandler() {
-      console.log("reached addNewSurveyHandler");
-      this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
-      // the apps occurrences should only relate to the current survey
-      // (the reset are remote or in IndexedDb)
+        // the apps occurrences should only relate to the current survey
+        // (the reset are remote or in IndexedDb)
+        this.app.clearCurrentSurvey();
 
-      this.app.clearCurrentSurvey();
-      this.app.setNewSurvey(); // it's opportune at this point to try to ping the server again to save anything left outstanding
+        this.app.setNewSurvey();
 
-      this.app.syncAll();
-      this.app.router.pause();
-      this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+        // it's opportune at this point to try to ping the server again to save anything left outstanding
+        this.app.syncAll();
 
-      this.app.router.resolve();
+        this.app.router.pause();
+        this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+        this.app.router.resolve();
     }
+
     /**
      * called after user has confirmed reset surveys dialog box
      */
-
-  }, {
-    key: "resetSurveysHandler",
-    value: function resetSurveysHandler() {
-      var _this2 = this;
-
-      this.app.clearLocalForage().then(function () {
-        _this2.app.reset();
-
-        _this2.addNewSurveyHandler();
-      });
+    resetSurveysHandler() {
+        this.app.clearLocalForage().then(() => {
+            this.app.reset();
+            this.addNewSurveyHandler();
+        });
     }
+
     /**
      *
      * @param {string} context typically 'survey'
@@ -16229,43 +9238,37 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
      * @param {(''|'help')} rhs currently not used
      * @param {Object.<string, string>} queryParameters surveyId
      */
+    addSurveyHandler(context, subcontext, rhs, queryParameters) {
+        console.log("reached addSurveyHandler");
+        console.log({context: context, params: subcontext, query: queryParameters});
 
-  }, {
-    key: "addSurveyHandler",
-    value: function addSurveyHandler(context, subcontext, rhs, queryParameters) {
-      var _this3 = this;
+        this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
-      console.log("reached addSurveyHandler");
-      console.log({
-        context: context,
-        params: subcontext,
-        query: queryParameters
-      });
-      this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
+        let surveyId = queryParameters.surveyId;
 
-      var surveyId = queryParameters.surveyId;
+        if (!surveyId || !surveyId.match(UUID_REGEX)) {
+            throw new NotFoundError(`Failed to match survey id '${surveyId}', the id format appears to be incorrect`);
+        }
 
-      if (!surveyId || !surveyId.match(UUID_REGEX)) {
-        throw new NotFoundError("Failed to match survey id '".concat(surveyId, "', the id format appears to be incorrect"));
-      }
+        surveyId = surveyId.toLowerCase();
 
-      surveyId = surveyId.toLowerCase();
-      this.app.restoreOccurrences(surveyId).then(function () {
-        _this3.app.markAllNotPristine();
+        this.app.restoreOccurrences(surveyId)
+            .then(() => {
+                this.app.markAllNotPristine();
 
-        _this3.app.router.pause();
+                this.app.router.pause();
+                this.app.router.navigate('/list').resume();
+                this.app.router.resolve();
+            }, (error) => {
+                console.log({'failed survey restoration' : error});
 
-        _this3.app.router.navigate('/list').resume();
+                // should display a modal error message
+                // either the survey was not found or there was no network connection
 
-        _this3.app.router.resolve();
-      }, function (error) {
-        console.log({
-          'failed survey restoration': error
-        }); // should display a modal error message
-        // either the survey was not found or there was no network connection
-        // should switch to displaying a list of available surveys and an option to start a new survey
-      });
+                // should switch to displaying a list of available surveys and an option to start a new survey
+            });
     }
+
     /**
      *
      * @param {string} context typically 'survey'
@@ -16273,339 +9276,136 @@ var SurveyPickerController = /*#__PURE__*/function (_AppController) {
      * @param {(''|'help')} rhs currently not used
      * @param {Object.<string, string>} queryParameters surveyId
      */
-
-  }, {
-    key: "mainRouteHandler",
-    value: function mainRouteHandler(context, subcontext, rhs, queryParameters) {
-      console.log("reached special route handler for SurveyPickerController.js");
-      console.log({
-        context: context,
-        params: subcontext,
-        query: queryParameters
-      });
+    mainRouteHandler(context, subcontext, rhs, queryParameters) {
+        console.log("reached special route handler for SurveyPickerController.js");
+        console.log({context: context, params: subcontext, query: queryParameters});
     }
-  }]);
+}
 
-  return SurveyPickerController;
-}(AppController);
+class ResponseFactory {
+    static responses = {};
 
-_defineProperty(SurveyPickerController, "EVENT_BACK", 'back');
-
-/* eslint-disable es/no-string-prototype-matchall -- safe */
-var $$7 = _export;
-var global$5 = global$$;
-var call$1 = functionCall;
-var uncurryThis$3 = functionUncurryThis;
-var createIteratorConstructor = createIteratorConstructor$2;
-var requireObjectCoercible$1 = requireObjectCoercible$a;
-var toLength$1 = toLength$6;
-var toString$3 = toString$d;
-var anObject = anObject$l;
-var classof$2 = classofRaw$1;
-var isPrototypeOf$1 = objectIsPrototypeOf;
-var isRegExp$1 = isRegexp;
-var regExpFlags$1 = regexpFlags$1;
-var getMethod = getMethod$7;
-var redefine$1 = redefine$d.exports;
-var fails$2 = fails$z;
-var wellKnownSymbol$1 = wellKnownSymbol$q;
-var speciesConstructor = speciesConstructor$4;
-var advanceStringIndex = advanceStringIndex$4;
-var regExpExec = regexpExecAbstract;
-var InternalStateModule = internalState;
-var IS_PURE = isPure;
-
-var MATCH_ALL = wellKnownSymbol$1('matchAll');
-var REGEXP_STRING = 'RegExp String';
-var REGEXP_STRING_ITERATOR = REGEXP_STRING + ' Iterator';
-var setInternalState = InternalStateModule.set;
-var getInternalState$2 = InternalStateModule.getterFor(REGEXP_STRING_ITERATOR);
-var RegExpPrototype$3 = RegExp.prototype;
-var TypeError$4 = global$5.TypeError;
-var getFlags$1 = uncurryThis$3(regExpFlags$1);
-var stringIndexOf$1 = uncurryThis$3(''.indexOf);
-var un$MatchAll = uncurryThis$3(''.matchAll);
-
-var WORKS_WITH_NON_GLOBAL_REGEX = !!un$MatchAll && !fails$2(function () {
-  un$MatchAll('a', /./);
-});
-
-var $RegExpStringIterator = createIteratorConstructor(function RegExpStringIterator(regexp, string, $global, fullUnicode) {
-  setInternalState(this, {
-    type: REGEXP_STRING_ITERATOR,
-    regexp: regexp,
-    string: string,
-    global: $global,
-    unicode: fullUnicode,
-    done: false
-  });
-}, REGEXP_STRING, function next() {
-  var state = getInternalState$2(this);
-  if (state.done) return { value: undefined, done: true };
-  var R = state.regexp;
-  var S = state.string;
-  var match = regExpExec(R, S);
-  if (match === null) return { value: undefined, done: state.done = true };
-  if (state.global) {
-    if (toString$3(match[0]) === '') R.lastIndex = advanceStringIndex(S, toLength$1(R.lastIndex), state.unicode);
-    return { value: match, done: false };
-  }
-  state.done = true;
-  return { value: match, done: false };
-});
-
-var $matchAll = function (string) {
-  var R = anObject(this);
-  var S = toString$3(string);
-  var C, flagsValue, flags, matcher, $global, fullUnicode;
-  C = speciesConstructor(R, RegExp);
-  flagsValue = R.flags;
-  if (flagsValue === undefined && isPrototypeOf$1(RegExpPrototype$3, R) && !('flags' in RegExpPrototype$3)) {
-    flagsValue = getFlags$1(R);
-  }
-  flags = flagsValue === undefined ? '' : toString$3(flagsValue);
-  matcher = new C(C === RegExp ? R.source : R, flags);
-  $global = !!~stringIndexOf$1(flags, 'g');
-  fullUnicode = !!~stringIndexOf$1(flags, 'u');
-  matcher.lastIndex = toLength$1(R.lastIndex);
-  return new $RegExpStringIterator(matcher, S, $global, fullUnicode);
-};
-
-// `String.prototype.matchAll` method
-// https://tc39.es/ecma262/#sec-string.prototype.matchall
-$$7({ target: 'String', proto: true, forced: WORKS_WITH_NON_GLOBAL_REGEX }, {
-  matchAll: function matchAll(regexp) {
-    var O = requireObjectCoercible$1(this);
-    var flags, S, matcher, rx;
-    if (regexp != null) {
-      if (isRegExp$1(regexp)) {
-        flags = toString$3(requireObjectCoercible$1('flags' in RegExpPrototype$3
-          ? regexp.flags
-          : getFlags$1(regexp)
-        ));
-        if (!~stringIndexOf$1(flags, 'g')) throw TypeError$4('`.matchAll` does not allow non-global regexes');
-      }
-      if (WORKS_WITH_NON_GLOBAL_REGEX) return un$MatchAll(O, regexp);
-      matcher = getMethod(regexp, MATCH_ALL);
-      if (matcher === undefined && IS_PURE && classof$2(regexp) == 'RegExp') matcher = $matchAll;
-      if (matcher) return call$1(matcher, regexp, O);
-    } else if (WORKS_WITH_NON_GLOBAL_REGEX) return un$MatchAll(O, regexp);
-    S = toString$3(O);
-    rx = new RegExp(regexp, 'g');
-    return rx[MATCH_ALL](S);
-  }
-});
-
-MATCH_ALL in RegExpPrototype$3 || redefine$1(RegExpPrototype$3, MATCH_ALL, $matchAll);
-
-var $$6 = _export;
-var $map = arrayIteration.map;
-var arrayMethodHasSpeciesSupport$1 = arrayMethodHasSpeciesSupport$5;
-
-var HAS_SPECIES_SUPPORT$1 = arrayMethodHasSpeciesSupport$1('map');
-
-// `Array.prototype.map` method
-// https://tc39.es/ecma262/#sec-array.prototype.map
-// with adding support of @@species
-$$6({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT$1 }, {
-  map: function map(callbackfn /* , thisArg */) {
-    return $map(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-
-var $$5 = _export;
-var uncurryThis$2 = functionUncurryThis;
-var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
-var toLength = toLength$6;
-var toString$2 = toString$d;
-var notARegExp = notARegexp;
-var requireObjectCoercible = requireObjectCoercible$a;
-var correctIsRegExpLogic = correctIsRegexpLogic;
-
-// eslint-disable-next-line es/no-string-prototype-startswith -- safe
-var un$StartsWith = uncurryThis$2(''.startsWith);
-var stringSlice$1 = uncurryThis$2(''.slice);
-var min$1 = Math.min;
-
-var CORRECT_IS_REGEXP_LOGIC = correctIsRegExpLogic('startsWith');
-// https://github.com/zloirock/core-js/pull/702
-var MDN_POLYFILL_BUG = !CORRECT_IS_REGEXP_LOGIC && !!function () {
-  var descriptor = getOwnPropertyDescriptor(String.prototype, 'startsWith');
-  return descriptor && !descriptor.writable;
-}();
-
-// `String.prototype.startsWith` method
-// https://tc39.es/ecma262/#sec-string.prototype.startswith
-$$5({ target: 'String', proto: true, forced: !MDN_POLYFILL_BUG && !CORRECT_IS_REGEXP_LOGIC }, {
-  startsWith: function startsWith(searchString /* , position = 0 */) {
-    var that = toString$2(requireObjectCoercible(this));
-    notARegExp(searchString);
-    var index = toLength(min$1(arguments.length > 1 ? arguments[1] : undefined, that.length));
-    var search = toString$2(searchString);
-    return un$StartsWith
-      ? un$StartsWith(that, search, index)
-      : stringSlice$1(that, index, index + search.length) === search;
-  }
-});
-
-function _createForOfIteratorHelper$5(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$5(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray$5(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$5(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$5(o, minLen); }
-
-function _arrayLikeToArray$5(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-var ResponseFactory = /*#__PURE__*/function () {
-  function ResponseFactory() {
-    _classCallCheck(this, ResponseFactory);
-  }
-
-  _createClass(ResponseFactory, null, [{
-    key: "fromPostedData",
-    value:
     /**
      *
      * @param {FormData} formData
      * @returns {LocalResponse}
      */
-    function fromPostedData(formData) {
-      /**
-       * the object that will be saved to IndexedDb
-       *
-       * this needs to be in scope for several stages of the promise chain
-       * @type {{[saved]: string, [type]: string, [imageId]: string, [surveyId]: string, [occurrenceId]: string, [image]: file, [projectId]: number, saveState: string }}
-       */
-      var toSaveLocally = {
-        saveState: SAVE_STATE_LOCAL // mark as not saved externally
+    static fromPostedData(formData) {
+        /**
+         * the object that will be saved to IndexedDb
+         *
+         * this needs to be in scope for several stages of the promise chain
+         * @type {{[saved]: string, [type]: string, [imageId]: string, [surveyId]: string, [occurrenceId]: string, [image]: file, [projectId]: number, saveState: string }}
+         */
+        const toSaveLocally = {
+            saveState: SAVE_STATE_LOCAL // mark as not saved externally
+        };
 
-      };
-
-      var _iterator = _createForOfIteratorHelper$5(formData.entries()),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var pair = _step.value;
-          toSaveLocally[pair[0]] = pair[1];
+        for(let pair of formData.entries()) {
+            toSaveLocally[pair[0]] = pair[1];
         }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
 
-      if (!toSaveLocally.type) {
-        throw new Error('Missing type in form data.');
-      }
+        if (!toSaveLocally.type) {
+            throw new Error('Missing type in form data.');
+        }
 
-      if (ResponseFactory.responses.hasOwnProperty(toSaveLocally.type)) {
-        return new ResponseFactory.responses[toSaveLocally.type](toSaveLocally, {});
-      } else {
-        throw new Error("Unrecognised post type '".concat(toSaveLocally.type, "'"));
-      }
+        if (ResponseFactory.responses.hasOwnProperty(toSaveLocally.type)) {
+            return new ResponseFactory.responses[toSaveLocally.type](toSaveLocally, {});
+        } else {
+            throw new Error(`Unrecognised post type '${toSaveLocally.type}'`);
+        }
     }
+
     /**
      *
      * @param {{}} returnedToClient
      */
+    static fromPostResponse(returnedToClient) {
+        if (!returnedToClient) {
+            throw new Error('Invalid empty post response.');
+        }
 
-  }, {
-    key: "fromPostResponse",
-    value: function fromPostResponse(returnedToClient) {
-      if (!returnedToClient) {
-        throw new Error('Invalid empty post response.');
-      }
+        if (!returnedToClient.type) {
+            throw new Error('Missing type in returned response.');
+        }
 
-      if (!returnedToClient.type) {
-        throw new Error('Missing type in returned response.');
-      }
-
-      if (ResponseFactory.responses.hasOwnProperty(returnedToClient.type)) {
-        console.log("in fromPostResponse returning a ".concat(returnedToClient.type));
-        return new ResponseFactory.responses[returnedToClient.type]({}, returnedToClient);
-      } else {
-        throw new Error("Unrecognised post type '".concat(returnedToClient.type, "'"));
-      }
+        if (ResponseFactory.responses.hasOwnProperty(returnedToClient.type)) {
+            console.log(`in fromPostResponse returning a ${returnedToClient.type}`);
+            return new ResponseFactory.responses[returnedToClient.type]({}, returnedToClient);
+        } else {
+            throw new Error(`Unrecognised post type '${returnedToClient.type}'`);
+        }
     }
-  }]);
-
-  return ResponseFactory;
-}();
-
-_defineProperty(ResponseFactory, "responses", {});
-
-function packageClientResponse(returnedToClient) {
-  var headers = new Headers();
-  headers.set('Content-Type', 'application/json');
-  return new Response(JSON.stringify(returnedToClient), {
-    status: returnedToClient.error ? 500 : 200,
-    headers: headers
-  });
 }
 
-var LocalResponse = /*#__PURE__*/function () {
-  /**
-   * @type {Response}
-   */
-  function LocalResponse(toSaveLocally, returnedToClient) {
-    _classCallCheck(this, LocalResponse);
+function packageClientResponse (returnedToClient) {
+    const headers = new Headers;
+    headers.set('Content-Type', 'application/json');
 
-    _defineProperty(this, "toSaveLocally", void 0);
+    return new Response(
+        JSON.stringify(returnedToClient),
+        {
+            status: returnedToClient.error ? 500 : 200,
+            headers
+        });
+}
 
-    _defineProperty(this, "returnedToClient", void 0);
+class LocalResponse {
+    toSaveLocally;
+    returnedToClient;
 
-    _defineProperty(this, "prebuiltResponse", void 0);
+    /**
+     * @type {Response}
+     */
+    prebuiltResponse;
 
-    _defineProperty(this, "failureErrorMessage", 'Failed to save a local copy on your device.');
+    failureErrorMessage = 'Failed to save a local copy on your device.';
+    failureErrorHelp = 'Your internet connection may have failed (or there could be a problem with the server). ' +
+        'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
+        'Please try to re-establish a network connection and try again.';
 
-    _defineProperty(this, "failureErrorHelp", 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' + 'Please try to re-establish a network connection and try again.');
-
-    this.toSaveLocally = toSaveLocally;
-    this.returnedToClient = returnedToClient;
-  }
-  /**
-   *
-   * @param {Response} prebuiltResponse
-   * @returns this
-   */
-
-
-  _createClass(LocalResponse, [{
-    key: "setPrebuiltResponse",
-    value: function setPrebuiltResponse(prebuiltResponse) {
-      this.prebuiltResponse = prebuiltResponse;
-      return this;
+    constructor(toSaveLocally, returnedToClient) {
+        this.toSaveLocally = toSaveLocally;
+        this.returnedToClient = returnedToClient;
     }
+
+    /**
+     *
+     * @param {Response} prebuiltResponse
+     * @returns this
+     */
+    setPrebuiltResponse(prebuiltResponse) {
+        this.prebuiltResponse = prebuiltResponse;
+        return this;
+    }
+
     /**
      *
      * @returns {Promise<Response>}
      */
+    storeLocally() {
+        return localforage.setItem(this.localKey(), this.toSaveLocally).then(() => {
+                console.log(`Stored object ${this.localKey()} locally`);
+                return this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient);
+            },
+            (reason) => {
+                console.log(`Failed to store object ${this.localKey()} locally`);
+                console.log({reason});
+                this.returnedToClient.error = this.failureErrorMessage;
+                this.returnedToClient.errorHelp = this.failureErrorHelp;
 
-  }, {
-    key: "storeLocally",
-    value: function storeLocally() {
-      var _this = this;
-
-      return localforage.setItem(this.localKey(), this.toSaveLocally).then(function () {
-        console.log("Stored object ".concat(_this.localKey(), " locally"));
-        return _this.prebuiltResponse ? _this.prebuiltResponse : packageClientResponse(_this.returnedToClient);
-      }, function (reason) {
-        console.log("Failed to store object ".concat(_this.localKey(), " locally"));
-        console.log({
-          reason: reason
-        });
-        _this.returnedToClient.error = _this.failureErrorMessage;
-        _this.returnedToClient.errorHelp = _this.failureErrorHelp;
-        return packageClientResponse(_this.returnedToClient);
-      });
+                return packageClientResponse(this.returnedToClient);
+            }
+        )
     }
+
     /**
      * @return {string}
      */
-
-  }, {
-    key: "localKey",
-    value: function localKey() {
-      throw new Error("LocalKey must be implemented in a subclass for ".concat(this.toSaveLocally.type));
+    localKey () {
+        throw new Error(`LocalKey must be implemented in a subclass for ${this.toSaveLocally.type}`);
     }
+
     /**
      * called to build the response to the post that is returned to the client
      * in the absence of the remote server
@@ -16613,302 +9413,196 @@ var LocalResponse = /*#__PURE__*/function () {
      * @returns {this}
      * @abstract
      */
-
-  }, {
-    key: "populateClientResponse",
-    value: function populateClientResponse() {}
-  }]);
-
-  return LocalResponse;
-}();
-
-function _createSuper$d(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$d(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$d() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var ImageResponse = /*#__PURE__*/function (_LocalResponse) {
-  _inherits(ImageResponse, _LocalResponse);
-
-  var _super = _createSuper$d(ImageResponse);
-
-  function ImageResponse() {
-    var _this;
-
-    _classCallCheck(this, ImageResponse);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    populateClientResponse() {
     }
+}
 
-    _this = _super.call.apply(_super, [this].concat(args));
+class ImageResponse extends LocalResponse {
+    failureErrorMessage = 'Failed to store image.';
+    failureErrorHelp = 'Your internet connection may have failed (or there could be a problem with the server). ' +
+        'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
+        'Please try to re-establish a network connection and try again.';
 
-    _defineProperty(_assertThisInitialized(_this), "failureErrorMessage", 'Failed to store image.');
-
-    _defineProperty(_assertThisInitialized(_this), "failureErrorHelp", 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' + 'Please try to re-establish a network connection and try again.');
-
-    return _this;
-  }
-
-  _createClass(ImageResponse, [{
-    key: "populateClientResponse",
-    value:
     /**
      * called to build the response to the post that is returned to the client
      * in the absence of the remote server
      *
      * @returns {this}
      */
-    function populateClientResponse() {
-      this.returnedToClient.id = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
-      this.returnedToClient.imageId = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
-      this.returnedToClient.type = 'image';
-      this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
-      this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
-      this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
+    populateClientResponse() {
+        this.returnedToClient.id = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
+        this.returnedToClient.imageId = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
+        this.returnedToClient.type = 'image';
+        this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
+        this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
+        this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
+        this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
+        this.returnedToClient.saveState = SAVE_STATE_LOCAL;
+        this.returnedToClient.deleted = this.toSaveLocally.deleted;
+        this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
 
-      this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
-      this.returnedToClient.saveState = SAVE_STATE_LOCAL;
-      this.returnedToClient.deleted = this.toSaveLocally.deleted;
-      this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
-      return this;
+        return this;
     }
+
     /**
      * called to mirror a response from the server locally
      *
      * @returns {this}
      */
+    populateLocalSave() {
+        this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
+        this.toSaveLocally.type = 'image';
+        this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
+        this.toSaveLocally.imageId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
+        this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
+        this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
+        this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
+        this.toSaveLocally.saveState = SAVE_STATE_SERVER;
+        this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
+        this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
 
-  }, {
-    key: "populateLocalSave",
-    value: function populateLocalSave() {
-      this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
-      this.toSaveLocally.type = 'image';
-      this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
-      this.toSaveLocally.imageId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
-
-      this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
-
-      this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
-
-      this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
-      this.toSaveLocally.saveState = SAVE_STATE_SERVER;
-      this.toSaveLocally.deleted = this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true';
-      this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-      return this;
+        return this;
     }
+
     /**
      *
      * @returns {string}
      */
-
-  }, {
-    key: "localKey",
-    value: function localKey() {
-      return "image.".concat(this.toSaveLocally.imageId);
-    }
-  }], [{
-    key: "register",
-    value: function register() {
-      ResponseFactory.responses.image = ImageResponse;
-    }
-  }]);
-
-  return ImageResponse;
-}(LocalResponse);
-
-function _createSuper$c(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$c(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$c() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var SurveyResponse = /*#__PURE__*/function (_LocalResponse) {
-  _inherits(SurveyResponse, _LocalResponse);
-
-  var _super = _createSuper$c(SurveyResponse);
-
-  function SurveyResponse() {
-    var _this;
-
-    _classCallCheck(this, SurveyResponse);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    localKey() {
+        return `image.${this.toSaveLocally.imageId}`;
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    static register() {
+        ResponseFactory.responses.image = ImageResponse;
+    }
+}
 
-    _defineProperty(_assertThisInitialized(_this), "failureErrorMessage", 'Failed to store survey.');
+class SurveyResponse extends LocalResponse {
+    failureErrorMessage = 'Failed to store survey.';
+    failureErrorHelp = 'Your internet connection may have failed (or there could be a problem with the server). ' +
+        'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
+        'Please try to re-establish a network connection and try again.';
 
-    _defineProperty(_assertThisInitialized(_this), "failureErrorHelp", 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' + 'Please try to re-establish a network connection and try again.');
-
-    return _this;
-  }
-
-  _createClass(SurveyResponse, [{
-    key: "populateClientResponse",
-    value:
     /**
      * called to build the response to the post that is returned to the client
      * in the absence of the remote server
      *
      * @returns {this}
      */
-    function populateClientResponse() {
-      this.toSaveLocally.surveyId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId; // hedging
+    populateClientResponse() {
+        this.toSaveLocally.surveyId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId; // hedging
+        this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId; // hedging
+        this.returnedToClient.type = 'survey';
+        this.returnedToClient.attributes = this.toSaveLocally.attributes;
+        this.returnedToClient.created = this.toSaveLocally.created; // stamps from server always take precedence
+        this.returnedToClient.modified = this.toSaveLocally.modified;
+        this.returnedToClient.saveState = SAVE_STATE_LOCAL;
+        this.returnedToClient.deleted = this.toSaveLocally.deleted;
+        this.returnedToClient.projectId = this.toSaveLocally.projectId;
 
-      this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId; // hedging
-
-      this.returnedToClient.type = 'survey';
-      this.returnedToClient.attributes = this.toSaveLocally.attributes;
-      this.returnedToClient.created = this.toSaveLocally.created; // stamps from server always take precedence
-
-      this.returnedToClient.modified = this.toSaveLocally.modified;
-      this.returnedToClient.saveState = SAVE_STATE_LOCAL;
-      this.returnedToClient.deleted = this.toSaveLocally.deleted;
-      this.returnedToClient.projectId = this.toSaveLocally.projectId;
-      return this;
+        return this;
     }
+
     /**
      * called to mirror a response from the server locally
      *
      * @returns {this}
      */
+    populateLocalSave() {
+        this.toSaveLocally.surveyId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId;
+        this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId;
+        this.toSaveLocally.type = 'survey';
+        this.toSaveLocally.attributes = this.returnedToClient.attributes;
+        this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
+        this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
+        this.toSaveLocally.saveState = SAVE_STATE_SERVER;
+        this.toSaveLocally.deleted = this.returnedToClient.deleted;
+        this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
 
-  }, {
-    key: "populateLocalSave",
-    value: function populateLocalSave() {
-      this.toSaveLocally.surveyId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId;
-      this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId;
-      this.toSaveLocally.type = 'survey';
-      this.toSaveLocally.attributes = this.returnedToClient.attributes;
-      this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
-
-      this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
-      this.toSaveLocally.saveState = SAVE_STATE_SERVER;
-      this.toSaveLocally.deleted = this.returnedToClient.deleted;
-      this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-      return this;
+        return this;
     }
+
     /**
      *
      * @returns {string}
      */
-
-  }, {
-    key: "localKey",
-    value: function localKey() {
-      return "survey.".concat(this.toSaveLocally.surveyId);
-    }
-  }], [{
-    key: "register",
-    value: function register() {
-      ResponseFactory.responses.survey = SurveyResponse;
-    }
-  }]);
-
-  return SurveyResponse;
-}(LocalResponse);
-
-function _createSuper$b(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$b(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$b() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var OccurrenceResponse = /*#__PURE__*/function (_LocalResponse) {
-  _inherits(OccurrenceResponse, _LocalResponse);
-
-  var _super = _createSuper$b(OccurrenceResponse);
-
-  function OccurrenceResponse() {
-    var _this;
-
-    _classCallCheck(this, OccurrenceResponse);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    localKey() {
+        return `survey.${this.toSaveLocally.surveyId}`;
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
+    static register() {
+        ResponseFactory.responses.survey = SurveyResponse;
+    }
+}
 
-    _defineProperty(_assertThisInitialized(_this), "failureErrorMessage", 'Failed to store occurrence.');
+class OccurrenceResponse extends LocalResponse {
+    failureErrorMessage = 'Failed to store occurrence.';
+    failureErrorHelp = 'Your internet connection may have failed (or there could be a problem with the server). ' +
+        'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
+        'Please try to re-establish a network connection and try again.';
 
-    _defineProperty(_assertThisInitialized(_this), "failureErrorHelp", 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' + 'Please try to re-establish a network connection and try again.');
-
-    return _this;
-  }
-
-  _createClass(OccurrenceResponse, [{
-    key: "populateClientResponse",
-    value:
     /**
      * called to build the response to the post that is returned to the client
      * in the absence of the remote server
      *
      * @returns {this}
      */
-    function populateClientResponse() {
-      this.returnedToClient.id = this.toSaveLocally.occurrenceId ? this.toSaveLocally.occurrenceId : this.toSaveLocally.id;
-      this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId ? this.toSaveLocally.occurrenceId : this.toSaveLocally.id;
-      this.returnedToClient.type = 'occurrence';
-      this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
-      this.returnedToClient.attributes = this.toSaveLocally.attributes;
-      this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
-
-      this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
-      this.returnedToClient.saveState = SAVE_STATE_LOCAL;
-      this.returnedToClient.deleted = this.toSaveLocally.deleted;
-      this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
-      return this;
+    populateClientResponse() {
+        this.returnedToClient.id = this.toSaveLocally.occurrenceId ? this.toSaveLocally.occurrenceId : this.toSaveLocally.id;
+        this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId ? this.toSaveLocally.occurrenceId : this.toSaveLocally.id;
+        this.returnedToClient.type = 'occurrence';
+        this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
+        this.returnedToClient.attributes = this.toSaveLocally.attributes;
+        this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
+        this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
+        this.returnedToClient.saveState = SAVE_STATE_LOCAL;
+        this.returnedToClient.deleted = this.toSaveLocally.deleted;
+        this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
+        return this;
     }
+
     /**
      * called to mirror a response from the server locally
      *
      * @returns {this}
      */
+    populateLocalSave() {
+        this.toSaveLocally.occurrenceId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.occurrenceId; // hedging
+        this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.occurrenceId; // hedging
+        this.toSaveLocally.type = 'occurrence';
+        this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
+        this.toSaveLocally.attributes = this.returnedToClient.attributes;
+        this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
+        this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
+        this.toSaveLocally.saveState = SAVE_STATE_SERVER;
+        this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
+        this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
 
-  }, {
-    key: "populateLocalSave",
-    value: function populateLocalSave() {
-      this.toSaveLocally.occurrenceId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.occurrenceId; // hedging
-
-      this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.occurrenceId; // hedging
-
-      this.toSaveLocally.type = 'occurrence';
-      this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
-      this.toSaveLocally.attributes = this.returnedToClient.attributes;
-      this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
-
-      this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
-      this.toSaveLocally.saveState = SAVE_STATE_SERVER;
-      this.toSaveLocally.deleted = this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true';
-      this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-      return this;
+        return this;
     }
+
     /**
      *
      * @returns {string}
      */
-
-  }, {
-    key: "localKey",
-    value: function localKey() {
-      return "occurrence.".concat(this.toSaveLocally.occurrenceId);
+    localKey() {
+        return `occurrence.${this.toSaveLocally.occurrenceId}`;
     }
-  }], [{
-    key: "register",
-    value: function register() {
-      ResponseFactory.responses.occurrence = OccurrenceResponse;
+
+    static register() {
+        ResponseFactory.responses.occurrence = OccurrenceResponse;
     }
-  }]);
+}
 
-  return OccurrenceResponse;
-}(LocalResponse);
+// service worker for BSBI app
 
-var BSBIServiceWorker = /*#__PURE__*/function () {
-  function BSBIServiceWorker() {
-    _classCallCheck(this, BSBIServiceWorker);
+class BSBIServiceWorker {
 
-    _defineProperty(this, "URL_CACHE_SET", void 0);
-  }
+    /**
+     * @var {Array.<string>}
+     */
+    URL_CACHE_SET;
 
-  _createClass(BSBIServiceWorker, [{
-    key: "initialise",
-    value:
     /**
      *
      * @param {{
@@ -16924,315 +9618,364 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
      *  version : string
      * }} configuration
      */
-    function initialise(configuration) {
-      var _this = this;
-
-      if (!Promise.prototype.finally) {
-        Promise.prototype.finally = function (callback) {
-          // must use 'function' here rather than arrow, due to this binding requirement
-          return this.then(callback).catch(callback);
-        };
-      }
-
-      ImageResponse.register();
-      SurveyResponse.register();
-      OccurrenceResponse.register();
-      this.CACHE_VERSION = "version-1.0.3.1643886046-".concat(configuration.version);
-      var POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
-      var POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
-      var GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
-      var SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
-      var SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
-      var SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
-      var INDEX_URL = configuration.indexUrl;
-      this.URL_CACHE_SET = configuration.urlCacheSet;
-      localforage.config({
-        name: configuration.forageName
-      }); // On install, cache some resources.
-
-      self.addEventListener('install', function (evt) {
-        console.log('BSBI app service worker is being installed.'); // noinspection JSIgnoredPromiseFromCall
-
-        self.skipWaiting(); // Ask the service worker to keep installing until the returning promise
-        // resolves.
-
-        evt.waitUntil(_this.precache() // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
-        // .finally(() => {
-        //     console.log("Service worker skip waiting after precache.");
-        //
-        //     return self.skipWaiting();
-        // })
-        );
-      });
-      self.addEventListener('activate', function (event) {
-        console.log({
-          'service worker activate event': event
-        });
-        event.waitUntil(self.clients.matchAll({
-          includeUncontrolled: true
-        }).then(function (clientList) {
-          var urls = clientList.map(function (client) {
-            return client.url;
-          });
-          console.log('[ServiceWorker] Matching clients:', urls.join(', '));
-        }).then(function () {
-          return caches.keys();
-        }).then(function (cacheNames) {
-          return Promise.all(cacheNames.map(function (cacheName) {
-            // test for 'version' prefix to avoid deleting mapbox tiles
-            if (cacheName.startsWith('version') && cacheName !== _this.CACHE_VERSION) {
-              console.log('[ServiceWorker] Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          }));
-        }).then(function () {
-          console.log('[ServiceWorker] Claiming clients for version', _this.CACHE_VERSION);
-          return self.clients.claim();
-        }));
-      }); // // see https://davidwalsh.name/background-sync
-      // // https://developers.google.com/web/updates/2015/12/background-sync
-      // self.addEventListener('sync', function(event) {
-      //
-      // });
-      // On fetch, use cache but update the entry with the latest contents
-      // from the server.
-
-      self.addEventListener('fetch',
-      /** @param {FetchEvent} evt */
-      function (evt) {
-        //console.log(`The service worker is serving: '${evt.request.url}'`);
-        evt.preventDefault();
-
-        if (evt.request.method === 'POST') {
-          //console.log(`Got a post request`);
-          //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
-          if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
-            console.log("Passing through whitelisted post request for: ".concat(evt.request.url));
-            evt.respondWith(fetch(evt.request));
-          } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-            console.log("Passing through nocache list post request for: ".concat(evt.request.url));
-            evt.respondWith(fetch(evt.request));
-          } else {
-            //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
-            if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
-              console.log("Got an image post request: '".concat(evt.request.url, "'"));
-
-              _this.handle_image_post(evt);
-            } else {
-              console.log("Got post request: '".concat(evt.request.url, "'"));
-
-              _this.handle_post(evt);
-            }
-          }
-        } else {
-          // test whether this is a direct link in to a page that should be substituted by
-          // the single page app
-          // console.log(`about to test url '${evt.request.url}'`);
-          if (SERVICE_WORKER_INTERCEPT_URL_MATCHES.test(evt.request.url) && !SERVICE_WORKER_IGNORE_URL_MATCHES.test(evt.request.url)) {
-            // serving single page app instead
-            console.log("redirecting to the root of the SPA for '".concat(evt.request.url, "'"));
-            var spaRequest = new Request(INDEX_URL);
-            evt.respondWith(_this.fromCache(spaRequest));
-            evt.waitUntil(_this.update(spaRequest));
-          } else if (evt.request.url.match(GET_IMAGE_URL_MATCH)) {
-            console.log("request is for an image '".concat(evt.request.url, "'"));
-
-            _this.handleImageFetch(evt);
-          } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-            // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
-            evt.respondWith(fetch(evt.request));
-          } else {
-            console.log("request is for non-image '".concat(evt.request.url, "'")); // You can use `respondWith()` to answer immediately, without waiting for the
-            // network response to reach the service worker...
-
-            evt.respondWith(_this.fromCache(evt.request)); // ...and `waitUntil()` to prevent the worker from being killed until the
-            // cache is updated.
-
-            evt.waitUntil(_this.update(evt.request));
-          }
+    initialise(configuration) {
+        if (!Promise.prototype.finally) {
+            Promise.prototype.finally = function (callback) { // must use 'function' here rather than arrow, due to this binding requirement
+                return this.then(callback)
+                    .catch(callback);
+            };
         }
-      });
+
+        ImageResponse.register();
+        SurveyResponse.register();
+        OccurrenceResponse.register();
+
+        this.CACHE_VERSION = `version-1.0.3.1643886046-${configuration.version}`;
+
+        const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
+        const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
+        const GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
+        const SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
+        const SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
+        const SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
+        const INDEX_URL = configuration.indexUrl;
+
+        this.URL_CACHE_SET = configuration.urlCacheSet;
+
+        localforage.config({
+            name: configuration.forageName
+        });
+
+        // On install, cache some resources.
+        self.addEventListener('install', (evt) => {
+            console.log('BSBI app service worker is being installed.');
+
+            // noinspection JSIgnoredPromiseFromCall
+            self.skipWaiting();
+
+            // Ask the service worker to keep installing until the returning promise
+            // resolves.
+            evt.waitUntil(
+                this.precache()
+                    // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
+                    // .finally(() => {
+                    //     console.log("Service worker skip waiting after precache.");
+                    //
+                    //     return self.skipWaiting();
+                    // })
+            );
+        });
+
+        self.addEventListener('activate', (event) => {
+            console.log({'service worker activate event' : event});
+
+            event.waitUntil(
+                self.clients.matchAll({
+                    includeUncontrolled: true
+                }).then((clientList) => {
+                    const urls = clientList.map((client) => {
+                        return client.url;
+                    });
+                    console.log('[ServiceWorker] Matching clients:', urls.join(', '));
+                }).then(() => caches.keys())
+                    .then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.map((cacheName) => {
+                                // test for 'version' prefix to avoid deleting mapbox tiles
+                                if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
+                                    console.log('[ServiceWorker] Deleting old cache:', cacheName);
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    }).then(() => {
+                        console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
+                        return self.clients.claim();
+                    })
+                );
+            });
+
+
+        // // see https://davidwalsh.name/background-sync
+        // // https://developers.google.com/web/updates/2015/12/background-sync
+        // self.addEventListener('sync', function(event) {
+        //
+        // });
+
+        // On fetch, use cache but update the entry with the latest contents
+        // from the server.
+        self.addEventListener('fetch', /** @param {FetchEvent} evt */ (evt) => {
+            //console.log(`The service worker is serving: '${evt.request.url}'`);
+
+            evt.preventDefault();
+
+            if (evt.request.method === 'POST') {
+                //console.log(`Got a post request`);
+
+                //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
+                if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
+                    console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
+                    evt.respondWith(fetch(evt.request));
+                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
+                    console.log(`Passing through nocache list post request for: ${evt.request.url}`);
+                    evt.respondWith(fetch(evt.request));
+                } else {
+                    //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
+                    if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
+                        console.log(`Got an image post request: '${evt.request.url}'`);
+                        this.handle_image_post(evt);
+                    } else {
+                        console.log(`Got post request: '${evt.request.url}'`);
+                        this.handle_post(evt);
+                    }
+                }
+            } else {
+                // test whether this is a direct link in to a page that should be substituted by
+                // the single page app
+
+                // console.log(`about to test url '${evt.request.url}'`);
+
+                if (SERVICE_WORKER_INTERCEPT_URL_MATCHES.test(evt.request.url) &&
+                    !SERVICE_WORKER_IGNORE_URL_MATCHES.test(evt.request.url)
+                ) {
+                    // serving single page app instead
+                    console.log(`redirecting to the root of the SPA for '${evt.request.url}'`);
+                    let spaRequest = new Request(INDEX_URL);
+                    evt.respondWith(this.fromCache(spaRequest));
+                    evt.waitUntil(this.update(spaRequest));
+                } else if (evt.request.url.match(GET_IMAGE_URL_MATCH)) {
+                    console.log(`request is for an image '${evt.request.url}'`);
+                    this.handleImageFetch(evt);
+                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
+                    // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
+                    evt.respondWith(fetch(evt.request));
+                } else {
+                    console.log(`request is for non-image '${evt.request.url}'`);
+                    // You can use `respondWith()` to answer immediately, without waiting for the
+                    // network response to reach the service worker...
+                    evt.respondWith(this.fromCache(evt.request));
+                    // ...and `waitUntil()` to prevent the worker from being killed until the
+                    // cache is updated.
+                    evt.waitUntil(this.update(evt.request));
+                }
+            }
+        });
     }
+
+
     /**
      * used to handle small posts (not images)
      * attempts remote save first then caches locally
      *
      * @param {FetchEvent} evt
      */
-
-  }, {
-    key: "handle_post",
-    value: function handle_post(evt) {
-      var clonedRequest;
-
-      try {
-        clonedRequest = evt.request.clone();
-      } catch (e) {
-        console.log('Failed to clone request.');
-        console.log({
-          'Cloning error': e
-        });
-      }
-
-      evt.respondWith(fetch(evt.request).then(function (response) {
-        // would get here if the server responds at all, but need to check that the response is ok (not a server error)
-        if (response.ok) {
-          return Promise.resolve(response).then(function (response) {
-            // save the response locally
-            // before returning it to the client
-            console.log('About to clone the json response.');
-            return response.clone().json();
-          }).then(function (jsonResponseData) {
-            console.log('Following successful remote post, about to save locally.');
-            return ResponseFactory.fromPostResponse(jsonResponseData).setPrebuiltResponse(response).populateLocalSave().storeLocally();
-          }).catch(function (error) {
-            // for some reason local storage failed, after a successful server save
-            console.log({
-              'local storage failed': error
-            });
-            return Promise.resolve(response); // pass through the server response
-          });
-        } else {
-          console.log("Failed to save, moving on to attempt IndexedDb");
-          return Promise.reject('Failed to save to server.');
+    handle_post(evt) {
+        let clonedRequest;
+        try {
+            clonedRequest = evt.request.clone();
+        } catch (e) {
+            console.log('Failed to clone request.');
+            console.log({'Cloning error': e});
         }
-      }).catch(function (reason) {
-        console.log({
-          'post fetch failed (probably no network)': reason
-        }); // would get here if the network is down
-        // or if got invalid response from the server
 
-        console.log("post fetch failed (probably no network), (reason: ".concat(reason, ")")); //console.log({'post failure reason' : reason});
-        // /**
-        //  * simulated result of post, returned as JSON body
-        //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-        //  */
-        // let returnedToClient = {};
+        evt.respondWith(fetch(evt.request)
+            .then((response) => {
+                // would get here if the server responds at all, but need to check that the response is ok (not a server error)
+                if (response.ok) {
+                    return Promise.resolve(response)
+                        .then((response) => {
+                            // save the response locally
+                            // before returning it to the client
 
-        return clonedRequest.formData().then(function (formData) {
-          console.log('got to form data handler'); //console.log({formData});
+                            console.log('About to clone the json response.');
 
-          return ResponseFactory.fromPostedData(formData).populateClientResponse().storeLocally();
-        }, function (reason) {
-          console.log({
-            'failed to read form data locally': reason
-          });
-          /**
-           * simulated result of post, returned as JSON body
-           * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-           */
+                            return response.clone().json();
+                        })
+                        .then((jsonResponseData) => {
+                            console.log('Following successful remote post, about to save locally.');
 
-          var returnedToClient = {
-            error: 'Failed to process posted response data. (internal error)',
-            errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' + 'Please try to re-establish a network connection and try again.'
-          };
-          return packageClientResponse(returnedToClient);
-        });
-      }));
+                            return ResponseFactory
+                                .fromPostResponse(jsonResponseData)
+                                .setPrebuiltResponse(response)
+                                .populateLocalSave()
+                                .storeLocally();
+                        })
+                        .catch((error) => {
+                            // for some reason local storage failed, after a successful server save
+                            console.log({'local storage failed' : error});
+
+                            return Promise.resolve(response); // pass through the server response
+                        });
+                } else {
+                    console.log(`Failed to save, moving on to attempt IndexedDb`);
+                    return Promise.reject('Failed to save to server.');
+                }
+            })
+            .catch( (reason) => {
+                    console.log({'post fetch failed (probably no network)': reason});
+
+                    // would get here if the network is down
+                    // or if got invalid response from the server
+
+                    console.log(`post fetch failed (probably no network), (reason: ${reason})`);
+                    //console.log({'post failure reason' : reason});
+
+                    // /**
+                    //  * simulated result of post, returned as JSON body
+                    //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+                    //  */
+                    // let returnedToClient = {};
+
+                    return clonedRequest.formData()
+                        .then((formData) => {
+                                console.log('got to form data handler');
+                                //console.log({formData});
+
+                                return ResponseFactory
+                                    .fromPostedData(formData)
+                                    .populateClientResponse()
+                                    .storeLocally();
+                            }, (reason) => {
+                                console.log({'failed to read form data locally' : reason});
+
+                                /**
+                                 * simulated result of post, returned as JSON body
+                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                                 */
+                                let returnedToClient = {
+                                    error: 'Failed to process posted response data. (internal error)',
+                                    errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                        'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                        'Please try to re-establish a network connection and try again.'
+                                };
+
+                                return packageClientResponse(returnedToClient);
+                            }
+                        );
+                }
+            ));
     }
+
     /**
      * used to handle image posts, which need to respond quickly even if the network is slow
      * attempts local cache first then saves out to network
      *
      * @param {FetchEvent} event
      */
+    handle_image_post(event) {
+        let clonedRequest;
 
-  }, {
-    key: "handle_image_post",
-    value: function handle_image_post(event) {
-      var clonedRequest;
-      console.log('posting image');
+        console.log('posting image');
 
-      try {
-        clonedRequest = event.request.clone();
-      } catch (e) {
-        console.log('Failed to clone request.');
-        console.log({
-          'Cloning error': e
-        });
-      } // send back a quick response to the client from local storage (before the server request completes)
+        try {
+            clonedRequest = event.request.clone();
+        } catch (e) {
+            console.log('Failed to clone request.');
+            console.log({'Cloning error': e});
+        }
 
+        // send back a quick response to the client from local storage (before the server request completes)
+        event.respondWith(
+            clonedRequest.formData()
+                .then((formData) => {
+                        console.log('got to form data handler');
+                        //console.log({formData});
 
-      event.respondWith(clonedRequest.formData().then(function (formData) {
-        console.log('got to form data handler'); //console.log({formData});
+                        return ResponseFactory
+                            .fromPostedData(formData)
+                            .populateClientResponse()
+                            .storeLocally()
+                            .then((response) => {
 
-        return ResponseFactory.fromPostedData(formData).populateClientResponse().storeLocally().then(function (response) {
-          // separately send data to the server, but response goes to client before this completes
-          // am unsure if the return from the wait until part ever reaches the client
-          event.waitUntil(fetch(event.request).then(function (response) {
-            console.log('posting image to server in waitUntil part of fetch cycle'); // would get here if the server responds at all, but need to check that the response is ok (not a server error)
+                                // separately send data to the server, but response goes to client before this completes
+                                // am unsure if the return from the wait until part ever reaches the client
+                                event.waitUntil(fetch(event.request)
+                                    .then((response) => {
+                                            console.log('posting image to server in waitUntil part of fetch cycle');
 
-            if (response.ok) {
-              console.log('posted image to server in waitUntil part of fetch cycle: got OK response');
-              return Promise.resolve(response).then(function (response) {
-                // save the response locally
-                // before returning it to the client
-                return response.clone().json();
-              }).then(function (jsonResponseData) {
-                return ResponseFactory.fromPostResponse(jsonResponseData).setPrebuiltResponse(response).populateLocalSave().storeLocally();
-              }).catch(function (error) {
-                // for some reason local storage failed, after a successful server save
-                console.log({
-                  error: error
-                });
-                return Promise.resolve(response); // pass through the server response
-              });
-            } else {
-              console.log('posted image to server in waitUntil part of fetch cycle: got Error response');
-              /**
-               * simulated result of post, returned as JSON body
-               * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-               */
+                                            // would get here if the server responds at all, but need to check that the response is ok (not a server error)
+                                            if (response.ok) {
+                                                console.log('posted image to server in waitUntil part of fetch cycle: got OK response');
 
-              var returnedToClient = {
-                error: 'Failed to save posted response data. (internal error)',
-                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' + 'Please try to re-establish a network connection and try again.'
-              };
-              return packageClientResponse(returnedToClient);
-            }
-          }, function () {
-            console.log('Rejected image post fetch from server - implies network is down');
-          }));
-          return response;
-        });
-      }, function (reason) {
-        console.log('failed to read form data locally');
-        console.log({
-          reason: reason
-        });
-        /**
-         * simulated result of post, returned as JSON body
-         * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-         */
+                                                return Promise.resolve(response)
+                                                    .then((response) => {
+                                                        // save the response locally
+                                                        // before returning it to the client
 
-        var returnedToClient = {
-          error: 'Failed to process posted response data. (internal error)',
-          errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' + 'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' + 'Please try to re-establish a network connection and try again.'
-        };
-        return packageClientResponse(returnedToClient);
-      }));
+                                                        return response.clone().json();
+                                                    })
+                                                    .then((jsonResponseData) => {
+                                                        return ResponseFactory
+                                                            .fromPostResponse(jsonResponseData)
+                                                            .setPrebuiltResponse(response)
+                                                            .populateLocalSave()
+                                                            .storeLocally();
+                                                    })
+                                                    .catch((error) => {
+                                                        // for some reason local storage failed, after a successful server save
+                                                        console.log({error});
+
+                                                        return Promise.resolve(response); // pass through the server response
+                                                    });
+                                            } else {
+                                                console.log('posted image to server in waitUntil part of fetch cycle: got Error response');
+
+                                                /**
+                                                 * simulated result of post, returned as JSON body
+                                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                                                 */
+                                                let returnedToClient = {
+                                                    error: 'Failed to save posted response data. (internal error)',
+                                                    errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                                        'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                                        'Please try to re-establish a network connection and try again.'
+                                                };
+
+                                                return packageClientResponse(returnedToClient);
+                                            }
+                                        }, () => {
+                                            console.log('Rejected image post fetch from server - implies network is down');
+                                        }
+                                    ));
+
+                                return response;
+                            });
+                    }, (reason) => {
+                        console.log('failed to read form data locally');
+                        console.log({reason});
+
+                        /**
+                         * simulated result of post, returned as JSON body
+                         * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                         */
+                        let returnedToClient = {
+                            error: 'Failed to process posted response data. (internal error)',
+                            errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                'Please try to re-establish a network connection and try again.'
+                        };
+
+                        return packageClientResponse(returnedToClient);
+                    }
+                )
+        );
     }
+
     /**
      * Open a cache and use `addAll()` with an array of assets to add all of them
      * to the cache. Return a promise resolving when all the assets are added.
      *
      * @returns {Promise<void>}
      */
-
-  }, {
-    key: "precache",
-    value: function precache() {
-      var _this2 = this;
-
-      return caches.open(this.CACHE_VERSION).then(function (cache) {
-        return cache.addAll(_this2.URL_CACHE_SET);
-      }).catch(function (error) {
-        console.log({
-          'Precache failed result': error
+    precache() {
+        return caches.open(this.CACHE_VERSION).then((cache) => {
+            return cache.addAll(this.URL_CACHE_SET);
+        }).catch((error) => {
+            console.log({'Precache failed result' : error});
+            return Promise.resolve();
         });
-        return Promise.resolve();
-      });
     }
+
     /**
      * Open the cache where the assets were stored and search for the requested
      * resource. Notice that in case of no matching, the promise still resolves
@@ -17241,24 +9984,27 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
      * @param {Request} request
      * @returns {Promise<Response | Promise<Response>>}
      */
+    fromCache(request) {
+        // @todo need to serve index.html in place of all Navigo-served pages
+        // (an issue if someone returns to a bookmarked page within the app)
 
-  }, {
-    key: "fromCache",
-    value: function fromCache(request) {
-      var _this3 = this;
+        console.log('attempting fromCache response');
 
-      // @todo need to serve index.html in place of all Navigo-served pages
-      // (an issue if someone returns to a bookmarked page within the app)
-      console.log('attempting fromCache response');
-      return caches.open(this.CACHE_VERSION).then(function (cache) {
-        console.log('cache is open');
-        return cache.match(request).then(function (matching) {
-          console.log(matching ? "cache matched ".concat(request.url) : "no cache match for ".concat(request.url)); //return matching || fetch(request); // return cache match or if not cached then go out to network
+        return caches.open(this.CACHE_VERSION).then((cache) => {
+            console.log('cache is open');
 
-          return matching || _this3.update(request); // return cache match or if not cached then go out to network (and then locally cache the response)
+            return cache.match(request).then((matching) => {
+                console.log(matching ?
+                    `cache matched ${request.url}`
+                    :
+                    `no cache match for ${request.url}`);
+
+                //return matching || fetch(request); // return cache match or if not cached then go out to network
+                return matching || this.update(request); // return cache match or if not cached then go out to network (and then locally cache the response)
+            });
         });
-      });
     }
+
     /**
      * Special case response for images
      * attempt to serve from local cache first,
@@ -17267,78 +10013,78 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
      *
      * @param {FetchEvent} evt
      */
+    handleImageFetch(evt) {
+        evt.respondWith(this.fromCache(evt.request).then((response) => {
+                console.log('In handleImageFetch promise');
 
-  }, {
-    key: "handleImageFetch",
-    value: function handleImageFetch(evt) {
-      var _this4 = this;
+                // response may be a 404
+                if (response && response.ok) {
+                    console.log('Responding with image from cache (or remotely if no cache).');
+                    return response;
+                } else {
+                    // not cached and no network access
+                    // try to respond from local storage
 
-      evt.respondWith(this.fromCache(evt.request).then(function (response) {
-        console.log('In handleImageFetch promise'); // response may be a 404
+                    const url = evt.request.url;
+                    console.log(`Attempting image match for '${url}'`);
 
-        if (response && response.ok) {
-          console.log('Responding with image from cache (or remotely if no cache).');
-          return response;
-        } else {
-          // not cached and no network access
-          // try to respond from local storage
-          var url = evt.request.url;
-          console.log("Attempting image match for '".concat(url, "'"));
-          var matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
+                    const matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
 
-          if (matches) {
-            var imageId = matches[1];
-            console.log("Returning image match for '".concat(url, "' from local database"));
-            return _this4.imageFromLocalDatabase(imageId);
-          } else {
-            console.log("Failed to match image id in url '".concat(url, "'"));
-          }
-        }
-      }).catch(function (error) {
-        var url = evt.request.url;
-        console.log({
-          'caught': error
-        });
-        console.log("In catch following failed network fetch, attempting image match for '".concat(url, "'"));
-        var matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
+                    if (matches) {
+                        const imageId = matches[1];
+                        console.log(`Returning image match for '${url}' from local database`);
+                        return this.imageFromLocalDatabase(imageId);
+                    } else {
+                        console.log(`Failed to match image id in url '${url}'`);
+                    }
+                }
+            })
+                .catch((error) => {
+                    const url = evt.request.url;
+                    console.log({'caught' : error});
+                    console.log(`In catch following failed network fetch, attempting image match for '${url}'`);
 
-        if (matches) {
-          var imageId = matches[1];
-          console.log("(via catch) Returning image match for '".concat(url, "' from local database"));
-          return _this4.imageFromLocalDatabase(imageId);
-        } else {
-          console.log("(via catch) Failed to match image id in url '".concat(url, "'"));
-          return Promise.reject(null);
-        }
-      }));
+                    const matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
+
+                    if (matches) {
+                        const imageId = matches[1];
+                        console.log(`(via catch) Returning image match for '${url}' from local database`);
+                        return this.imageFromLocalDatabase(imageId);
+                    } else {
+                        console.log(`(via catch) Failed to match image id in url '${url}'`);
+                        return Promise.reject(null);
+                    }
+                })
+        );
     }
+
     /**
      *
      * @param {string} imageId
      * @returns {Promise}
      */
+    imageFromLocalDatabase(imageId) {
+        const image = new OccurrenceImage();
 
-  }, {
-    key: "imageFromLocalDatabase",
-    value: function imageFromLocalDatabase(imageId) {
-      var image = new OccurrenceImage();
-      console.log('attempting retrieval of image data from local database');
-      return Model.retrieveFromLocal(imageId, image).then(function (image) {
-        console.log("Retrieved image '".concat(imageId, "' from indexeddb."));
+        console.log('attempting retrieval of image data from local database');
 
-        if (image.file) {
-          var headers = new Headers();
-          headers.append('Content-Type', image.file.type);
-          return new Response(image.file, {
-            "status": 200,
-            "statusText": "OK image response from IndexedDb"
-          });
-        } else {
-          console.log("No local file object associated with retrieved image '".concat(imageId, "' from indexeddb."));
-          return Promise.reject("No local file object associated with retrieved image '".concat(imageId, "' from indexeddb."));
-        }
-      });
+        return Model.retrieveFromLocal(imageId, image).then((image) => {
+            console.log(`Retrieved image '${imageId}' from indexeddb.`);
+            if (image.file) {
+                const headers = new Headers();
+                headers.append('Content-Type', image.file.type);
+
+                return new Response(image.file, {
+                    "status": 200,
+                    "statusText": "OK image response from IndexedDb"
+                });
+            } else {
+                console.log(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
+                return Promise.reject(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
+            }
+        });
     }
+
     /**
      * Update consists in opening the cache, performing a network request and
      * storing the new response data.
@@ -17346,41 +10092,30 @@ var BSBIServiceWorker = /*#__PURE__*/function () {
      * @param {Request} request
      * @returns {Promise<Response>}
      */
+    update(request) {
+        request = new Request(request, {mode: 'cors', credentials: 'omit'});
 
-  }, {
-    key: "update",
-    value: function update(request) {
-      request = new Request(request, {
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      console.log("Attempting fetch and cache update of ".concat(request.url));
-      return caches.open(this.CACHE_VERSION).then(function (cache) {
-        return fetch(request, {
-          cache: "no-cache"
-        }).then(function (response) {
-          if (response.ok) {
-            console.log("(re-)caching ".concat(request.url));
-            return cache.put(request, response).then(function () {
-              return cache.match(request);
+        console.log(`Attempting fetch and cache update of ${request.url}`);
+
+        return caches.open(this.CACHE_VERSION).then((cache) => {
+            return fetch(request, {cache: "no-cache"}).then((response) => {
+                if (response.ok) {
+                    console.log(`(re-)caching ${request.url}`);
+                    return cache.put(request, response).then(() => {
+                        return cache.match(request);
+                    });
+                } else {
+                    console.log(`Request during cache update failed for ${request.url}`);
+                    console.log({'failed cache response': response});
+                    return Promise.reject('Request during cache update failed, not caching.');
+                }
+            }).catch((error) => {
+                console.log(`Cache attempt failed for ${request.url}: error was ${error}`);
+                return Promise.reject(`Cache attempt failed for ${request.url}: error was ${error}`);
             });
-          } else {
-            console.log("Request during cache update failed for ".concat(request.url));
-            console.log({
-              'failed cache response': response
-            });
-            return Promise.reject('Request during cache update failed, not caching.');
-          }
-        }).catch(function (error) {
-          console.log("Cache attempt failed for ".concat(request.url, ": error was ").concat(error));
-          return Promise.reject("Cache attempt failed for ".concat(request.url, ": error was ").concat(error));
         });
-      });
     }
-  }]);
-
-  return BSBIServiceWorker;
-}();
+}
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -17842,620 +10577,400 @@ Navigo.REPLACE_WILDCARD = '(?:.*)';
 Navigo.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
 Navigo.MATCH_REGEXP_FLAGS = '';
 
-function _createSuper$a(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$a(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$a() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var PatchedNavigo = /*#__PURE__*/function (_Navigo) {
-  _inherits(PatchedNavigo, _Navigo);
-
-  var _super = _createSuper$a(PatchedNavigo);
-
-  function PatchedNavigo() {
-    _classCallCheck(this, PatchedNavigo);
-
-    return _super.apply(this, arguments);
-  }
-
-  _createClass(PatchedNavigo, [{
-    key: "updatePageLinks",
-    value: function updatePageLinks() {
-      var _this = this;
-
-      if (typeof document === 'undefined') {
-        return;
-      }
-
-      var l = document.createElement("a");
-      l.href = this.root;
-      var rootPath = l.pathname;
-
-      this._findLinks().forEach(function (link) {
-        if (!link.hasListenerAttached) {
-          link.addEventListener('click',
-          /** @param {MouseEvent} e */
-          function (e) {
-            if (doubleClickIntercepted(e)) {
-              return;
-            }
-
-            if ((e.ctrlKey || e.metaKey) && e.target.tagName.toLowerCase() === 'a') {
-              return false;
-            }
-
-            if (!_this._destroyed) {
-              var path = link.pathname; // console.log({path});
-
-              var leaf = path.replace(rootPath, ''); // console.log({leaf});
-              //var location = self.getLinkPath(link);
-
-              e.preventDefault(); //self.navigate(location.replace(/\/+$/, '').replace(/^\/+/, '/'));
-
-              _this.navigate(leaf);
-            }
-          });
-          link.hasListenerAttached = true;
+class PatchedNavigo extends Navigo {
+    updatePageLinks() {
+        if (typeof document === 'undefined') {
+            return;
         }
-      });
+
+        const l = document.createElement("a");
+        l.href = this.root;
+
+        const rootPath = l.pathname;
+
+        this._findLinks().forEach((link) => {
+            if (!link.hasListenerAttached) {
+                link.addEventListener('click', /** @param {MouseEvent} e */ (e) => {
+                    if (doubleClickIntercepted(e)) {
+                        return;
+                    }
+
+                    if ((e.ctrlKey || e.metaKey) && e.target.tagName.toLowerCase() === 'a') {
+                        return false;
+                    }
+
+                    if (!this._destroyed) {
+                        const path = link.pathname;
+                        // console.log({path});
+
+                        const leaf = path.replace(rootPath, '');
+                        // console.log({leaf});
+
+                        //var location = self.getLinkPath(link);
+
+                        e.preventDefault();
+                        //self.navigate(location.replace(/\/+$/, '').replace(/^\/+/, '/'));
+                        this.navigate(leaf);
+                    }
+                });
+                link.hasListenerAttached = true;
+            }
+        });
     }
-  }]);
-
-  return PatchedNavigo;
-}(Navigo);
-
-var DESCRIPTORS$2 = descriptors;
-var global$4 = global$$;
-var uncurryThis$1 = functionUncurryThis;
-var isForced = isForced_1;
-var inheritIfRequired = inheritIfRequired$2;
-var createNonEnumerableProperty = createNonEnumerableProperty$8;
-var defineProperty$2 = objectDefineProperty.f;
-var getOwnPropertyNames = objectGetOwnPropertyNames.f;
-var isPrototypeOf = objectIsPrototypeOf;
-var isRegExp = isRegexp;
-var toString$1 = toString$d;
-var regExpFlags = regexpFlags$1;
-var stickyHelpers = regexpStickyHelpers;
-var redefine = redefine$d.exports;
-var fails$1 = fails$z;
-var hasOwn = hasOwnProperty_1;
-var enforceInternalState = internalState.enforce;
-var setSpecies = setSpecies$3;
-var wellKnownSymbol = wellKnownSymbol$q;
-var UNSUPPORTED_DOT_ALL$1 = regexpUnsupportedDotAll;
-var UNSUPPORTED_NCG = regexpUnsupportedNcg;
-
-var MATCH = wellKnownSymbol('match');
-var NativeRegExp = global$4.RegExp;
-var RegExpPrototype$2 = NativeRegExp.prototype;
-var SyntaxError = global$4.SyntaxError;
-var getFlags = uncurryThis$1(regExpFlags);
-var exec = uncurryThis$1(RegExpPrototype$2.exec);
-var charAt = uncurryThis$1(''.charAt);
-var replace = uncurryThis$1(''.replace);
-var stringIndexOf = uncurryThis$1(''.indexOf);
-var stringSlice = uncurryThis$1(''.slice);
-// TODO: Use only propper RegExpIdentifierName
-var IS_NCG = /^\?<[^\s\d!#%&*+<=>@^][^\s!#%&*+<=>@^]*>/;
-var re1 = /a/g;
-var re2 = /a/g;
-
-// "new" should create a new object, old webkit bug
-var CORRECT_NEW = new NativeRegExp(re1) !== re1;
-
-var MISSED_STICKY$1 = stickyHelpers.MISSED_STICKY;
-var UNSUPPORTED_Y = stickyHelpers.UNSUPPORTED_Y;
-
-var BASE_FORCED = DESCRIPTORS$2 &&
-  (!CORRECT_NEW || MISSED_STICKY$1 || UNSUPPORTED_DOT_ALL$1 || UNSUPPORTED_NCG || fails$1(function () {
-    re2[MATCH] = false;
-    // RegExp constructor can alter flags and IsRegExp works correct with @@match
-    return NativeRegExp(re1) != re1 || NativeRegExp(re2) == re2 || NativeRegExp(re1, 'i') != '/a/i';
-  }));
-
-var handleDotAll = function (string) {
-  var length = string.length;
-  var index = 0;
-  var result = '';
-  var brackets = false;
-  var chr;
-  for (; index <= length; index++) {
-    chr = charAt(string, index);
-    if (chr === '\\') {
-      result += chr + charAt(string, ++index);
-      continue;
-    }
-    if (!brackets && chr === '.') {
-      result += '[\\s\\S]';
-    } else {
-      if (chr === '[') {
-        brackets = true;
-      } else if (chr === ']') {
-        brackets = false;
-      } result += chr;
-    }
-  } return result;
-};
-
-var handleNCG = function (string) {
-  var length = string.length;
-  var index = 0;
-  var result = '';
-  var named = [];
-  var names = {};
-  var brackets = false;
-  var ncg = false;
-  var groupid = 0;
-  var groupname = '';
-  var chr;
-  for (; index <= length; index++) {
-    chr = charAt(string, index);
-    if (chr === '\\') {
-      chr = chr + charAt(string, ++index);
-    } else if (chr === ']') {
-      brackets = false;
-    } else if (!brackets) switch (true) {
-      case chr === '[':
-        brackets = true;
-        break;
-      case chr === '(':
-        if (exec(IS_NCG, stringSlice(string, index + 1))) {
-          index += 2;
-          ncg = true;
-        }
-        result += chr;
-        groupid++;
-        continue;
-      case chr === '>' && ncg:
-        if (groupname === '' || hasOwn(names, groupname)) {
-          throw new SyntaxError('Invalid capture group name');
-        }
-        names[groupname] = true;
-        named[named.length] = [groupname, groupid];
-        ncg = false;
-        groupname = '';
-        continue;
-    }
-    if (ncg) groupname += chr;
-    else result += chr;
-  } return [result, named];
-};
-
-// `RegExp` constructor
-// https://tc39.es/ecma262/#sec-regexp-constructor
-if (isForced('RegExp', BASE_FORCED)) {
-  var RegExpWrapper = function RegExp(pattern, flags) {
-    var thisIsRegExp = isPrototypeOf(RegExpPrototype$2, this);
-    var patternIsRegExp = isRegExp(pattern);
-    var flagsAreUndefined = flags === undefined;
-    var groups = [];
-    var rawPattern = pattern;
-    var rawFlags, dotAll, sticky, handled, result, state;
-
-    if (!thisIsRegExp && patternIsRegExp && flagsAreUndefined && pattern.constructor === RegExpWrapper) {
-      return pattern;
-    }
-
-    if (patternIsRegExp || isPrototypeOf(RegExpPrototype$2, pattern)) {
-      pattern = pattern.source;
-      if (flagsAreUndefined) flags = 'flags' in rawPattern ? rawPattern.flags : getFlags(rawPattern);
-    }
-
-    pattern = pattern === undefined ? '' : toString$1(pattern);
-    flags = flags === undefined ? '' : toString$1(flags);
-    rawPattern = pattern;
-
-    if (UNSUPPORTED_DOT_ALL$1 && 'dotAll' in re1) {
-      dotAll = !!flags && stringIndexOf(flags, 's') > -1;
-      if (dotAll) flags = replace(flags, /s/g, '');
-    }
-
-    rawFlags = flags;
-
-    if (MISSED_STICKY$1 && 'sticky' in re1) {
-      sticky = !!flags && stringIndexOf(flags, 'y') > -1;
-      if (sticky && UNSUPPORTED_Y) flags = replace(flags, /y/g, '');
-    }
-
-    if (UNSUPPORTED_NCG) {
-      handled = handleNCG(pattern);
-      pattern = handled[0];
-      groups = handled[1];
-    }
-
-    result = inheritIfRequired(NativeRegExp(pattern, flags), thisIsRegExp ? this : RegExpPrototype$2, RegExpWrapper);
-
-    if (dotAll || sticky || groups.length) {
-      state = enforceInternalState(result);
-      if (dotAll) {
-        state.dotAll = true;
-        state.raw = RegExpWrapper(handleDotAll(pattern), rawFlags);
-      }
-      if (sticky) state.sticky = true;
-      if (groups.length) state.groups = groups;
-    }
-
-    if (pattern !== rawPattern) try {
-      // fails in old engines, but we have no alternatives for unsupported regex syntax
-      createNonEnumerableProperty(result, 'source', rawPattern === '' ? '(?:)' : rawPattern);
-    } catch (error) { /* empty */ }
-
-    return result;
-  };
-
-  var proxy = function (key) {
-    key in RegExpWrapper || defineProperty$2(RegExpWrapper, key, {
-      configurable: true,
-      get: function () { return NativeRegExp[key]; },
-      set: function (it) { NativeRegExp[key] = it; }
-    });
-  };
-
-  for (var keys = getOwnPropertyNames(NativeRegExp), index = 0; keys.length > index;) {
-    proxy(keys[index++]);
-  }
-
-  RegExpPrototype$2.constructor = RegExpWrapper;
-  RegExpWrapper.prototype = RegExpPrototype$2;
-  redefine(global$4, 'RegExp', RegExpWrapper);
 }
 
-// https://tc39.es/ecma262/#sec-get-regexp-@@species
-setSpecies('RegExp');
-
-var global$3 = global$$;
-var DESCRIPTORS$1 = descriptors;
-var UNSUPPORTED_DOT_ALL = regexpUnsupportedDotAll;
-var classof$1 = classofRaw$1;
-var defineProperty$1 = objectDefineProperty.f;
-var getInternalState$1 = internalState.get;
-
-var RegExpPrototype$1 = RegExp.prototype;
-var TypeError$3 = global$3.TypeError;
-
-// `RegExp.prototype.dotAll` getter
-// https://tc39.es/ecma262/#sec-get-regexp.prototype.dotall
-if (DESCRIPTORS$1 && UNSUPPORTED_DOT_ALL) {
-  defineProperty$1(RegExpPrototype$1, 'dotAll', {
-    configurable: true,
-    get: function () {
-      if (this === RegExpPrototype$1) return undefined;
-      // We can't use InternalStateModule.getterFor because
-      // we don't add metadata for regexps created by a literal.
-      if (classof$1(this) === 'RegExp') {
-        return !!getInternalState$1(this).dotAll;
-      }
-      throw TypeError$3('Incompatible receiver, RegExp required');
-    }
-  });
-}
-
-var global$2 = global$$;
-var DESCRIPTORS = descriptors;
-var MISSED_STICKY = regexpStickyHelpers.MISSED_STICKY;
-var classof = classofRaw$1;
-var defineProperty = objectDefineProperty.f;
-var getInternalState = internalState.get;
-
-var RegExpPrototype = RegExp.prototype;
-var TypeError$2 = global$2.TypeError;
-
-// `RegExp.prototype.sticky` getter
-// https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
-if (DESCRIPTORS && MISSED_STICKY) {
-  defineProperty(RegExpPrototype, 'sticky', {
-    configurable: true,
-    get: function () {
-      if (this === RegExpPrototype) return undefined;
-      // We can't use InternalStateModule.getterFor because
-      // we don't add metadata for regexps created by a literal.
-      if (classof(this) === 'RegExp') {
-        return !!getInternalState(this).sticky;
-      }
-      throw TypeError$2('Incompatible receiver, RegExp required');
-    }
-  });
-}
-
-var arraySlice = arraySliceSimple;
-
-var floor = Math.floor;
-
-var mergeSort = function (array, comparefn) {
-  var length = array.length;
-  var middle = floor(length / 2);
-  return length < 8 ? insertionSort(array, comparefn) : merge(
-    array,
-    mergeSort(arraySlice(array, 0, middle), comparefn),
-    mergeSort(arraySlice(array, middle), comparefn),
-    comparefn
-  );
-};
-
-var insertionSort = function (array, comparefn) {
-  var length = array.length;
-  var i = 1;
-  var element, j;
-
-  while (i < length) {
-    j = i;
-    element = array[i];
-    while (j && comparefn(array[j - 1], element) > 0) {
-      array[j] = array[--j];
-    }
-    if (j !== i++) array[j] = element;
-  } return array;
-};
-
-var merge = function (array, left, right, comparefn) {
-  var llength = left.length;
-  var rlength = right.length;
-  var lindex = 0;
-  var rindex = 0;
-
-  while (lindex < llength || rindex < rlength) {
-    array[lindex + rindex] = (lindex < llength && rindex < rlength)
-      ? comparefn(left[lindex], right[rindex]) <= 0 ? left[lindex++] : right[rindex++]
-      : lindex < llength ? left[lindex++] : right[rindex++];
-  } return array;
-};
-
-var arraySort = mergeSort;
-
-var userAgent$1 = engineUserAgent;
-
-var firefox = userAgent$1.match(/firefox\/(\d+)/i);
-
-var engineFfVersion = !!firefox && +firefox[1];
-
-var UA = engineUserAgent;
-
-var engineIsIeOrEdge = /MSIE|Trident/.test(UA);
-
-var userAgent = engineUserAgent;
-
-var webkit = userAgent.match(/AppleWebKit\/(\d+)\./);
-
-var engineWebkitVersion = !!webkit && +webkit[1];
-
-var $$4 = _export;
-var uncurryThis = functionUncurryThis;
-var aCallable = aCallable$7;
-var toObject$1 = toObject$a;
-var lengthOfArrayLike$1 = lengthOfArrayLike$9;
-var toString = toString$d;
-var fails = fails$z;
-var internalSort = arraySort;
-var arrayMethodIsStrict = arrayMethodIsStrict$3;
-var FF = engineFfVersion;
-var IE_OR_EDGE = engineIsIeOrEdge;
-var V8 = engineV8Version;
-var WEBKIT = engineWebkitVersion;
-
-var test = [];
-var un$Sort = uncurryThis(test.sort);
-var push = uncurryThis(test.push);
-
-// IE8-
-var FAILS_ON_UNDEFINED = fails(function () {
-  test.sort(undefined);
-});
-// V8 bug
-var FAILS_ON_NULL = fails(function () {
-  test.sort(null);
-});
-// Old WebKit
-var STRICT_METHOD = arrayMethodIsStrict('sort');
-
-var STABLE_SORT = !fails(function () {
-  // feature detection can be too slow, so check engines versions
-  if (V8) return V8 < 70;
-  if (FF && FF > 3) return;
-  if (IE_OR_EDGE) return true;
-  if (WEBKIT) return WEBKIT < 603;
-
-  var result = '';
-  var code, chr, value, index;
-
-  // generate an array with more 512 elements (Chakra and old V8 fails only in this case)
-  for (code = 65; code < 76; code++) {
-    chr = String.fromCharCode(code);
-
-    switch (code) {
-      case 66: case 69: case 70: case 72: value = 3; break;
-      case 68: case 71: value = 4; break;
-      default: value = 2;
-    }
-
-    for (index = 0; index < 47; index++) {
-      test.push({ k: chr + index, v: value });
-    }
-  }
-
-  test.sort(function (a, b) { return b.v - a.v; });
-
-  for (index = 0; index < test.length; index++) {
-    chr = test[index].k.charAt(0);
-    if (result.charAt(result.length - 1) !== chr) result += chr;
-  }
-
-  return result !== 'DGBEFHACIJK';
-});
-
-var FORCED$1 = FAILS_ON_UNDEFINED || !FAILS_ON_NULL || !STRICT_METHOD || !STABLE_SORT;
-
-var getSortCompare = function (comparefn) {
-  return function (x, y) {
-    if (y === undefined) return -1;
-    if (x === undefined) return 1;
-    if (comparefn !== undefined) return +comparefn(x, y) || 0;
-    return toString(x) > toString(y) ? 1 : -1;
-  };
-};
-
-// `Array.prototype.sort` method
-// https://tc39.es/ecma262/#sec-array.prototype.sort
-$$4({ target: 'Array', proto: true, forced: FORCED$1 }, {
-  sort: function sort(comparefn) {
-    if (comparefn !== undefined) aCallable(comparefn);
-
-    var array = toObject$1(this);
-
-    if (STABLE_SORT) return comparefn === undefined ? un$Sort(array) : un$Sort(array, comparefn);
-
-    var items = [];
-    var arrayLength = lengthOfArrayLike$1(array);
-    var itemsLength, index;
-
-    for (index = 0; index < arrayLength; index++) {
-      if (index in array) push(items, array[index]);
-    }
-
-    internalSort(items, getSortCompare(comparefn));
-
-    itemsLength = items.length;
-    index = 0;
-
-    while (index < itemsLength) array[index] = items[index++];
-    while (index < arrayLength) delete array[index++];
-
-    return array;
-  }
-});
-
-var $$3 = _export;
-var global$1 = global$$;
-var toAbsoluteIndex = toAbsoluteIndex$4;
-var toIntegerOrInfinity = toIntegerOrInfinity$5;
-var lengthOfArrayLike = lengthOfArrayLike$9;
-var toObject = toObject$a;
-var arraySpeciesCreate = arraySpeciesCreate$3;
-var createProperty = createProperty$6;
-var arrayMethodHasSpeciesSupport = arrayMethodHasSpeciesSupport$5;
-
-var HAS_SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('splice');
-
-var TypeError$1 = global$1.TypeError;
-var max = Math.max;
-var min = Math.min;
-var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF;
-var MAXIMUM_ALLOWED_LENGTH_EXCEEDED = 'Maximum allowed length exceeded';
-
-// `Array.prototype.splice` method
-// https://tc39.es/ecma262/#sec-array.prototype.splice
-// with adding support of @@species
-$$3({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT }, {
-  splice: function splice(start, deleteCount /* , ...items */) {
-    var O = toObject(this);
-    var len = lengthOfArrayLike(O);
-    var actualStart = toAbsoluteIndex(start, len);
-    var argumentsLength = arguments.length;
-    var insertCount, actualDeleteCount, A, k, from, to;
-    if (argumentsLength === 0) {
-      insertCount = actualDeleteCount = 0;
-    } else if (argumentsLength === 1) {
-      insertCount = 0;
-      actualDeleteCount = len - actualStart;
-    } else {
-      insertCount = argumentsLength - 2;
-      actualDeleteCount = min(max(toIntegerOrInfinity(deleteCount), 0), len - actualStart);
-    }
-    if (len + insertCount - actualDeleteCount > MAX_SAFE_INTEGER) {
-      throw TypeError$1(MAXIMUM_ALLOWED_LENGTH_EXCEEDED);
-    }
-    A = arraySpeciesCreate(O, actualDeleteCount);
-    for (k = 0; k < actualDeleteCount; k++) {
-      from = actualStart + k;
-      if (from in O) createProperty(A, k, O[from]);
-    }
-    A.length = actualDeleteCount;
-    if (insertCount < actualDeleteCount) {
-      for (k = actualStart; k < len - actualDeleteCount; k++) {
-        from = k + actualDeleteCount;
-        to = k + insertCount;
-        if (from in O) O[to] = O[from];
-        else delete O[to];
-      }
-      for (k = len; k > len - actualDeleteCount + insertCount; k--) delete O[k - 1];
-    } else if (insertCount > actualDeleteCount) {
-      for (k = len - actualDeleteCount; k > actualStart; k--) {
-        from = k + actualDeleteCount - 1;
-        to = k + insertCount - 1;
-        if (from in O) O[to] = O[from];
-        else delete O[to];
-      }
-    }
-    for (k = 0; k < insertCount; k++) {
-      O[k + actualStart] = arguments[k + 2];
-    }
-    O.length = len - actualDeleteCount + insertCount;
-    return A;
-  }
-});
+/** ****************************************************************************
+ * Generates species list suggestions.
+ *****************************************************************************/
 
 /**
  * @external BsbiDb
  */
 
-var TaxonSearch = /*#__PURE__*/function () {
-  /**
-   * see TaxonRank::sort
-   *
-   * @type int|null
-   */
+class TaxonSearch {
 
-  /**
-   * if set then only taxa with records are returned
-   *
-   * @type boolean
-   */
-  // /**
-  //  * if set then only taxa with records present in the specified status scheme (scheme id code)
-  //  * (default null)
-  //  *
-  //  * @type string|null
-  //  */
-  // requiredStatusSchemeId = null;
+    /**
+     * see TaxonRank::sort
+     *
+     * @type int|null
+     */
+    minimumRankSort = null;
 
-  /**
-   * if set then require that returned taxon names are >= 3 letters
-   * and don't contain numerals
-   *
-   * @type boolean
-   */
+    /**
+     * if set then only taxa with records are returned
+     *
+     * @type boolean
+     */
+    requireExtantDDbRecords = false;
 
-  /**
-   * (static config setting)
-   *
-   * @type {boolean}
-   */
-  function TaxonSearch() {
-    _classCallCheck(this, TaxonSearch);
+    // /**
+    //  * if set then only taxa with records present in the specified status scheme (scheme id code)
+    //  * (default null)
+    //  *
+    //  * @type string|null
+    //  */
+    // requiredStatusSchemeId = null;
 
-    _defineProperty(this, "minimumRankSort", null);
+    /**
+     * if set then require that returned taxon names are >= 3 letters
+     * and don't contain numerals
+     *
+     * @type boolean
+     */
+    skipJunk = true;
 
-    _defineProperty(this, "requireExtantDDbRecords", false);
+    /**
+     * (static config setting)
+     *
+     * @type {boolean}
+     */
+    static showVernacular = true;
 
-    _defineProperty(this, "skipJunk", true);
+    static MIN_SEARCH_LENGTH = 2;
 
-    if (!Taxon.rawTaxa) {
-      Taxon.rawTaxa = BsbiDb.TaxonNames;
+    static MAXIMUM_RESULTS = 25;
 
-      if (!Taxon.rawTaxa) {
-        throw new Error('Taxon list has failed to load in TaxonSearch');
-      }
+    constructor() {
+        if (!Taxon.rawTaxa) {
+            Taxon.rawTaxa = BsbiDb.TaxonNames;
+
+            if (!Taxon.rawTaxa) {
+                throw new Error('Taxon list has failed to load in TaxonSearch');
+            }
+        }
     }
-  }
-  /**
-   *
-   * @param {object} taxonResult
-   * @param {string} queryString
-   * @returns {string}
-   */
 
+    /**
+     *
+     * @param {object} taxonResult
+     * @param {string} queryString
+     * @returns {string}
+     */
+    static formatter(taxonResult, queryString = '') {
+        if (TaxonSearch.showVernacular) {
+            if (taxonResult.vernacularMatched) {
+                if (taxonResult.acceptedEntityId) {
+                    return `<q><b>${taxonResult.vernacular}</b></q> <span class="italictaxon">${taxonResult.uname}${taxonResult.qualifier ? ` <b>${taxonResult.qualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.authority}</span>` +
+                        ` = <span class="italictaxon">${taxonResult.acceptedNameString}${taxonResult.acceptedQualifier ? ` <b>${taxonResult.acceptedQualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.acceptedAuthority}</span>`;
+                }
+                return `<q><b>${taxonResult.vernacular}</b></q> <span class="italictaxon">${taxonResult.uname}${taxonResult.qualifier ? ` <b>${taxonResult.qualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.authority}</span>`;
+            }
+            if (taxonResult.acceptedEntityId) {
+                return `<span class="italictaxon">${taxonResult.uname}${taxonResult.qualifier ? ` <b>${taxonResult.qualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.authority}</span>${taxonResult.vernacular ? ` <q><b>${taxonResult.vernacular}</b></q>` : ''
+                    } = <span class="italictaxon">${taxonResult.acceptedNameString}${taxonResult.acceptedQualifier ? ` <b>${taxonResult.acceptedQualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.acceptedAuthority}</span>`;
+            }
+            return `<span class="italictaxon">${taxonResult.uname}${taxonResult.qualifier ? ` <b>${taxonResult.qualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.authority}</span>${taxonResult.vernacular ? ` <q><b>${taxonResult.vernacular}</b></q>` : ''}`;
+        }
+        if (taxonResult.acceptedEntityId) {
+            return `<span class="italictaxon">${taxonResult.uname}${taxonResult.qualifier ? ` <b>${taxonResult.qualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.authority}</span>` +
+                ` = <span class="italictaxon">${taxonResult.acceptedNameString}${taxonResult.acceptedQualifier ? ` <b>${taxonResult.acceptedQualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.acceptedAuthority}</span>`;
+        }
+        return `<span class="italictaxon">${taxonResult.uname}${taxonResult.qualifier ? ` <b>${taxonResult.qualifier}</b>` : ''}</span> <span class="taxauthority">${taxonResult.authority}</span>`;
+    }
 
-  _createClass(TaxonSearch, [{
-    key: "lookup",
-    value:
+    static abbreviatedGenusRegex = /^(X\s+)?([a-z])[.\s]+(.*?)$/i;
+
+    static nameStringColumn = 0;
+    static canonicalColumn = 1;
+    static hybridCanonicalColumn = 2;
+    static acceptedEntityIdColumn = 3;
+    static qualifierColumn = 4;
+    static authorityColumn = 5;
+    static vernacularColumn = 6;
+    static vernacularRootColumn = 7;
+    static usedColumn = 8;
+    static minRankColumn = 9;
+
+    static taxonRankNameSearchRegex = [
+        /\s+sub-?g(?:en(?:us)?)?[.\s]+/i,
+        /\s+sect(?:ion)?[.\s]+/i,
+        /\s+subsect(?:ion)?[.\s]+/i,
+        /\s+ser(?:ies)?[.\s]+/i,
+        /\s+gp[.\s]+/i,
+        /\s+s(?:ub)?-?sp(?:ecies)?[.\s]+/i,
+        /\s+morphotype\s+/i,
+        /\s+var[.\s]+/i,
+        /\s+cv[.\s]+/i,
+        /\s+n(?:otho)?v(?:ar)?[.\s]+/i,
+        /\s+f[.\s]+|\s+forma?\s+/i,
+        /\s+n(?:otho)?ssp[.\s]+/i,
+    ];
+
+    static taxonRankNameReplacement = [
+        ' subg. ',
+        ' sect. ',
+        ' subsect. ',
+        ' ser. ',
+        ' group ',
+        ' subsp. ',
+        ' morph. ',
+        ' var. ',
+        ' cv. ', // ddb preference is for single quotes for cultivars
+        ' nothovar. ',
+        ' f. ',
+        ' nothosubsp. ',
+    ];
+
+    /**
+     * well-formed ranks, used for stripping rank from name for results table sorting
+     *
+     * @type RegExp
+     */
+    static cleanRankNamesRegex = /\s(subfam\.|subg\.|sect\.|subsect\.|ser\.|subser\.|subsp\.|nothosubsp\.|microsp\.|praesp\.|agsp\.|race|convar\.|nm\.|microgene|f\.|subvar\.|var\.|nothovar\.|cv\.|sublusus|taxon|morph\.|group|sp\.)\s/;
+
+    /**
+     *
+     * @type Array *DON'T COPY THESE YET, AS THEY ARE AN UNOPTIMIZED MESS!*
+     */
+    static taxonQualifierSearchRegex = [
+        /\s*\(?\bf\s*x\s*m or m\s*x\s*f\)?\s*$/i,
+        /\s*\(?\bm\s*x\s*f or f\s*x\s*m\)?\s*$/i,
+
+        /\s*\(?\bf\s*x\s*m\)?\s*$/i,
+        /\s*\(?\bm\s*x\s*f\)?\s*$/i,
+
+        /\s*\(?\bfemale\s*x\s*male\)?\s*$/i,
+        /\s*\(?\bmale\s*x\s*female\)?\s*$/i,
+
+        // stand-alone male/female qualifier (e.g. applied to Petasites hybridus)
+        // removes single quotes
+        /\s*'male'\s*$/i,
+        /\s*'female'\s*$/i,
+
+        // mid-string ss/sl qualifiers
+        /\b\s*sens\.?\s*lat[.\s]+/i,
+        /\b\s*s\.\s*lat\.?\s*\b/i,
+        /\b\s*s\.?\s*l\.?\s+\b/i,
+        /\b\s*sensu\s*lato\s+\b|\(\s*sensu\s*lato\s*\)/i,
+
+        /\b\s*sensu\s*stricto\s+\b|\(\s*sensu\s*stricto\s*\)/i,
+        /\b\s*sens\.?\s*strict[.\s]+/i,
+
+        // '/\b\s*sens\.?\s*str\.?\s*(?=\))|\b\s*sens\.?\s*str\.?\s*\b/i', // the first look-ahead option matches before a closing-paren (\b fails between '.)' )
+        /\b\s*sens\.?\s*str\.?\s*(?=\))|\b\s*sens\.?\s*str[.\s]+/i,
+        // '/\b\s*s\.\s*str\.?\s*\b/i',
+        /\b\s*s\.\s*str[.\s]+/i,
+        /\b\s*s\.?\s*s\.?\s+\b/i,
+
+        // end-of-string ss/sl qualifiers
+        /\b\s*sens\.?\s*lat\.?\s*$/i,
+        /\b\s*s\.\s*lat\.?\s*$/i,
+        /\b\s*s\.?\s*l\.?\s*$/i,
+        /\b\s*sensu\s*lato\s*$/i,
+
+        /\b\s*sensu\s*stricto\s*$/i,
+        /\b\s*sens\.?\s*strict\.?\s*$/i,
+        /\b\s*sens\.?\s*str\.?\s*$/i,
+        /\b\s*s\.\s*str\.?\s*$/i,
+        /\b\s*s\.?\s*s\.?\s*$/i,
+
+        /\b\s*agg\.?\s*$/i,
+        /\b\s*aggregate\s*$/i,
+
+        /\b\s*sp\.?\s*cultivar\s*$/i,
+        /\b\s*sp\.?\s*cv\.?\s*$/i,
+        /\b\s*cultivars?\s*$/i,
+        /\b\s*cv\s+$/i,
+        /\b\s*cv$/i,
+
+        /\b\s*cf\s*$/i,
+        /\b\s*aff\s*$/i,
+        /\b\s*s\.?n\.?\s*$/i,
+        /\b\s*sp\.?\s*nov\.?\s*$/i,
+
+        /\b\s*auct[.\s]*$/i,
+
+        /\b\s*ined[.\s]*$/i,
+
+        /\b\s*nom\.?\snud[.\s]*$/i,
+
+        /\b\s*p\.p[.\s?]*$/i,
+
+        /\b\s*spp?\.?[\s?]*$/i,
+        /\b\s*species\s*$/i,
+        /\b\s*spp?\.?\s*\(/i, // catch e.g. Ulmus sp. (excluding Ulmus glabra)
+        /\b\s*species\s*\(/i,
+    ];
+
+    static taxonQualifierReplacement = [
+        ' ', // (f x m or m x f) is the default so an explicit qualifier isn't used
+        ' ', // (m x f or f x m) is the default so an explicit qualifier isn't used
+
+        ' (f x m)',
+        ' (m x f)',
+
+        ' (f x m)',
+        ' (m x f)',
+
+        // stand-alone male/female qualifier (e.g. applied to Petasites hybridus)
+        // removed single quotes
+        ' male',
+        ' female',
+
+        // mid-string ss/sl qualifiers
+        ' s.l. ',
+        ' s.l. ',
+        ' s.l. ',
+        ' s.l. ',
+
+        ' s.s. ',
+        ' s.s. ',
+        ' s.s. ',
+        ' s.s. ',
+        ' s.s. ',
+
+        // end-of-string ss/sl qualifiers
+        ' s.l.',
+        ' s.l.',
+        ' s.l.',
+        ' s.l.',
+
+        ' s.s.',
+        ' s.s.',
+        ' s.s.',
+        ' s.s.',
+        ' s.s.',
+
+        ' agg.',
+        ' agg.',
+
+        ' cv. ',
+        ' cv. ',
+        ' cv. ',
+        ' cv. ',
+        ' cv. ',
+
+        ' cf.',
+        ' aff.',
+
+        ' sp.nov.',
+        ' sp.nov.',
+
+        ' auct.',
+
+        ' ined.',
+
+        ' nom. nud.',
+
+        ' pro parte',
+
+        '',
+        '',
+        ' (',
+        ' (',
+    ];
+
+    /**
+     *
+     * @param {string} taxonString
+     * @returns {string}
+     */
+    static normaliseTaxonName(taxonString) {
+        for (let i = 0, l = TaxonSearch.taxonRankNameSearchRegex.length; i < l; i++) {
+            taxonString = taxonString.replace(TaxonSearch.taxonRankNameSearchRegex[i], TaxonSearch.taxonRankNameReplacement[i]);
+        }
+
+        for (let i = 0, l = TaxonSearch.taxonQualifierSearchRegex.length; i < l; i++) {
+            taxonString = taxonString.replace(TaxonSearch.taxonQualifierSearchRegex[i], TaxonSearch.taxonQualifierReplacement[i]);
+        }
+
+        return taxonString;
+    }
+
+    /**
+     * from https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
+     *
+     * @param {string} literal
+     * @return string
+     */
+    static escapeRegExp(literal) {
+        return literal.replace(TaxonSearch.cleanRegex, '\\$&');
+    };
+
+    static cleanRegex = /[.*+?^${}()|[\]\\]/g;
+
+    /**
+     * generate hybrid name permutations
+     *
+     * @param {string} names unescaped series of species e.g. "glandulifera" or "carex x nigra"
+     * @returns {string} name permutations formatted as a regular expression
+     */
+    static generate_hybrid_combinations_regex(names) {
+        const splitParts = TaxonSearch.escapeRegExp(names).split(/\s+x\s+/i);
+        if (splitParts.length < 2) {
+            return splitParts[0];
+        }
+
+        const hybridPermutations = [];
+
+        /**
+         * generate hybrid name permutations
+         *
+         * modified from O'Reilly PHP Cookbook
+         * http://docstore.mik.ua/orelly/webprog/pcook/ch04_26.htm
+         *
+         * @param {Array.<string>} items
+         * @param {Array.<string>} perms
+         */
+        const permutate = function (items, perms) {
+            if (items.length === 0) {
+                hybridPermutations[hybridPermutations.length] = perms.join('[a-zA-Z]* x ');
+            } else {
+                for (let i = items.length - 1; i >= 0; --i) {
+                    const newItems = items.slice(0);
+                    const newPerms = perms.slice(0); // take copies of the array
+
+                    newPerms.unshift(newItems.splice(i, 1)[0]);
+                    permutate(newItems, newPerms);
+                }
+            }
+        };
+
+        permutate(splitParts, []);
+
+        return `(?:${hybridPermutations.join('|')})`;
+    }
+
     /**
      *
      * @param {string} query
@@ -18476,437 +10991,322 @@ var TaxonSearch = /*#__PURE__*/function () {
                         acceptedAuthority: string
                         }>}
      */
-    function lookup(query) {
-      var results,
-          taxonString,
-          canonical,
-          matchedIds = {},
-          preferHybrids; // ignore trailing ' x' from string which would just muck up result matching
+    lookup(query) {
+        let results,
+            taxonString,
+            canonical,
+            matchedIds = {},
+            preferHybrids
+            ;
 
-      taxonString = TaxonSearch.normaliseTaxonName(decodeURIComponent(query).trim()).replace(/\s+x$/i, '');
-      preferHybrids = / x\b/.test(taxonString);
+        // ignore trailing ' x' from string which would just muck up result matching
+        taxonString = TaxonSearch.normaliseTaxonName(decodeURIComponent(query).trim()).replace(/\s+x$/i, '');
+        preferHybrids = / x\b/.test(taxonString);
 
-      if (taxonString !== '') {
-        var abbreviatedMatches = taxonString.match(TaxonSearch.abbreviatedGenusRegex);
+        if (taxonString !== '') {
+            const abbreviatedMatches = taxonString.match(TaxonSearch.abbreviatedGenusRegex);
+            if (abbreviatedMatches) {
+                // matched an abbreviated genus name (or an abbreviated hybrid genus)
 
-        if (abbreviatedMatches) {
-          // matched an abbreviated genus name (or an abbreviated hybrid genus)
-          var exp, nearMatchExp;
+                let exp,
+                    nearMatchExp;
+                if (abbreviatedMatches[2] === 'X' || abbreviatedMatches[2] === 'x') {
+                    // either have a genus name beginning 'X' or a hybrid genus
 
-          if (abbreviatedMatches[2] === 'X' || abbreviatedMatches[2] === 'x') {
-            // either have a genus name beginning 'X' or a hybrid genus
-            exp = new RegExp("^(X\\s|X[a-z]+\\s+)(x )?\\b".concat(TaxonSearch.generate_hybrid_combinations_regex(abbreviatedMatches[3]), ".*"), 'i');
-            nearMatchExp = exp;
-          } else {
-            exp = new RegExp("^(X )?".concat(TaxonSearch.escapeRegExp(abbreviatedMatches[2]), "[a-z]+ (x )?.*\\b").concat(TaxonSearch.generate_hybrid_combinations_regex(abbreviatedMatches[3]), ".*"), 'i');
-            /**
-             * Similar to exp but without flexibility (.*) after genus part
-             * used only for result ranking (exact>near>vague)
-             */
-
-            nearMatchExp = new RegExp("^(X )?".concat(TaxonSearch.escapeRegExp(abbreviatedMatches[2]), "[a-z]+ (x )?\\b").concat(TaxonSearch.generate_hybrid_combinations_regex(abbreviatedMatches[3]), ".*"), 'i');
-          }
-
-          for (var id in Taxon.rawTaxa) {
-            // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
-            var testTaxon = Taxon.rawTaxa[id];
-            /**
-             * The canonical name may be identical to the nameString in which case JSON taxon list stores
-             * zero instead to save file space (and to mark that canonical name should be ignored)
-             */
-
-            canonical = testTaxon[TaxonSearch.canonicalColumn] === 0 ? testTaxon[TaxonSearch.nameStringColumn] : testTaxon[TaxonSearch.canonicalColumn];
-
-            if (exp.test(canonical) || testTaxon[TaxonSearch.hybridCanonicalColumn] !== '' && exp.test(testTaxon[TaxonSearch.hybridCanonicalColumn])) {
-              matchedIds[id] = {
-                exact: testTaxon[TaxonSearch.nameStringColumn] === taxonString,
-                near: nearMatchExp.test(testTaxon[TaxonSearch.nameStringColumn])
-              };
-            }
-          }
-
-          results = this.compile_results(matchedIds, preferHybrids);
-        } else {
-          // genus is not abbreviated
-          var canonicalQuery, nearMatchRegex;
-          var escapedTaxonString = TaxonSearch.escapeRegExp(taxonString);
-
-          if (taxonString.indexOf(' ') !== -1) {
-            // hybrids of the form Species x nothoname or Species nothoname should be seen as equivalent
-            canonicalQuery = "".concat(TaxonSearch.escapeRegExp(taxonString.substr(0, taxonString.indexOf(' '))), " (x )?.*\\b").concat(TaxonSearch.generate_hybrid_combinations_regex(taxonString.substr(taxonString.indexOf(' ') + 1)), ".*");
-            /**
-             * Similar to canonicalQuery/hybridCanonicalQuery but without flexibility (.*) after genus part
-             * used only for result ranking (exact>near>vague)
-             */
-
-            nearMatchRegex = new RegExp("^(?:Xs+)?".concat(TaxonSearch.escapeRegExp(taxonString.substr(0, taxonString.indexOf(' '))), " (x )?\\b").concat(TaxonSearch.generate_hybrid_combinations_regex(taxonString.substr(taxonString.indexOf(' ') + 1)), ".*"), 'i');
-          } else {
-            canonicalQuery = "".concat(escapedTaxonString, ".*");
-            nearMatchRegex = new RegExp("^".concat(escapedTaxonString, ".*"));
-          }
-
-          var strictEscapedTaxonString = "^".concat(escapedTaxonString, ".*"); // var escapedTaxonStringRegExp = new RegExp(strictEscapedTaxonString, 'i');
-          // var canonicalQueryRegExp = new RegExp('^' + canonicalQuery, 'i');
-          // var hybridCanonicalQueryregExp = new RegExp('^X ' + canonicalQuery, 'i');
-
-          var canonicalQueryRegExp = new RegExp("^(?:Xs+)?".concat(canonicalQuery), 'i');
-
-          if (!TaxonSearch.showVernacular) {
-            // no vernacular
-            for (var _id in Taxon.rawTaxa) {
-              // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
-              var _testTaxon = Taxon.rawTaxa[_id];
-              canonical = _testTaxon[TaxonSearch.canonicalColumn] === 0 ? _testTaxon[TaxonSearch.nameStringColumn] : _testTaxon[TaxonSearch.canonicalColumn];
-
-              if ( // testTaxon[TaxonSearch.nameStringColumn].search(escapedTaxonStringRegExp) !== -1 ||
-              canonicalQueryRegExp.test(_testTaxon[TaxonSearch.nameStringColumn]) || canonical !== _testTaxon[TaxonSearch.nameStringColumn] && canonicalQueryRegExp.test(canonical) // testTaxon[TaxonSearch.nameStringColumn].search(hybridCanonicalQueryregExp) !== -1
-              ) {
-                matchedIds[_id] = {
-                  exact: _testTaxon[TaxonSearch.nameStringColumn] === taxonString
-                };
-              }
-            }
-
-            results = this.compile_results(matchedIds, preferHybrids);
-          } else {
-            var caseInsensitiveEscapedTaxonRegex = new RegExp(strictEscapedTaxonString, 'i');
-
-            for (var _id2 in Taxon.rawTaxa) {
-              // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
-              var _testTaxon2 = Taxon.rawTaxa[_id2];
-              canonical = _testTaxon2[TaxonSearch.canonicalColumn] === 0 ? _testTaxon2[TaxonSearch.nameStringColumn] : _testTaxon2[TaxonSearch.canonicalColumn];
-
-              if ( // testTaxon[TaxonSearch.nameStringColumn].search(escapedTaxonStringRegExp) !== -1 ||
-              canonicalQueryRegExp.test(_testTaxon2[TaxonSearch.nameStringColumn]) || canonical !== _testTaxon2[TaxonSearch.nameStringColumn] && canonicalQueryRegExp.test(canonical) // testTaxon[TaxonSearch.nameStringColumn].search(hybridCanonicalQueryregExp) !== -1
-              ) {
-                matchedIds[_id2] = {
-                  exact: _testTaxon2[TaxonSearch.nameStringColumn] === taxonString,
-                  near: nearMatchRegex.test(_testTaxon2[TaxonSearch.nameStringColumn]) || nearMatchRegex.test(canonical)
-                };
-              } else if (caseInsensitiveEscapedTaxonRegex.test(_testTaxon2[TaxonSearch.vernacularColumn]) || caseInsensitiveEscapedTaxonRegex.test(_testTaxon2[TaxonSearch.vernacularRootColumn])) {
-                matchedIds[_id2] = {
-                  exact: _testTaxon2[TaxonSearch.vernacularColumn] === taxonString,
-                  vernacular: true
-                };
-              }
-            }
-
-            results = this.compile_results(matchedIds, preferHybrids);
-            /**
-             * if very few matches then retry searching using much fuzzier matching
-             */
-
-            if (results.length < 5) {
-              var broadRegExp = new RegExp("\\b".concat(escapedTaxonString, ".*"), 'i'); // match anywhere in string
-
-              for (var _id3 in Taxon.rawTaxa) {
-                // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
-                if (!matchedIds.hasOwnProperty(_id3)) {
-                  var _testTaxon3 = Taxon.rawTaxa[_id3];
-
-                  if (broadRegExp.test(_testTaxon3[TaxonSearch.nameStringColumn])) {
-                    matchedIds[_id3] = {
-                      exact: _testTaxon3[TaxonSearch.nameStringColumn] === taxonString
-                    };
-                  } else if (_testTaxon3[TaxonSearch.canonicalColumn] !== 0 && broadRegExp.test(_testTaxon3[TaxonSearch.canonicalColumn]) || broadRegExp.test(_testTaxon3[TaxonSearch.vernacularColumn])) {
-                    matchedIds[_id3] = {
-                      exact: _testTaxon3[TaxonSearch.nameStringColumn] === taxonString,
-                      vernacular: true
-                    };
-                  }
-                }
-              }
-
-              results = this.compile_results(matchedIds, preferHybrids);
-            }
-          }
-        }
-      } else {
-        results = [];
-      }
-
-      return results;
-    }
-  }, {
-    key: "compile_results",
-    value: function compile_results(matchedIds, preferHybrids) {
-      var results = [];
-
-      for (var id in matchedIds) {
-        if (matchedIds.hasOwnProperty(id)) {
-          var taxon = Taxon.rawTaxa[id];
-
-          if ((!this.requireExtantDDbRecords || this.requireExtantDDbRecords && taxon[TaxonSearch.usedColumn] === 1) && (!this.minimumRankSort || this.minimumRankSort > 0 && taxon[TaxonSearch.minRankColumn] >= this.minimumRankSort)) {
-            var qname = taxon[TaxonSearch.nameStringColumn] + (taxon[TaxonSearch.qualifierColumn] ? " ".concat(taxon[TaxonSearch.qualifierColumn]) : '');
-            var row = {
-              entityId: id,
-              vernacular: taxon[TaxonSearch.vernacularColumn],
-              qname: qname,
-              name: qname,
-              // use qualified name for the generic name field
-              qualifier: taxon[TaxonSearch.qualifierColumn],
-              authority: taxon[TaxonSearch.authorityColumn],
-              uname: taxon[TaxonSearch.nameStringColumn],
-              vernacularMatched: matchedIds[id].hasOwnProperty('vernacular'),
-              exact: matchedIds[id].hasOwnProperty('exact') && matchedIds[id].exact,
-              near: matchedIds[id].hasOwnProperty('near') && matchedIds[id].near
-            };
-            row.formatted = TaxonSearch.formatter(row);
-
-            if (taxon[TaxonSearch.acceptedEntityIdColumn]) {
-              var acceptedTaxon = Taxon.rawTaxa[taxon[TaxonSearch.acceptedEntityIdColumn]];
-
-              if (!acceptedTaxon) {
-                if (!Taxon.rawTaxa) {
-                  throw new Error("Taxon.rawTaxa set is undefined, when trying to find taxon for accepted entity id ".concat(taxon[TaxonSearch.acceptedEntityIdColumn]));
+                    exp = new RegExp(`^(X\\s|X[a-z]+\\s+)(x )?\\b${TaxonSearch.generate_hybrid_combinations_regex(abbreviatedMatches[3])}.*`, 'i');
+                    nearMatchExp = exp;
                 } else {
-                  throw new Error("Failed to find taxon for accepted entity id ".concat(taxon[TaxonSearch.acceptedEntityIdColumn]));
+                    exp = new RegExp(`^(X )?${TaxonSearch.escapeRegExp(abbreviatedMatches[2])}[a-z]+ (x )?.*\\b${TaxonSearch.generate_hybrid_combinations_regex(abbreviatedMatches[3])}.*`, 'i');
+
+                    /**
+                     * Similar to exp but without flexibility (.*) after genus part
+                     * used only for result ranking (exact>near>vague)
+                     */
+                    nearMatchExp = new RegExp(`^(X )?${TaxonSearch.escapeRegExp(abbreviatedMatches[2])}[a-z]+ (x )?\\b${TaxonSearch.generate_hybrid_combinations_regex(abbreviatedMatches[3])}.*`, 'i');
                 }
-              }
 
-              row.acceptedEntityId = taxon[TaxonSearch.acceptedEntityIdColumn];
-              row.acceptedNameString = acceptedTaxon[TaxonSearch.nameStringColumn];
-              row.acceptedQualifier = acceptedTaxon[TaxonSearch.qualifierColumn];
-              row.acceptedAuthority = acceptedTaxon[TaxonSearch.authorityColumn];
-            }
+                for (let id in Taxon.rawTaxa) {
+                    // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
+                    let testTaxon = Taxon.rawTaxa[id];
 
-            results.push(row);
-          }
-        }
-      }
+                    /**
+                     * The canonical name may be identical to the nameString in which case JSON taxon list stores
+                     * zero instead to save file space (and to mark that canonical name should be ignored)
+                     */
+                    canonical = testTaxon[TaxonSearch.canonicalColumn] === 0 ?
+                        testTaxon[TaxonSearch.nameStringColumn]
+                        :
+                        testTaxon[TaxonSearch.canonicalColumn];
 
-      if (results.length) {
-        results.sort(function (a, b) {
-          // if (a.uname == 'Taraxacum \'Irish cambricum\'' || b.uname == 'Taraxacum \'Irish cambricum\'') {
-          //   console.log(a.uname + " with " + b.uname);
-          // }
-          if (a.exact) {
-            // logger('exact test a: ' + a.uname + ' vs ' + b.uname);
-            // logger(b);
-            if (b.exact) {
-              return a.acceptedEntityId ? 1 : 0; // prefer accepted name
-            }
+                    if (exp.test(canonical) ||
+                        ((testTaxon[TaxonSearch.hybridCanonicalColumn] !== '') && exp.test(testTaxon[TaxonSearch.hybridCanonicalColumn]))
+                    ) {
+                        matchedIds[id] = {
+                            exact: (testTaxon[TaxonSearch.nameStringColumn] === taxonString),
+                            near: (nearMatchExp.test(testTaxon[TaxonSearch.nameStringColumn])),
+                        };
+                    }
+                }
 
-            return -1; // return b.exact ? 0 : -1;
-          } else if (b.exact) {
-            // logger('exact test b: ' + b.uname);
-            return 1;
-          }
-
-          if (a.near) {
-            if (!b.near) {
-              return -1;
-            }
-          } else if (b.near) {
-            // logger('exact test b: ' + b.uname);
-            return 1;
-          }
-
-          var aIsHybrid = a.uname.match(/\bx\b/i) !== null;
-          var bIsHybrid = b.uname.match(/\bx\b/i) !== null;
-
-          if (aIsHybrid) {
-            // logger('hybrid test: ' + a.qname + ' vs ' + b.qname);
-            // logger('hybrid test: ' + a.uname + ' vs ' + b.uname);
-            if (bIsHybrid) {
-              if (a.uname === b.uname) {
-                return a.acceptedEntityId ? 1 : 0; // prefer accepted name
-              }
-
-              return a.qname < b.qname ? -1 : 1;
-            }
-
-            return preferHybrids ? -1 : 1;
-          } else if (bIsHybrid) {
-            return preferHybrids ? 1 : -1;
-          } else if (a.uname === b.uname) {
-            if ((a.acceptedEntityId || b.acceptedEntityId) && !(a.acceptedEntityId && b.acceptedEntityId)) {
-              // one of the pair is not an accepted name
-              return a.acceptedEntityId ? 1 : -1; // prefer accepted name
+                results = this.compile_results(matchedIds, preferHybrids);
             } else {
-              // for NYPH purposes agg. and s.l. should be prioritised over
-              // agg., s.l., empty, s.s.
-              var aQIndex = ['s.s.', '', null, 's.l.', 'agg.'].indexOf(a.qualifier);
-              var bQIndex = ['s.s.', '', null, 's.l.', 'agg.'].indexOf(b.qualifier);
-              return aQIndex === bQIndex ? 0 : aQIndex < bQIndex ? 1 : -1;
+                // genus is not abbreviated
+
+                let canonicalQuery,
+                    nearMatchRegex;
+                const escapedTaxonString = TaxonSearch.escapeRegExp(taxonString);
+
+                if (taxonString.indexOf(' ') !== -1) {
+                    // hybrids of the form Species x nothoname or Species nothoname should be seen as equivalent
+
+                    canonicalQuery = `${TaxonSearch.escapeRegExp(taxonString.substr(0, taxonString.indexOf(' ')))
+                        } (x )?.*\\b${TaxonSearch.generate_hybrid_combinations_regex(taxonString.substr(taxonString.indexOf(' ') + 1))}.*`;
+
+                    /**
+                     * Similar to canonicalQuery/hybridCanonicalQuery but without flexibility (.*) after genus part
+                     * used only for result ranking (exact>near>vague)
+                     */
+                    nearMatchRegex = new RegExp(`^(?:X\s+)?${TaxonSearch.escapeRegExp(taxonString.substr(0, taxonString.indexOf(' ')))
+                        } (x )?\\b${TaxonSearch.generate_hybrid_combinations_regex(taxonString.substr(taxonString.indexOf(' ') + 1))}.*`, 'i');
+                } else {
+                    canonicalQuery = `${escapedTaxonString}.*`;
+                    nearMatchRegex = new RegExp(`^${escapedTaxonString}.*`);
+                }
+
+                const strictEscapedTaxonString = `^${escapedTaxonString}.*`;
+                // var escapedTaxonStringRegExp = new RegExp(strictEscapedTaxonString, 'i');
+                // var canonicalQueryRegExp = new RegExp('^' + canonicalQuery, 'i');
+                // var hybridCanonicalQueryregExp = new RegExp('^X ' + canonicalQuery, 'i');
+                const canonicalQueryRegExp = new RegExp(`^(?:X\s+)?${canonicalQuery}`, 'i');
+
+                if (!TaxonSearch.showVernacular) {
+                    // no vernacular
+
+                    for (let id in Taxon.rawTaxa) {
+                        // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
+                        let testTaxon = Taxon.rawTaxa[id];
+
+                        canonical = testTaxon[TaxonSearch.canonicalColumn] === 0 ?
+                            testTaxon[TaxonSearch.nameStringColumn]
+                            :
+                            testTaxon[TaxonSearch.canonicalColumn];
+
+                        if (
+                            // testTaxon[TaxonSearch.nameStringColumn].search(escapedTaxonStringRegExp) !== -1 ||
+                            canonicalQueryRegExp.test(testTaxon[TaxonSearch.nameStringColumn]) ||
+                            ((canonical !== testTaxon[TaxonSearch.nameStringColumn]) && canonicalQueryRegExp.test(canonical))
+                        // testTaxon[TaxonSearch.nameStringColumn].search(hybridCanonicalQueryregExp) !== -1
+                        ) {
+                            matchedIds[id] =
+                                {exact: (testTaxon[TaxonSearch.nameStringColumn] === taxonString)};
+                        }
+                    }
+
+                    results = this.compile_results(matchedIds, preferHybrids);
+                } else {
+                    const caseInsensitiveEscapedTaxonRegex = new RegExp(strictEscapedTaxonString, 'i');
+
+                    for (let id in Taxon.rawTaxa) {
+                        // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
+                        let testTaxon = Taxon.rawTaxa[id];
+
+                        canonical = testTaxon[TaxonSearch.canonicalColumn] === 0 ?
+                            testTaxon[TaxonSearch.nameStringColumn]
+                            :
+                            testTaxon[TaxonSearch.canonicalColumn];
+
+                        if (
+                            // testTaxon[TaxonSearch.nameStringColumn].search(escapedTaxonStringRegExp) !== -1 ||
+                            canonicalQueryRegExp.test(testTaxon[TaxonSearch.nameStringColumn]) ||
+                            ((canonical !== testTaxon[TaxonSearch.nameStringColumn]) && canonicalQueryRegExp.test(canonical))
+                        // testTaxon[TaxonSearch.nameStringColumn].search(hybridCanonicalQueryregExp) !== -1
+                        ) {
+                            matchedIds[id] = {
+                                exact: (testTaxon[TaxonSearch.nameStringColumn] === taxonString),
+                                near: (nearMatchRegex.test(testTaxon[TaxonSearch.nameStringColumn]) ||
+                                    nearMatchRegex.test(canonical)),
+                            };
+                        } else if (
+                            caseInsensitiveEscapedTaxonRegex.test(testTaxon[TaxonSearch.vernacularColumn]) ||
+                            caseInsensitiveEscapedTaxonRegex.test(testTaxon[TaxonSearch.vernacularRootColumn])
+                        ) {
+                            matchedIds[id] = {
+                                exact: (testTaxon[TaxonSearch.vernacularColumn] === taxonString),
+                                vernacular: true,
+                            };
+                        }
+                    }
+
+                    results = this.compile_results(matchedIds, preferHybrids);
+
+                    /**
+                     * if very few matches then retry searching using much fuzzier matching
+                     */
+                    if (results.length < 5) {
+                        const broadRegExp = new RegExp(`\\b${escapedTaxonString}.*`, 'i'); // match anywhere in string
+
+                        for (let id in Taxon.rawTaxa) {
+                            // noinspection JSUnfilteredForInLoop (assume is safe for rawTaxa object)
+                            if (!matchedIds.hasOwnProperty(id)) {
+                                let testTaxon = Taxon.rawTaxa[id];
+
+                                if (broadRegExp.test(testTaxon[TaxonSearch.nameStringColumn])) {
+                                    matchedIds[id] =
+                                        {exact: (testTaxon[TaxonSearch.nameStringColumn] === taxonString)};
+                                } else if (
+                                    (testTaxon[TaxonSearch.canonicalColumn] !== 0 && broadRegExp.test(testTaxon[TaxonSearch.canonicalColumn])) ||
+                                    broadRegExp.test(testTaxon[TaxonSearch.vernacularColumn])
+                                ) {
+                                    matchedIds[id] = {
+                                        exact: (testTaxon[TaxonSearch.nameStringColumn] === taxonString),
+                                        vernacular: true
+                                    };
+                                }
+                            }
+                        }
+
+                        results = this.compile_results(matchedIds, preferHybrids);
+                    }
+                }
             }
-          } else if (a.vernacularMatched && b.vernacularMatched) {
-            // matching both names using vernacular
-            // so sort by this
-            if (a.vernacular !== b.vernacular) {
-              return a.vernacular.length < b.vernacular.length ? -1 : 1;
-            }
-          }
-
-          return a.uname < b.uname ? -1 : 1;
-        }); // truncate results
-
-        if (results.length > TaxonSearch.MAXIMUM_RESULTS) {
-          results.length = TaxonSearch.MAXIMUM_RESULTS;
-        }
-      }
-
-      return results;
-    }
-  }], [{
-    key: "formatter",
-    value: function formatter(taxonResult) {
-
-      if (TaxonSearch.showVernacular) {
-        if (taxonResult.vernacularMatched) {
-          if (taxonResult.acceptedEntityId) {
-            return "<q><b>".concat(taxonResult.vernacular, "</b></q> <span class=\"italictaxon\">").concat(taxonResult.uname).concat(taxonResult.qualifier ? " <b>".concat(taxonResult.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.authority, "</span>") + " = <span class=\"italictaxon\">".concat(taxonResult.acceptedNameString).concat(taxonResult.acceptedQualifier ? " <b>".concat(taxonResult.acceptedQualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.acceptedAuthority, "</span>");
-          }
-
-          return "<q><b>".concat(taxonResult.vernacular, "</b></q> <span class=\"italictaxon\">").concat(taxonResult.uname).concat(taxonResult.qualifier ? " <b>".concat(taxonResult.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.authority, "</span>");
-        }
-
-        if (taxonResult.acceptedEntityId) {
-          return "<span class=\"italictaxon\">".concat(taxonResult.uname).concat(taxonResult.qualifier ? " <b>".concat(taxonResult.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.authority, "</span>").concat(taxonResult.vernacular ? " <q><b>".concat(taxonResult.vernacular, "</b></q>") : '', " = <span class=\"italictaxon\">").concat(taxonResult.acceptedNameString).concat(taxonResult.acceptedQualifier ? " <b>".concat(taxonResult.acceptedQualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.acceptedAuthority, "</span>");
-        }
-
-        return "<span class=\"italictaxon\">".concat(taxonResult.uname).concat(taxonResult.qualifier ? " <b>".concat(taxonResult.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.authority, "</span>").concat(taxonResult.vernacular ? " <q><b>".concat(taxonResult.vernacular, "</b></q>") : '');
-      }
-
-      if (taxonResult.acceptedEntityId) {
-        return "<span class=\"italictaxon\">".concat(taxonResult.uname).concat(taxonResult.qualifier ? " <b>".concat(taxonResult.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.authority, "</span>") + " = <span class=\"italictaxon\">".concat(taxonResult.acceptedNameString).concat(taxonResult.acceptedQualifier ? " <b>".concat(taxonResult.acceptedQualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.acceptedAuthority, "</span>");
-      }
-
-      return "<span class=\"italictaxon\">".concat(taxonResult.uname).concat(taxonResult.qualifier ? " <b>".concat(taxonResult.qualifier, "</b>") : '', "</span> <span class=\"taxauthority\">").concat(taxonResult.authority, "</span>");
-    }
-  }, {
-    key: "normaliseTaxonName",
-    value:
-    /**
-     *
-     * @param {string} taxonString
-     * @returns {string}
-     */
-    function normaliseTaxonName(taxonString) {
-      for (var i = 0, l = TaxonSearch.taxonRankNameSearchRegex.length; i < l; i++) {
-        taxonString = taxonString.replace(TaxonSearch.taxonRankNameSearchRegex[i], TaxonSearch.taxonRankNameReplacement[i]);
-      }
-
-      for (var _i = 0, _l = TaxonSearch.taxonQualifierSearchRegex.length; _i < _l; _i++) {
-        taxonString = taxonString.replace(TaxonSearch.taxonQualifierSearchRegex[_i], TaxonSearch.taxonQualifierReplacement[_i]);
-      }
-
-      return taxonString;
-    }
-    /**
-     * from https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
-     *
-     * @param {string} literal
-     * @return string
-     */
-
-  }, {
-    key: "escapeRegExp",
-    value: function escapeRegExp(literal) {
-      return literal.replace(TaxonSearch.cleanRegex, '\\$&');
-    }
-  }, {
-    key: "generate_hybrid_combinations_regex",
-    value:
-    /**
-     * generate hybrid name permutations
-     *
-     * @param {string} names unescaped series of species e.g. "glandulifera" or "carex x nigra"
-     * @returns {string} name permutations formatted as a regular expression
-     */
-    function generate_hybrid_combinations_regex(names) {
-      var splitParts = TaxonSearch.escapeRegExp(names).split(/\s+x\s+/i);
-
-      if (splitParts.length < 2) {
-        return splitParts[0];
-      }
-
-      var hybridPermutations = [];
-      /**
-       * generate hybrid name permutations
-       *
-       * modified from O'Reilly PHP Cookbook
-       * http://docstore.mik.ua/orelly/webprog/pcook/ch04_26.htm
-       *
-       * @param {Array.<string>} items
-       * @param {Array.<string>} perms
-       */
-
-      var permutate = function permutate(items, perms) {
-        if (items.length === 0) {
-          hybridPermutations[hybridPermutations.length] = perms.join('[a-zA-Z]* x ');
         } else {
-          for (var i = items.length - 1; i >= 0; --i) {
-            var newItems = items.slice(0);
-            var newPerms = perms.slice(0); // take copies of the array
-
-            newPerms.unshift(newItems.splice(i, 1)[0]);
-            permutate(newItems, newPerms);
-          }
+            results = [];
         }
-      };
 
-      permutate(splitParts, []);
-      return "(?:".concat(hybridPermutations.join('|'), ")");
+        return results;
     }
-  }]);
 
-  return TaxonSearch;
-}();
+    compile_results(matchedIds, preferHybrids) {
+        const results = [];
 
-_defineProperty(TaxonSearch, "showVernacular", true);
+        for (const id in matchedIds) {
+            if (matchedIds.hasOwnProperty(id)) {
+                const taxon = Taxon.rawTaxa[id];
 
-_defineProperty(TaxonSearch, "MIN_SEARCH_LENGTH", 2);
+                if (
+                    (!this.requireExtantDDbRecords || (this.requireExtantDDbRecords && taxon[TaxonSearch.usedColumn] === 1)) &&
+                    (!this.minimumRankSort || (this.minimumRankSort > 0 && taxon[TaxonSearch.minRankColumn] >= this.minimumRankSort))
+                ) {
+                    const qname = taxon[TaxonSearch.nameStringColumn] + (taxon[TaxonSearch.qualifierColumn] ? (` ${taxon[TaxonSearch.qualifierColumn]}`) : '');
 
-_defineProperty(TaxonSearch, "MAXIMUM_RESULTS", 25);
+                    const row = {
+                        entityId: id,
+                        vernacular: taxon[TaxonSearch.vernacularColumn],
+                        qname,
+                        name: qname, // use qualified name for the generic name field
+                        qualifier: taxon[TaxonSearch.qualifierColumn],
+                        authority: taxon[TaxonSearch.authorityColumn],
+                        uname: taxon[TaxonSearch.nameStringColumn],
+                        vernacularMatched: matchedIds[id].hasOwnProperty('vernacular'),
+                        exact: matchedIds[id].hasOwnProperty('exact') && matchedIds[id].exact,
+                        near: matchedIds[id].hasOwnProperty('near') && matchedIds[id].near,
+                    };
 
-_defineProperty(TaxonSearch, "abbreviatedGenusRegex", /^(X\s+)?([a-z])[.\s]+(.*?)$/i);
+                    row.formatted = TaxonSearch.formatter(row);
 
-_defineProperty(TaxonSearch, "nameStringColumn", 0);
+                    if (taxon[TaxonSearch.acceptedEntityIdColumn]) {
+                        const acceptedTaxon = Taxon.rawTaxa[taxon[TaxonSearch.acceptedEntityIdColumn]];
 
-_defineProperty(TaxonSearch, "canonicalColumn", 1);
+                        if (!acceptedTaxon) {
+                            if (!Taxon.rawTaxa) {
+                                throw new Error(`Taxon.rawTaxa set is undefined, when trying to find taxon for accepted entity id ${taxon[TaxonSearch.acceptedEntityIdColumn]}`);
+                            } else {
+                                throw new Error(`Failed to find taxon for accepted entity id ${taxon[TaxonSearch.acceptedEntityIdColumn]}`);
+                            }
+                        }
 
-_defineProperty(TaxonSearch, "hybridCanonicalColumn", 2);
+                        row.acceptedEntityId = taxon[TaxonSearch.acceptedEntityIdColumn];
+                        row.acceptedNameString = acceptedTaxon[TaxonSearch.nameStringColumn];
+                        row.acceptedQualifier = acceptedTaxon[TaxonSearch.qualifierColumn];
+                        row.acceptedAuthority = acceptedTaxon[TaxonSearch.authorityColumn];
+                    }
 
-_defineProperty(TaxonSearch, "acceptedEntityIdColumn", 3);
+                    results.push(row);
+                }
+            }
+        }
 
-_defineProperty(TaxonSearch, "qualifierColumn", 4);
+        if (results.length) {
+            results.sort((a, b) => {
+                // if (a.uname == 'Taraxacum \'Irish cambricum\'' || b.uname == 'Taraxacum \'Irish cambricum\'') {
+                //   console.log(a.uname + " with " + b.uname);
+                // }
 
-_defineProperty(TaxonSearch, "authorityColumn", 5);
+                if (a.exact) {
+                    // logger('exact test a: ' + a.uname + ' vs ' + b.uname);
+                    // logger(b);
+                    if (b.exact) {
+                        return a.acceptedEntityId ? 1 : 0; // prefer accepted name
+                    }
+                    return -1;
 
-_defineProperty(TaxonSearch, "vernacularColumn", 6);
+                    // return b.exact ? 0 : -1;
+                } else if (b.exact) {
+                    // logger('exact test b: ' + b.uname);
+                    return 1;
+                }
 
-_defineProperty(TaxonSearch, "vernacularRootColumn", 7);
+                if (a.near) {
+                    if (!b.near) {
+                        return -1;
+                    }
+                } else if (b.near) {
+                    // logger('exact test b: ' + b.uname);
+                    return 1;
+                }
 
-_defineProperty(TaxonSearch, "usedColumn", 8);
+                let aIsHybrid = a.uname.match(/\bx\b/i) !== null;
+                let bIsHybrid = b.uname.match(/\bx\b/i) !== null;
 
-_defineProperty(TaxonSearch, "minRankColumn", 9);
+                if (aIsHybrid) {
+                    // logger('hybrid test: ' + a.qname + ' vs ' + b.qname);
+                    // logger('hybrid test: ' + a.uname + ' vs ' + b.uname);
+                    if (bIsHybrid) {
+                        if (a.uname === b.uname) {
+                            return a.acceptedEntityId ? 1 : 0; // prefer accepted name
+                        }
+                        return a.qname < b.qname ? -1 : 1;
+                    }
+                    return preferHybrids ? -1 : 1;
+                } else if (bIsHybrid) {
+                    return preferHybrids ? 1 : -1;
+                } else if (a.uname === b.uname) {
+                    if ((a.acceptedEntityId || b.acceptedEntityId) &&
+                        !(a.acceptedEntityId && b.acceptedEntityId)) {
+                        // one of the pair is not an accepted name
 
-_defineProperty(TaxonSearch, "taxonRankNameSearchRegex", [/\s+sub-?g(?:en(?:us)?)?[.\s]+/i, /\s+sect(?:ion)?[.\s]+/i, /\s+subsect(?:ion)?[.\s]+/i, /\s+ser(?:ies)?[.\s]+/i, /\s+gp[.\s]+/i, /\s+s(?:ub)?-?sp(?:ecies)?[.\s]+/i, /\s+morphotype\s+/i, /\s+var[.\s]+/i, /\s+cv[.\s]+/i, /\s+n(?:otho)?v(?:ar)?[.\s]+/i, /\s+f[.\s]+|\s+forma?\s+/i, /\s+n(?:otho)?ssp[.\s]+/i]);
+                        return a.acceptedEntityId ? 1 : -1; // prefer accepted name
+                    } else {
+                        // for NYPH purposes agg. and s.l. should be prioritised over
+                        // agg., s.l., empty, s.s.
 
-_defineProperty(TaxonSearch, "taxonRankNameReplacement", [' subg. ', ' sect. ', ' subsect. ', ' ser. ', ' group ', ' subsp. ', ' morph. ', ' var. ', ' cv. ', // ddb preference is for single quotes for cultivars
-' nothovar. ', ' f. ', ' nothosubsp. ']);
+                        let aQIndex = ['s.s.', '', null, 's.l.', 'agg.'].indexOf(a.qualifier);
+                        let bQIndex = ['s.s.', '', null, 's.l.', 'agg.'].indexOf(b.qualifier);
 
-_defineProperty(TaxonSearch, "cleanRankNamesRegex", /\s(subfam\.|subg\.|sect\.|subsect\.|ser\.|subser\.|subsp\.|nothosubsp\.|microsp\.|praesp\.|agsp\.|race|convar\.|nm\.|microgene|f\.|subvar\.|var\.|nothovar\.|cv\.|sublusus|taxon|morph\.|group|sp\.)\s/);
+                        return (aQIndex === bQIndex) ? 0 : (
+                            (aQIndex < bQIndex) ? 1 : -1
+                        );
+                    }
+                } else if (a.vernacularMatched && b.vernacularMatched) {
+                    // matching both names using vernacular
+                    // so sort by this
 
-_defineProperty(TaxonSearch, "taxonQualifierSearchRegex", [/\s*\(?\bf\s*x\s*m or m\s*x\s*f\)?\s*$/i, /\s*\(?\bm\s*x\s*f or f\s*x\s*m\)?\s*$/i, /\s*\(?\bf\s*x\s*m\)?\s*$/i, /\s*\(?\bm\s*x\s*f\)?\s*$/i, /\s*\(?\bfemale\s*x\s*male\)?\s*$/i, /\s*\(?\bmale\s*x\s*female\)?\s*$/i, // stand-alone male/female qualifier (e.g. applied to Petasites hybridus)
-// removes single quotes
-/\s*'male'\s*$/i, /\s*'female'\s*$/i, // mid-string ss/sl qualifiers
-/\b\s*sens\.?\s*lat[.\s]+/i, /\b\s*s\.\s*lat\.?\s*\b/i, /\b\s*s\.?\s*l\.?\s+\b/i, /\b\s*sensu\s*lato\s+\b|\(\s*sensu\s*lato\s*\)/i, /\b\s*sensu\s*stricto\s+\b|\(\s*sensu\s*stricto\s*\)/i, /\b\s*sens\.?\s*strict[.\s]+/i, // '/\b\s*sens\.?\s*str\.?\s*(?=\))|\b\s*sens\.?\s*str\.?\s*\b/i', // the first look-ahead option matches before a closing-paren (\b fails between '.)' )
-/\b\s*sens\.?\s*str\.?\s*(?=\))|\b\s*sens\.?\s*str[.\s]+/i, // '/\b\s*s\.\s*str\.?\s*\b/i',
-/\b\s*s\.\s*str[.\s]+/i, /\b\s*s\.?\s*s\.?\s+\b/i, // end-of-string ss/sl qualifiers
-/\b\s*sens\.?\s*lat\.?\s*$/i, /\b\s*s\.\s*lat\.?\s*$/i, /\b\s*s\.?\s*l\.?\s*$/i, /\b\s*sensu\s*lato\s*$/i, /\b\s*sensu\s*stricto\s*$/i, /\b\s*sens\.?\s*strict\.?\s*$/i, /\b\s*sens\.?\s*str\.?\s*$/i, /\b\s*s\.\s*str\.?\s*$/i, /\b\s*s\.?\s*s\.?\s*$/i, /\b\s*agg\.?\s*$/i, /\b\s*aggregate\s*$/i, /\b\s*sp\.?\s*cultivar\s*$/i, /\b\s*sp\.?\s*cv\.?\s*$/i, /\b\s*cultivars?\s*$/i, /\b\s*cv\s+$/i, /\b\s*cv$/i, /\b\s*cf\s*$/i, /\b\s*aff\s*$/i, /\b\s*s\.?n\.?\s*$/i, /\b\s*sp\.?\s*nov\.?\s*$/i, /\b\s*auct[.\s]*$/i, /\b\s*ined[.\s]*$/i, /\b\s*nom\.?\snud[.\s]*$/i, /\b\s*p\.p[.\s?]*$/i, /\b\s*spp?\.?[\s?]*$/i, /\b\s*species\s*$/i, /\b\s*spp?\.?\s*\(/i, // catch e.g. Ulmus sp. (excluding Ulmus glabra)
-/\b\s*species\s*\(/i]);
+                    if (a.vernacular !== b.vernacular) {
+                        return a.vernacular.length < b.vernacular.length ? -1 : 1;
+                    }
+                }
+                return a.uname < b.uname ? -1 : 1;
+            });
 
-_defineProperty(TaxonSearch, "taxonQualifierReplacement", [' ', // (f x m or m x f) is the default so an explicit qualifier isn't used
-' ', // (m x f or f x m) is the default so an explicit qualifier isn't used
-' (f x m)', ' (m x f)', ' (f x m)', ' (m x f)', // stand-alone male/female qualifier (e.g. applied to Petasites hybridus)
-// removed single quotes
-' male', ' female', // mid-string ss/sl qualifiers
-' s.l. ', ' s.l. ', ' s.l. ', ' s.l. ', ' s.s. ', ' s.s. ', ' s.s. ', ' s.s. ', ' s.s. ', // end-of-string ss/sl qualifiers
-' s.l.', ' s.l.', ' s.l.', ' s.l.', ' s.s.', ' s.s.', ' s.s.', ' s.s.', ' s.s.', ' agg.', ' agg.', ' cv. ', ' cv. ', ' cv. ', ' cv. ', ' cv. ', ' cf.', ' aff.', ' sp.nov.', ' sp.nov.', ' auct.', ' ined.', ' nom. nud.', ' pro parte', '', '', ' (', ' (']);
+            // truncate results
+            if (results.length > TaxonSearch.MAXIMUM_RESULTS) {
+                results.length = TaxonSearch.MAXIMUM_RESULTS;
+            }
+        }
 
-_defineProperty(TaxonSearch, "cleanRegex", /[.*+?^${}()|[\]\\]/g);
+        return results;
+    }
+}
 
 /**
  * @external BsbiDb
@@ -18915,277 +11315,219 @@ _defineProperty(TaxonSearch, "cleanRegex", /[.*+?^${}()|[\]\\]/g);
 /**
  *
  */
+class TaxaLoadedHook {
+    static callbackStack = [];
 
-var TaxaLoadedHook = /*#__PURE__*/function () {
-  function TaxaLoadedHook() {
-    _classCallCheck(this, TaxaLoadedHook);
-  }
-
-  _createClass(TaxaLoadedHook, null, [{
-    key: "taxaLoadedEntryPoint",
-    value: function taxaLoadedEntryPoint() {
-      Taxon.rawTaxa = BsbiDb.TaxonNames;
-
-      while (TaxaLoadedHook.callbackStack.length) {
-        var callback = TaxaLoadedHook.callbackStack.shift();
-
-        try {
-          callback();
-        } catch (e) {
-          console.log({
-            'Exception after taxon load': e
-          });
+    static taxaLoadedEntryPoint() {
+        Taxon.rawTaxa = BsbiDb.TaxonNames;
+        while (TaxaLoadedHook.callbackStack.length) {
+            const callback = TaxaLoadedHook.callbackStack.shift();
+            try {
+                callback();
+            } catch (e) {
+                console.log({'Exception after taxon load' : e});
+            }
         }
-      }
     }
+
     /**
      *
      * @returns {Promise<any>|Promise<void>}
      */
+    static onceTaxaLoaded() {
+        if (BsbiDb.hasOwnProperty('TaxonNames')) {
+            return Promise.resolve();
+        } else {
+            if (!BsbiDb.taxonNamesLoadedEntryPoint) {
+                BsbiDb.taxonNamesLoadedEntryPoint = TaxaLoadedHook.taxaLoadedEntryPoint;
+            }
 
-  }, {
-    key: "onceTaxaLoaded",
-    value: function onceTaxaLoaded() {
-      if (BsbiDb.hasOwnProperty('TaxonNames')) {
-        return Promise.resolve();
-      } else {
-        if (!BsbiDb.taxonNamesLoadedEntryPoint) {
-          BsbiDb.taxonNamesLoadedEntryPoint = TaxaLoadedHook.taxaLoadedEntryPoint;
+            return new Promise(
+                (resolve) => {
+                    TaxaLoadedHook.callbackStack.push(resolve);
+                }
+            );
         }
-
-        return new Promise(function (resolve) {
-          TaxaLoadedHook.callbackStack.push(resolve);
-        });
-      }
     }
-  }]);
+}
 
-  return TaxaLoadedHook;
-}();
+class DateField extends FormField {
 
-_defineProperty(TaxaLoadedHook, "callbackStack", []);
+    /**
+     * @type {string}
+     */
+    #inputId;
 
-var $$2 = _export;
-var call = functionCall;
+    /**
+     * @type {string}
+     */
+    #containerId;
 
-// `URL.prototype.toJSON` method
-// https://url.spec.whatwg.org/#dom-url-tojson
-$$2({ target: 'URL', proto: true, enumerable: true }, {
-  toJSON: function toJSON() {
-    return call(URL.prototype.toString, this);
-  }
-});
-
-function _createSuper$9(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$9(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$9() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateFieldInitSpec$6(obj, privateMap, value) { _checkPrivateRedeclaration$8(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$8(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-var _inputId$2 = /*#__PURE__*/new WeakMap();
-
-var _containerId$6 = /*#__PURE__*/new WeakMap();
-
-var DateField = /*#__PURE__*/function (_FormField) {
-  _inherits(DateField, _FormField);
-
-  var _super = _createSuper$9(DateField);
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   * minimum date (inclusive) or null if no constraint
-   */
-
-  /**
-   * minimum date (inclusive) or null if no constraint
-   */
-
-  /**
-   *
-   * @param {{
-   * [label] : string,
-   * [helpText]: string,
-   * [options]: {},
-   * [placeholder]: string,
-   * [type]: string,
-   * [autocomplete]: string,
-   * [minDate] : string,
-   * [maxDate] : string,
-   * }} [params]
-   */
-  function DateField(params) {
-    var _this;
-
-    _classCallCheck(this, DateField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _inputId$2, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$6(_assertThisInitialized(_this), _containerId$6, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_value", '');
-
-    _defineProperty(_assertThisInitialized(_this), "_inputType", 'date');
-
-    _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
-
-    _defineProperty(_assertThisInitialized(_this), "_minDate", null);
-
-    _defineProperty(_assertThisInitialized(_this), "_maxDate", null);
-
-    _this._value = new Date().toJSON().slice(0, 10); // default to current date
-
-    if (params) {
-      if (params.placeholder) {
-        _this.placeholder = params.placeholder;
-      }
-
-      if (params.autocomplete) {
-        _this._autocomplete = params.autocomplete;
-      }
-
-      if (params.minDate) {
-        _this._minDate = params.minDate;
-      }
-
-      if (params.maxDate) {
-        _this._maxDate = params.maxDate;
-      }
-    }
-
-    return _this;
-  }
-  /**
-   *
-   * @param {(string|null|undefined)} textContent
-   */
-
-
-  _createClass(DateField, [{
-    key: "value",
-    get:
     /**
      *
-     * @returns {string}
+     * @type {string}
+     * @private
      */
-    function get() {
-      return this._value ? this._value.slice(0, 10) : '';
-    },
-    set: function set(textContent) {
-      this._value = undefined === textContent || null == textContent ? DateField.todaysDate() // current date in ISO format
-      : textContent.trim();
-      this.updateView();
+    _value = '';
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _inputType = 'date';
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _autocomplete = '';
+
+    /**
+     * minimum date (inclusive) or null if no constraint
+     */
+    _minDate = null;
+
+    /**
+     * minimum date (inclusive) or null if no constraint
+     */
+    _maxDate = null;
+
+    /**
+     *
+     * @param {{
+     * [label] : string,
+     * [helpText]: string,
+     * [options]: {},
+     * [placeholder]: string,
+     * [type]: string,
+     * [autocomplete]: string,
+     * [minDate] : string,
+     * [maxDate] : string,
+     * }} [params]
+     */
+    constructor (params) {
+        super(params);
+
+        this._value = (new Date).toJSON().slice(0,10); // default to current date
+
+        if (params) {
+            if (params.placeholder) {
+                this.placeholder = params.placeholder;
+            }
+
+            if (params.autocomplete) {
+                this._autocomplete = params.autocomplete;
+            }
+
+            if (params.minDate) {
+                this._minDate = params.minDate;
+            }
+
+            if (params.maxDate) {
+                this._maxDate = params.maxDate;
+            }
+        }
     }
+
+    /**
+     *
+     * @param {(string|null|undefined)} textContent
+     */
+    set value(textContent) {
+        this._value = (undefined === textContent || null == textContent) ?
+            DateField.todaysDate() // current date in ISO format
+            :
+            textContent.trim();
+        this.updateView();
+    }
+
     /**
      * current date in ISO format
      *
      * @returns {string}
      */
-
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId$2));
-        inputEl.value = FormField.cleanRawString(this._value);
-      }
+    static todaysDate() {
+        return (new Date).toJSON().slice(0,10) // current date in ISO format
     }
+
+    /**
+     *
+     * @returns {string}
+     */
+    get value() {
+        return this._value ? this._value.slice(0,10) : '';
+    }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const inputEl = document.getElementById(this.#inputId);
+            inputEl.value = FormField.cleanRawString(this._value);
+        }
+    }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+        const container = document.createElement('div');
+        container.className = 'form-group';
+        this.#containerId = container.id = FormField.nextId;
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      var container = document.createElement('div');
-      container.className = 'form-group';
+        this.#inputId = FormField.nextId;
 
-      _classPrivateFieldSet(this, _containerId$6, container.id = FormField.nextId);
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this.#inputId;
+        labelEl.textContent = this.label;
 
-      _classPrivateFieldSet(this, _inputId$2, FormField.nextId);
+        const inputField = container.appendChild(document.createElement('input'));
+        inputField.className = "form-control";
+        inputField.id = this.#inputId;
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$2);
-      labelEl.textContent = this.label;
-      var inputField = container.appendChild(document.createElement('input'));
-      inputField.className = "form-control";
-      inputField.id = _classPrivateFieldGet(this, _inputId$2);
-
-      try {
-        // this is needed for compatibility with IE11
-        inputField.type = this._inputType;
-      } catch (e) {
-        console.log("Failed to set type '".concat(this._inputType, "'"));
-      }
-
-      if (this.placeholder) {
-        inputField.placeholder = this.placeholder;
-      }
-
-      if (this._autocomplete) {
-        inputField.autocomplete = this._autocomplete;
-
-        if ('off' === this._autocomplete) {
-          // browsers tend to ignore autocomplete off, so also assign a random 'name' value
-          inputField.name = uuid();
+        try { // this is needed for compatibility with IE11
+            inputField.type = this._inputType;
+        } catch (e) {
+            console.log(`Failed to set type '${this._inputType}'`);
         }
-      }
 
-      if (this.completion === FormField.COMPLETION_COMPULSORY) {
-        inputField.required = true;
-      }
+        if (this.placeholder) {
+            inputField.placeholder = this.placeholder;
+        }
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        if (this._autocomplete) {
+            inputField.autocomplete = this._autocomplete;
 
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
+            if ('off' === this._autocomplete) {
+                // browsers tend to ignore autocomplete off, so also assign a random 'name' value
+                inputField.name = uuid();
+            }
+        }
 
-      inputField.addEventListener('change', this.inputChangeHandler.bind(this));
-      this._fieldEl = container;
+        if (this.completion === FormField.COMPLETION_COMPULSORY) {
+            inputField.required = true;
+        }
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
+
+        inputField.addEventListener('change', this.inputChangeHandler.bind(this));
+
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {string} key
@@ -19205,33 +11547,61 @@ var DateField = /*#__PURE__*/function (_FormField) {
      * @param attributes attributes of the model object
      * @return {(boolean|null)} returns null if validity was not assessed
      */
+    static isValid(key, property, attributes) {
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is missing
+            if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
+                return false;
+            } else {
+                // check if range constraints are met
+                let dateValue = attributes[key];
 
-  }, {
-    key: "markValidity",
-    value:
+                if (property.attributes.minDate && dateValue < property.attributes.minDate) {
+                    return false;
+                }
+
+                if (property.attributes.maxDate && dateValue > property.attributes.maxDate) {
+                    return false;
+                }
+
+                let today = (new Date).toJSON().slice(0,10);
+                if (dateValue > today) {
+                    return false;
+                }
+            }
+        }
+        // field is present or optional
+        // report as valid unless content is corrupt
+
+        return null; // field not assessed
+    }
+
     /**
      *
      * @param {(boolean|null)} isValid
      */
-    function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _inputId$2));
+    markValidity(isValid) {
+        const el = document.getElementById(this.#inputId);
 
-      if (null === isValid) {
-        el.classList.remove('is-invalid', 'is-valid');
-      } else {
-        el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
-        el.classList.add(isValid ? 'is-valid' : 'is-invalid');
-      }
+        if (null === isValid) {
+            el.classList.remove('is-invalid', 'is-valid');
+        } else {
+            el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
+            el.classList.add(isValid ? 'is-valid' : 'is-invalid');
+        }
     }
-  }, {
-    key: "inputChangeHandler",
-    value: function inputChangeHandler(event) {
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      console.log('got date field change event');
-      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId$2)).value);
-      this.fireEvent(FormField.EVENT_CHANGE);
+    inputChangeHandler (event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+
+        console.log('got date field change event');
+
+        this.value = FormField.cleanRawString(document.getElementById(this.#inputId).value);
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -19240,439 +11610,309 @@ var DateField = /*#__PURE__*/function (_FormField) {
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
-
-  }], [{
-    key: "todaysDate",
-    value: function todaysDate() {
-      return new Date().toJSON().slice(0, 10); // current date in ISO format
+    static summariseImpl(key, property, attributes) {
+        return (attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined) ?
+            escapeHTML(attributes[key].trim())
+            : '';
     }
-  }, {
-    key: "isValid",
-    value: function isValid(key, property, attributes) {
-      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
-        // test whether required field is missing
-        if (!attributes.hasOwnProperty(key) || property.field.isEmpty(attributes[key])) {
-          return false;
-        } else {
-          // check if range constraints are met
-          var dateValue = attributes[key];
+}
 
-          if (property.attributes.minDate && dateValue < property.attributes.minDate) {
-            return false;
-          }
+const IMAGE_MODAL_ID = 'imagemodal';
+const IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
+const DELETE_IMAGE_MODAL_ID = 'deleteimagemodal';
+const EVENT_DELETE_IMAGE = 'deleteimage';
 
-          if (property.attributes.maxDate && dateValue > property.attributes.maxDate) {
-            return false;
-          }
+class ImageField extends FormField {
 
-          var today = new Date().toJSON().slice(0, 10);
+    /**
+     * @type {string}
+     */
+    #inputId;
 
-          if (dateValue > today) {
-            return false;
-          }
-        }
-      } // field is present or optional
-      // report as valid unless content is corrupt
+    /**
+     * @type {string}
+     */
+    #containerId;
 
+    /**
+     * @type {string}
+     */
+    #statusBlockId;
 
-      return null; // field not assessed
-    }
-  }, {
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
-    }
-  }]);
+    /**
+     * @type {OccurrenceForm}
+     */
+    parentForm;
 
-  return DateField;
-}(FormField);
-
-var collection = collection$3;
-var collectionWeak = collectionWeak$2;
-
-// `WeakSet` constructor
-// https://tc39.es/ecma262/#sec-weakset-constructor
-collection('WeakSet', function (init) {
-  return function WeakSet() { return init(this, arguments.length ? arguments[0] : undefined); };
-}, collectionWeak);
-
-function _createForOfIteratorHelper$4(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$4(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray$4(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$4(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$4(o, minLen); }
-
-function _arrayLikeToArray$4(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _createSuper$8(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$8(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$8() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateMethodInitSpec$5(obj, privateSet) { _checkPrivateRedeclaration$7(obj, privateSet); privateSet.add(obj); }
-
-function _classPrivateFieldInitSpec$5(obj, privateMap, value) { _checkPrivateRedeclaration$7(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$7(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-function _classPrivateMethodGet$5(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-var IMAGE_MODAL_ID = 'imagemodal';
-var IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
-var DELETE_IMAGE_MODAL_ID = 'deleteimagemodal';
-var EVENT_DELETE_IMAGE = 'deleteimage';
-
-var _inputId$1 = /*#__PURE__*/new WeakMap();
-
-var _containerId$5 = /*#__PURE__*/new WeakMap();
-
-var _statusBlockId = /*#__PURE__*/new WeakMap();
-
-var _addFiles = /*#__PURE__*/new WeakSet();
-
-var _save = /*#__PURE__*/new WeakSet();
-
-var ImageField = /*#__PURE__*/function (_FormField) {
-  _inherits(ImageField, _FormField);
-
-  var _super = _createSuper$8(ImageField);
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {OccurrenceForm}
-   */
-
-  /**
-   *
-   * @type {{images: Array.<OccurrenceImage>}}
-   * @private
-   */
-
-  /**
-   *
-   * @type {boolean}
-   */
-
-  /**
-   *
-   * @type {string}
-   */
-
-  /**
-   *
-   * @param {{[label] : string, [helpText]: string, [placeholder]: string, [includeCamera]: boolean}} [params]
-   */
-  function ImageField(params) {
-    var _this;
-
-    _classCallCheck(this, ImageField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateMethodInitSpec$5(_assertThisInitialized(_this), _save);
-
-    _classPrivateMethodInitSpec$5(_assertThisInitialized(_this), _addFiles);
-
-    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _inputId$1, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _containerId$5, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$5(_assertThisInitialized(_this), _statusBlockId, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "parentForm", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "_value", {
-      images: []
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "includeCamera", true);
-
-    _defineProperty(_assertThisInitialized(_this), "placeholder", '');
-
-    if (params) {
-      if (params.hasOwnProperty('includeCamera')) {
-        _this.includeCamera = params.includeCamera;
-      }
-
-      if (params.placeholder) {
-        _this.placeholder = params.placeholder;
-      }
-    }
-
-    return _this;
-  }
-  /**
-   * sets content as Images, not as raw files
-   *
-   * @param {(Array.<string>|null)} imageIds
-   */
-
-
-  _createClass(ImageField, [{
-    key: "value",
-    get:
     /**
      *
-     * @returns {Array.<string>}
+     * @type {{images: Array.<OccurrenceImage>}}
+     * @private
      */
-    function get() {
-      var ids = [];
+    _value = {
+        images : []
+    };
 
-      if (this._value && this._value.images) {
-        var _iterator = _createForOfIteratorHelper$4(this._value.images),
-            _step;
+    /**
+     *
+     * @type {boolean}
+     */
+    includeCamera = true;
 
-        try {
-          for (_iterator.s(); !(_step = _iterator.n()).done;) {
-            var image = _step.value;
-            ids[ids.length] = image.id;
-          }
-        } catch (err) {
-          _iterator.e(err);
-        } finally {
-          _iterator.f();
-        }
-      }
+    /**
+     *
+     * @type {string}
+     */
+    placeholder = '';
 
-      return ids;
-    },
-    set: function set(imageIds) {
-      this._value = {
-        images: []
-      };
+    static LICENSE_MODAL = 'imagelicensemodal';
 
-      if (imageIds) {
-        var _iterator2 = _createForOfIteratorHelper$4(imageIds),
-            _step2;
+    static ORIGIN_CAMERA = 'cameraimage';
+    static ORIGIN_FILE = 'fileimage';
 
-        try {
-          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-            var id = _step2.value;
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [placeholder]: string, [includeCamera]: boolean}} [params]
+     */
+    constructor (params) {
+        super(params);
 
-            if (OccurrenceImage.imageCache.has(id)) {
-              this._value.images.push(OccurrenceImage.imageCache.get(id));
-            } else {
-              console.log("Creating placeholder image object '".concat(id, "'"));
-
-              this._value.images.push(OccurrenceImage.placeholder(id));
+        if (params) {
+            if (params.hasOwnProperty('includeCamera')) {
+                this.includeCamera = params.includeCamera;
             }
-          }
-        } catch (err) {
-          _iterator2.e(err);
-        } finally {
-          _iterator2.f();
-        }
-      }
 
-      this.updateView();
+            if (params.placeholder) {
+                this.placeholder = params.placeholder;
+            }
+        }
     }
+
+    /**
+     * sets content as Images, not as raw files
+     *
+     * @param {(Array.<string>|null)} imageIds
+     */
+    set value(imageIds) {
+        this._value = {
+            images : []
+        };
+
+        if (imageIds) {
+            for (let id of imageIds) {
+                if (OccurrenceImage.imageCache.has(id)) {
+                    this._value.images.push(OccurrenceImage.imageCache.get(id));
+                } else {
+                    console.log(`Creating placeholder image object '${id}'`);
+                    this._value.images.push(OccurrenceImage.placeholder(id));
+                }
+            }
+        }
+
+        this.updateView();
+    }
+
     /**
      *
      * @param {Array.<string>} value (list of image ids or null)
      * @returns {boolean}
      */
+    static isEmpty(value) {
+        return !value || value.length === 0;
+    }
 
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var idList = [];
-
-        var _iterator3 = _createForOfIteratorHelper$4(this._value.images),
-            _step3;
-
-        try {
-          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-            var image = _step3.value;
-            idList.push("<picture style=\"cursor: pointer;\" data-imageid=\"".concat(image.id, "\"><source srcset=\"/image.php?imageid=").concat(image.id, "&amp;height=128&amp;format=webp\" type=\"image/webp\"><img data-imageid=\"").concat(image.id, "\" src=\"/image.php?imageid=").concat(image.id, "&amp;height=128&amp;format=jpeg\" height=\"128\" alt=\"photo\"></picture>"));
-          }
-        } catch (err) {
-          _iterator3.e(err);
-        } finally {
-          _iterator3.f();
+    /**
+     *
+     * @returns {Array.<string>}
+     */
+    get value() {
+        let ids = [];
+        if (this._value && this._value.images) {
+            for (let image of this._value.images) {
+                ids[ids.length] = image.id;
+            }
         }
 
-        var statusEl = document.getElementById(_classPrivateFieldGet(this, _statusBlockId));
-        statusEl.innerHTML = idList.join("\n");
-      }
+        return ids;
     }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const idList = [];
+            for (let image of this._value.images) {
+                idList.push(`<picture style="cursor: pointer;" data-imageid="${image.id}"><source srcset="/image.php?imageid=${image.id}&amp;height=128&amp;format=webp" type="image/webp"><img data-imageid="${image.id}" src="/image.php?imageid=${image.id}&amp;height=128&amp;format=jpeg" height="128" alt="photo"></picture>`);
+            }
+
+            const statusEl = document.getElementById(this.#statusBlockId);
+            statusEl.innerHTML = idList.join("\n");
+        }
+    }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+        // <div class="custom-file">
+        //     <input type="file" class="custom-file-input" id="customFile">
+        //     <label class="custom-file-label" for="customFile">Choose file</label>
+        // </div>
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      // <div class="custom-file">
-      //     <input type="file" class="custom-file-input" id="customFile">
-      //     <label class="custom-file-label" for="customFile">Choose file</label>
-      // </div>
-      var container = document.createElement('div');
-      container.className = 'form-group';
+        const container = document.createElement('div');
+        container.className = 'form-group';
 
-      _classPrivateFieldSet(this, _containerId$5, container.id = FormField.nextId);
+        this.#containerId = container.id = FormField.nextId;
+        this.#inputId = FormField.nextId;
 
-      _classPrivateFieldSet(this, _inputId$1, FormField.nextId);
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this.#inputId;
+        labelEl.textContent = this.label;
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId$1);
-      labelEl.textContent = this.label;
-      var inputGroupEl = container.appendChild(document.createElement('div'));
-      inputGroupEl.className = 'input-group';
-      var filePickerWrapper = document.createElement('div');
-      filePickerWrapper.className = 'custom-file';
-      inputGroupEl.appendChild(filePickerWrapper);
-      var filePickerField = filePickerWrapper.appendChild(document.createElement('input'));
-      filePickerField.type = 'file';
-      filePickerField.className = "custom-file-input";
-      filePickerField.id = _classPrivateFieldGet(this, _inputId$1);
-      filePickerField.accept = ".jpeg, .jpg, image/png, image/jpeg";
-      filePickerField.multiple = true;
+        const inputGroupEl = container.appendChild(document.createElement('div'));
+        inputGroupEl.className = 'input-group';
 
-      if (this.placeholder) {
-        var pickerLabelEl = filePickerWrapper.appendChild(document.createElement('label'));
-        pickerLabelEl.className = 'custom-file-label';
-        pickerLabelEl.htmlFor = _classPrivateFieldGet(this, _inputId$1);
-        pickerLabelEl.textContent = this.placeholder;
-      }
+        const filePickerWrapper = document.createElement('div');
+        filePickerWrapper.className = 'custom-file';
+        inputGroupEl.appendChild(filePickerWrapper);
 
-      if (this.includeCamera && GPSRequest.getDeviceType() !== GPSRequest.DEVICE_TYPE_IMMOBILE) {
-        var cameraButtonContainer = document.createElement('div');
-        cameraButtonContainer.className = 'input-group-append';
-        var cameraSpan = cameraButtonContainer.appendChild(document.createElement('span'));
-        cameraSpan.className = 'input-group-text';
-        var cameraLabel = cameraSpan.appendChild(document.createElement('label'));
-        cameraLabel.className = 'pl-0 pr-0 ml-0 mr-0 mt-0 mb-0 pt-0 pb-0 material-icons';
-        var cameraIcon = cameraLabel.appendChild(document.createElement('i'));
-        cameraIcon.className = 'material-icons pl-0 pr-0 ml-0 mr-0 mt-0 mb-0 pt-0 pb-0';
-        cameraIcon.textContent = 'add_a_photo';
-        var cameraInput = cameraLabel.appendChild(document.createElement('input'));
-        cameraInput.type = 'file';
-        cameraInput.capture = 'environment';
-        cameraInput.accept = 'image/*';
-        cameraInput.style.display = 'none';
-        cameraInput.id = FormField.nextId;
-        inputGroupEl.appendChild(cameraButtonContainer);
-        cameraInput.addEventListener('change', this.inputChangeHandler.bind(this, {
-          inputId: cameraInput.id,
-          origin: ImageField.ORIGIN_CAMERA
-        }));
-      } // styling save buttons: https://www.abeautifulsite.net/whipping-file-inputs-into-shape-with-bootstrap-3
-      // (partially relevant)
-      // <label class="img-picker icon icon-camera">
-      // <input type="file" accept="image/*" capture="environment"/>
-      // </label>
+        const filePickerField = filePickerWrapper.appendChild(document.createElement('input'));
+        filePickerField.type = 'file';
+        filePickerField.className = "custom-file-input";
+        filePickerField.id = this.#inputId;
+        filePickerField.accept = ".jpeg, .jpg, image/png, image/jpeg";
+        filePickerField.multiple = true;
 
+        if (this.placeholder) {
+            const pickerLabelEl = filePickerWrapper.appendChild(document.createElement('label'));
+            pickerLabelEl.className = 'custom-file-label';
+            pickerLabelEl.htmlFor = this.#inputId;
+            pickerLabelEl.textContent = this.placeholder;
+        }
 
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
+        if (this.includeCamera && (GPSRequest.getDeviceType() !== GPSRequest.DEVICE_TYPE_IMMOBILE)) {
+            const cameraButtonContainer = document.createElement('div');
+            cameraButtonContainer.className = 'input-group-append';
 
-      var statusBlockEl = container.appendChild(document.createElement('p'));
+            const cameraSpan = cameraButtonContainer.appendChild(document.createElement('span'));
+            cameraSpan.className = 'input-group-text';
 
-      _classPrivateFieldSet(this, _statusBlockId, statusBlockEl.id = FormField.nextId); // register a click handler for images (to open a modal)
+            const cameraLabel = cameraSpan.appendChild(document.createElement('label'));
+            cameraLabel.className = 'pl-0 pr-0 ml-0 mr-0 mt-0 mb-0 pt-0 pb-0 material-icons';
 
+            const cameraIcon = cameraLabel.appendChild(document.createElement('i'));
+            cameraIcon.className = 'material-icons pl-0 pr-0 ml-0 mr-0 mt-0 mb-0 pt-0 pb-0';
+            cameraIcon.textContent = 'add_a_photo';
 
-      statusBlockEl.addEventListener('click', this.imageClickHandler.bind(this));
+            const cameraInput = cameraLabel.appendChild(document.createElement('input'));
+            cameraInput.type = 'file';
+            cameraInput.capture = 'environment';
+            cameraInput.accept = 'image/*';
+            cameraInput.style.display = 'none';
+            cameraInput.id = FormField.nextId;
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+            inputGroupEl.appendChild(cameraButtonContainer);
+            cameraInput.addEventListener('change', this.inputChangeHandler.bind(this, {inputId : cameraInput.id, origin : ImageField.ORIGIN_CAMERA}));
+        }
 
-      filePickerField.addEventListener('change', this.inputChangeHandler.bind(this, {
-        inputId: filePickerField.id,
-        origin: ImageField.ORIGIN_FILE
-      }));
-      this._fieldEl = container;
-      this.parentForm.addListener(EVENT_DELETE_IMAGE, this.deleteImageHandler.bind(this));
+        // styling save buttons: https://www.abeautifulsite.net/whipping-file-inputs-into-shape-with-bootstrap-3
+        // (partially relevant)
+
+        // <label class="img-picker icon icon-camera">
+        // <input type="file" accept="image/*" capture="environment"/>
+        // </label>
+
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
+
+        const statusBlockEl = container.appendChild(document.createElement('p'));
+        this.#statusBlockId = statusBlockEl.id = FormField.nextId;
+
+        // register a click handler for images (to open a modal)
+        statusBlockEl.addEventListener('click', this.imageClickHandler.bind(this));
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        filePickerField.addEventListener('change', this.inputChangeHandler.bind(this, {inputId : filePickerField.id, origin : ImageField.ORIGIN_FILE}));
+
+        this._fieldEl = container;
+
+        this.parentForm.addListener(EVENT_DELETE_IMAGE, this.deleteImageHandler.bind(this));
     }
+
     /**
      * called after user has clicked delete button on an image
      *
      * @param {{imageId : string}} params
      */
+    deleteImageHandler(params) {
+        console.log(`delete image ${params.imageId}`);
 
-  }, {
-    key: "deleteImageHandler",
-    value: function deleteImageHandler(params) {
-      console.log("delete image ".concat(params.imageId));
-      var image;
+        let image;
 
-      for (var key in this._value.images) {
-        if (this._value.images.hasOwnProperty(key)) {
-          if (this._value.images[key].id === params.imageId) {
-            image = this._value.images.splice(key, 1)[0];
-            break;
-          }
+        for (let key in this._value.images) {
+            if (this._value.images.hasOwnProperty(key)) {
+                if (this._value.images[key].id === params.imageId) {
+                    image = this._value.images.splice(key, 1)[0];
+                    break;
+                }
+            }
         }
-      }
 
-      if (!image) {
-        console.log("Failed to find image id ".concat(params.imageId));
-      } else {
-        // re-save image to flag as deleted
-        image.deleted = true;
+        if (!image) {
+            console.log(`Failed to find image id ${params.imageId}`);
+        } else {
+            // re-save image to flag as deleted
+            image.deleted = true;
+            this.#save([image]);
 
-        _classPrivateMethodGet$5(this, _save, _save2).call(this, [image]);
-
-        this.updateView();
-        this.fireEvent(FormField.EVENT_CHANGE);
-      }
+            this.updateView();
+            this.fireEvent(FormField.EVENT_CHANGE);
+        }
     }
+
     /**
      *
      * @param {MouseEvent} event
      */
+    imageClickHandler (event) {
+        if (doubleClickIntercepted(event)) {
+            return;
+        }
 
-  }, {
-    key: "imageClickHandler",
-    value: function imageClickHandler(event) {
-      if (doubleClickIntercepted(event)) {
-        return;
-      }
+        let targetEl = event.target.closest('picture');
 
-      var targetEl = event.target.closest('picture');
+        if (!targetEl) {
+            targetEl = event.target.closest('img');
+        }
 
-      if (!targetEl) {
-        targetEl = event.target.closest('img');
-      } // console.log({'clicked image' : targetEl});
+        // console.log({'clicked image' : targetEl});
 
+        const imageId = targetEl.getAttribute('data-imageid');
 
-      var imageId = targetEl.getAttribute('data-imageid');
+        if (imageId) {
+            const imageModal = document.getElementById(IMAGE_MODAL_ID);
+            const pictureEl = imageModal.getElementsByTagName('picture')[0];
+            pictureEl.innerHTML = `<source srcset="/image.php?imageid=${imageId}&amp;width=${window.innerWidth}&amp;format=webp" type="image/webp">
+                <img src="/image.php?imageid=${imageId}&amp;width=${window.innerWidth}&amp;format=jpeg" width="auto" style="max-height: 48vh; max-width: 100%;" alt="photo">`;
 
-      if (imageId) {
-        var imageModal = document.getElementById(IMAGE_MODAL_ID);
-        var pictureEl = imageModal.getElementsByTagName('picture')[0];
-        pictureEl.innerHTML = "<source srcset=\"/image.php?imageid=".concat(imageId, "&amp;width=").concat(window.innerWidth, "&amp;format=webp\" type=\"image/webp\">\n                <img src=\"/image.php?imageid=").concat(imageId, "&amp;width=").concat(window.innerWidth, "&amp;format=jpeg\" width=\"auto\" style=\"max-height: 48vh; max-width: 100%;\" alt=\"photo\">");
-        var deleteButton = document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID);
-        deleteButton.setAttribute('data-imageid', imageId); //$(`#${IMAGE_MODAL_ID}`).modal({});
-        //Modal.getOrCreateInstance(document.getElementById(IMAGE_MODAL_ID), {}).show();
+            const deleteButton = document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID);
+            deleteButton.setAttribute('data-imageid', imageId);
 
-        ImageField.imageModal.show();
-      }
+            //$(`#${IMAGE_MODAL_ID}`).modal({});
+            //Modal.getOrCreateInstance(document.getElementById(IMAGE_MODAL_ID), {}).show();
+            ImageField.imageModal.show();
+        }
     }
+
     /**
      * called with an additional bound element id parameter
      * (this allows the handler to easily distinguish between the two file pickers)
@@ -19680,47 +11920,86 @@ var ImageField = /*#__PURE__*/function (_FormField) {
      * @param {{inputId : string, origin : string}} params
      * @param {Event} event
      */
+    inputChangeHandler (params, event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-  }, {
-    key: "inputChangeHandler",
-    value: function inputChangeHandler(params, event) {
-      var _this2 = this;
+        console.log({'got image field input change event' : params});
 
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+        let imageEl = document.getElementById(params.inputId);
 
-      console.log({
-        'got image field input change event': params
-      });
-      var imageEl = document.getElementById(params.inputId);
+        if (imageEl.files.length) {
+            this.#addFiles(imageEl.files)
+                .then(() => {
+                    this.fireEvent(FormField.EVENT_CHANGE);
+                });
 
-      if (imageEl.files.length) {
-        _classPrivateMethodGet$5(this, _addFiles, _addFiles2).call(this, imageEl.files).then(function () {
-          _this2.fireEvent(FormField.EVENT_CHANGE);
-        });
-
-        if (params.origin === ImageField.ORIGIN_CAMERA) {
-          // if origin of image was camera button click then it's useful to fire event
-          // as this might be a good time to take a GPS fix
-          this.parentForm.fireEvent(Form.EVENT_CAMERA);
+            if (params.origin === ImageField.ORIGIN_CAMERA) {
+                // if origin of image was camera button click then it's useful to fire event
+                // as this might be a good time to take a GPS fix
+                this.parentForm.fireEvent(Form.EVENT_CAMERA);
+            }
+        } else {
+            this.fireEvent(FormField.EVENT_CHANGE);
         }
-      } else {
-        this.fireEvent(FormField.EVENT_CHANGE);
-      }
     }
+
     /**
      *
      * @param {FileList} fileList
      * @return {Promise<void>}
      */
+    #addFiles (fileList) {
+        // cannot save until parent occurrence has been saved
+        // so pre-trigger a save event
+        this.parentForm.pingOccurrence();
 
-  }], [{
-    key: "isEmpty",
-    value: function isEmpty(value) {
-      return !value || value.length === 0;
+        const images = [];
+
+        for (let file of fileList) {
+            images.push(OccurrenceImage.fromFile(file));
+        }
+
+        return this.#save(images);
     }
-  }, {
-    key: "registerImageModalElement",
-    value:
+
+    /**
+     *
+     * @param {Array.<OccurrenceImage>} images
+     * @returns {Promise.<void>|Promise.<T>}
+     */
+    #save (images) {
+        if (images.length) {
+            const image = images.shift();
+            return image.save(this.parentForm.surveyId, this.parentForm.occurrenceId, this.parentForm.projectId)
+                .then((jsonImageDescriptor) => {
+
+                    if (!image.deleted) {
+                        console.log(`Added image '${image.id}'`);
+                        console.log({jsonDescription: jsonImageDescriptor});
+                        this._value.images.push(image);
+                        this.updateView(); // excessive view updates, should do once when all promises have succeeded
+                        // this may break with multiple images if fileList is live and is cleared when input is cleared
+                        // during view update, need to test
+                    } else {
+                        console.log({'deleted image' : image.id});
+                    }
+                }, (reason) => {
+                    console.log(`Failed to add image ${image.id}`);
+                    console.log({"Failure reason": reason});
+                })
+                .finally(() => {
+                    return this.#save(images);
+                });
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    /**
+     * @type {Modal}
+     */
+    static imageModal;
+
     /**
      * image display modal div
      * includes a button to delete the image
@@ -19728,120 +12007,107 @@ var ImageField = /*#__PURE__*/function (_FormField) {
      * @param {HTMLDivElement} container
      * @param {MainView} mainView
      */
-    function registerImageModalElement(container, mainView) {
-      var imageModalEl = document.createElement('div');
-      imageModalEl.innerHTML = "<div class=\"modal fade\" id=\"".concat(IMAGE_MODAL_ID, "\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"").concat(IMAGE_MODAL_ID, "Title\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header d-none d-md-flex\">\n        <h5 class=\"modal-title\" id=\"").concat(IMAGE_MODAL_ID, "Title\">Photo</h5>\n        <button type=\"button\" class=\"close\" data-bs-dismiss=\"modal\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\" style=\"position: relative;\">\n        <picture>\n        </picture>\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" id=\"").concat(IMAGE_MODAL_DELETE_BUTTON_ID, "\" class=\"btn btn-outline-danger delete-occurrence-button mr-3\" data-bs-toggle=\"modal\" data-bs-target=\"#").concat(DELETE_IMAGE_MODAL_ID, "\" data-imageid=\"\"><i class=\"material-icons\">delete</i></button>\n        <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n</div>");
-      container.appendChild(imageModalEl.firstChild);
-      ImageField.imageModal = Modal.getOrCreateInstance(document.getElementById(IMAGE_MODAL_ID));
-      document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID).addEventListener('click', function (event) {
-        if (doubleClickIntercepted(event)) {
-          return;
-        }
+    static registerImageModalElement(container, mainView) {
+        const imageModalEl = document.createElement('div');
+        imageModalEl.innerHTML = `<div class="modal fade" id="${IMAGE_MODAL_ID}" tabindex="-1" role="dialog" aria-labelledby="${IMAGE_MODAL_ID}Title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header d-none d-md-flex">
+        <h5 class="modal-title" id="${IMAGE_MODAL_ID}Title">Photo</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="position: relative;">
+        <picture>
+        </picture>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>`;
 
-        var deleteButtonEl = event.target.closest('button');
+        container.appendChild(imageModalEl.firstChild);
+        ImageField.imageModal = Modal.getOrCreateInstance(document.getElementById(IMAGE_MODAL_ID));
 
-        if (deleteButtonEl && deleteButtonEl.hasAttribute('data-imageid')) {
-          var imageId = deleteButtonEl.getAttribute('data-imageid'); //console.log(`Deleting image ${occurrenceId}.`);
+        document.getElementById(IMAGE_MODAL_DELETE_BUTTON_ID).addEventListener('click', (event) => {
+            if (doubleClickIntercepted(event)) {
+                return;
+            }
 
-          mainView.getOccurrenceForm().fireEvent(EVENT_DELETE_IMAGE, {
-            imageId: imageId
-          });
-          ImageField.imageModal.hide(); //$(`#${IMAGE_MODAL_ID}`).modal('hide');
-        }
-      });
+            const deleteButtonEl = event.target.closest('button');
+
+            if (deleteButtonEl && deleteButtonEl.hasAttribute('data-imageid')) {
+                const imageId = deleteButtonEl.getAttribute('data-imageid');
+                //console.log(`Deleting image ${occurrenceId}.`);
+
+                mainView.getOccurrenceForm().fireEvent(EVENT_DELETE_IMAGE, {imageId});
+                ImageField.imageModal.hide();
+                //$(`#${IMAGE_MODAL_ID}`).modal('hide');
+            }
+        });
     }
+
     /**
      * @type {Modal}
      */
+    static licenseModal;
 
-  }, {
-    key: "registerLicenseModal",
-    value:
     /**
      *
      * @param {HTMLDivElement} container
      */
-    function registerLicenseModal(container) {
-      // 'image license' modal
-      // this pop-up is informational only
-      var modalEl = document.createElement('div');
-      modalEl.innerHTML = "<div class=\"modal fade\" id=\"".concat(ImageField.LICENSE_MODAL, "\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"").concat(ImageField.LICENSE_MODAL, "Title\" aria-hidden=\"true\">\n  <div class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h5 class=\"modal-title\" id=\"").concat(ImageField.LICENSE_MODAL, "Title\">Image licensing</h5>\n        <button type=\"button\" class=\"close\" data-bs-dismiss=\"modal\" aria-label=\"Close\">\n          <span aria-hidden=\"true\">&times;</span>\n        </button>\n      </div>\n      <div class=\"modal-body\">\n        <p>By choosing to submit images with your Garden Wildflower Hunt records you agree to license the image under the terms of the Creative Common Attribution 4.0 International license (CC BY 4.0).</p>\n        <p>The following is a summary of (and not a substitute for) the <a href=\"https://creativecommons.org/licenses/by/4.0/\" target=\"_blank\">license</a>.</p>\n        <p>Licensees are free to:</p>\n        <ul class=\"license-properties\">\n<li>\n<strong>Share</strong> \u2014 copy and redistribute the material in any medium or format\n</li>\n<li>\n<strong>Adapt</strong> \u2014 remix, transform, and build upon the material for any purpose, even commercially.\n</li>\n</ul>\n<p>Licensees are most follow these term:</p>\n<ul>\n<li>\n<p>\n<strong>Attribution</strong> \u2014 licensees must give appropriate credit, provide a link to the license, and indicate if changes were made.\n</p>\n</li>\n</ul>\n<p>Full details of the license are here: <a href=\"https://creativecommons.org/licenses/by/4.0/\" target=\"_blank\">CC BY 4.0 license</a></p>\n\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n</div>");
-      container.appendChild(modalEl.firstChild);
-      ImageField.licenseModal = Modal.getOrCreateInstance(document.getElementById(ImageField.LICENSE_MODAL));
+    static registerLicenseModal(container) {
+        // 'image license' modal
+        // this pop-up is informational only
+        const modalEl = document.createElement('div');
+        modalEl.innerHTML = `<div class="modal fade" id="${ImageField.LICENSE_MODAL}" tabindex="-1" role="dialog" aria-labelledby="${ImageField.LICENSE_MODAL}Title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="${ImageField.LICENSE_MODAL}Title">Image licensing</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>By choosing to submit images with your Garden Wildflower Hunt records you agree to license the image under the terms of the Creative Common Attribution 4.0 International license (CC BY 4.0).</p>
+        <p>The following is a summary of (and not a substitute for) the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">license</a>.</p>
+        <p>Licensees are free to:</p>
+        <ul class="license-properties">
+<li>
+<strong>Share</strong> — copy and redistribute the material in any medium or format
+</li>
+<li>
+<strong>Adapt</strong> — remix, transform, and build upon the material for any purpose, even commercially.
+</li>
+</ul>
+<p>Licensees are most follow these term:</p>
+<ul>
+<li>
+<p>
+<strong>Attribution</strong> — licensees must give appropriate credit, provide a link to the license, and indicate if changes were made.
+</p>
+</li>
+</ul>
+<p>Full details of the license are here: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 license</a></p>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+
+        container.appendChild(modalEl.firstChild);
+
+        ImageField.licenseModal = Modal.getOrCreateInstance(document.getElementById(ImageField.LICENSE_MODAL));
     }
-  }]);
-
-  return ImageField;
-}(FormField);
-
-function _addFiles2(fileList) {
-  // cannot save until parent occurrence has been saved
-  // so pre-trigger a save event
-  this.parentForm.pingOccurrence();
-  var images = [];
-
-  var _iterator4 = _createForOfIteratorHelper$4(fileList),
-      _step4;
-
-  try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var file = _step4.value;
-      images.push(OccurrenceImage.fromFile(file));
-    }
-  } catch (err) {
-    _iterator4.e(err);
-  } finally {
-    _iterator4.f();
-  }
-
-  return _classPrivateMethodGet$5(this, _save, _save2).call(this, images);
 }
-
-function _save2(images) {
-  var _this3 = this;
-
-  if (images.length) {
-    var image = images.shift();
-    return image.save(this.parentForm.surveyId, this.parentForm.occurrenceId, this.parentForm.projectId).then(function (jsonImageDescriptor) {
-      if (!image.deleted) {
-        console.log("Added image '".concat(image.id, "'"));
-        console.log({
-          jsonDescription: jsonImageDescriptor
-        });
-
-        _this3._value.images.push(image);
-
-        _this3.updateView(); // excessive view updates, should do once when all promises have succeeded
-        // this may break with multiple images if fileList is live and is cleared when input is cleared
-        // during view update, need to test
-
-      } else {
-        console.log({
-          'deleted image': image.id
-        });
-      }
-    }, function (reason) {
-      console.log("Failed to add image ".concat(image.id));
-      console.log({
-        "Failure reason": reason
-      });
-    }).finally(function () {
-      return _classPrivateMethodGet$5(_this3, _save, _save2).call(_this3, images);
-    });
-  } else {
-    return Promise.resolve();
-  }
-}
-
-_defineProperty(ImageField, "LICENSE_MODAL", 'imagelicensemodal');
-
-_defineProperty(ImageField, "ORIGIN_CAMERA", 'cameraimage');
-
-_defineProperty(ImageField, "ORIGIN_FILE", 'fileimage');
-
-_defineProperty(ImageField, "imageModal", void 0);
-
-_defineProperty(ImageField, "licenseModal", void 0);
 
 var tester = /^[-!#$%&'*+\/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+\/0-9=?A-Z^_a-z`{|}~])*@[a-zA-Z0-9](-*\.?[a-zA-Z0-9])*\.[a-zA-Z](-?[a-zA-Z0-9])+$/;
 // Thanks to:
@@ -19872,221 +12138,201 @@ var validate = function(email)
 	return true;
 };
 
-function _createSuper$7(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$7(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+class InputField extends FormField {
 
-function _isNativeReflectConstruct$7() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+    /**
+     * @type {string}
+     */
+    #inputId;
 
-function _classPrivateFieldInitSpec$4(obj, privateMap, value) { _checkPrivateRedeclaration$6(obj, privateMap); privateMap.set(obj, value); }
+    /**
+     * @type {string}
+     */
+    #containerId;
 
-function _checkPrivateRedeclaration$6(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-var _inputId = /*#__PURE__*/new WeakMap();
-
-var _containerId$4 = /*#__PURE__*/new WeakMap();
-
-var InputField = /*#__PURE__*/function (_FormField) {
-  _inherits(InputField, _FormField);
-
-  var _super = _createSuper$7(InputField);
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
-   */
-  function InputField(params) {
-    var _this;
-
-    _classCallCheck(this, InputField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _inputId, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$4(_assertThisInitialized(_this), _containerId$4, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_value", '');
-
-    _defineProperty(_assertThisInitialized(_this), "_inputType", 'text');
-
-    _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
-
-    if (params) {
-      if (params.type) {
-        _this._inputType = params.type;
-      }
-
-      if (params.placeholder) {
-        _this.placeholder = params.placeholder;
-      }
-
-      if (params.autocomplete) {
-        _this._autocomplete = params.autocomplete;
-      }
-    }
-
-    return _this;
-  }
-  /**
-   *
-   * @param {string} key
-   * @param property properties of the form descriptor
-   * @param attributes attributes of the model object
-   * @return {(boolean|null)} returns null if validity was not assessed
-   */
-
-
-  _createClass(InputField, [{
-    key: "value",
-    get:
     /**
      *
-     * @returns {string}
+     * @type {string}
+     * @private
      */
-    function get() {
-      return this._value;
-    },
-    set:
+    _value = '';
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _inputType = 'text';
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _autocomplete = '';
+
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
+     */
+    constructor (params) {
+        super(params);
+
+        if (params) {
+            if (params.type) {
+                this._inputType = params.type;
+            }
+
+            if (params.placeholder) {
+                this.placeholder = params.placeholder;
+            }
+
+            if (params.autocomplete) {
+                this._autocomplete = params.autocomplete;
+            }
+        }
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @param property properties of the form descriptor
+     * @param attributes attributes of the model object
+     * @return {(boolean|null)} returns null if validity was not assessed
+     */
+    static emailValidator(key, property, attributes) {
+        //console.log(`FormField isValid for '${key}'`);
+
+        if (property.attributes.completion &&
+            (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)
+        ) {
+            // test whether required field is present and is email
+            return (attributes.hasOwnProperty(key) &&
+                (!property.field.isEmpty(attributes[key])) &&
+                validate(attributes[key])
+            );
+        }
+        // field is present or optional
+        // report as valid unless content is corrupt
+
+        return null; // field not assessed
+    }
+
     /**
      *
      * @param {(string|null|undefined)} textContent
      */
-    function set(textContent) {
-      this._value = undefined === textContent || null == textContent ? '' : textContent.trim();
-      this.updateView();
+    set value(textContent) {
+        this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+        this.updateView();
     }
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputId));
-        inputEl.value = FormField.cleanRawString(this._value);
-      }
+
+    /**
+     *
+     * @returns {string}
+     */
+    get value() {
+        return this._value;
     }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const inputEl = document.getElementById(this.#inputId);
+            inputEl.value = FormField.cleanRawString(this._value);
+        }
+    }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+        // <div class="form-group">
+        //     <label for="{baseId}gridref">Postcode or grid-reference</label>
+        //     <input type="text" class="form-control" id="{baseId}gridref" aria-describedby="grHelp" placeholder="Grid-reference or postcode">
+        //     <small id="grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
+        // </div>
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      // <div class="form-group">
-      //     <label for="{baseId}gridref">Postcode or grid-reference</label>
-      //     <input type="text" class="form-control" id="{baseId}gridref" aria-describedby="grHelp" placeholder="Grid-reference or postcode">
-      //     <small id="grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
-      // </div>
-      var container = document.createElement('div');
-      container.className = 'form-group';
+        const container = document.createElement('div');
+        container.className = 'form-group';
+        this.#containerId = container.id = FormField.nextId;
 
-      _classPrivateFieldSet(this, _containerId$4, container.id = FormField.nextId);
+        this.#inputId = FormField.nextId;
 
-      _classPrivateFieldSet(this, _inputId, FormField.nextId);
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this.#inputId;
+        labelEl.textContent = this.label;
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputId);
-      labelEl.textContent = this.label;
-      var inputField = container.appendChild(document.createElement('input'));
-      inputField.className = "form-control";
-      inputField.id = _classPrivateFieldGet(this, _inputId);
+        const inputField = container.appendChild(document.createElement('input'));
+        inputField.className = "form-control";
+        inputField.id = this.#inputId;
 
-      try {
-        // this is needed for compatibility with IE11
-        inputField.type = this._inputType;
-      } catch (e) {
-        console.log("Failed to set type '".concat(this._inputType, "'"));
-      }
-
-      if (this.placeholder) {
-        inputField.placeholder = this.placeholder;
-      }
-
-      if (this._autocomplete) {
-        inputField.autocomplete = this._autocomplete;
-
-        if ('off' === this._autocomplete) {
-          // browsers tend to ignore autocomplete off, so also assign a random 'name' value
-          inputField.name = uuid();
+        try { // this is needed for compatibility with IE11
+            inputField.type = this._inputType;
+        } catch (e) {
+            console.log(`Failed to set type '${this._inputType}'`);
         }
-      }
 
-      if (this.completion === FormField.COMPLETION_COMPULSORY) {
-        inputField.required = true;
-      }
+        if (this.placeholder) {
+            inputField.placeholder = this.placeholder;
+        }
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        if (this._autocomplete) {
+            inputField.autocomplete = this._autocomplete;
 
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
+            if ('off' === this._autocomplete) {
+                // browsers tend to ignore autocomplete off, so also assign a random 'name' value
+                inputField.name = uuid();
+            }
+        }
 
-      inputField.addEventListener('change', this.inputChangeHandler.bind(this));
-      this._fieldEl = container;
+        if (this.completion === FormField.COMPLETION_COMPULSORY) {
+            inputField.required = true;
+        }
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
+
+        inputField.addEventListener('change', this.inputChangeHandler.bind(this));
+
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {(boolean|null)} isValid
      */
+    markValidity(isValid) {
+        const el = document.getElementById(this.#inputId);
 
-  }, {
-    key: "markValidity",
-    value: function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _inputId));
-
-      if (null === isValid) {
-        el.classList.remove('is-invalid', 'is-valid');
-      } else {
-        el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
-        el.classList.add(isValid ? 'is-valid' : 'is-invalid');
-      }
+        if (null === isValid) {
+            el.classList.remove('is-invalid', 'is-valid');
+        } else {
+            el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
+            el.classList.add(isValid ? 'is-valid' : 'is-invalid');
+        }
     }
-  }, {
-    key: "inputChangeHandler",
-    value: function inputChangeHandler(event) {
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      console.log('got input field change event');
-      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _inputId)).value);
-      this.fireEvent(FormField.EVENT_CHANGE);
+    inputChangeHandler (event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+
+        console.log('got input field change event');
+
+        this.value = FormField.cleanRawString(document.getElementById(this.#inputId).value);
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -20095,29 +12341,12 @@ var InputField = /*#__PURE__*/function (_FormField) {
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
-
-  }], [{
-    key: "emailValidator",
-    value: function emailValidator(key, property, attributes) {
-      //console.log(`FormField isValid for '${key}'`);
-      if (property.attributes.completion && (property.attributes.completion === FormField.COMPLETION_COMPULSORY || property.attributes.completion === FormField.COMPLETION_DESIRED)) {
-        // test whether required field is present and is email
-        return attributes.hasOwnProperty(key) && !property.field.isEmpty(attributes[key]) && validate(attributes[key]);
-      } // field is present or optional
-      // report as valid unless content is corrupt
-
-
-      return null; // field not assessed
+    static summariseImpl(key, property, attributes) {
+        return (attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined) ?
+            escapeHTML(attributes[key].trim())
+            : '';
     }
-  }, {
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
-    }
-  }]);
-
-  return InputField;
-}(FormField);
+}
 
 /**
  *
@@ -20127,268 +12356,210 @@ var InputField = /*#__PURE__*/function (_FormField) {
  * @return string
  */
 function formattedImplode(separator, finalSeparator, list) {
-  if (list.length > 2) {
-    var last = list.pop();
-    return "".concat(list.join(separator + ' '), " ").concat(finalSeparator, " ").concat(last);
-  } else {
-    return list.join(" ".concat(finalSeparator, " "));
-  }
+    if (list.length > 2) {
+        const last = list.pop();
+        return `${list.join(separator + ' ')} ${finalSeparator} ${last}`;
+    } else {
+        return list.join(` ${finalSeparator} `);
+    }
 }
 
-function _createForOfIteratorHelper$3(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$3(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray$3(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$3(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$3(o, minLen); }
-
-function _arrayLikeToArray$3(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _createSuper$6(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$6(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$6() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateMethodInitSpec$4(obj, privateSet) { _checkPrivateRedeclaration$5(obj, privateSet); privateSet.add(obj); }
-
-function _classPrivateFieldInitSpec$3(obj, privateMap, value) { _checkPrivateRedeclaration$5(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$5(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-function _classPrivateMethodGet$4(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-
-function _classStaticPrivateFieldSpecGet$1(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess$1(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor$1(descriptor, "get"); return _classApplyDescriptorGet$1(receiver, descriptor); }
-
-function _classCheckPrivateStaticFieldDescriptor$1(descriptor, action) { if (descriptor === undefined) { throw new TypeError("attempted to " + action + " private static field before its declaration"); } }
-
-function _classCheckPrivateStaticAccess$1(receiver, classConstructor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } }
-
-function _classApplyDescriptorGet$1(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
 /**
  * used for option-based selections, allowing multiple choices, with optional 'other' field that exposes a text field
  */
+class OptionsField extends FormField {
 
-var _containerId$3 = /*#__PURE__*/new WeakMap();
+    /**
+     * @type {string}
+     */
+    #containerId;
 
-var _otherTextId$1 = /*#__PURE__*/new WeakMap();
+    /**
+     * @type {string}
+     */
+    #otherTextId;
 
-var _buildOption$1 = /*#__PURE__*/new WeakSet();
+    /**
+     *
+     * @type {Object.<string, {label: string}>}
+     */
+    options = {};
 
-var OptionsField = /*#__PURE__*/function (_FormField) {
-  _inherits(OptionsField, _FormField);
+    /**
+     * if set then include a free-text input field alongside the 'other' option
+     *
+     * @type {boolean}
+     */
+    includeOtherFreeText = true;
 
-  var _super = _createSuper$6(OptionsField);
+    /**
+     *
+     * @type {({selection : Array.<string>, other : (string|null)}|null)}
+     * @private
+     */
+    _value = {selection: [], other: null};
 
-  /**
-   * @type {string}
-   */
+    static KEY_OTHER = 'other';
 
-  /**
-   * @type {string}
-   */
+    static #TOP_LEVEL_ELEMENT = 'fieldset';
 
-  /**
-   *
-   * @type {Object.<string, {label: string}>}
-   */
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [options]: {}, [includeOtherFreeText]: boolean}} [params]
+     */
+    constructor (params) {
+        super(params);
 
-  /**
-   * if set then include a free-text input field alongside the 'other' option
-   *
-   * @type {boolean}
-   */
+        if (params) {
+            if (params.options) {
+                this.options = params.options;
+            }
 
-  /**
-   *
-   * @type {({selection : Array.<string>, other : (string|null)}|null)}
-   * @private
-   */
-
-  /**
-   *
-   * @param {{[label] : string, [helpText]: string, [options]: {}, [includeOtherFreeText]: boolean}} [params]
-   */
-  function OptionsField(params) {
-    var _this;
-
-    _classCallCheck(this, OptionsField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateMethodInitSpec$4(_assertThisInitialized(_this), _buildOption$1);
-
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _containerId$3, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$3(_assertThisInitialized(_this), _otherTextId$1, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "options", {});
-
-    _defineProperty(_assertThisInitialized(_this), "includeOtherFreeText", true);
-
-    _defineProperty(_assertThisInitialized(_this), "_value", {
-      selection: [],
-      other: null
-    });
-
-    if (params) {
-      if (params.options) {
-        _this.options = params.options;
-      }
-
-      if (params.hasOwnProperty('includeOtherFreeText')) {
-        _this.includeOtherFreeText = params.includeOtherFreeText;
-      }
+            if (params.hasOwnProperty('includeOtherFreeText')) {
+                this.includeOtherFreeText = params.includeOtherFreeText;
+            }
+        }
     }
 
-    return _this;
-  }
-  /**
-   *
-   * @param {{selection : Array.<string>, other : (string|null)}} selection
-   */
+    /**
+     *
+     * @param {{selection : Array.<string>, other : (string|null)}} selection
+     */
+    set value(selection) {
+        this._value = selection || {selection: [], other: null};
+        this.updateView();
+    }
 
-
-  _createClass(OptionsField, [{
-    key: "value",
-    get:
     /**
      *
      * @returns {{selection: Array.<string>, other: (string|null)}}
      */
-    function get() {
-      return this._value;
-    },
-    set: function set(selection) {
-      this._value = selection || {
-        selection: [],
-        other: null
-      };
-      this.updateView();
+    get value() {
+        return this._value;
     }
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var _iterator = _createForOfIteratorHelper$3(document.querySelectorAll("".concat(_classStaticPrivateFieldSpecGet$1(OptionsField, OptionsField, _TOP_LEVEL_ELEMENT$1), "#").concat(_classPrivateFieldGet(this, _containerId$3), " input[type=\"checkbox\"]"))),
-            _step;
 
-        try {
-          for (_iterator.s(); !(_step = _iterator.n()).done;) {
-            var optionEl = _step.value;
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
 
-            var selected = optionEl.checked = this._value.selection.includes(optionEl.name);
+            for (let optionEl of document.querySelectorAll(`${OptionsField.#TOP_LEVEL_ELEMENT}#${this.#containerId} input[type="checkbox"]`)) {
+               let selected =  optionEl.checked = this._value.selection.includes(optionEl.name);
 
-            if (optionEl.name === OptionsField.KEY_OTHER && _classPrivateFieldGet(this, _otherTextId$1)) {
-              var otherEl = document.getElementById(_classPrivateFieldGet(this, _otherTextId$1));
-              otherEl.style.display = selected ? 'block' : 'none';
-              otherEl.value = this._value.other === null ? '' : this._value.other.trim();
+               if (optionEl.name === OptionsField.KEY_OTHER && this.#otherTextId) {
+                   let otherEl = document.getElementById(this.#otherTextId);
+                   otherEl.style.display = selected ? 'block' : 'none';
+                   otherEl.value = this._value.other === null ? '' : this._value.other.trim();
+               }
             }
-          }
-        } catch (err) {
-          _iterator.e(err);
-        } finally {
-          _iterator.f();
         }
-      }
     }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
-
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      if (!this.options) {
-        throw new Error('Options have not been set before call to buildField()');
-      }
-
-      var container = document.createElement(_classStaticPrivateFieldSpecGet$1(OptionsField, OptionsField, _TOP_LEVEL_ELEMENT$1));
-      container.className = 'form-group';
-
-      _classPrivateFieldSet(this, _containerId$3, container.id = FormField.nextId);
-
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.style.display = 'block';
-      labelEl.textContent = this.label;
-
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
-
-      for (var key in this.options) {
-        if (this.options.hasOwnProperty(key)) {
-          _classPrivateMethodGet$4(this, _buildOption$1, _buildOption2$1).call(this, container, key, this.options[key]);
+    buildField() {
+        if (!this.options) {
+            throw new Error('Options have not been set before call to buildField()');
         }
-      }
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        const container = document.createElement(OptionsField.#TOP_LEVEL_ELEMENT);
+        container.className = 'form-group';
+        this.#containerId = container.id = FormField.nextId;
 
-      container.addEventListener('change', this.inputChangeHandler.bind(this));
-      this._fieldEl = container;
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.style.display = 'block';
+        labelEl.textContent = this.label;
+
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
+
+        for (let key in this.options) {
+            if (this.options.hasOwnProperty(key)) {
+                this.#buildOption(container, key, this.options[key]);
+            }
+        }
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        container.addEventListener('change', this.inputChangeHandler.bind(this));
+
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {HTMLElement} fieldSet
      * @param {string} key
      * @param {{label : string}} option
      */
+    #buildOption(fieldSet, key, option) {
+        // <div class="form-check">
+        //     <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
+        //     <label class="form-check-label" for="defaultCheck1">
+        //         Default checkbox
+        //     </label>
+        // </div><
 
-  }, {
-    key: "inputChangeHandler",
-    value:
+        const container = fieldSet.appendChild(document.createElement('div'));
+        container.className = 'form-check';
+
+        const optionField = container.appendChild(document.createElement('input'));
+        optionField.type = 'checkbox';
+        optionField.className = "form-check-input";
+        optionField.id = FormField.nextId;
+        optionField.name = key;
+
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = optionField.id;
+        labelEl.className = 'form-check-label';
+        labelEl.textContent = option.label;
+
+        if (OptionsField.KEY_OTHER === key && this.includeOtherFreeText) {
+            const otherTextEl = container.appendChild(document.createElement('input'));
+            otherTextEl.id = this.#otherTextId = FormField.nextId;
+            otherTextEl.className = 'form-control';
+            otherTextEl.style.display = 'none';
+        }
+    }
+
     /**
      *
      * @param {Event} event
      */
-    function inputChangeHandler(event) {
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+    inputChangeHandler (event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      var value = {
-        selection: [],
-        other: null
-      };
-      var otherSelected = false;
-      var otherEl;
+        let value = {
+            selection : [],
+            other : null
+        };
+        let otherEl;
 
-      if (_classPrivateFieldGet(this, _otherTextId$1)) {
-        otherEl = document.getElementById(_classPrivateFieldGet(this, _otherTextId$1));
-      }
-
-      var options = document.querySelectorAll("".concat(_classStaticPrivateFieldSpecGet$1(OptionsField, OptionsField, _TOP_LEVEL_ELEMENT$1), "#").concat(_classPrivateFieldGet(this, _containerId$3), " input[type=\"checkbox\"]:checked"));
-
-      var _iterator2 = _createForOfIteratorHelper$3(options),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var option = _step2.value;
-          value.selection[value.selection.length] = option.name;
-
-          if (option.name === OptionsField.KEY_OTHER && _classPrivateFieldGet(this, _otherTextId$1)) {
-            value.other = FormField.cleanRawInput(otherEl);
-            otherSelected = true;
-          }
+        if (this.#otherTextId) {
+            otherEl = document.getElementById(this.#otherTextId);
         }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
 
-      this.value = value; // the setter will trigger a refresh of the view
+        const options = document.querySelectorAll(`${OptionsField.#TOP_LEVEL_ELEMENT}#${this.#containerId} input[type="checkbox"]:checked`);
+        for (let option of options) {
+            value.selection[value.selection.length] = option.name;
 
-      this.fireEvent(FormField.EVENT_CHANGE);
+            if (option.name === OptionsField.KEY_OTHER && this.#otherTextId) {
+                value.other = FormField.cleanRawInput(otherEl);
+            }
+        }
+
+        this.value = value; // the setter will trigger a refresh of the view
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -20397,340 +12568,212 @@ var OptionsField = /*#__PURE__*/function (_FormField) {
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
+    static summariseImpl(key, property, attributes) {
+        const summaryDescriptor = property.summary;
+        const methods = [];
 
-  }], [{
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      var summaryDescriptor = property.summary;
-      var methods = [];
-
-      if (attributes[key].selection.length) {
-        var _iterator3 = _createForOfIteratorHelper$3(attributes[key].selection),
-            _step3;
-
-        try {
-          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-            var attributeValue = _step3.value;
-
-            if ('other' === attributeValue && attributes[key].other) {
-              methods[methods.length] = "".concat(property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label, " (").concat(attributes[key].other, ")");
-            } else {
-              methods[methods.length] = property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label;
+        if (attributes[key].selection.length) {
+            for (let attributeValue of attributes[key].selection) {
+                if ('other' === attributeValue && attributes[key].other) {
+                    methods[methods.length] = `${property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label} (${attributes[key].other})`;
+                } else {
+                    methods[methods.length] = property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label;
+                }
             }
-          }
-        } catch (err) {
-          _iterator3.e(err);
-        } finally {
-          _iterator3.f();
+
+            return escapeHTML(`${summaryDescriptor.summaryPrefix} ${formattedImplode(',', 'or', methods)}`);
+        } else {
+            return '';
         }
-
-        return escapeHTML("".concat(summaryDescriptor.summaryPrefix, " ").concat(formattedImplode(',', 'or', methods)));
-      } else {
-        return '';
-      }
     }
-  }]);
-
-  return OptionsField;
-}(FormField);
-
-function _buildOption2$1(fieldSet, key, option) {
-  // <div class="form-check">
-  //     <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
-  //     <label class="form-check-label" for="defaultCheck1">
-  //         Default checkbox
-  //     </label>
-  // </div><
-  var container = fieldSet.appendChild(document.createElement('div'));
-  container.className = 'form-check';
-  var optionField = container.appendChild(document.createElement('input'));
-  optionField.type = 'checkbox';
-  optionField.className = "form-check-input";
-  optionField.id = FormField.nextId;
-  optionField.name = key;
-  var labelEl = container.appendChild(document.createElement('label'));
-  labelEl.htmlFor = optionField.id;
-  labelEl.className = 'form-check-label';
-  labelEl.textContent = option.label;
-
-  if (OptionsField.KEY_OTHER === key && this.includeOtherFreeText) {
-    var otherTextEl = container.appendChild(document.createElement('input'));
-    otherTextEl.id = _classPrivateFieldSet(this, _otherTextId$1, FormField.nextId);
-    otherTextEl.className = 'form-control';
-    otherTextEl.style.display = 'none';
-  }
 }
 
-_defineProperty(OptionsField, "KEY_OTHER", 'other');
-
-var _TOP_LEVEL_ELEMENT$1 = {
-  writable: true,
-  value: 'fieldset'
-};
-
-function _createForOfIteratorHelper$2(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$2(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray$2(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$2(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$2(o, minLen); }
-
-function _arrayLikeToArray$2(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _createSuper$5(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$5(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct$5() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _classPrivateMethodInitSpec$3(obj, privateSet) { _checkPrivateRedeclaration$4(obj, privateSet); privateSet.add(obj); }
-
-function _classPrivateFieldInitSpec$2(obj, privateMap, value) { _checkPrivateRedeclaration$4(obj, privateMap); privateMap.set(obj, value); }
-
-function _checkPrivateRedeclaration$4(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-function _classPrivateMethodGet$3(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-
-function _classStaticPrivateFieldSpecGet(receiver, classConstructor, descriptor) { _classCheckPrivateStaticAccess(receiver, classConstructor); _classCheckPrivateStaticFieldDescriptor(descriptor, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
-
-function _classCheckPrivateStaticFieldDescriptor(descriptor, action) { if (descriptor === undefined) { throw new TypeError("attempted to " + action + " private static field before its declaration"); } }
-
-function _classCheckPrivateStaticAccess(receiver, classConstructor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } }
-
-function _classApplyDescriptorGet(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
 /**
  * used for select based menus, allowing multiple choices, with optional 'other' field that exposes a text field
  */
+class SelectField extends FormField {
 
-var _containerId$2 = /*#__PURE__*/new WeakMap();
+    /**
+     * @type {string}
+     */
+    #containerId;
 
-var _menuId = /*#__PURE__*/new WeakMap();
+    /**
+     * @type {string}
+     */
+    #menuId;
 
-var _otherTextId = /*#__PURE__*/new WeakMap();
+    /**
+     * @type {string}
+     */
+    #otherTextId;
 
-var _buildOption = /*#__PURE__*/new WeakSet();
+    /**
+     *
+     * @type {Object.<string, {label: string}>}
+     */
+    options = {};
 
-var SelectField = /*#__PURE__*/function (_FormField) {
-  _inherits(SelectField, _FormField);
+    placeholder = '';
 
-  var _super = _createSuper$5(SelectField);
+    /**
+     * if set then include a free-text input field alongside the 'other' option
+     *
+     * @type {boolean}
+     */
+    includeOtherFreeText = true;
 
-  /**
-   * @type {string}
-   */
+    /**
+     *
+     * @type {{selection : Array.<string>, other : (string|null)}}
+     * @private
+     */
+    _value = {selection: [], other: null};
 
-  /**
-   * @type {string}
-   */
+    // static timeoutDelay = 50;
 
-  /**
-   * @type {string}
-   */
+    //static KEY_OTHER = 'other';
 
-  /**
-   *
-   * @type {Object.<string, {label: string}>}
-   */
+    static #TOP_LEVEL_ELEMENT = 'fieldset';
 
-  /**
-   * if set then include a free-text input field alongside the 'other' option
-   *
-   * @type {boolean}
-   */
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [options]: {}, [includeOtherFreeText]: boolean}} [params]
+     */
+    constructor (params) {
+        super(params);
 
-  /**
-   *
-   * @type {{selection : Array.<string>, other : (string|null)}}
-   * @private
-   */
-  // static timeoutDelay = 50;
-  //static KEY_OTHER = 'other';
+        if (params) {
+            if (params.options) {
+                this.options = params.options;
+            }
 
-  /**
-   *
-   * @param {{[label] : string, [helpText]: string, [options]: {}, [includeOtherFreeText]: boolean}} [params]
-   */
-  function SelectField(params) {
-    var _this;
+            if (params.hasOwnProperty('includeOtherFreeText')) {
+                this.includeOtherFreeText = params.includeOtherFreeText;
+            }
 
-    _classCallCheck(this, SelectField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateMethodInitSpec$3(_assertThisInitialized(_this), _buildOption);
-
-    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _containerId$2, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _menuId, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$2(_assertThisInitialized(_this), _otherTextId, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "options", {});
-
-    _defineProperty(_assertThisInitialized(_this), "placeholder", '');
-
-    _defineProperty(_assertThisInitialized(_this), "includeOtherFreeText", true);
-
-    _defineProperty(_assertThisInitialized(_this), "_value", {
-      selection: [],
-      other: null
-    });
-
-    if (params) {
-      if (params.options) {
-        _this.options = params.options;
-      }
-
-      if (params.hasOwnProperty('includeOtherFreeText')) {
-        _this.includeOtherFreeText = params.includeOtherFreeText;
-      }
-
-      if (params.placeholder) {
-        _this.placeholder = params.placeholder;
-      }
+            if (params.placeholder) {
+                this.placeholder = params.placeholder;
+            }
+        }
     }
 
-    return _this;
-  }
-  /**
-   *
-   * @param {({selection : Array.<string>, other : (string|null)}|null)} selection
-   */
+    /**
+     *
+     * @param {({selection : Array.<string>, other : (string|null)}|null)} selection
+     */
+    set value(selection) {
+        this._value = selection || {selection: [], other: null};
+        this.updateView();
+    }
 
-
-  _createClass(SelectField, [{
-    key: "value",
-    get:
     /**
      *
      * @returns {{selection: Array.<string>, other: (string|null)}}
      */
-    function get() {
-      return this._value;
+    get value() {
+        return this._value;
     }
+
     /**
      *
      * @param value
      * @returns {boolean}
      */
-    ,
-    set: function set(selection) {
-      this._value = selection || {
-        selection: [],
-        other: null
-      };
-      this.updateView();
+    static isEmpty(value) {
+        return value.selection.length === 0 || value.selection[0] === '';
     }
-  }, {
-    key: "markValidity",
-    value:
+
     /**
      *
      * @param {(boolean|null)} isValid
      */
-    function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _menuId));
+    markValidity(isValid) {
+        const el = document.getElementById(this.#menuId);
 
-      if (null === isValid) {
-        el.classList.remove('is-invalid', 'is-valid');
-      } else {
-        el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
-        el.classList.add(isValid ? 'is-valid' : 'is-invalid');
-      }
-    }
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var _iterator = _createForOfIteratorHelper$2(document.querySelectorAll("select#".concat(_classPrivateFieldGet(this, _menuId), " option"))),
-            _step;
-
-        try {
-          for (_iterator.s(); !(_step = _iterator.n()).done;) {
-            var optionEl = _step.value;
-
-            if (optionEl.value !== '') {
-              var selected = optionEl.selected = this._value.selection.includes(optionEl.value);
-
-              if (optionEl.value === OptionsField.KEY_OTHER && _classPrivateFieldGet(this, _otherTextId)) {
-                var otherEl = document.getElementById(_classPrivateFieldGet(this, _otherTextId));
-                otherEl.style.display = selected ? 'block' : 'none';
-                otherEl.value = this._value.other === null ? '' : this._value.other.trim();
-              }
-            } else {
-              // default placeholder choice
-              optionEl.selected = this._value.selection.length === 0;
-            }
-          }
-        } catch (err) {
-          _iterator.e(err);
-        } finally {
-          _iterator.f();
+        if (null === isValid) {
+            el.classList.remove('is-invalid', 'is-valid');
+        } else {
+            el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
+            el.classList.add(isValid ? 'is-valid' : 'is-invalid');
         }
-      }
     }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            for (let optionEl of document.querySelectorAll(`select#${this.#menuId} option`)) {
+                if (optionEl.value !== '') {
+                    let selected = optionEl.selected = this._value.selection.includes(optionEl.value);
+
+                    if (optionEl.value === OptionsField.KEY_OTHER && this.#otherTextId) {
+                        let otherEl = document.getElementById(this.#otherTextId);
+                        otherEl.style.display = selected ? 'block' : 'none';
+                        otherEl.value = this._value.other === null ? '' : this._value.other.trim();
+                    }
+                } else {
+                    // default placeholder choice
+                    optionEl.selected = (this._value.selection.length === 0);
+                }
+            }
+        }
+    }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
-
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      if (!this.options) {
-        throw new Error('Options have not been set before call to buildField()');
-      }
-
-      var container = document.createElement(_classStaticPrivateFieldSpecGet(SelectField, SelectField, _TOP_LEVEL_ELEMENT));
-      container.className = 'form-group';
-
-      _classPrivateFieldSet(this, _containerId$2, container.id = FormField.nextId);
-
-      _classPrivateFieldSet(this, _menuId, FormField.nextId);
-
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _menuId); //labelEl.className = 'form-check-label';
-
-      labelEl.style.display = 'block';
-      labelEl.innerHTML = this.label;
-      var selectEl = document.createElement('select');
-      selectEl.id = _classPrivateFieldGet(this, _menuId);
-      selectEl.className = 'custom-select';
-
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
-
-      if (this.placeholder) {
-        _classPrivateMethodGet$3(this, _buildOption, _buildOption2).call(this, container, selectEl, '', {
-          label: this.placeholder
-        });
-      }
-
-      for (var key in this.options) {
-        if (this.options.hasOwnProperty(key)) {
-          _classPrivateMethodGet$3(this, _buildOption, _buildOption2).call(this, container, selectEl, key, this.options[key]);
+    buildField() {
+        if (!this.options) {
+            throw new Error('Options have not been set before call to buildField()');
         }
-      }
 
-      container.appendChild(selectEl);
+        const container = document.createElement(SelectField.#TOP_LEVEL_ELEMENT);
+        container.className = 'form-group';
+        this.#containerId = container.id = FormField.nextId;
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        this.#menuId = FormField.nextId;
 
-      container.addEventListener('change', this.inputChangeHandler.bind(this));
-      this._fieldEl = container;
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this.#menuId;
+        //labelEl.className = 'form-check-label';
+        labelEl.style.display = 'block';
+        labelEl.innerHTML = this.label;
+
+        const selectEl = document.createElement('select');
+        selectEl.id = this.#menuId;
+        selectEl.className = 'custom-select';
+
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
+
+        if (this.placeholder) {
+            this.#buildOption(container, selectEl, '', {label : this.placeholder});
+        }
+
+        for (let key in this.options) {
+            if (this.options.hasOwnProperty(key)) {
+                this.#buildOption(container, selectEl, key, this.options[key]);
+            }
+        }
+
+        container.appendChild(selectEl);
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        container.addEventListener('change', this.inputChangeHandler.bind(this));
+
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {HTMLElement} containerEl
@@ -20738,58 +12781,55 @@ var SelectField = /*#__PURE__*/function (_FormField) {
      * @param {string} key
      * @param {{label : string}} option
      */
+    #buildOption(containerEl, selectEl, key, option) {
 
-  }, {
-    key: "inputChangeHandler",
-    value:
+        const optionEl = selectEl.appendChild(document.createElement('option'));
+        //optionEl.className = ;
+        optionEl.value = key;
+        optionEl.innerText = option.label;
+
+        if (OptionsField.KEY_OTHER === key && this.includeOtherFreeText) {
+            const otherTextEl = containerEl.appendChild(document.createElement('input'));
+            otherTextEl.id = this.#otherTextId = FormField.nextId;
+            otherTextEl.className = 'form-control';
+        }
+    }
+
     /**
      *
      * @param {Event} event
      */
-    function inputChangeHandler(event) {
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
-      // console.log('got options change event');
-      // console.log(event);
+    inputChangeHandler (event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      var value = {
-        selection: [],
-        other: null
-      };
-      var otherSelected = false;
-      var otherEl;
+        // console.log('got options change event');
+        // console.log(event);
 
-      if (_classPrivateFieldGet(this, _otherTextId)) {
-        otherEl = document.getElementById(_classPrivateFieldGet(this, _otherTextId));
-      }
+        let value = {
+            selection : [],
+            other : null
+        };
+        let otherEl;
 
-      var options = document.querySelectorAll("select#".concat(_classPrivateFieldGet(this, _menuId), " option:checked"));
-
-      var _iterator2 = _createForOfIteratorHelper$2(options),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var option = _step2.value;
-
-          if (option.value !== '') {
-            value.selection[value.selection.length] = option.value;
-
-            if (option.name === OptionsField.KEY_OTHER && _classPrivateFieldGet(this, _otherTextId)) {
-              value.other = FormField.cleanRawInput(otherEl);
-              otherSelected = true;
-            }
-          }
+        if (this.#otherTextId) {
+            otherEl = document.getElementById(this.#otherTextId);
         }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
 
-      this.value = value; // the setter will trigger a refresh of the view
+        const options = document.querySelectorAll(`select#${this.#menuId} option:checked`);
+        for (let option of options) {
+            if (option.value !== '') {
+                value.selection[value.selection.length] = option.value;
 
-      this.fireEvent(FormField.EVENT_CHANGE);
+                if (option.name === OptionsField.KEY_OTHER && this.#otherTextId) {
+                    value.other = FormField.cleanRawInput(otherEl);
+                }
+            }
+        }
+
+        this.value = value; // the setter will trigger a refresh of the view
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -20798,924 +12838,719 @@ var SelectField = /*#__PURE__*/function (_FormField) {
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
+    static summariseImpl(key, property, attributes) {
+        const summaryDescriptor = property.summary;
+        const methods = [];
 
-  }], [{
-    key: "isEmpty",
-    value: function isEmpty(value) {
-      return value.selection.length === 0 || value.selection[0] === '';
-    }
-  }, {
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      var summaryDescriptor = property.summary;
-      var methods = [];
-
-      if (attributes[key].selection.length) {
-        var _iterator3 = _createForOfIteratorHelper$2(attributes[key].selection),
-            _step3;
-
-        try {
-          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-            var attributeValue = _step3.value;
-
-            if ('other' === attributeValue && attributes[key].other) {
-              methods[methods.length] = "".concat(property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label, " (").concat(attributes[key].other, ")");
-            } else {
-              methods[methods.length] = property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label;
+        if (attributes[key].selection.length) {
+            for (let attributeValue of attributes[key].selection) {
+                if ('other' === attributeValue && attributes[key].other) {
+                    methods[methods.length] = `${property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label} (${attributes[key].other})`;
+                } else {
+                    methods[methods.length] = property.attributes.options[attributeValue].summary || property.attributes.options[attributeValue].label;
+                }
             }
-          }
-        } catch (err) {
-          _iterator3.e(err);
-        } finally {
-          _iterator3.f();
+
+            return escapeHTML(`${summaryDescriptor.summaryPrefix} ${formattedImplode(',', 'or', methods)}`);
+        } else {
+            return '';
         }
-
-        return escapeHTML("".concat(summaryDescriptor.summaryPrefix, " ").concat(formattedImplode(',', 'or', methods)));
-      } else {
-        return '';
-      }
     }
-  }]);
-
-  return SelectField;
-}(FormField);
-
-function _buildOption2(containerEl, selectEl, key, option) {
-  var optionEl = selectEl.appendChild(document.createElement('option')); //optionEl.className = ;
-
-  optionEl.value = key;
-  optionEl.innerText = option.label;
-
-  if (OptionsField.KEY_OTHER === key && this.includeOtherFreeText) {
-    var otherTextEl = containerEl.appendChild(document.createElement('input'));
-    otherTextEl.id = _classPrivateFieldSet(this, _otherTextId, FormField.nextId);
-    otherTextEl.className = 'form-control';
-  }
 }
 
-var _TOP_LEVEL_ELEMENT = {
-  writable: true,
-  value: 'fieldset'
-};
+class TaxonPickerField extends FormField {
+    /**
+     * @type {TaxonSearch}
+     */
+    taxonSearch;
 
-var $$1 = _export;
-var $trimStart = stringTrim.start;
-var forcedStringTrimMethod = stringTrimForced;
+    /**
+     * @type {string}
+     */
+    #inputFieldId;
 
-var FORCED = forcedStringTrimMethod('trimStart');
+    /**
+     * @type {string}
+     */
+    #dropDownListDivId;
 
-var trimStart = FORCED ? function trimStart() {
-  return $trimStart(this);
-// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
-} : ''.trimStart;
+    /**
+     * @type {string}
+     */
+    #dropDownListUlId;
 
-// `String.prototype.{ trimStart, trimLeft }` methods
-// https://tc39.es/ecma262/#sec-string.prototype.trimstart
-// https://tc39.es/ecma262/#String.prototype.trimleft
-$$1({ target: 'String', proto: true, name: 'trimStart', forced: FORCED }, {
-  trimStart: trimStart,
-  trimLeft: trimStart
-});
+    #containerId;
 
-var $ = _export;
-var $find = arrayIteration.find;
-var addToUnscopables = addToUnscopables$3;
+    #taxonLookupTimeoutHandle = null;
 
-var FIND = 'find';
-var SKIPS_HOLES = true;
+    #changeEventTimeout = null;
 
-// Shouldn't skip holes
-if (FIND in []) Array(1)[FIND](function () { SKIPS_HOLES = false; });
+    /**
+     *
+     * @type {null|number}
+     */
+    #selectedIndex = null;
 
-// `Array.prototype.find` method
-// https://tc39.es/ecma262/#sec-array.prototype.find
-$({ target: 'Array', proto: true, forced: SKIPS_HOLES }, {
-  find: function find(callbackfn /* , that = undefined */) {
-    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _lastInputValue = '';
 
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables(FIND);
+    /**
+     * @type {Array.<{entityId: string,
+                        vernacular: string,
+                        qname: string,
+                        name: string,
+                        qualifier: string,
+                        authority: string,
+                        uname: string,
+                        vernacularMatched: boolean,
+                        exact: boolean,
+                        near: boolean,
+                        formatted: string,
+                        acceptedEntityId: string,
+                        acceptedNameString: string,
+                        acceptedQualifier: string,
+                        acceptedAuthority: string
+                        }>}
+     */
+    #searchResults = [];
 
-function _createForOfIteratorHelper$1(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+    /**
+     *
+     * @type {{taxonName: string, taxonId: string, vernacularMatch: boolean}}
+     * @private
+     */
+    _value = {
+        taxonId: '',
+        taxonName: '',
+        vernacularMatch: false
+    };
 
-function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
+    static timeoutDelay = 50;
 
-function _arrayLikeToArray$1(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+    /**
+     *
+     * @param {{label : string, [helpText]: string}} [params]
+     */
+    constructor (params) {
+        super(params);
 
-function _createSuper$4(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$4(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+        this.taxonSearch = new TaxonSearch();
+    }
 
-function _isNativeReflectConstruct$4() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+    /**
+     *
+     * @param {({taxonName: string, taxonId: string, vernacularMatch: boolean}|null)} taxonSpec
+     */
+    set value(taxonSpec) {
+        let taxon;
 
-function _classPrivateMethodInitSpec$2(obj, privateSet) { _checkPrivateRedeclaration$3(obj, privateSet); privateSet.add(obj); }
+        if (taxonSpec && taxonSpec.taxonId) {
+            // this will trigger an error if somehow an invalid id was supplied
+            taxon = Taxon.fromId(taxonSpec.taxonId);
 
-function _classPrivateFieldInitSpec$1(obj, privateMap, value) { _checkPrivateRedeclaration$3(obj, privateMap); privateMap.set(obj, value); }
+            // build the saved values from the dictionary rather than from the literal user entry (which may use different formatting)
+            this._value = {
+                taxonId: taxon.id,
+                taxonName: taxonSpec.vernacularMatch ? taxon.vernacular : taxon.nameString,
+                vernacularMatch: taxonSpec.vernacularMatch
+            };
+        } else {
+            this._value = {
+                taxonId: '',
+                taxonName: taxonSpec && taxonSpec.taxonName ? taxonSpec.taxonName : '',
+                vernacularMatch: null
+            };
+        }
 
-function _checkPrivateRedeclaration$3(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+        this.updateView();
+    }
 
-function _classPrivateMethodGet$2(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-
-var _inputFieldId = /*#__PURE__*/new WeakMap();
-
-var _dropDownListDivId = /*#__PURE__*/new WeakMap();
-
-var _dropDownListUlId = /*#__PURE__*/new WeakMap();
-
-var _containerId$1 = /*#__PURE__*/new WeakMap();
-
-var _taxonLookupTimeoutHandle = /*#__PURE__*/new WeakMap();
-
-var _changeEventTimeout = /*#__PURE__*/new WeakMap();
-
-var _selectedIndex = /*#__PURE__*/new WeakMap();
-
-var _searchResults = /*#__PURE__*/new WeakMap();
-
-var _triggerQuery = /*#__PURE__*/new WeakSet();
-
-var TaxonPickerField = /*#__PURE__*/function (_FormField) {
-  _inherits(TaxonPickerField, _FormField);
-
-  var _super = _createSuper$4(TaxonPickerField);
-
-  /**
-   * @type {TaxonSearch}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {null|number}
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   * @type {Array.<{entityId: string,
-                      vernacular: string,
-                      qname: string,
-                      name: string,
-                      qualifier: string,
-                      authority: string,
-                      uname: string,
-                      vernacularMatched: boolean,
-                      exact: boolean,
-                      near: boolean,
-                      formatted: string,
-                      acceptedEntityId: string,
-                      acceptedNameString: string,
-                      acceptedQualifier: string,
-                      acceptedAuthority: string
-                      }>}
-   */
-
-  /**
-   *
-   * @type {{taxonName: string, taxonId: string, vernacularMatch: boolean}}
-   * @private
-   */
-
-  /**
-   *
-   * @param {{label : string, [helpText]: string}} [params]
-   */
-  function TaxonPickerField(params) {
-    var _this;
-
-    _classCallCheck(this, TaxonPickerField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateMethodInitSpec$2(_assertThisInitialized(_this), _triggerQuery);
-
-    _defineProperty(_assertThisInitialized(_this), "taxonSearch", void 0);
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _inputFieldId, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _dropDownListDivId, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _dropDownListUlId, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _containerId$1, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _taxonLookupTimeoutHandle, {
-      writable: true,
-      value: null
-    });
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _changeEventTimeout, {
-      writable: true,
-      value: null
-    });
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _selectedIndex, {
-      writable: true,
-      value: null
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_lastInputValue", '');
-
-    _classPrivateFieldInitSpec$1(_assertThisInitialized(_this), _searchResults, {
-      writable: true,
-      value: []
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_value", {
-      taxonId: '',
-      taxonName: '',
-      vernacularMatch: false
-    });
-
-    _this.taxonSearch = new TaxonSearch();
-    return _this;
-  }
-  /**
-   *
-   * @param {({taxonName: string, taxonId: string, vernacularMatch: boolean}|null)} taxonSpec
-   */
-
-
-  _createClass(TaxonPickerField, [{
-    key: "value",
-    get:
     /**
      *
      * @returns {{taxonName: string, taxonId: string, vernacularMatch: boolean}}
      */
-    function get() {
-      return this._value;
+    get value() {
+        return this._value;
     }
+
     /**
      *
      * @param {({taxonName: string, taxonId: string, vernacularMatch: boolean}|null)} value
      * @returns {boolean}
      */
-    ,
-    set: function set(taxonSpec) {
-      var taxon;
-
-      if (taxonSpec && taxonSpec.taxonId) {
-        // this will trigger an error if somehow an invalid id was supplied
-        taxon = Taxon.fromId(taxonSpec.taxonId); // build the saved values from the dictionary rather than from the literal user entry (which may use different formatting)
-
-        this._value = {
-          taxonId: taxon.id,
-          taxonName: taxonSpec.vernacularMatch ? taxon.vernacular : taxon.nameString,
-          vernacularMatch: taxonSpec.vernacularMatch
-        };
-      } else {
-        this._value = {
-          taxonId: '',
-          taxonName: taxonSpec && taxonSpec.taxonName ? taxonSpec.taxonName : '',
-          vernacularMatch: null
-        };
-      }
-
-      this.updateView();
+    static isEmpty(value) {
+        return !value || (value && !value.taxonName);
     }
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputFieldId));
-        inputEl.value = this._value.taxonName;
-        this._lastInputValue = this._value.taxonName; // probably not necessary
-      }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const inputEl = document.getElementById(this.#inputFieldId);
+            inputEl.value = this._value.taxonName;
+
+            this._lastInputValue = this._value.taxonName; // probably not necessary
+        }
     }
+
     /**
      *
      * @param {(boolean|null)} isValid
      */
+    markValidity(isValid) {
+        const el = document.getElementById(this.#inputFieldId);
 
-  }, {
-    key: "markValidity",
-    value: function markValidity(isValid) {
-      var el = document.getElementById(_classPrivateFieldGet(this, _inputFieldId));
-
-      if (null === isValid) {
-        el.classList.remove('is-invalid', 'is-valid');
-      } else {
-        el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
-        el.classList.add(isValid ? 'is-valid' : 'is-invalid');
-      }
+        if (null === isValid) {
+            el.classList.remove('is-invalid', 'is-valid');
+        } else {
+            el.classList.remove(isValid ? 'is-invalid' : 'is-valid');
+            el.classList.add(isValid ? 'is-valid' : 'is-invalid');
+        }
     }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+    //    <div class="form-group">
+    //     <label for="exampleFormControlInput1">Email address</label>
+    //     <div class="dropbox-wrapper">
+    //     <input type="text" class="form-control dropbox-input" id="exampleFormControlInput1" placeholder="name@example.com">
+    //     <div class="dropdown-list">
+    //     </div>
+    //   </div>
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      //    <div class="form-group">
-      //     <label for="exampleFormControlInput1">Email address</label>
-      //     <div class="dropbox-wrapper">
-      //     <input type="text" class="form-control dropbox-input" id="exampleFormControlInput1" placeholder="name@example.com">
-      //     <div class="dropdown-list">
-      //     </div>
-      //   </div>
-      var container = document.createElement('div');
-      container.className = 'form-group';
+        const container = document.createElement('div');
+        container.className = 'form-group';
+        this.#containerId = container.id = FormField.nextId;
 
-      _classPrivateFieldSet(this, _containerId$1, container.id = FormField.nextId);
+        this.#inputFieldId = FormField.nextId;
 
-      _classPrivateFieldSet(this, _inputFieldId, FormField.nextId);
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this.#inputFieldId;
+        labelEl.textContent = this.label;
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _inputFieldId);
-      labelEl.textContent = this.label;
-      var wrapperEl = container.appendChild(document.createElement('div'));
-      wrapperEl.className = 'dropdown-wrapper';
-      var inputField = wrapperEl.appendChild(document.createElement('input'));
-      inputField.className = "form-control dropdown-input";
-      inputField.id = _classPrivateFieldGet(this, _inputFieldId);
-      inputField.autocomplete = 'off';
-      inputField.spellcheck = false;
+        const wrapperEl = container.appendChild(document.createElement('div'));
+        wrapperEl.className = 'dropdown-wrapper';
 
-      if (this.validationMessage) {
-        // unfortunately the validation message has to be placed immediately after the input field
-        var validationMessageElement = wrapperEl.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        const inputField = wrapperEl.appendChild(document.createElement('input'));
+        inputField.className = "form-control dropdown-input";
+        inputField.id = this.#inputFieldId;
+        inputField.autocomplete = 'off';
+        inputField.spellcheck = false;
 
-      var dropDownList = wrapperEl.appendChild(document.createElement('div'));
-      dropDownList.className = 'dropdown-list';
+        if (this.validationMessage) {
+            // unfortunately the validation message has to be placed immediately after the input field
+            const validationMessageElement = wrapperEl.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
 
-      _classPrivateFieldSet(this, _dropDownListDivId, dropDownList.id = FormField.nextId);
+        const dropDownList = wrapperEl.appendChild(document.createElement('div'));
+        dropDownList.className = 'dropdown-list';
+        this.#dropDownListDivId = dropDownList.id = FormField.nextId;
 
-      _classPrivateFieldSet(this, _dropDownListUlId, FormField.nextId);
+        this.#dropDownListUlId = FormField.nextId;
 
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
+        }
 
-      inputField.addEventListener('keydown', this.keydownHandler.bind(this)); //inputField.addEventListener('keyup', this.keyupHandler.bind(this)); // unfortunately keyup doesn't fire for touch keyboards
+        inputField.addEventListener('keydown', this.keydownHandler.bind(this));
+        //inputField.addEventListener('keyup', this.keyupHandler.bind(this)); // unfortunately keyup doesn't fire for touch keyboards
+        inputField.addEventListener('input', this.inputHandler.bind(this));
+        inputField.addEventListener('change', this.inputChangeHandler.bind(this));
 
-      inputField.addEventListener('input', this.inputHandler.bind(this));
-      inputField.addEventListener('change', this.inputChangeHandler.bind(this));
-      container.addEventListener('focusin', this.focusHandler.bind(this));
-      container.addEventListener('focusout', this.blurHandler.bind(this));
-      dropDownList.addEventListener('click', this.dropboxClickHandler.bind(this));
-      this._fieldEl = container;
+        container.addEventListener('focusin', this.focusHandler.bind(this));
+        container.addEventListener('focusout', this.blurHandler.bind(this));
+        dropDownList.addEventListener('click', this.dropboxClickHandler.bind(this));
+
+
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {KeyboardEvent} event
      * @param {HTMLInputElement} event.target
      * @return {boolean}
      */
+    keydownHandler(event) {
+        this._lastInputValue = event.target.value.trimLeft(); // save value for testing in InputEvent handler
 
-  }, {
-    key: "keydownHandler",
-    value: function keydownHandler(event) {
-      this._lastInputValue = event.target.value.trimLeft(); // save value for testing in InputEvent handler
+        switch (event.key) {
+            case 'Enter':
+                event.preventDefault();
 
-      switch (event.key) {
-        case 'Enter':
-          event.preventDefault(); // exit if no suggestions
-          // if (this.selectedIndex < 0 || !this.suggestionsCol) {
-          //     return;
-          // }
-          // // find which one is currently selected
-          // const selectedModel = this.suggestionsCol.at(this.selectedIndex);
-          //
-          // const species = selectedModel.toJSON();
-          // delete species.selected;
-          // this.trigger('taxon:selected', species, false);
+                // exit if no suggestions
+                // if (this.selectedIndex < 0 || !this.suggestionsCol) {
+                //     return;
+                // }
 
-          break;
+                // // find which one is currently selected
+                // const selectedModel = this.suggestionsCol.at(this.selectedIndex);
+                //
+                // const species = selectedModel.toJSON();
+                // delete species.selected;
+                // this.trigger('taxon:selected', species, false);
 
-        case 'ArrowUp':
-          event.preventDefault(); // if (this.selectedIndex > 0) {
-          //     this.suggestionsCol.at(this.selectedIndex).set('selected', false);
-          //     this.selectedIndex--;
-          //     this.suggestionsCol.at(this.selectedIndex).set('selected', true);
-          // }
+                break;
 
-          break;
+            case 'ArrowUp':
+                event.preventDefault();
 
-        case 'ArrowDown':
-          // Down
-          event.preventDefault(); // if ((this.suggestionsCol && this.suggestionsCol.length) && // initialized
-          //     this.selectedIndex < this.suggestionsCol.length - 1) { // not out of boundaries
-          //     this.suggestionsCol.at(this.selectedIndex).set('selected', false);
-          //     this.selectedIndex++;
-          //     this.suggestionsCol.at(this.selectedIndex).set('selected', true);
-          // }
+                // if (this.selectedIndex > 0) {
+                //     this.suggestionsCol.at(this.selectedIndex).set('selected', false);
+                //     this.selectedIndex--;
+                //     this.suggestionsCol.at(this.selectedIndex).set('selected', true);
+                // }
+                break;
 
-          break;
-        // default:
-        //     // Other
-        //     let text = input;
-        //
-        //     // on keyDOWN need to add the pressed char
-        //     let pressedChar = String.fromCharCode(event.key);
-        //     if (event.keyCode != 8) {
-        //         // http://stackoverflow.com/questions/19278037/javascript-non-unicode-char-code-to-unicode-character
-        //         if (e.keyCode === 189 || e.keyCode === 109) {
-        //             pressedChar = '-';
-        //         }
-        //         if (e.keyCode === 190) {
-        //             pressedChar = '.';
-        //         }
-        //
-        //         text += pressedChar;
-        //     } else {
-        //         // Backspace - remove a char
-        //         text = text.slice(0, text.length - 1);
-        //     }
-        //
-        //     // proceed if minimum length phrase was provided
-        //     if ((text.replace(/\.|\s/g, '').length) >= TaxonSearch.MIN_SEARCH_LENGTH) {
-        //         text = text.trim();
-        //
-        //         // Clear previous timeout
-        //         if (this.#taxonLookupTimeoutHandle !== -1) {
-        //             clearTimeout(this.#taxonLookupTimeoutHandle);
-        //         }
-        //
-        //         // Set new timeout - don't run if user is typing
-        //         this.#taxonLookupTimeoutHandle = setTimeout(function () {
-        //             // let controller know
-        //             that.trigger('taxon:searched', text.toLowerCase());
-        //         }, 100);
-        //     } else if (text.replace(/\.|\s/g, '').length === 0) {
-        //         // no search text, but pass through search, so that 'Unknown sp' can be shown
-        //
-        //         // Clear previous timeout
-        //         if (this.#taxonLookupTimeoutHandle !== -1) {
-        //             clearTimeout(this.#taxonLookupTimeoutHandle);
-        //         }
-        //
-        //         // Set new timeout - don't run if user is typing
-        //         this.#taxonLookupTimeoutHandle = setTimeout(function () {
-        //             // let controller know
-        //             that.trigger('taxon:searched', '');
-        //         }, 100);
-        //     }
-      }
+            case 'ArrowDown': // Down
+                event.preventDefault();
+
+                // if ((this.suggestionsCol && this.suggestionsCol.length) && // initialized
+                //     this.selectedIndex < this.suggestionsCol.length - 1) { // not out of boundaries
+                //     this.suggestionsCol.at(this.selectedIndex).set('selected', false);
+                //     this.selectedIndex++;
+                //     this.suggestionsCol.at(this.selectedIndex).set('selected', true);
+                // }
+                break;
+
+            // default:
+            //     // Other
+            //     let text = input;
+            //
+            //     // on keyDOWN need to add the pressed char
+            //     let pressedChar = String.fromCharCode(event.key);
+            //     if (event.keyCode != 8) {
+            //         // http://stackoverflow.com/questions/19278037/javascript-non-unicode-char-code-to-unicode-character
+            //         if (e.keyCode === 189 || e.keyCode === 109) {
+            //             pressedChar = '-';
+            //         }
+            //         if (e.keyCode === 190) {
+            //             pressedChar = '.';
+            //         }
+            //
+            //         text += pressedChar;
+            //     } else {
+            //         // Backspace - remove a char
+            //         text = text.slice(0, text.length - 1);
+            //     }
+            //
+            //     // proceed if minimum length phrase was provided
+            //     if ((text.replace(/\.|\s/g, '').length) >= TaxonSearch.MIN_SEARCH_LENGTH) {
+            //         text = text.trim();
+            //
+            //         // Clear previous timeout
+            //         if (this.#taxonLookupTimeoutHandle !== -1) {
+            //             clearTimeout(this.#taxonLookupTimeoutHandle);
+            //         }
+            //
+            //         // Set new timeout - don't run if user is typing
+            //         this.#taxonLookupTimeoutHandle = setTimeout(function () {
+            //             // let controller know
+            //             that.trigger('taxon:searched', text.toLowerCase());
+            //         }, 100);
+            //     } else if (text.replace(/\.|\s/g, '').length === 0) {
+            //         // no search text, but pass through search, so that 'Unknown sp' can be shown
+            //
+            //         // Clear previous timeout
+            //         if (this.#taxonLookupTimeoutHandle !== -1) {
+            //             clearTimeout(this.#taxonLookupTimeoutHandle);
+            //         }
+            //
+            //         // Set new timeout - don't run if user is typing
+            //         this.#taxonLookupTimeoutHandle = setTimeout(function () {
+            //             // let controller know
+            //             that.trigger('taxon:searched', '');
+            //         }, 100);
+            //     }
+        }
+
     }
+
     /**
      *
      * @param {InputEvent} event
      */
+    inputHandler(event) {
+        const currentValue = event.target.value.trimLeft(); // save value for testing in InputEvent handler
 
-  }, {
-    key: "inputHandler",
-    value: function inputHandler(event) {
-      var currentValue = event.target.value.trimLeft(); // save value for testing in InputEvent handler
-
-      if (currentValue !== this._lastInputValue) {
-        _classPrivateMethodGet$2(this, _triggerQuery, _triggerQuery2).call(this, event.target);
-      }
+        if (currentValue !== this._lastInputValue) {
+            this.#triggerQuery(event.target);
+        }
     }
+
     /**
      *
      * @param {KeyboardEvent} event
      * @return {boolean}
      */
+    keyupHandler(event) {
+        //console.log({'key' : event.key});
 
-  }, {
-    key: "keyupHandler",
-    value: function keyupHandler(event) {
-      //console.log({'key' : event.key});
-      if (event.key && (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')) {
-        //keypress was a printable character
-        _classPrivateMethodGet$2(this, _triggerQuery, _triggerQuery2).call(this, event.target); // let text = TaxonPickerField.cleanRawInput(event.target);
-        //
-        // // proceed if minimum length phrase was provided
-        // if ((text.length) >= TaxonSearch.MIN_SEARCH_LENGTH) {
-        //
-        //     // Clear previous timeout
-        //     if (this.#taxonLookupTimeoutHandle) {
-        //         clearTimeout(this.#taxonLookupTimeoutHandle);
-        //     }
-        //
-        //     // Set new timeout - don't run if user is typing
-        //     this.#taxonLookupTimeoutHandle = setTimeout(() => {
-        //         this.#searchResults = this.taxonSearch.lookup(
-        //             TaxonPickerField.cleanRawInput(document.getElementById(this.#inputFieldId))
-        //         );
-        //
-        //         console.log(this.#searchResults);
-        //
-        //         this.refreshSearchResultsList();
-        //
-        //         this.#taxonLookupTimeoutHandle = null;
-        //     }, TaxonPickerField.timeoutDelay);
-        // }
+        if (event.key && (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')) {
+            //keypress was a printable character
 
-      }
+            this.#triggerQuery(event.target);
+
+            // let text = TaxonPickerField.cleanRawInput(event.target);
+            //
+            // // proceed if minimum length phrase was provided
+            // if ((text.length) >= TaxonSearch.MIN_SEARCH_LENGTH) {
+            //
+            //     // Clear previous timeout
+            //     if (this.#taxonLookupTimeoutHandle) {
+            //         clearTimeout(this.#taxonLookupTimeoutHandle);
+            //     }
+            //
+            //     // Set new timeout - don't run if user is typing
+            //     this.#taxonLookupTimeoutHandle = setTimeout(() => {
+            //         this.#searchResults = this.taxonSearch.lookup(
+            //             TaxonPickerField.cleanRawInput(document.getElementById(this.#inputFieldId))
+            //         );
+            //
+            //         console.log(this.#searchResults);
+            //
+            //         this.refreshSearchResultsList();
+            //
+            //         this.#taxonLookupTimeoutHandle = null;
+            //     }, TaxonPickerField.timeoutDelay);
+            // }
+        }
     }
+
     /**
      *
      * @param {HTMLInputElement} inputEl
      */
+    #triggerQuery(inputEl) {
+        let text = FormField.cleanRawInput(inputEl);
 
-  }, {
-    key: "focusHandler",
-    value:
-    /**
-     *
-     * @param {Event} event
-     */
-    function focusHandler(event) {
-      console.log('focused');
-      var dropDownEl = document.getElementById(_classPrivateFieldGet(this, _dropDownListDivId)); //const container = document.getElementById(this.#containerId);
-
-      if (!dropDownEl.classList.contains('dropdown-focused')) {
-        // refresh dropdown list when first focused
-        // focus event will re-fire after click on link in dropdown potentially disrupting subsequent click
-        // it is important that the query is not re-run if already focused.
-        var inputEl = document.getElementById(_classPrivateFieldGet(this, _inputFieldId));
-
-        _classPrivateMethodGet$2(this, _triggerQuery, _triggerQuery2).call(this, inputEl);
-
-        dropDownEl.classList.add('dropdown-focused');
-      }
-    }
-    /**
-     *
-     * @param {Event} event
-     */
-
-  }, {
-    key: "blurHandler",
-    value: function blurHandler(event) {
-      var _this2 = this;
-
-      // clear taxon result lookup timeout
-      if (_classPrivateFieldGet(this, _taxonLookupTimeoutHandle)) {
-        clearTimeout(_classPrivateFieldGet(this, _taxonLookupTimeoutHandle));
-
-        _classPrivateFieldSet(this, _taxonLookupTimeoutHandle, null);
-      } // to avoid blurring before a link click has been processed, introduce a delay
-
-
-      setTimeout(function () {
-        var dropDownEl = document.getElementById(_classPrivateFieldGet(_this2, _dropDownListDivId));
-        dropDownEl.classList.remove('dropdown-focused'); // console.log('applied blur');
-      }, 500);
-    }
-  }, {
-    key: "refreshSearchResultsList",
-    value: function refreshSearchResultsList() {
-      var dropdownListEl = document.getElementById(_classPrivateFieldGet(this, _dropDownListDivId));
-
-      if (_classPrivateFieldGet(this, _searchResults).length) {
-        var htmlResults = [];
-        var n = 0;
-
-        var _iterator = _createForOfIteratorHelper$1(_classPrivateFieldGet(this, _searchResults)),
-            _step;
-
-        try {
-          for (_iterator.s(); !(_step = _iterator.n()).done;) {
-            var result = _step.value;
-            htmlResults[htmlResults.length] = "<a class=\"list-group-item list-group-item-action\" href=\"#\" data-occurrenceId=\"".concat(result.entityId, "\" data-resultnumber=\"").concat(n, "\">").concat(TaxonSearch.formatter(result), "</a>");
-            ++n;
-          }
-        } catch (err) {
-          _iterator.e(err);
-        } finally {
-          _iterator.f();
+        // Clear previous timeout
+        if (this.#taxonLookupTimeoutHandle) {
+            clearTimeout(this.#taxonLookupTimeoutHandle);
         }
 
-        dropdownListEl.innerHTML = "<div class=\"list-group\" id=\"".concat(_classPrivateFieldGet(this, _dropDownListUlId), "\">").concat(htmlResults.join(''), "</div>"); // const htmlResults = [];
-        //
-        // let n = 0;
-        // for (let result of this.#searchResults) {
-        //     htmlResults[htmlResults.length] = `<li><a href="#" data-occurrenceId="${result.entityId}" data-resultnumber="${n}">${TaxonSearch.formatter(result)}</a></li>`;
-        //     ++n;
-        // }
-        //
-        // dropdownListEl.innerHTML = `<ul id="${this.#dropDownListUlId}">${htmlResults.join('')}</ul>`;
-      } else {
-        dropdownListEl.innerHTML = '';
-      }
+        // proceed if minimum length phrase was provided
+        if ((text.length) >= TaxonSearch.MIN_SEARCH_LENGTH) {
 
-      _classPrivateFieldSet(this, _selectedIndex, null);
+            // Set new timeout - don't run if user is typing
+            this.#taxonLookupTimeoutHandle = setTimeout(() => {
+                this.#searchResults = this.taxonSearch.lookup(
+                    FormField.cleanRawInput(document.getElementById(this.#inputFieldId))
+                );
+
+                //console.log(this.#searchResults);
+
+                this.refreshSearchResultsList();
+
+                this.#taxonLookupTimeoutHandle = null;
+            }, TaxonPickerField.timeoutDelay);
+        } else {
+            // clear the results list
+            this.#searchResults = [];
+            this.refreshSearchResultsList();
+        }
     }
-  }, {
-    key: "dropboxClickHandler",
-    value:
+
+    /**
+     *
+     * @param {Event} event
+     */
+    focusHandler(event) {
+        console.log('focused');
+
+        const dropDownEl = document.getElementById(this.#dropDownListDivId);
+
+        //const container = document.getElementById(this.#containerId);
+
+        if (!dropDownEl.classList.contains('dropdown-focused')) {
+            // refresh dropdown list when first focused
+            // focus event will re-fire after click on link in dropdown potentially disrupting subsequent click
+            // it is important that the query is not re-run if already focused.
+            const inputEl = document.getElementById(this.#inputFieldId);
+            this.#triggerQuery(inputEl);
+
+            dropDownEl.classList.add('dropdown-focused');
+        }
+    }
+
+    /**
+     *
+     * @param {Event} event
+     */
+    blurHandler(event) {
+        // clear taxon result lookup timeout
+        if (this.#taxonLookupTimeoutHandle) {
+            clearTimeout(this.#taxonLookupTimeoutHandle);
+            this.#taxonLookupTimeoutHandle = null;
+        }
+
+        // to avoid blurring before a link click has been processed, introduce a delay
+        setTimeout(() => {
+            const dropDownEl = document.getElementById(this.#dropDownListDivId);
+            dropDownEl.classList.remove('dropdown-focused');
+            // console.log('applied blur');
+
+        }, 500);
+    }
+
+    refreshSearchResultsList() {
+        const dropdownListEl = document.getElementById(this.#dropDownListDivId);
+
+        if (this.#searchResults.length) {
+            const htmlResults = [];
+
+            let n = 0;
+            for (let result of this.#searchResults) {
+                htmlResults[htmlResults.length] = `<a class="list-group-item list-group-item-action" href="#" data-occurrenceId="${result.entityId}" data-resultnumber="${n}">${TaxonSearch.formatter(result)}</a>`;
+                ++n;
+            }
+
+            dropdownListEl.innerHTML = `<div class="list-group" id="${this.#dropDownListUlId}">${htmlResults.join('')}</div>`;
+
+
+
+            // const htmlResults = [];
+            //
+            // let n = 0;
+            // for (let result of this.#searchResults) {
+            //     htmlResults[htmlResults.length] = `<li><a href="#" data-occurrenceId="${result.entityId}" data-resultnumber="${n}">${TaxonSearch.formatter(result)}</a></li>`;
+            //     ++n;
+            // }
+            //
+            // dropdownListEl.innerHTML = `<ul id="${this.#dropDownListUlId}">${htmlResults.join('')}</ul>`;
+        } else {
+            dropdownListEl.innerHTML = '';
+        }
+
+        this.#selectedIndex = null;
+    }
+
+    static cleanRawInput(inputElement) {
+        return inputElement.value.trim().replace(/\s\s+/g, ' ');
+    }
+
     /**
      *
      * @param {MouseEvent} event
      */
-    function dropboxClickHandler(event) {
-      if (doubleClickIntercepted(event)) {
-        return;
-      } //console.log('click handler');
-      //console.log(event);
-
-
-      var targetEl = event.target.closest('a'); //console.log(targetEl);
-
-      if (_classPrivateFieldGet(this, _changeEventTimeout)) {
-        clearTimeout(_classPrivateFieldGet(this, _changeEventTimeout));
-
-        _classPrivateFieldSet(this, _changeEventTimeout, null);
-
-        console.log('cleared a pending change event');
-      }
-
-      if (targetEl && targetEl.dataset.occurrenceid) {
-        event.preventDefault(); //console.log(`got target ${targetEl.dataset.occurrenceid}`);
-
-        var result = _classPrivateFieldGet(this, _searchResults)[targetEl.dataset.resultnumber]; //document.getElementById(this.#inputFieldId).blur();
-
-
-        this.value = {
-          taxonId: result.entityId,
-          taxonName: result.vernacularMatched ? result.vernacular : result.qname,
-          vernacularMatch: result.vernacularMatched
-        }; // setter will refresh the field but not fire a change event
-
-        this.fireEvent(FormField.EVENT_CHANGE);
-      }
-    }
-  }, {
-    key: "inputChangeHandler",
-    value: function inputChangeHandler(event) {
-      var _this3 = this;
-
-      // need to prevent race-conditions between clicks and change events
-      // i.e. a click event on the dropdown list might come after a change event on the input field
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
-
-      console.log('got taxon field input change event');
-
-      if (_classPrivateFieldGet(this, _changeEventTimeout)) {
-        clearTimeout(_classPrivateFieldGet(this, _changeEventTimeout));
-      } // avoid acting on a change immediately, in case there is a click event following
-
-
-      _classPrivateFieldSet(this, _changeEventTimeout, setTimeout(function () {
-        console.log('processing taxon field input change event'); // check if the dropdown list has an exact match, if so then use it
-
-        var exactMatch = _classPrivateFieldGet(_this3, _searchResults).find(function (result) {
-          return result.exact;
-        });
-
-        if (exactMatch) {
-          console.log('exact match');
-          _this3.value = {
-            taxonId: exactMatch.entityId,
-            taxonName: exactMatch.vernacularMatched ? exactMatch.vernacular : exactMatch.qname,
-            vernacularMatch: exactMatch.vernacularMatched
-          }; // setter will refresh the field but not fire a change event
-        } else {
-          console.log('no match');
-          _this3.value = {
-            taxonId: '',
-            taxonName: document.getElementById(_classPrivateFieldGet(_this3, _inputFieldId)).value.trim(),
-            vernacularMatch: null
-          };
+    dropboxClickHandler(event) {
+        if (doubleClickIntercepted(event)) {
+            return;
         }
 
-        console.log(_this3._value);
+        //console.log('click handler');
+        //console.log(event);
 
-        _this3.fireEvent(FormField.EVENT_CHANGE);
-      }, 500));
+        const targetEl = event.target.closest('a');
+        //console.log(targetEl);
+
+        if (this.#changeEventTimeout) {
+            clearTimeout(this.#changeEventTimeout);
+            this.#changeEventTimeout = null;
+            console.log('cleared a pending change event');
+        }
+
+        if (targetEl && targetEl.dataset.occurrenceid) {
+            event.preventDefault();
+
+            //console.log(`got target ${targetEl.dataset.occurrenceid}`);
+
+            const result = this.#searchResults[targetEl.dataset.resultnumber];
+
+            //document.getElementById(this.#inputFieldId).blur();
+
+            this.value = {
+                taxonId: result.entityId,
+                taxonName: result.vernacularMatched ? result.vernacular : result.qname,
+                vernacularMatch: result.vernacularMatched
+            }; // setter will refresh the field but not fire a change event
+
+            this.fireEvent(FormField.EVENT_CHANGE);
+        }
     }
-  }], [{
-    key: "isEmpty",
-    value: function isEmpty(value) {
-      return !value || value && !value.taxonName;
+
+    inputChangeHandler (event) {
+        // need to prevent race-conditions between clicks and change events
+        // i.e. a click event on the dropdown list might come after a change event on the input field
+
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+
+        console.log('got taxon field input change event');
+
+        if (this.#changeEventTimeout) {
+            clearTimeout(this.#changeEventTimeout);
+        }
+
+        // avoid acting on a change immediately, in case there is a click event following
+        this.#changeEventTimeout = setTimeout(() => {
+            console.log('processing taxon field input change event');
+
+            // check if the dropdown list has an exact match, if so then use it
+            const exactMatch = this.#searchResults.find((result) => {
+                return result.exact;
+            });
+
+            if (exactMatch) {
+                console.log('exact match');
+                this.value = {
+                    taxonId: exactMatch.entityId,
+                    taxonName: exactMatch.vernacularMatched ? exactMatch.vernacular : exactMatch.qname,
+                    vernacularMatch: exactMatch.vernacularMatched
+                }; // setter will refresh the field but not fire a change event
+            } else {
+                console.log('no match');
+                this.value = {
+                    taxonId: '',
+                    taxonName: document.getElementById(this.#inputFieldId).value.trim(),
+                    vernacularMatch: null
+                };
+            }
+
+            console.log(this._value);
+            this.fireEvent(FormField.EVENT_CHANGE);
+        }, 500);
     }
-  }, {
-    key: "cleanRawInput",
-    value: function cleanRawInput(inputElement) {
-      return inputElement.value.trim().replace(/\s\s+/g, ' ');
-    }
-  }]);
-
-  return TaxonPickerField;
-}(FormField);
-
-function _triggerQuery2(inputEl) {
-  var _this4 = this;
-
-  var text = FormField.cleanRawInput(inputEl); // Clear previous timeout
-
-  if (_classPrivateFieldGet(this, _taxonLookupTimeoutHandle)) {
-    clearTimeout(_classPrivateFieldGet(this, _taxonLookupTimeoutHandle));
-  } // proceed if minimum length phrase was provided
-
-
-  if (text.length >= TaxonSearch.MIN_SEARCH_LENGTH) {
-    // Set new timeout - don't run if user is typing
-    _classPrivateFieldSet(this, _taxonLookupTimeoutHandle, setTimeout(function () {
-      _classPrivateFieldSet(_this4, _searchResults, _this4.taxonSearch.lookup(FormField.cleanRawInput(document.getElementById(_classPrivateFieldGet(_this4, _inputFieldId))))); //console.log(this.#searchResults);
-
-
-      _this4.refreshSearchResultsList();
-
-      _classPrivateFieldSet(_this4, _taxonLookupTimeoutHandle, null);
-    }, TaxonPickerField.timeoutDelay));
-  } else {
-    // clear the results list
-    _classPrivateFieldSet(this, _searchResults, []);
-
-    this.refreshSearchResultsList();
-  }
 }
 
-_defineProperty(TaxonPickerField, "timeoutDelay", 50);
+class TextAreaField extends FormField {
 
-function _createSuper$3(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$3(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+    /**
+     * @type {string}
+     */
+    #textAreaId;
 
-function _isNativeReflectConstruct$3() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+    /**
+     * @type {string}
+     */
+    #containerId;
 
-function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration$2(obj, privateMap); privateMap.set(obj, value); }
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _value = '';
 
-function _checkPrivateRedeclaration$2(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _autocomplete = '';
 
-var _textAreaId = /*#__PURE__*/new WeakMap();
+    /**
+     *
+     * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
+     */
+    constructor (params) {
+        super(params);
 
-var _containerId = /*#__PURE__*/new WeakMap();
+        if (params) {
+            if (params.options) {
+                this.options = params.options;
+            }
 
-var TextAreaField = /*#__PURE__*/function (_FormField) {
-  _inherits(TextAreaField, _FormField);
+            if (params.placeholder) {
+                this.placeholder = params.placeholder;
+            }
 
-  var _super = _createSuper$3(TextAreaField);
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @type {string}
-   * @private
-   */
-
-  /**
-   *
-   * @param {{[label] : string, [helpText]: string, [options]: {}, [placeholder]: string, [type]: string, [autocomplete]: string}} [params]
-   */
-  function TextAreaField(params) {
-    var _this;
-
-    _classCallCheck(this, TextAreaField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _textAreaId, {
-      writable: true,
-      value: void 0
-    });
-
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _containerId, {
-      writable: true,
-      value: void 0
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_value", '');
-
-    _defineProperty(_assertThisInitialized(_this), "_autocomplete", '');
-
-    if (params) {
-      if (params.options) {
-        _this.options = params.options;
-      }
-
-      if (params.placeholder) {
-        _this.placeholder = params.placeholder;
-      }
-
-      if (params.autocomplete) {
-        _this._autocomplete = params.autocomplete;
-      }
+            if (params.autocomplete) {
+                this._autocomplete = params.autocomplete;
+            }
+        }
     }
 
-    return _this;
-  }
-  /**
-   *
-   * @param {(string|null|undefined)} textContent
-   */
-
-
-  _createClass(TextAreaField, [{
-    key: "value",
-    get: function get() {
-      return this._value;
-    },
-    set: function set(textContent) {
-      this._value = undefined === textContent || null == textContent ? '' : textContent.trim();
-      this.updateView();
+    /**
+     *
+     * @param {(string|null|undefined)} textContent
+     */
+    set value(textContent) {
+        this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+        this.updateView();
     }
-  }, {
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var textAreaEl = document.getElementById(_classPrivateFieldGet(this, _textAreaId));
-        textAreaEl.value = FormField.cleanRawString(this._value);
-      }
+
+    get value() {
+        return this._value;
     }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const textAreaEl = document.getElementById(this.#textAreaId);
+            textAreaEl.value = FormField.cleanRawString(this._value);
+        }
+    }
+
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+    // <div class="form-group">
+    //     <label for="exampleFormControlTextarea1">Example textarea</label>
+    //     <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+    // </div>
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      // <div class="form-group">
-      //     <label for="exampleFormControlTextarea1">Example textarea</label>
-      //     <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
-      // </div>
-      var container = document.createElement('div');
-      container.className = 'form-group';
+        const container = document.createElement('div');
+        container.className = 'form-group';
+        this.#containerId = container.id = FormField.nextId;
 
-      _classPrivateFieldSet(this, _containerId, container.id = FormField.nextId);
+        this.#textAreaId = FormField.nextId;
 
-      _classPrivateFieldSet(this, _textAreaId, FormField.nextId);
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this.#textAreaId;
+        labelEl.textContent = this.label;
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = _classPrivateFieldGet(this, _textAreaId);
-      labelEl.textContent = this.label;
-      var textareaField = container.appendChild(document.createElement('textarea'));
-      textareaField.className = "form-control";
-      textareaField.id = _classPrivateFieldGet(this, _textAreaId);
+        const textareaField = container.appendChild(document.createElement('textarea'));
+        textareaField.className = "form-control";
+        textareaField.id = this.#textAreaId;
 
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
-
-      if (this._autocomplete) {
-        textareaField.autocomplete = this._autocomplete;
-
-        if ('off' === this._autocomplete) {
-          textareaField.name = uuid();
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
         }
-      }
 
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
+        if (this._autocomplete) {
+            textareaField.autocomplete = this._autocomplete;
 
-      textareaField.addEventListener('change', this.inputChangeHandler.bind(this));
-      this._fieldEl = container;
+            if ('off' === this._autocomplete) {
+                textareaField.name = uuid();
+            }
+        }
+
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
+        }
+
+        textareaField.addEventListener('change', this.inputChangeHandler.bind(this));
+
+        this._fieldEl = container;
     }
-  }, {
-    key: "inputChangeHandler",
-    value: function inputChangeHandler(event) {
-      event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
 
-      console.log('got text area field input change event');
-      this.value = FormField.cleanRawString(document.getElementById(_classPrivateFieldGet(this, _textAreaId)).value);
-      this.fireEvent(FormField.EVENT_CHANGE);
+    inputChangeHandler (event) {
+        event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
+        
+        console.log('got text area field input change event');
+        
+        this.value = FormField.cleanRawString(document.getElementById(this.#textAreaId).value);
+        this.fireEvent(FormField.EVENT_CHANGE);
     }
+
     /**
      * by the time summariseImpl has been called have already checked that summary is wanted
      *
@@ -21724,16 +13559,12 @@ var TextAreaField = /*#__PURE__*/function (_FormField) {
      * @param {Object.<string, {}>} attributes attributes of the model object
      * @return {string}
      */
-
-  }], [{
-    key: "summariseImpl",
-    value: function summariseImpl(key, property, attributes) {
-      return attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined ? escapeHTML(attributes[key].trim()) : '';
+    static summariseImpl(key, property, attributes) {
+        return (attributes[key] !== '' && attributes[key] !== null && attributes[key] !== undefined) ?
+            escapeHTML(attributes[key].trim())
+            : '';
     }
-  }]);
-
-  return TextAreaField;
-}(FormField);
+}
 
 var mapboxGl = {exports: {}};
 
@@ -21784,995 +13615,825 @@ return mapboxgl$1;
 
 var mapboxgl = mapboxGl.exports;
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+class MapMarker {
+    /**
+     * @type {string}
+     */
+    markerId;
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+    /**
+     * @type {{name : string,
+     * type : string,
+     * [coordinates] : Array,
+     * [fillColour] : string,
+     * [fillOpacity] : number,
+     * [lineColour] : string,
+     * [lineOpacity] : number,
+     * [lineWidth] : number,
+     * [lineDashArray] : Array<number>
+     * }} definition
+     */
+    definition;
 
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+    visible = false;
 
-function _classPrivateMethodInitSpec$1(obj, privateSet) { _checkPrivateRedeclaration$1(obj, privateSet); privateSet.add(obj); }
+    static TYPE_POLYGON = 'polygon';
+    static TYPE_POINT = 'point';
 
-function _checkPrivateRedeclaration$1(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
-
-function _classPrivateMethodGet$1(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-
-var _addPolygon = /*#__PURE__*/new WeakSet();
-
-var MapMarker = /*#__PURE__*/function () {
-  /**
-   * @type {string}
-   */
-
-  /**
-   * @type {{name : string,
-   * type : string,
-   * [coordinates] : Array,
-   * [fillColour] : string,
-   * [fillOpacity] : number,
-   * [lineColour] : string,
-   * [lineOpacity] : number,
-   * [lineWidth] : number,
-   * [lineDashArray] : Array<number>
-   * }} definition
-   */
-
-  /**
-   *
-   * @type {number}
-   * @private
-   */
-
-  /**
-   *
-   * @type {Array<string>}
-   */
-
-  /**
-   *
-   * @param {{name : string,
-   * type : string,
-   * [coordinates] : Array,
-   * [fillColour] : string,
-   * [fillOpacity] : number,
-   * [lineColour] : string,
-   * [lineOpacity] : number,
-   * [lineWidth] : number,
-   * [lineDashArray] : Array<number>
-   * }} [definition]
-   */
-  function MapMarker(definition) {
-    _classCallCheck(this, MapMarker);
-
-    _classPrivateMethodInitSpec$1(this, _addPolygon);
-
-    _defineProperty(this, "markerId", void 0);
-
-    _defineProperty(this, "definition", void 0);
-
-    _defineProperty(this, "visible", false);
-
-    _defineProperty(this, "layerIds", []);
-
-    this.markerId = "marker".concat(MapMarker._markerSerial++);
-
-    if (definition) {
-      this.setDefinition(definition);
-    }
-  }
-  /**
-   *
-   * @param {{name : string,
-   * type : string,
-   * [coordinates] : Array,
-   * [fillColour] : string,
-   * [fillOpacity] : number,
-   * [lineColour] : string,
-   * [lineOpacity] : number,
-   * [lineWidth] : number,
-   * [lineDashArray] : Array<number>
-   * }} definition
-   */
-
-
-  _createClass(MapMarker, [{
-    key: "setDefinition",
-    value: function setDefinition(definition) {
-      this.definition = definition;
-    }
     /**
      *
-     * @param {mapboxgl.Map} map
+     * @type {number}
+     * @private
      */
+    static _markerSerial = 0;
 
-  }, {
-    key: "addToMap",
-    value: function addToMap(map) {
-      switch (this.definition.type) {
-        case MapMarker.TYPE_POLYGON:
-          _classPrivateMethodGet$1(this, _addPolygon, _addPolygon2).call(this, map);
-
-          break;
-
-        case MapMarker.TYPE_POINT:
-          break;
-
-        default:
-          throw new Error("Unrecognised marker type '{this.definition.type}'.");
-      }
-    }
     /**
      *
-     * @param {mapboxgl.Map} map
+     * @type {Array<string>}
      */
+    layerIds = [];
 
-  }, {
-    key: "_addPolygonImpl",
-    value: function _addPolygonImpl(map) {
-      // e.g. see https://docs.mapbox.com/mapbox-gl-js/example/geojson-polygon/
-      map.addSource(this.markerId, {
-        'type': 'geojson',
-        'data': {
-          'type': 'Feature',
-          "properties": {
-            "name": this.definition.name
-          },
-          'geometry': {
-            'type': 'Polygon',
-            'coordinates': this.definition.coordinates // each shape consists of array pairs of lat/lng wrapped in an array, with outer array ?for multiple polygons (i.e. three levels of array nesting)
+    /**
+     *
+     * @param {{name : string,
+     * type : string,
+     * [coordinates] : Array,
+     * [fillColour] : string,
+     * [fillOpacity] : number,
+     * [lineColour] : string,
+     * [lineOpacity] : number,
+     * [lineWidth] : number,
+     * [lineDashArray] : Array<number>
+     * }} [definition]
+     */
+    constructor(definition) {
+        this.markerId = `marker${MapMarker._markerSerial++}`;
 
-          }
+        if (definition) {
+            this.setDefinition(definition);
         }
-      });
-
-      this._addPolygonMarkerLayersToMap(map);
     }
+
+    /**
+     *
+     * @param {{name : string,
+     * type : string,
+     * [coordinates] : Array,
+     * [fillColour] : string,
+     * [fillOpacity] : number,
+     * [lineColour] : string,
+     * [lineOpacity] : number,
+     * [lineWidth] : number,
+     * [lineDashArray] : Array<number>
+     * }} definition
+     */
+    setDefinition(definition) {
+        this.definition = definition;
+    }
+
     /**
      *
      * @param {mapboxgl.Map} map
      */
+    addToMap(map) {
+        switch (this.definition.type) {
+            case MapMarker.TYPE_POLYGON:
+                this.#addPolygon(map);
+                break;
 
-  }, {
-    key: "_addPolygonMarkerLayersToMap",
-    value: function _addPolygonMarkerLayersToMap(map) {
-      if (this.definition.fillColour) {
-        var paint = {
-          'fill-color': this.definition.fillColour
-        };
+            case MapMarker.TYPE_POINT:
+                break;
 
-        if (this.definition.fillOpacity) {
-          paint['fill-opacity'] = this.definition.fillOpacity;
+            default:
+                throw new Error(`Unrecognised marker type '{this.definition.type}'.`);
         }
+    }
 
-        var fillLayerId = "".concat(this.markerId, "-fill");
-        map.addLayer({
-          'id': fillLayerId,
-          'type': 'fill',
-          'source': this.markerId,
-          // reference the data source
-          'layout': {},
-          'paint': paint
+    /**
+     *
+     * @param {mapboxgl.Map} map
+     */
+    #addPolygon(map) {
+        // mapbox life-cycle is broken can't add source until map has finished loading
+        if (map.isStyleLoaded()) {
+            this._addPolygonImpl(map);
+        } else {
+            setTimeout(() => {
+                this.#addPolygon(map);
+            }, 1000);
+        }
+    }
+
+    _addPolygonImpl(map) {
+        // e.g. see https://docs.mapbox.com/mapbox-gl-js/example/geojson-polygon/
+        map.addSource(this.markerId, {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                "properties": {"name": this.definition.name},
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': this.definition.coordinates // each shape consists of array pairs of lat/lng wrapped in an array, with outer array ?for multiple polygons (i.e. three levels of array nesting)
+                }
+            }
         });
-        this.layerIds.push(fillLayerId);
-      }
 
-      if (this.definition.lineColour) {
-        var _paint = {
-          'line-color': this.definition.lineColour
-        };
-
-        if (this.definition.lineOpacity) {
-          _paint['line-opacity'] = this.definition.lineOpacity;
-        }
-
-        if (this.definition.lineWidth) {
-          _paint['line-width'] = this.definition.lineWidth;
-        }
-
-        var lineLayerId = "".concat(this.markerId, "-line");
-        map.addLayer({
-          'id': lineLayerId,
-          'type': 'line',
-          'source': this.markerId,
-          // reference the data source
-          'layout': {},
-          'paint': _paint
-        });
-        this.layerIds.push(lineLayerId);
-      }
-
-      this.visible = true;
+        this._addPolygonMarkerLayersToMap(map);
     }
+
+    /**
+     *
+     * @param {mapboxgl.Map} map
+     */
+    _addPolygonMarkerLayersToMap(map) {
+        if (this.definition.fillColour) {
+            let paint = {
+                'fill-color':this.definition.fillColour
+            };
+
+            if (this.definition.fillOpacity) {
+                paint['fill-opacity'] = this.definition.fillOpacity;
+            }
+
+            const fillLayerId = `${this.markerId}-fill`;
+            map.addLayer({
+                'id': fillLayerId,
+                'type': 'fill',
+                'source': this.markerId, // reference the data source
+                'layout': {},
+                'paint': paint
+            });
+
+            this.layerIds.push(fillLayerId);
+        }
+
+        if (this.definition.lineColour) {
+            let paint = {
+                'line-color': this.definition.lineColour
+            };
+
+            if (this.definition.lineOpacity) {
+                paint['line-opacity'] = this.definition.lineOpacity;
+            }
+
+            if (this.definition.lineWidth) {
+                paint['line-width'] = this.definition.lineWidth;
+            }
+
+            const lineLayerId = `${this.markerId}-line`;
+            map.addLayer({
+                'id': lineLayerId,
+                'type': 'line',
+                'source': this.markerId, // reference the data source
+                'layout': {},
+                'paint': paint
+            });
+
+            this.layerIds.push(lineLayerId);
+        }
+
+        this.visible = true;
+    }
+
     /**
      *
      * @param {mapboxgl.Map} map
      * @param {Array} newCoordinates
      * @param {string} newName
      */
+    updateCoordinates(map, newCoordinates, newName) {
+        this.definition.coordinates = newCoordinates;
+        this.definition.name = newName;
 
-  }, {
-    key: "updateCoordinates",
-    value: function updateCoordinates(map, newCoordinates, newName) {
-      this.definition.coordinates = newCoordinates;
-      this.definition.name = newName;
-      var source = map.getSource(this.markerId);
+        let source = map.getSource(this.markerId);
 
-      if (source) {
-        try {
-          source.setData({
-            'type': 'Feature',
-            "properties": {
-              "name": this.definition.name
-            },
-            'geometry': {
-              'type': 'Polygon',
-              'coordinates': this.definition.coordinates // each shape consists of array pairs of lat/lng wrapped in an array, with outer array ?for multiple polygons (i.e. three levels of array nesting)
+        if (source) {
+            try {
+                source.setData({
+                    'type': 'Feature',
+                    "properties": {"name": this.definition.name},
+                    'geometry': {
+                        'type': 'Polygon',
+                        'coordinates': this.definition.coordinates // each shape consists of array pairs of lat/lng wrapped in an array, with outer array ?for multiple polygons (i.e. three levels of array nesting)
+                    }
+                });
 
+                if (!this.visible) {
+                    this._addPolygonMarkerLayersToMap(map);
+                }
+            } catch (e) {
+                console.error({'Exception in MapMarker.updateCoordinates': e});
             }
-          });
-
-          if (!this.visible) {
-            this._addPolygonMarkerLayersToMap(map);
-          }
-        } catch (e) {
-          console.error({
-            'Exception in MapMarker.updateCoordinates': e
-          });
+        } else {
+            // this may happen if the map isn't ready yet before a marker is set or moved
+            // however the marker should eventually go in
+            console.error('Source is null in MapMarker.updateCoordinates');
         }
-      } else {
-        // this may happen if the map isn't ready yet before a marker is set or moved
-        // however the marker should eventually go in
-        console.error('Source is null in MapMarker.updateCoordinates');
-      }
     }
+
     /**
      *
      * @param {mapboxgl.Map} map
      */
-
-  }, {
-    key: "removeFromMap",
-    value: function removeFromMap(map) {
-      var _iterator = _createForOfIteratorHelper(this.layerIds),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var layerId = _step.value;
-          map.removeLayer(layerId);
+    removeFromMap(map) {
+        for (let layerId of this.layerIds) {
+            map.removeLayer(layerId);
         }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
 
-      map.removeSource(this.markerId);
-      this.visible = false;
+        map.removeSource(this.markerId);
+        this.visible = false;
     }
-  }]);
-
-  return MapMarker;
-}();
-
-function _addPolygon2(map) {
-  var _this = this;
-
-  // mapbox life-cycle is broken can't add source until map has finished loading
-  if (map.isStyleLoaded()) {
-    this._addPolygonImpl(map);
-  } else {
-    setTimeout(function () {
-      _classPrivateMethodGet$1(_this, _addPolygon, _addPolygon2).call(_this, map);
-    }, 1000);
-  }
 }
 
-_defineProperty(MapMarker, "TYPE_POLYGON", 'polygon');
+class MapGeorefField extends TextGeorefField {
 
-_defineProperty(MapMarker, "TYPE_POINT", 'point');
+    // /**
+    //  * @type {string}
+    //  */
+    // containerId;
 
-_defineProperty(MapMarker, "_markerSerial", 0);
+    // /**
+    //  *
+    //  * @type {string}
+    //  * @private
+    //  */
+    // _inputType = 'text';
 
-function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+    // /**
+    //  *
+    //  * @type {string}
+    //  * @private
+    //  */
+    // _autocomplete = '';
 
-function _isNativeReflectConstruct$2() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+    /**
+     *
+     * @type {boolean}
+     */
+    includeSearchBox = false;
 
-function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration(obj, privateSet); privateSet.add(obj); }
+    /**
+     *
+     * @type {number}
+     */
+    defaultLat = 55.15793;
 
-function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+    /**
+     *
+     * @type {number}
+     */
+    defaultLng = -4.68;
 
-function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+    /**
+     *
+     * @type {number}
+     */
+    defaultZoom = 5;
 
-var _setGridrefFromGeocodedResult = /*#__PURE__*/new WeakSet();
+    /**
+     * @type {mapboxgl.Map}
+     */
+    map;
 
-var MapGeorefField = /*#__PURE__*/function (_TextGeorefField) {
-  _inherits(MapGeorefField, _TextGeorefField);
+    /**
+     * @type {MapMarker}
+     * @private
+     */
+    _squareMarker;
 
-  var _super = _createSuper$2(MapGeorefField);
+    /**
+     * set if map has a well-defined zoom and centre
+     * (i.e. has been initialised from a typed grid-ref, a manual re-centre or user-click)
+     *
+     * @type {boolean}
+     */
+    mapPositionIsCurrent = false;
 
-  // /**
-  //  * @type {string}
-  //  */
-  // containerId;
-  // /**
-  //  *
-  //  * @type {string}
-  //  * @private
-  //  */
-  // _inputType = 'text';
-  // /**
-  //  *
-  //  * @type {string}
-  //  * @private
-  //  */
-  // _autocomplete = '';
+    static GPS_INITIALISATION_MODE_ALWAYS = 'always'; // for fresh form always start GPS lookup on ay type of device
+    static GPS_INITIALISATION_MODE_PERMITTED = 'permitted'; // for fresh form start GPS lookup automatically if already permitted
+    static GPS_INITIALISATION_MODE_MOBILE_ALWAYS = 'mobilealways'; // for fresh form start GPS lookup if on mobile device
+    static GPS_INITIALISATION_MODE_MOBILE_PERMITTED = 'mobilepermitted'; // for fresh form start GPS lookup if on mobile device and GPS already allowed
+    static GPS_INITIALISATION_MODE_NEVER = 'never'; // don't automatically attempt GPS lookup
 
-  /**
-   *
-   * @type {boolean}
-   */
+    gpsInitialisationMode = MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_PERMITTED;
 
-  /**
-   *
-   * @type {number}
-   */
+    geocoderOnMap = false;
 
-  /**
-   *
-   * @type {number}
-   */
+    useSeparateInputField = false;
 
-  /**
-   *
-   * @type {number}
-   */
+    /**
+     *
+     * @param {{
+     * [label] : string,
+     * [helpText]: string,
+     * [options]: {},
+     * [placeholder]: string,
+     * [type]: string,
+     * [autocomplete]: string,
+     * [baseSquareResolution]: ?number,
+     * [maxResolution]: ?number,
+     * [minResolution]: ?number,
+     * [includeSearchBox]: boolean,
+     * [gpsInitialisationMode]: string
+     * }} [params]
+     */
+    constructor (params) {
+        super(params);
 
-  /**
-   * @type {mapboxgl.Map}
-   */
+        if (params) {
+            if (params.includeSearchBox) {
+                this.includeSearchBox = params.includeSearchBox;
+            }
 
-  /**
-   * @type {MapMarker}
-   * @private
-   */
+            if (params.gpsInitialisationMode) {
+                this.gpsInitialisationMode = params.gpsInitialisationMode;
+            }
+        }
 
-  /**
-   * set if map has a well-defined zoom and centre
-   * (i.e. has been initialised from a typed grid-ref, a manual re-centre or user-click)
-   *
-   * @type {boolean}
-   */
-  // for fresh form always start GPS lookup on ay type of device
-  // for fresh form start GPS lookup automatically if already permitted
-  // for fresh form start GPS lookup if on mobile device
-  // for fresh form start GPS lookup if on mobile device and GPS already allowed
-  // don't automatically attempt GPS lookup
-
-  /**
-   *
-   * @param {{
-   * [label] : string,
-   * [helpText]: string,
-   * [options]: {},
-   * [placeholder]: string,
-   * [type]: string,
-   * [autocomplete]: string,
-   * [baseSquareResolution]: ?number,
-   * [maxResolution]: ?number,
-   * [minResolution]: ?number,
-   * [includeSearchBox]: boolean,
-   * [gpsInitialisationMode]: string
-   * }} [params]
-   */
-  function MapGeorefField(params) {
-    var _this;
-
-    _classCallCheck(this, MapGeorefField);
-
-    _this = _super.call(this, params);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _setGridrefFromGeocodedResult);
-
-    _defineProperty(_assertThisInitialized(_this), "includeSearchBox", false);
-
-    _defineProperty(_assertThisInitialized(_this), "defaultLat", 55.15793);
-
-    _defineProperty(_assertThisInitialized(_this), "defaultLng", -4.68);
-
-    _defineProperty(_assertThisInitialized(_this), "defaultZoom", 5);
-
-    _defineProperty(_assertThisInitialized(_this), "map", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "_squareMarker", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "mapPositionIsCurrent", false);
-
-    _defineProperty(_assertThisInitialized(_this), "gpsInitialisationMode", MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_PERMITTED);
-
-    _defineProperty(_assertThisInitialized(_this), "geocoderOnMap", false);
-
-    _defineProperty(_assertThisInitialized(_this), "useSeparateInputField", false);
-
-    if (params) {
-      if (params.includeSearchBox) {
-        _this.includeSearchBox = params.includeSearchBox;
-      }
-
-      if (params.gpsInitialisationMode) {
-        _this.gpsInitialisationMode = params.gpsInitialisationMode;
-      }
+        if (!this.includeSearchBox && !this.useSeparateInputField) {
+            throw new Error("Incompatible false combination of geo-ref field options: includeSearchBox and useSeparateInputField");
+        }
     }
 
-    if (!_this.includeSearchBox && !_this.useSeparateInputField) {
-      throw new Error("Incompatible false combination of geo-ref field options: includeSearchBox and useSeparateInputField");
+    // /**
+    //  *
+    //  * @param {(string|null|undefined)} textContent
+    //  */
+    // set value(textContent) {
+    //     this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
+    //     this.updateView();
+    // }
+
+    // /**
+    //  *
+    //  * @returns {string}
+    //  */
+    // get value() {
+    //     return this._value;
+    // }
+
+    updateView() {
+        if (this._fieldEl) {
+            // do nothing until the view has been constructed
+
+            const inputEl = document.getElementById(this._inputId);
+            inputEl.value = FormField.cleanRawString(this._value.gridRef);
+
+            // always need to call tryValue as this sets or clears the map marker
+            this.tryValue(this._value.gridRef);
+
+            // if (this._value.gridRef && this._value.source === TextGeorefField.GEOREF_SOURCE_GRIDREF) {
+            //     // only recenter the map if the source was a typed grid-reference
+            //     // (refs from other sources should already have moved the map)
+            //
+            //     this.tryValue(inputEl.value);
+            // } else {
+            //     console.log({'not re-centering map for new value' : this._value});
+            // }
+        }
     }
 
-    return _this;
-  } // /**
-  //  *
-  //  * @param {(string|null|undefined)} textContent
-  //  */
-  // set value(textContent) {
-  //     this._value = (undefined === textContent || null == textContent) ? '' : textContent.trim();
-  //     this.updateView();
-  // }
-  // /**
-  //  *
-  //  * @returns {string}
-  //  */
-  // get value() {
-  //     return this._value;
-  // }
-
-
-  _createClass(MapGeorefField, [{
-    key: "updateView",
-    value: function updateView() {
-      if (this._fieldEl) {
-        // do nothing until the view has been constructed
-        var inputEl = document.getElementById(this._inputId);
-        inputEl.value = FormField.cleanRawString(this._value.gridRef); // always need to call tryValue as this sets or clears the map marker
-
-        this.tryValue(this._value.gridRef); // if (this._value.gridRef && this._value.source === TextGeorefField.GEOREF_SOURCE_GRIDREF) {
-        //     // only recenter the map if the source was a typed grid-reference
-        //     // (refs from other sources should already have moved the map)
-        //
-        //     this.tryValue(inputEl.value);
-        // } else {
-        //     console.log({'not re-centering map for new value' : this._value});
-        // }
-      }
-    }
     /**
      * initialises this._fieldEl
      *
      * @returns {void}
      */
+    buildField() {
+        // <div class="form-group">
+        //     <label for="{baseId}gridref">Postcode or grid-reference</label>
+        //     <input type="text" class="form-control" id="{baseId}gridref" aria-describedby="{baseId}grHelp" placeholder="Grid-reference or postcode">
+        //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
+        // </div>
 
-  }, {
-    key: "buildField",
-    value: function buildField() {
-      var _this2 = this;
+        // <div class="form-group">
+        //     <label for="{baseId}gridref">Postcode or grid-reference</label>
+        //     <div class="input-group">
+        //         <input id="{baseId}gridref" aria-describedby="{baseId}grHelp" type="text" class="form-control" placeholder="Grid-reference or postcode" autocomplete="postal-code" required>
+        //         <span class="input-group-btn">
+        //             <button id="gps" type="button" class="btn btn-outline-secondary btn-sm" title="use GPS">
+        //                 <span class="material-icons">gps_not_fixed</span>
+        //             </button>
+        //         </span>
+        //     </div>
+        //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
+        // </div>
 
-      // <div class="form-group">
-      //     <label for="{baseId}gridref">Postcode or grid-reference</label>
-      //     <input type="text" class="form-control" id="{baseId}gridref" aria-describedby="{baseId}grHelp" placeholder="Grid-reference or postcode">
-      //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
-      // </div>
-      // <div class="form-group">
-      //     <label for="{baseId}gridref">Postcode or grid-reference</label>
-      //     <div class="input-group">
-      //         <input id="{baseId}gridref" aria-describedby="{baseId}grHelp" type="text" class="form-control" placeholder="Grid-reference or postcode" autocomplete="postal-code" required>
-      //         <span class="input-group-btn">
-      //             <button id="gps" type="button" class="btn btn-outline-secondary btn-sm" title="use GPS">
-      //                 <span class="material-icons">gps_not_fixed</span>
-      //             </button>
-      //         </span>
-      //     </div>
-      //     <small id="{baseId}grHelp" class="form-text text-muted">We need to be able to put your survey on our map. Detailed locations won't be made public.</small>
-      // </div>
-      var container = document.createElement('div');
-      container.className = 'form-group';
-      this.containerId = container.id = FormField.nextId;
-      this._inputId = FormField.nextId;
+        const container = document.createElement('div');
+        container.className = 'form-group';
+        this.containerId = container.id = FormField.nextId;
 
-      if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
-        // if on a mobile device and GPS is not turned on
-        var gpsEnabledLinkEl = document.createElement('a');
-        gpsEnabledLinkEl.className = 'no-gps-link-prompt'; // will be visible only if document body doesn't have a 'gps-enabled' class
+        this._inputId = FormField.nextId;
 
-        gpsEnabledLinkEl.href = '#';
-        gpsEnabledLinkEl.innerText = 'Please enable GPS';
-        container.appendChild(gpsEnabledLinkEl);
-        gpsEnabledLinkEl.addEventListener('click', this.gpsButtonClickHandler.bind(this));
-      }
+        if (navigator.geolocation && this.showGPSEnableLinkIfNotActiveOnMobile && GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) {
+            // if on a mobile device and GPS is not turned on
 
-      var labelEl = container.appendChild(document.createElement('label'));
-      labelEl.htmlFor = this._inputId;
-      labelEl.textContent = this.label;
-      var inputGroupEl = container.appendChild(document.createElement('div'));
-      inputGroupEl.className = 'input-group';
+            const gpsEnabledLinkEl = document.createElement('a');
+            gpsEnabledLinkEl.className = 'no-gps-link-prompt'; // will be visible only if document body doesn't have a 'gps-enabled' class
+            gpsEnabledLinkEl.href = '#';
+            gpsEnabledLinkEl.innerText = 'Please enable GPS';
+            container.appendChild(gpsEnabledLinkEl);
 
-      if (this.useSeparateInputField) {
-        var inputField = inputGroupEl.appendChild(document.createElement('input'));
-        inputField.className = "form-control";
-        inputField.id = this._inputId;
-        inputField.type = 'text';
-
-        if (this.placeholder) {
-          inputField.placeholder = this.placeholder;
+            gpsEnabledLinkEl.addEventListener('click', this.gpsButtonClickHandler.bind(this));
         }
 
-        if (this._autocomplete) {
-          inputField.autocomplete = this._autocomplete;
+        const labelEl = container.appendChild(document.createElement('label'));
+        labelEl.htmlFor = this._inputId;
+        labelEl.textContent = this.label;
 
-          if ('off' === this._autocomplete || '' === this._autocomplete) {
-            // browsers tend to ignore autocomplete off, so also assign a random 'name' value
-            inputField.name = uuid();
-          }
+        const inputGroupEl = container.appendChild(document.createElement('div'));
+        inputGroupEl.className = 'input-group';
+
+        if (this.useSeparateInputField) {
+            const inputField = inputGroupEl.appendChild(document.createElement('input'));
+            inputField.className = "form-control";
+            inputField.id = this._inputId;
+            inputField.type = 'text';
+
+            if (this.placeholder) {
+                inputField.placeholder = this.placeholder;
+            }
+
+            if (this._autocomplete) {
+                inputField.autocomplete = this._autocomplete;
+
+                if ('off' === this._autocomplete || '' === this._autocomplete) {
+                    // browsers tend to ignore autocomplete off, so also assign a random 'name' value
+                    inputField.name = uuid();
+                }
+            }
+
+            inputField.addEventListener('change', this.inputChangeHandler.bind(this));
+
+            if (this.completion === FormField.COMPLETION_COMPULSORY) {
+                inputField.required = true;
+            }
         }
 
-        inputField.addEventListener('change', this.inputChangeHandler.bind(this));
-
-        if (this.completion === FormField.COMPLETION_COMPULSORY) {
-          inputField.required = true;
-        }
-      }
-
-      if (this.validationMessage) {
-        var validationMessageElement = container.appendChild(document.createElement('div'));
-        validationMessageElement.className = 'invalid-feedback';
-        validationMessageElement.innerHTML = this.validationMessage;
-      }
-
-      this.addMapBox(container);
-
-      if (this.includeSearchBox) {
-        // noinspection JSUnresolvedFunction
-        var geocoder = new MapboxGeocoder({
-          accessToken: mapboxgl.accessToken,
-          mapboxgl: mapboxgl,
-          marker: false,
-          bbox: [-11, 49.1, 2, 61],
-          // [minX, minY, maxX, maxY]
-          localGeocoder: function localGeocoder(queryString) {
-            return _this2.localGridRefGeocoder(queryString);
-          }
-        });
-        geocoder.on('result', function (result) {
-          console.log({
-            'geocode result': result
-          });
-
-          _classPrivateMethodGet(_this2, _setGridrefFromGeocodedResult, _setGridrefFromGeocodedResult2).call(_this2, result.result);
-        });
-
-        if (this.geocoderOnMap) {
-          this.map.addControl(geocoder, 'top-right');
-        } else {
-          // put the geocoder outside the map area
-          inputGroupEl.appendChild(geocoder.onAdd(this.map)); //geocoder.addTo(inputGroupEl);
+        if (this.validationMessage) {
+            const validationMessageElement = container.appendChild(document.createElement('div'));
+            validationMessageElement.className = 'invalid-feedback';
+            validationMessageElement.innerHTML = this.validationMessage;
         }
 
-        if (!this.useSeparateInputField) {
-          var geoCoderInputEl = container.getElementsByClassName('mapboxgl-ctrl-geocoder--input')[0];
+        this.addMapBox(container);
 
-          if (!geoCoderInputEl) {
-            console.error("Failed to look-up geocoder's input element by class name");
-          }
+        if (this.includeSearchBox) {
+            // noinspection JSUnresolvedFunction
+            const geocoder = new MapboxGeocoder({
+                accessToken: mapboxgl.accessToken,
+                mapboxgl: mapboxgl,
+                marker: false,
+                bbox: [-11, 49.1, 2, 61], // [minX, minY, maxX, maxY]
+                localGeocoder: (queryString) => {
+                    return this.localGridRefGeocoder(queryString);
+                },
+            });
 
-          geoCoderInputEl.id = this._inputId;
-          geoCoderInputEl.classList.add('form-control'); // bootstrap class needed for validation display
+            geocoder.on('result', (result) => {
+                console.log({'geocode result' : result});
+                this.#setGridrefFromGeocodedResult(result.result);
+            });
 
-          geoCoderInputEl.addEventListener('change', this.inputChangeHandler.bind(this));
+            if (this.geocoderOnMap) {
+                this.map.addControl(geocoder, 'top-right');
+            } else {
+                // put the geocoder outside the map area
 
-          if (this.placeholder) {
-            geoCoderInputEl.placeholder = this.placeholder;
-          }
+                inputGroupEl.appendChild(geocoder.onAdd(this.map));
 
-          geocoder.on('clear', function () {
-            console.log('geocoder cleared');
-            _this2.value = {
-              gridRef: '',
-              rawString: '',
-              // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-              source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
-              latLng: null,
-              precision: null
-            };
+                //geocoder.addTo(inputGroupEl);
+            }
 
-            _this2.fireEvent(FormField.EVENT_CHANGE);
-          }); //mapbox-gl-geocoder--error mapbox-gl-geocoder--no-results
+            if (!this.useSeparateInputField) {
+                const geoCoderInputEl = container.getElementsByClassName('mapboxgl-ctrl-geocoder--input')[0];
+
+                if (!geoCoderInputEl) {
+                    console.error("Failed to look-up geocoder's input element by class name");
+                }
+                geoCoderInputEl.id = this._inputId;
+                geoCoderInputEl.classList.add('form-control'); // bootstrap class needed for validation display
+
+                geoCoderInputEl.addEventListener('change', this.inputChangeHandler.bind(this));
+
+                if (this.placeholder) {
+                    geoCoderInputEl.placeholder = this.placeholder;
+                }
+
+                geocoder.on('clear', () => {
+                    console.log('geocoder cleared');
+
+                    this.value = {
+                        gridRef: '',
+                        rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                        source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                        latLng: null,
+                        precision: null
+                    };
+
+                    this.fireEvent(FormField.EVENT_CHANGE);
+                });
+
+                //mapbox-gl-geocoder--error mapbox-gl-geocoder--no-results
+            }
         }
-      }
 
-      if (navigator.geolocation) {
-        var buttonContainerEl = inputGroupEl.appendChild(document.createElement('span'));
-        buttonContainerEl.className = 'input-group-btn gps-button-flex';
-        var gpsButton = buttonContainerEl.appendChild(document.createElement('button'));
-        gpsButton.id = FormField.nextId;
-        gpsButton.type = 'button';
-        gpsButton.className = 'btn btn-outline-secondary btn-sm';
-        gpsButton.title = 'use GPS';
+        if (navigator.geolocation) {
+            const buttonContainerEl = inputGroupEl.appendChild(document.createElement('span'));
+            buttonContainerEl.className = 'input-group-btn gps-button-flex';
 
-        if (this.gpsTextLabel) {
-          var gpsTextLabel = gpsButton.appendChild(document.createElement('span'));
-          gpsTextLabel.style.verticalAlign = 'middle';
-          gpsTextLabel.innerText = 'GPS ';
+            const gpsButton = buttonContainerEl.appendChild(document.createElement('button'));
+            gpsButton.id = FormField.nextId;
+            gpsButton.type = 'button';
+            gpsButton.className = 'btn btn-outline-secondary btn-sm';
+            gpsButton.title = 'use GPS';
+
+            if (this.gpsTextLabel) {
+                const gpsTextLabel = gpsButton.appendChild(document.createElement('span'));
+                gpsTextLabel.style.verticalAlign = 'middle';
+                gpsTextLabel.innerText = 'GPS ';
+            }
+
+            const buttonIconEl = gpsButton.appendChild(document.createElement('span'));
+            buttonIconEl.className = 'material-icons gps-icon';
+            buttonIconEl.innerText = 'gps_not_fixed';
+
+            if (this.gpsTextLabel) {
+                buttonIconEl.style.verticalAlign = 'middle';
+            }
+
+            gpsButton.addEventListener('click', this.gpsButtonClickHandler.bind(this));
         }
 
-        var buttonIconEl = gpsButton.appendChild(document.createElement('span'));
-        buttonIconEl.className = 'material-icons gps-icon';
-        buttonIconEl.innerText = 'gps_not_fixed';
+        const offlineWarning = container.appendChild(document.createElement('small'));
+        offlineWarning.classList.add('offline-warning');
+        offlineWarning.innerHTML = 'The map box might not display properly because you may not have a network connection currently. You can still use GPS or type in a grid-reference to locate records.';
 
-        if (this.gpsTextLabel) {
-          buttonIconEl.style.verticalAlign = 'middle';
+        if (this.helpText) {
+            const helpTextField = container.appendChild(document.createElement('small'));
+            helpTextField.innerHTML = this.helpText;
         }
 
-        gpsButton.addEventListener('click', this.gpsButtonClickHandler.bind(this));
-      }
-
-      var offlineWarning = container.appendChild(document.createElement('small'));
-      offlineWarning.classList.add('offline-warning');
-      offlineWarning.innerHTML = 'The map box might not display properly because you may not have a network connection currently. You can still use GPS or type in a grid-reference to locate records.';
-
-      if (this.helpText) {
-        var helpTextField = container.appendChild(document.createElement('small'));
-        helpTextField.innerHTML = this.helpText;
-      }
-
-      this._fieldEl = container;
+        this._fieldEl = container;
     }
+
     /**
      *
      * @param {string} queryString
      * @returns {[]} array of Carmen GeoJason features (see https://github.com/mapbox/carmen/blob/master/carmen-geojson.md )
      */
+    localGridRefGeocoder(queryString) {
+        let matches = [];
+        queryString = queryString.trim();
 
-  }, {
-    key: "localGridRefGeocoder",
-    value: function localGridRefGeocoder(queryString) {
-      var matches = [];
-      queryString = queryString.trim();
+        if (queryString) {
+            const parsedGridRef = S.from_string(queryString);
 
-      if (queryString) {
-        var parsedGridRef = S.from_string(queryString);
+            if (parsedGridRef) {
+                const latLngSW = parsedGridRef.gridCoords.to_latLng();
+                const latLngNW = (new parsedGridRef.GridCoords(parsedGridRef.gridCoords.x, parsedGridRef.gridCoords.y + parsedGridRef.length)).to_latLng();
+                const latLngNE = (new parsedGridRef.GridCoords(parsedGridRef.gridCoords.x + parsedGridRef.length, parsedGridRef.gridCoords.y + parsedGridRef.length)).to_latLng();
+                const latLngSE = (new parsedGridRef.GridCoords(parsedGridRef.gridCoords.x + parsedGridRef.length, parsedGridRef.gridCoords.y)).to_latLng();
 
-        if (parsedGridRef) {
-          var latLngSW = parsedGridRef.gridCoords.to_latLng();
-          var latLngNW = new parsedGridRef.GridCoords(parsedGridRef.gridCoords.x, parsedGridRef.gridCoords.y + parsedGridRef.length).to_latLng();
-          var latLngNE = new parsedGridRef.GridCoords(parsedGridRef.gridCoords.x + parsedGridRef.length, parsedGridRef.gridCoords.y + parsedGridRef.length).to_latLng();
-          var latLngSE = new parsedGridRef.GridCoords(parsedGridRef.gridCoords.x + parsedGridRef.length, parsedGridRef.gridCoords.y).to_latLng();
-          var latCentre = (latLngSW.lat + latLngNW.lat + latLngSE.lat + latLngNE.lat) / 4;
-          var lngCentre = (latLngSW.lng + latLngNW.lng + latLngSE.lng + latLngNE.lng) / 4;
-          matches[0] = {
-            "type": "Feature",
-            "text": "".concat(parsedGridRef.preciseGridRef, " (grid-reference)"),
-            "place_name": parsedGridRef.preciseGridRef,
-            "place_type": 'gridreference',
-            // non-standard
-            "grid_square_precision": parsedGridRef.length,
-            // non-standard
-            "geometry": {
-              "type": "Point",
-              "coordinates": [lngCentre, latCentre]
-            },
-            "bbox": [latLngNW.lng, latLngNW.lat, latLngSE.lng, latLngSE.lat]
-          };
+                const latCentre = (latLngSW.lat + latLngNW.lat + latLngSE.lat + latLngNE.lat) / 4;
+                const lngCentre = (latLngSW.lng + latLngNW.lng + latLngSE.lng + latLngNE.lng) / 4;
+
+                matches[0] = {
+                    "type" : "Feature",
+                    "text" : `${parsedGridRef.preciseGridRef} (grid-reference)`,
+                    "place_name" : parsedGridRef.preciseGridRef,
+                    "place_type" : 'gridreference', // non-standard
+                    "grid_square_precision" : parsedGridRef.length, // non-standard
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [lngCentre, latCentre]
+                    },
+                    "bbox": [latLngNW.lng, latLngNW.lat, latLngSE.lng, latLngSE.lat],
+                };
+            }
         }
-      }
 
-      return matches;
+        return matches;
     }
+
     /**
      *
      * @param {HTMLElement} contentContainer
      */
+    addField (contentContainer) {
+        // const formEl = this.parentForm.formElement;
+        //
+        // formEl.appendChild(this.fieldElement);
 
-  }, {
-    key: "addField",
-    value: function addField(contentContainer) {
-      var _this3 = this;
+        super.addField(contentContainer);
+        this.parentForm.addListener(Form.EVENT_INITIALISE_NEW, async (/** @type {{[survey] : Survey}} */ params) => {
+            console.log('Handling initialisation of new MapGeoRefField.');
 
-      // const formEl = this.parentForm.formElement;
-      //
-      // formEl.appendChild(this.fieldElement);
-      _get(_getPrototypeOf(MapGeorefField.prototype), "addField", this).call(this, contentContainer);
-
-      this.parentForm.addListener(Form.EVENT_INITIALISE_NEW, /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(
-        /** @type {{[survey] : Survey}} */
-        params) {
-          var doGPSInitialisation;
-          return regenerator.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  console.log('Handling initialisation of new MapGeoRefField.');
-
-                  if (!_this3._value.gridRef) {
-                    _context.next = 4;
-                    break;
-                  }
-
-                  console.log({
-                    'In georef form initialisation already have a value set, so aborting.': _this3._value
-                  });
-                  return _context.abrupt("return");
-
-                case 4:
-                  if (!(navigator.geolocation && _this3.gpsInitialisationMode !== MapGeorefField.GPS_INITIALISATION_MODE_NEVER)) {
-                    _context.next = 29;
-                    break;
-                  }
-
-                  if (!(_this3.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_ALWAYS || _this3.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_PERMITTED)) {
-                    _context.next = 19;
-                    break;
-                  }
-
-                  _context.t0 = GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE;
-
-                  if (!_context.t0) {
-                    _context.next = 16;
-                    break;
-                  }
-
-                  _context.t1 = _this3.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_ALWAYS;
-
-                  if (_context.t1) {
-                    _context.next = 15;
-                    break;
-                  }
-
-                  _context.next = 12;
-                  return GPSRequest.haveGPSPermission();
-
-                case 12:
-                  _context.t2 = _context.sent;
-                  _context.t3 = GPSRequest.GPS_PERMISSION_GRANTED;
-                  _context.t1 = _context.t2 === _context.t3;
-
-                case 15:
-                  _context.t0 = _context.t1;
-
-                case 16:
-                  doGPSInitialisation = _context.t0;
-                  _context.next = 27;
-                  break;
-
-                case 19:
-                  _context.t4 = _this3.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_ALWAYS;
-
-                  if (_context.t4) {
-                    _context.next = 26;
-                    break;
-                  }
-
-                  _context.next = 23;
-                  return GPSRequest.haveGPSPermission();
-
-                case 23:
-                  _context.t5 = _context.sent;
-                  _context.t6 = GPSRequest.GPS_PERMISSION_GRANTED;
-                  _context.t4 = _context.t5 === _context.t6;
-
-                case 26:
-                  doGPSInitialisation = _context.t4;
-
-                case 27:
-                  _context.next = 30;
-                  break;
-
-                case 29:
-                  doGPSInitialisation = false;
-
-                case 30:
-                  // let grantState = GPSRequest.haveGPSPermission();
-                  //
-                  // console.log({'grant state':grantState});
-                  if (doGPSInitialisation) {
-                    // It is somewhat anomalous that linkage with the camera event only happens if the form has been
-                    // freshly initialised.
-                    // If returning to a previous (perhaps blank-ish) entry later and filling in photo and grid-ref
-                    // for the first time then it would be better if the camera event was listened for again.
-                    _this3.parentForm.addListener(Form.EVENT_CAMERA, function () {
-                      // also set GPS when photo is taken
-                      _this3.seekGPS().then(function () {
-                        console.log('After photo got successful GPS fix.');
-                      }, function () {
-                        console.log('After photo failed GPS fix.');
-                      });
-                    });
-
-                    _this3.seekGPS().then(function () {
-                      console.log('GPS initialisation succeeded.');
-
-                      _this3._tryDefaultGeoreferenceFromSurvey(params.survey, false); // don't move the map, but do set a placeholder value
-
-                    }, function (error) {
-                      console.log({
-                        'GPS initialisation failed': error
-                      });
-
-                      _this3._tryDefaultGeoreferenceFromSurvey(params.survey, true);
-                    });
-                  } else {
-                    _this3._tryDefaultGeoreferenceFromSurvey(params.survey, true);
-                  }
-
-                case 31:
-                case "end":
-                  return _context.stop();
-              }
+            if (this._value.gridRef) {
+                console.log({'In georef form initialisation already have a value set, so aborting.' : this._value});
+                return;
             }
-          }, _callee);
-        }));
 
-        return function (_x) {
-          return _ref.apply(this, arguments);
-        };
-      }());
-      this.parentForm.addListener(Form.EVENT_INITIALISED, function (
-      /** @type {{[survey] : Survey}} */
-      params) {
-        console.log('Handling re-initialisation of new MapGeoRefField.'); // set the geo-ref field placeholder to match the survey grid-ref and center the map there if no grid-ref has been specified
+            let doGPSInitialisation;
 
-        _this3._tryDefaultGeoreferenceFromSurvey(params.survey, !_this3._value.gridRef);
-      });
+            if (navigator.geolocation && this.gpsInitialisationMode !== MapGeorefField.GPS_INITIALISATION_MODE_NEVER) {
+                if (this.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_ALWAYS ||
+                    this.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_PERMITTED) {
+
+                    doGPSInitialisation = ((GPSRequest.getDeviceType() === GPSRequest.DEVICE_TYPE_MOBILE) &&
+                        (this.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_MOBILE_ALWAYS ||
+                            await GPSRequest.haveGPSPermission() === GPSRequest.GPS_PERMISSION_GRANTED));
+
+                } else {
+                    // either 'always' or 'always-if-permitted'
+
+                    doGPSInitialisation = (this.gpsInitialisationMode === MapGeorefField.GPS_INITIALISATION_MODE_ALWAYS ||
+                        await GPSRequest.haveGPSPermission() === GPSRequest.GPS_PERMISSION_GRANTED);
+                }
+
+            } else {
+                doGPSInitialisation = false;
+            }
+
+            // let grantState = GPSRequest.haveGPSPermission();
+            //
+            // console.log({'grant state':grantState});
+
+            if (doGPSInitialisation) {
+
+                // It is somewhat anomalous that linkage with the camera event only happens if the form has been
+                // freshly initialised.
+                // If returning to a previous (perhaps blank-ish) entry later and filling in photo and grid-ref
+                // for the first time then it would be better if the camera event was listened for again.
+                this.parentForm.addListener(Form.EVENT_CAMERA, () => {
+                    // also set GPS when photo is taken
+
+                    this.seekGPS().then(() => {
+                        console.log('After photo got successful GPS fix.');
+                    }, () => {
+                        console.log('After photo failed GPS fix.');
+                    });
+                });
+
+                this.seekGPS().then(() => {
+                    console.log('GPS initialisation succeeded.');
+
+                    this._tryDefaultGeoreferenceFromSurvey(params.survey, false); // don't move the map, but do set a placeholder value
+                },
+                    (error) => {
+                        console.log({'GPS initialisation failed': error});
+                        this._tryDefaultGeoreferenceFromSurvey(params.survey, true);
+                    });
+            } else {
+                this._tryDefaultGeoreferenceFromSurvey(params.survey, true);
+            }
+        });
+
+        this.parentForm.addListener(Form.EVENT_INITIALISED, (/** @type {{[survey] : Survey}} */ params) => {
+            console.log('Handling re-initialisation of new MapGeoRefField.');
+
+            // set the geo-ref field placeholder to match the survey grid-ref and center the map there if no grid-ref has been specified
+
+            this._tryDefaultGeoreferenceFromSurvey(params.survey, !this._value.gridRef);
+        });
     }
+
     /**
      *
      * @param {Survey} survey
      * @param {boolean} setMap
      * @private
      */
+    _tryDefaultGeoreferenceFromSurvey(survey, setMap) {
+        if (this.initialiseFromDefaultSurveyGeoref) {
+            let geoRef = survey.geoReference;
 
-  }, {
-    key: "_tryDefaultGeoreferenceFromSurvey",
-    value: function _tryDefaultGeoreferenceFromSurvey(survey, setMap) {
-      var _this4 = this;
+            console.log({"Default occurrence georef" : geoRef});
 
-      if (this.initialiseFromDefaultSurveyGeoref) {
-        var geoRef = survey.geoReference;
-        console.log({
-          "Default occurrence georef": geoRef
-        });
+            if (geoRef && geoRef.gridRef) {
+                if (setMap) {
+                    this.mapPositionIsCurrent = false; // force re-centre & zoom
+                    this.tryValue(geoRef.gridRef);
+                }
 
-        if (geoRef && geoRef.gridRef) {
-          if (setMap) {
-            this.mapPositionIsCurrent = false; // force re-centre & zoom
-
-            this.tryValue(geoRef.gridRef);
-          }
-
-          var inputEl = document.getElementById(this._inputId);
-
-          if (inputEl) {
-            inputEl.placeholder = geoRef.gridRef;
-          }
-        }
-
-        survey.addListener(Survey.EVENT_MODIFIED, function () {
-          var newGeoRef = survey.geoReference;
-
-          if (newGeoRef && newGeoRef.gridRef) {
-            var _inputEl = document.getElementById(_this4._inputId);
-
-            if (_inputEl) {
-              _inputEl.placeholder = geoRef.gridRef;
+                const inputEl = document.getElementById(this._inputId);
+                if (inputEl) {
+                    inputEl.placeholder = geoRef.gridRef;
+                }
             }
-          }
-        });
-      }
+
+            survey.addListener(Survey.EVENT_MODIFIED, () => {
+                const newGeoRef = survey.geoReference;
+
+                if (newGeoRef && newGeoRef.gridRef) {
+                    const inputEl = document.getElementById(this._inputId);
+                    if (inputEl) {
+                        inputEl.placeholder = geoRef.gridRef;
+                    }
+                }
+            });
+        }
     }
+
     /**
      *
      * @param {HTMLElement} container
      */
+    addMapBox(container) {
+        let divEl = container.appendChild(document.createElement('div'));
+        divEl.id = `map${FormField.nextId}`;
+        divEl.className = 'map-container';
 
-  }, {
-    key: "addMapBox",
-    value: function addMapBox(container) {
-      var _this5 = this;
+        // see https://docs.mapbox.com/mapbox-gl-js/example/simple-map/
+        mapboxgl.accessToken = 'pk.eyJ1IjoiamFwb25pY3VzIiwiYSI6ImNramV1dnRpeTJvNzczMG10c2s3NnZ2bHMifQ.C8BsQepXT6KE-hoQaEerRw';
 
-      var divEl = container.appendChild(document.createElement('div'));
-      divEl.id = "map".concat(FormField.nextId);
-      divEl.className = 'map-container'; // see https://docs.mapbox.com/mapbox-gl-js/example/simple-map/
-
-      mapboxgl.accessToken = 'pk.eyJ1IjoiamFwb25pY3VzIiwiYSI6ImNramV1dnRpeTJvNzczMG10c2s3NnZ2bHMifQ.C8BsQepXT6KE-hoQaEerRw';
-      this.map = new mapboxgl.Map({
-        container: divEl,
-        style: 'mapbox://styles/mapbox/streets-v11',
-        // style URL
-        center: [this.defaultLng, this.defaultLat],
-        // starting position [lng, lat]
-        zoom: this.defaultZoom,
-        // starting zoom
-        cooperativeGestures: true // see https://github.com/mapbox/mapbox-gl-js/issues/6884
-
-      });
-      this.map.addControl(new mapboxgl.NavigationControl({
-        showCompass: false
-      }));
-      this.map.on('click',
-      /** @param {mapboxgl.MapMouseEvent} mapMouseEvent */
-      function (mapMouseEvent) {
-        console.log("A click event has occurred at ".concat(mapMouseEvent.lngLat));
-        console.log({
-          mapMouseEvent: mapMouseEvent
+        this.map = new mapboxgl.Map({
+            container: divEl,
+            style: 'mapbox://styles/mapbox/streets-v11', // style URL
+            center: [this.defaultLng, this.defaultLat], // starting position [lng, lat]
+            zoom: this.defaultZoom, // starting zoom
+            cooperativeGestures: true // see https://github.com/mapbox/mapbox-gl-js/issues/6884
         });
 
-        var zoom = _this5.map.getZoom();
+        this.map.addControl(new mapboxgl.NavigationControl({
+            showCompass : false
+        }));
 
-        var squareDimension = _this5.reverseZoomMapping(zoom);
+        this.map.on('click', /** @param {mapboxgl.MapMouseEvent} mapMouseEvent */ (mapMouseEvent) => {
+            console.log(`A click event has occurred at ${mapMouseEvent.lngLat}`);
+            console.log({mapMouseEvent});
 
-        if (squareDimension <= _this5.minResolution) {
-          // only allow selection if zoomed-in sufficiently
-          _this5.map.jumpTo({
-            center: [mapMouseEvent.lngLat.lng, mapMouseEvent.lngLat.lat],
-            zoom: zoom
-          }, null);
+            let zoom = this.map.getZoom();
+            const squareDimension = this.reverseZoomMapping(zoom);
 
-          _this5.mapPositionIsCurrent = true;
+            if (squareDimension <= this.minResolution) {
+                // only allow selection if zoomed-in sufficiently
 
-          _this5.processLatLngPosition(mapMouseEvent.lngLat.lat, mapMouseEvent.lngLat.lng, squareDimension, TextGeorefField.GEOREF_SOURCE_MAP);
-        }
-      });
-      this.respondToVisibility(divEl, function (visible) {
-        if (visible) {
-          console.log('Map is visible');
+                this.map.jumpTo({
+                    center: [mapMouseEvent.lngLat.lng, mapMouseEvent.lngLat.lat],
+                    zoom: zoom
+                }, null);
 
-          _this5.map.resize(null);
-        }
-      });
+                this.mapPositionIsCurrent = true;
+
+                this.processLatLngPosition(
+                    mapMouseEvent.lngLat.lat,
+                    mapMouseEvent.lngLat.lng,
+                    squareDimension,
+                    TextGeorefField.GEOREF_SOURCE_MAP
+                );
+            }
+        });
+
+        this.respondToVisibility(divEl, (visible) => {
+            if (visible) {
+                console.log('Map is visible');
+                this.map.resize(null);
+            }
+        });
     }
+
     /**
      *
      * @param {number} length (should already have been normalised)
      * @returns {number} zoom level
      */
-
-  }, {
-    key: "zoomMapping",
-    value: function zoomMapping(length) {
-      return {
-        1: 12,
-        10: 12,
-        100: 11,
-        1000: 10,
-        2000: 10,
-        10000: 8
-      }[length];
+    zoomMapping(length) {
+        return {
+            1: 12,
+            10: 12,
+            100: 11,
+            1000: 10,
+            2000: 10,
+            10000: 8,
+        }[length];
     }
+
     /**
      *
      * @param {number} zoom
      * @returns {number} grid square dimension (m)
      */
-
-  }, {
-    key: "reverseZoomMapping",
-    value: function reverseZoomMapping(zoom) {
-      return {
-        0: 100000,
-        1: 100000,
-        2: 100000,
-        3: 100000,
-        4: 100000,
-        5: 100000,
-        6: 100000,
-        7: 10000,
-        8: 10000,
-        9: 2000,
-        10: 2000,
-        11: 1000,
-        12: 1000,
-        13: 100,
-        14: 100,
-        15: 10
-      }[Math.round(zoom)];
+    reverseZoomMapping(zoom) {
+        return {
+            0: 100000,
+            1: 100000,
+            2: 100000,
+            3: 100000,
+            4: 100000,
+            5: 100000,
+            6: 100000,
+            7: 10000,
+            8: 10000,
+            9: 2000,
+            10: 2000,
+            11: 1000,
+            12: 1000,
+            13: 100,
+            14: 100,
+            15: 10,
+        }[Math.round(zoom)];
     }
+
     /**
      * Start observing visibility of element. On change,
      * the callback is called with Boolean visibility as argument.
@@ -22781,31 +14442,59 @@ var MapGeorefField = /*#__PURE__*/function (_TextGeorefField) {
      * @param element
      * @param callback
      */
+    respondToVisibility(element, callback) {
+        // intersection observer is unsupported on older apple devices
+        if (window.IntersectionObserver) {
+            let options = {
+                root: document.documentElement,
+            };
 
-  }, {
-    key: "respondToVisibility",
-    value: function respondToVisibility(element, callback) {
-      // intersection observer is unsupported on older apple devices
-      if (window.IntersectionObserver) {
-        var options = {
-          root: document.documentElement
-        };
-        var observer = new IntersectionObserver(function (entries, observer) {
-          entries.forEach(function (entry) {
-            callback(entry.intersectionRatio > 0);
-          });
-        }, options);
-        observer.observe(element);
-      }
+            let observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    callback(entry.intersectionRatio > 0);
+                });
+            }, options);
+
+            observer.observe(element);
+        }
     }
+
     /**
      *
      * @param {{bbox : Array<number>, center : Array<number>, geometry : {coordinates:Array<number>, type:string}, type:string, place_type:Array<string>}} result
      */
+    #setGridrefFromGeocodedResult(result) {
+        console.log({'geocoded result' : result});
 
-  }, {
-    key: "tryValue",
-    value: // /**
+        this.mapPositionIsCurrent = false;
+
+        if (result.place_type === 'gridreference') {
+            // special case
+
+            this.value = {
+                gridRef: result.place_name,
+                rawString: result.rawString,
+                source: TextGeorefField.GEOREF_SOURCE_GRIDREF,
+                latLng: {lat : result.geometry.coordinates[1], lng:result.geometry.coordinates[0]},
+                precision: result.grid_square_precision
+            };
+
+            this.fireEvent(FormField.EVENT_CHANGE);
+        } else {
+            // currently, just uses the centre-point
+            this.processLatLngPosition(
+                result.center[1],
+                result.center[0],
+                this.baseSquareResolution || 1,
+                TextGeorefField.GEOREF_SOURCE_PLACE,
+                result.place_name || ''
+            );
+
+            // place_type is one or more of country, region, postcode, district, place, locality, neighborhood, address, and poi
+        }
+    }
+
+    // /**
     //  *
     //  * @param {(boolean|null)} isValid
     //  */
@@ -22819,6 +14508,7 @@ var MapGeorefField = /*#__PURE__*/function (_TextGeorefField) {
     //         el.classList.add(isValid ? 'is-valid' : 'is-invalid');
     //     }
     // }
+
     // inputChangeHandler (event) {
     //     event.stopPropagation(); // don't allow the change event to reach the form-level event handler (will handle it here instead)
     //
@@ -22838,66 +14528,74 @@ var MapGeorefField = /*#__PURE__*/function (_TextGeorefField) {
      *
      * @param {string} query may be a grid-reference or postcode
      */
-    function tryValue(query) {
-      if (query) {
-        var gridRefParser = S.from_string(query);
+    tryValue(query) {
 
-        if (gridRefParser) {
-          var latLngSW = gridRefParser.gridCoords.to_latLng();
-          var latLngNW = new gridRefParser.GridCoords(gridRefParser.gridCoords.x, gridRefParser.gridCoords.y + gridRefParser.length).to_latLng();
-          var latLngNE = new gridRefParser.GridCoords(gridRefParser.gridCoords.x + gridRefParser.length, gridRefParser.gridCoords.y + gridRefParser.length).to_latLng();
-          var latLngSE = new gridRefParser.GridCoords(gridRefParser.gridCoords.x + gridRefParser.length, gridRefParser.gridCoords.y).to_latLng();
-          var latCentre = (latLngSW.lat + latLngNW.lat + latLngSE.lat + latLngNE.lat) / 4;
-          var lngCentre = (latLngSW.lng + latLngNW.lng + latLngSE.lng + latLngNE.lng) / 4; // this.processLatLngPosition(
-          //     latCentre,
-          //     lngCentre,
-          //     gridRefParser.length
-          // );
+        if (query) {
+            let gridRefParser = S.from_string(query);
 
-          if (!this.mapPositionIsCurrent) {
-            this.map.jumpTo({
-              center: [lngCentre, latCentre],
-              zoom: this.zoomMapping(gridRefParser.length)
-            }, null);
-            this.mapPositionIsCurrent = true;
-          } // const marker = new MapMarker({
-          //     name : gridRefParser.preciseGridRef,
-          //     type : MapMarker.TYPE_POLYGON,
-          //     coordinates : [[
-          //         [latLngSW.lng, latLngSW.lat],
-          //         [latLngNW.lng, latLngNW.lat],
-          //         [latLngNE.lng, latLngNE.lat],
-          //         [latLngSE.lng, latLngSE.lat]
-          //     ]],
-          //     fillColour: '#008800',
-          //     fillOpacity: 0.5,
-          //     lineColour: '#00aa00',
-          // });
-          //
-          // marker.addToMap(this.map);
+            if (gridRefParser) {
+                const latLngSW = gridRefParser.gridCoords.to_latLng();
+                const latLngNW = (new gridRefParser.GridCoords(gridRefParser.gridCoords.x, gridRefParser.gridCoords.y + gridRefParser.length)).to_latLng();
+                const latLngNE = (new gridRefParser.GridCoords(gridRefParser.gridCoords.x + gridRefParser.length, gridRefParser.gridCoords.y + gridRefParser.length)).to_latLng();
+                const latLngSE = (new gridRefParser.GridCoords(gridRefParser.gridCoords.x + gridRefParser.length, gridRefParser.gridCoords.y)).to_latLng();
 
+                const latCentre = (latLngSW.lat + latLngNW.lat + latLngSE.lat + latLngNE.lat) / 4;
+                const lngCentre = (latLngSW.lng + latLngNW.lng + latLngSE.lng + latLngNE.lng) / 4;
 
-          this.setSquareMarker(latLngSW, latLngNW, latLngNE, latLngSE, gridRefParser.preciseGridRef);
+                // this.processLatLngPosition(
+                //     latCentre,
+                //     lngCentre,
+                //     gridRefParser.length
+                // );
+
+                if (!this.mapPositionIsCurrent) {
+                    this.map.jumpTo({
+                        center: [lngCentre, latCentre],
+                        zoom: this.zoomMapping(gridRefParser.length),
+                    }, null);
+
+                    this.mapPositionIsCurrent = true;
+                }
+
+                // const marker = new MapMarker({
+                //     name : gridRefParser.preciseGridRef,
+                //     type : MapMarker.TYPE_POLYGON,
+                //     coordinates : [[
+                //         [latLngSW.lng, latLngSW.lat],
+                //         [latLngNW.lng, latLngNW.lat],
+                //         [latLngNE.lng, latLngNE.lat],
+                //         [latLngSE.lng, latLngSE.lat]
+                //     ]],
+                //     fillColour: '#008800',
+                //     fillOpacity: 0.5,
+                //     lineColour: '#00aa00',
+                // });
+                //
+                // marker.addToMap(this.map);
+
+                this.setSquareMarker(latLngSW, latLngNW, latLngNE, latLngSE, gridRefParser.preciseGridRef);
+
+            } else {
+                this.hideSquareMarker();
+
+                // try to decipher postcode or place-name using remote geo-coder
+
+            }
         } else {
-          this.hideSquareMarker(); // try to decipher postcode or place-name using remote geo-coder
+            this.hideSquareMarker();
         }
-      } else {
-        this.hideSquareMarker();
-      }
     }
+
     /**
      *
      */
-
-  }, {
-    key: "hideSquareMarker",
-    value: function hideSquareMarker() {
-      if (this._squareMarker && this._squareMarker.visible) {
-        this._squareMarker.removeFromMap(this.map);
-
-        this._squareMarker = null;
-      }
+    hideSquareMarker() {
+        if (this._squareMarker && this._squareMarker.visible) {
+            this._squareMarker.removeFromMap(this.map);
+            this._squareMarker = null;
+        }
     }
+
     /**
      *
      * @param {LatLngWGS84} sw
@@ -22906,28 +14604,40 @@ var MapGeorefField = /*#__PURE__*/function (_TextGeorefField) {
      * @param {LatLngWGS84} se
      * @param {string=} name
      */
+    setSquareMarker(sw, nw, ne, se,name = '') {
+        if (this._squareMarker) {
+            // marker has already been defined, so only need to update its position data and redisplay
 
-  }, {
-    key: "setSquareMarker",
-    value: function setSquareMarker(sw, nw, ne, se) {
-      var name = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
+            this._squareMarker.updateCoordinates(
+                this.map,
+                [[
+                    [sw.lng, sw.lat],
+                    [nw.lng, nw.lat],
+                    [ne.lng, ne.lat],
+                    [se.lng, se.lat]
+                ]],
+                name
+            );
+        } else {
+            this._squareMarker = new MapMarker({
+                name : name,
+                type : MapMarker.TYPE_POLYGON,
+                coordinates : [[
+                    [sw.lng, sw.lat],
+                    [nw.lng, nw.lat],
+                    [ne.lng, ne.lat],
+                    [se.lng, se.lat]
+                ]],
+                fillColour: '#008800',
+                fillOpacity: 0.5,
+                lineColour: '#00aa00',
+            });
 
-      if (this._squareMarker) {
-        // marker has already been defined, so only need to update its position data and redisplay
-        this._squareMarker.updateCoordinates(this.map, [[[sw.lng, sw.lat], [nw.lng, nw.lat], [ne.lng, ne.lat], [se.lng, se.lat]]], name);
-      } else {
-        this._squareMarker = new MapMarker({
-          name: name,
-          type: MapMarker.TYPE_POLYGON,
-          coordinates: [[[sw.lng, sw.lat], [nw.lng, nw.lat], [ne.lng, ne.lat], [se.lng, se.lat]]],
-          fillColour: '#008800',
-          fillOpacity: 0.5,
-          lineColour: '#00aa00'
-        });
+            this._squareMarker.addToMap(this.map);
+        }
+    }
 
-        this._squareMarker.addToMap(this.map);
-      }
-    } // /**
+    // /**
     //  * by the time summariseImpl has been called have already checked that summary is wanted
     //  *
     //  * @param {string} key
@@ -22941,308 +14651,223 @@ var MapGeorefField = /*#__PURE__*/function (_TextGeorefField) {
     //         :
     //         '';
     // }
-
-  }]);
-
-  return MapGeorefField;
-}(TextGeorefField);
-
-function _setGridrefFromGeocodedResult2(result) {
-  console.log({
-    'geocoded result': result
-  });
-  this.mapPositionIsCurrent = false;
-
-  if (result.place_type === 'gridreference') {
-    // special case
-    this.value = {
-      gridRef: result.place_name,
-      rawString: result.rawString,
-      source: TextGeorefField.GEOREF_SOURCE_GRIDREF,
-      latLng: {
-        lat: result.geometry.coordinates[1],
-        lng: result.geometry.coordinates[0]
-      },
-      precision: result.grid_square_precision
-    };
-    this.fireEvent(FormField.EVENT_CHANGE);
-  } else {
-    // currently, just uses the centre-point
-    this.processLatLngPosition(result.center[1], result.center[0], this.baseSquareResolution || 1, TextGeorefField.GEOREF_SOURCE_PLACE, result.place_name || ''); // place_type is one or more of country, region, postcode, district, place, locality, neighborhood, address, and poi
-  }
 }
 
-_defineProperty(MapGeorefField, "GPS_INITIALISATION_MODE_ALWAYS", 'always');
+class OccurrenceForm extends Form {
+    /**
+     * @protected
+     * @type {Occurrence}
+     */
+    _occurrence;
 
-_defineProperty(MapGeorefField, "GPS_INITIALISATION_MODE_PERMITTED", 'permitted');
+    /**
+     * nasty tight coupling, but is needed for saving of images
+     * set by MainView immediately after the form is constructed
+     *
+     * @type {string}
+     */
+    surveyId = '';
 
-_defineProperty(MapGeorefField, "GPS_INITIALISATION_MODE_MOBILE_ALWAYS", 'mobilealways');
+    /**
+     * @abstract
+     * @type {Object.<string,{field: typeof FormField, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>}
+     */
+    static properties;
 
-_defineProperty(MapGeorefField, "GPS_INITIALISATION_MODE_MOBILE_PERMITTED", 'mobilepermitted');
+    /**
+     * @abstract
+     * @type {string}
+     */
+    static sectionTitle = 'Occurrence form';
 
-_defineProperty(MapGeorefField, "GPS_INITIALISATION_MODE_NEVER", 'never');
+    /**
+     * @type {string}
+     */
+    static help = 'Records help text, should normally be initialised with an imported html template';
 
-function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+    constructor(occurrence) {
+        super();
 
-function _isNativeReflectConstruct$1() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var OccurrenceForm = /*#__PURE__*/function (_Form) {
-  _inherits(OccurrenceForm, _Form);
+        if (new.target === OccurrenceForm) {
+            throw new TypeError("Cannot construct OccurrenceForm instances directly, class should be overridden.");
+        }
 
-  var _super = _createSuper$1(OccurrenceForm);
-
-  /**
-   * @protected
-   * @type {Occurrence}
-   */
-
-  /**
-   * nasty tight coupling, but is needed for saving of images
-   * set by MainView immediately after the form is constructed
-   *
-   * @type {string}
-   */
-
-  /**
-   * @abstract
-   * @type {Object.<string,{field: typeof FormField, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>}
-   */
-
-  /**
-   * @abstract
-   * @type {string}
-   */
-
-  /**
-   * @type {string}
-   */
-  function OccurrenceForm(occurrence) {
-    var _this;
-
-    _classCallCheck(this, OccurrenceForm);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "_occurrence", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "surveyId", '');
-
-    if ((this instanceof OccurrenceForm ? this.constructor : void 0) === OccurrenceForm) {
-      throw new TypeError("Cannot construct OccurrenceForm instances directly, class should be overridden.");
+        if (occurrence) {
+            this.model = occurrence;
+        }
     }
 
-    if (occurrence) {
-      _this.model = occurrence;
+    /**
+     *
+     * @returns {HTMLElement}
+     */
+    get formElement() {
+        console.log({test_constructor : this.constructor});
+
+        let el = super.formElement;
+
+        if (!this._formFieldsBuilt) {
+            this.buildFormFields();
+
+            el.addEventListener('change', () => {
+                console.log('occurrence form change event');
+                console.log(arguments);
+            }, {capture: false});
+        }
+
+        return el;
     }
 
-    return _this;
-  }
-  /**
-   *
-   * @returns {HTMLElement}
-   */
-
-
-  _createClass(OccurrenceForm, [{
-    key: "formElement",
-    get: function get() {
-      var _arguments = arguments;
-      console.log({
-        test_constructor: this.constructor
-      });
-
-      var el = _get(_getPrototypeOf(OccurrenceForm.prototype), "formElement", this);
-
-      if (!this._formFieldsBuilt) {
-        this.buildFormFields();
-        el.addEventListener('change', function () {
-          console.log('occurrence form change event');
-          console.log(_arguments);
-        }, {
-          capture: false
-        });
-      }
-
-      return el;
-    }
     /**
      * sets this._formContentContainer to the container that should contain the form fields
      *
      * if no wrapper then can re-use the outer container id (this.#formEl
      */
+    buildContentContainer(outerContainer) {
+        const cardEl = outerContainer.appendChild(document.createElement('div'));
+        cardEl.className = 'card mt-3 ml-0 mr-0 mb-3';
 
-  }, {
-    key: "buildContentContainer",
-    value: function buildContentContainer(outerContainer) {
-      var cardEl = outerContainer.appendChild(document.createElement('div'));
-      cardEl.className = 'card mt-3 ml-0 mr-0 mb-3';
-      var cardHeaderEl = cardEl.appendChild(document.createElement('div'));
-      cardHeaderEl.className = 'card-header';
-      cardHeaderEl.textContent = OccurrenceForm.sectionTitle;
-      this._formContentContainer = cardEl.appendChild(document.createElement('div'));
-      this._formContentContainer.className = 'card-body';
-      return this._formContentContainer;
+        const cardHeaderEl = cardEl.appendChild(document.createElement('div'));
+        cardHeaderEl.className = 'card-header';
+
+        cardHeaderEl.textContent = OccurrenceForm.sectionTitle;
+
+        this._formContentContainer = cardEl.appendChild(document.createElement('div'));
+        this._formContentContainer.className = 'card-body';
+
+        return this._formContentContainer;
     }
+
     /**
      *
      * @returns {(string|null)}
      */
-
-  }, {
-    key: "occurrenceId",
-    get: function get() {
-      return this._occurrence ? this._occurrence.id : null;
+    get occurrenceId() {
+        return this._occurrence ? this._occurrence.id : null;
     }
+
     /**
      *
      * @returns {(number|null)}
      */
-
-  }, {
-    key: "projectId",
-    get: function get() {
-      return this._occurrence ? this._occurrence.projectId : null;
+    get projectId() {
+        return this._occurrence ? this._occurrence.projectId : null;
     }
+
     /**
      *
      */
+    initialiseFormFields() {
+        const properties = this.getFormSectionProperties();
 
-  }, {
-    key: "initialiseFormFields",
-    value: function initialiseFormFields() {
-      var properties = this.getFormSectionProperties();
-      this.fields = {};
+        this.fields = {};
 
-      for (var key in properties) {
-        if (properties.hasOwnProperty(key)) {
-          // noinspection JSPotentiallyInvalidConstructorUsage
-          this.fields[key] = new properties[key].field(properties[key].attributes);
+        for (let key in properties) {
+            if (properties.hasOwnProperty(key)) {
+                // noinspection JSPotentiallyInvalidConstructorUsage
+                this.fields[key] = new properties[key].field(properties[key].attributes);
+            }
         }
-      }
     }
-  }, {
-    key: "updateModelFromContent",
-    value: function updateModelFromContent() {
-      console.log('updating occurrence from OccurrenceForm content');
 
-      for (var key in this.fields) {
-        if (this.fields.hasOwnProperty(key)) {
-          var field = this.fields[key];
-          this._occurrence.attributes[key] = field.value;
+    updateModelFromContent() {
+        console.log('updating occurrence from OccurrenceForm content');
+
+        for (let key in this.fields) {
+            if (this.fields.hasOwnProperty(key)) {
+                let field = this.fields[key];
+
+                this._occurrence.attributes[key] = field.value;
+            }
         }
-      }
 
-      console.log({
-        occurrence: this._occurrence
-      });
+        console.log({occurrence: this._occurrence});
     }
+
     /**
      *
      * @param {Occurrence} model
      */
-
-  }, {
-    key: "model",
-    get: function get() {
-      return this._occurrence;
-    },
-    set: function set(model) {
-      this._occurrence = model;
-      this.populateFormContent();
-    }
-  }, {
-    key: "changeHandler",
-    value: function changeHandler(event) {
-      console.log('occurrence form change event');
-      console.log({
-        event: event
-      });
-      this.fireEvent(Form.CHANGE_EVENT, {
-        form: this
-      });
-    }
-  }, {
-    key: "pingOccurrence",
-    value: function pingOccurrence() {
-      if (this._occurrence.unsaved()) {
-        this.fireEvent(Form.CHANGE_EVENT, {
-          form: this
-        });
-      }
-    }
-  }, {
-    key: "destructor",
-    value: function destructor() {
-      this._occurrence = null;
-
-      _get(_getPrototypeOf(OccurrenceForm.prototype), "destructor", this).call(this);
-    }
-  }, {
-    key: "getFormSectionProperties",
-    value: function getFormSectionProperties() {
-      return OccurrenceForm.properties;
-    }
-  }]);
-
-  return OccurrenceForm;
-}(Form);
-
-_defineProperty(OccurrenceForm, "properties", void 0);
-
-_defineProperty(OccurrenceForm, "sectionTitle", 'Occurrence form');
-
-_defineProperty(OccurrenceForm, "help", 'Records help text, should normally be initialised with an imported html template');
-
-var SurveyFormSection = function SurveyFormSection() {
-  _classCallCheck(this, SurveyFormSection);
-};
-
-_defineProperty(SurveyFormSection, "sectionTitle", void 0);
-
-_defineProperty(SurveyFormSection, "sectionSortOrder", void 0);
-
-_defineProperty(SurveyFormSection, "sectionNavigationKey", void 0);
-
-_defineProperty(SurveyFormSection, "help", '');
-
-_defineProperty(SurveyFormSection, "properties", void 0);
-
-_defineProperty(SurveyFormSection, "completionRequired", false);
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-var SurveyPickerView = /*#__PURE__*/function (_Page) {
-  _inherits(SurveyPickerView, _Page);
-
-  var _super = _createSuper(SurveyPickerView);
-
-  function SurveyPickerView() {
-    var _this;
-
-    _classCallCheck(this, SurveyPickerView);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    set model (model) {
+        this._occurrence = model;
+        this.populateFormContent();
     }
 
-    _this = _super.call.apply(_super, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this), "content", '<p>Placeholder survey picker content.</p>');
-
-    return _this;
-  }
-
-  _createClass(SurveyPickerView, [{
-    key: "body",
-    value: function body() {
-      // at this point the entire content of #body should be safe to replace
-      var bodyEl = document.getElementById('body');
-      bodyEl.innerHTML = this.content;
+    get model() {
+        return this._occurrence;
     }
-  }]);
 
-  return SurveyPickerView;
-}(Page);
+    changeHandler(event) {
+        console.log('occurrence form change event');
+        console.log({event});
+
+        this.fireEvent(Form.CHANGE_EVENT, {form: this});
+    }
+
+    pingOccurrence() {
+        if (this._occurrence.unsaved()) {
+            this.fireEvent(Form.CHANGE_EVENT, {form: this});
+        }
+    }
+
+    destructor() {
+        this._occurrence = null;
+
+        super.destructor();
+    }
+
+    getFormSectionProperties() {
+        return OccurrenceForm.properties;
+    }
+}
+
+class SurveyFormSection {
+    /**
+     * @type {string}
+     */
+    static sectionTitle;
+
+    /**
+     * @type {number}
+     */
+    static sectionSortOrder;
+
+    /**
+     * @type {string}
+     */
+    static sectionNavigationKey;
+
+    /**
+     * @type {string}
+     */
+    static help = '';
+
+    /**
+     *
+     * @type {Object.<string,{field: typeof FormField, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>}
+     */
+    static properties;
+
+    /**
+     *
+     * @type {boolean}
+     */
+    static completionRequired = false;
+}
+
+// Survey picker page
+
+class SurveyPickerView extends Page {
+
+    content = '<p>Placeholder survey picker content.</p>';
+
+    body() {
+        // at this point the entire content of #body should be safe to replace
+
+        const bodyEl = document.getElementById('body');
+        bodyEl.innerHTML = this.content;
+    }
+}
 
 export { App, AppController, BSBIServiceWorker, DELETE_IMAGE_MODAL_ID, DateField, EVENT_DELETE_IMAGE, EventHarness, Form, FormField, GPSRequest, h as GridCoords, u as GridCoordsCI, c as GridCoordsGB, U as GridCoordsIE, S as GridRef, M as GridRefCI, O as GridRefGB, J as GridRefIE, IMAGE_MODAL_DELETE_BUTTON_ID, IMAGE_MODAL_ID, ImageField, InputField, InternalAppError, C as LatLngCI, g as LatLngGB, L as LatLngIE, T as LatLngWGS84, Layout, MainController, MapGeorefField, Model, NotFoundError, Occurrence, OccurrenceForm, OccurrenceImage, OptionsField, Page, PatchedNavigo, SelectField, StaticContentController, Survey, SurveyForm, SurveyFormSection, SurveyPickerController, SurveyPickerView, TaxaLoadedHook, Taxon, TaxonError, TaxonPickerField, TaxonSearch, TextAreaField, TextGeorefField, UUID_REGEX, doubleClickIntercepted, escapeHTML };
-//# sourceMappingURL=bsbiappframework.js.map
+//# sourceMappingURL=index.js.map

@@ -3,7 +3,7 @@ import {OccurrenceImage} from "../../models/OccurrenceImage";
 import {doubleClickIntercepted} from "../../utils/stopDoubleClick";
 import {GPSRequest} from "../../utils/GPSRequest";
 import {Form} from "../forms/Form";
-import {Modal} from 'bootstrap';
+import Modal from 'bootstrap/js/dist/modal';
 
 export const IMAGE_MODAL_ID = 'imagemodal';
 export const IMAGE_MODAL_DELETE_BUTTON_ID = 'imagemodaldelete';
@@ -402,7 +402,7 @@ export class ImageField extends FormField {
     <div class="modal-content">
       <div class="modal-header d-none d-md-flex">
         <h5 class="modal-title" id="${IMAGE_MODAL_ID}Title">Photo</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -411,8 +411,8 @@ export class ImageField extends FormField {
         </picture>
       </div>
       <div class="modal-footer">
-        <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-toggle="modal" data-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -457,7 +457,7 @@ export class ImageField extends FormField {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="${ImageField.LICENSE_MODAL}Title">Image licensing</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -485,7 +485,7 @@ export class ImageField extends FormField {
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

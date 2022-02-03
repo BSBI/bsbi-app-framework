@@ -62,6 +62,102 @@ export class Page extends EventHarness {
      *
      * @returns {HTMLDivElement}
      */
+    accordionItem(descriptor) {
+        let cardContainer = document.createElement('div');
+        cardContainer.id = descriptor.cardId;
+        cardContainer.className = 'accordion-item';
+
+        let cardHeadingEl = cardContainer.appendChild(document.createElement('div'));
+        cardHeadingEl.className = 'accordion-header pointer';
+        if (descriptor.cardHeadingId) {
+            cardHeadingEl.id = descriptor.cardHeadingId;
+        }
+
+        let headingEl = cardHeadingEl.appendChild(document.createElement('h2'));
+        headingEl.className = 'mb-0';
+
+        let buttonEl = headingEl.appendChild(document.createElement('button'));
+        //buttonEl.className = `btn btn-link${(descriptor.collapsed ? ' collapsed' : '')}`;
+        buttonEl.className = `accordion-button${(descriptor.collapsed ? ' collapsed' : '')}`;
+
+        buttonEl.setAttribute('data-bs-toggle', 'collapse');
+        //buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
+
+        if (descriptor.headingButtonId) {
+            buttonEl.id = descriptor.headingButtonId;
+        }
+
+        buttonEl.type = 'button';
+        //buttonEl.setAttribute('data-bs-toggle', 'collapse');
+
+        if (descriptor.buttonStyleString) {
+            buttonEl.style.cssText = descriptor.buttonStyleString;
+        }
+
+        if (descriptor.cardDescriptionId) {
+            buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
+            buttonEl.setAttribute('aria-controls', descriptor.cardDescriptionId);
+        }
+
+        buttonEl.setAttribute('aria-expanded', descriptor.collapsed ? 'false' : 'true');
+        buttonEl.innerHTML = `<div class="material-icons icon-show-collapsed">expand_more</div><div class="material-icons icon-hide-collapsed">unfold_less</div>${descriptor.headingHTML}`;
+
+        if (descriptor.headingNonbuttonHTML) {
+            const extraHeadingElement = buttonEl.appendChild(document.createElement('span'));
+            extraHeadingElement.style.display = 'flex';
+            extraHeadingElement.innerHTML = descriptor.headingNonbuttonHTML;
+        }
+
+        if (descriptor.headingValidationWarningHTML) {
+            const headerValidationWarning = cardHeadingEl.appendChild(document.createElement('div'));
+            headerValidationWarning.className = 'card-invalid-feedback';
+            headerValidationWarning.innerHTML = `<small>${descriptor.headingValidationWarningHTML}</small>`;
+        }
+
+        let cardDescriptionEl = cardContainer.appendChild(document.createElement('div'));
+        if (descriptor.cardDescriptionId) {
+            cardDescriptionEl.id = descriptor.cardDescriptionId;
+        }
+        cardDescriptionEl.className = `accordion-collapse collapse${(descriptor.collapsed ? '' : ' show')}`;
+        if (descriptor.cardHeadingId) {
+            cardDescriptionEl.setAttribute('aria-labelledby', descriptor.cardHeadingId);
+        }
+
+        cardDescriptionEl.setAttribute('data-bs-parent', `#${descriptor.parentContainerId}`);
+
+        if (descriptor.dataAttributes) {
+            for (let key in descriptor.dataAttributes) {
+                if (descriptor.dataAttributes.hasOwnProperty(key)) {
+                    cardDescriptionEl.setAttribute(`data-${key}`, descriptor.dataAttributes[key]);
+                }
+            }
+        }
+
+        let cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
+        cardBodyEl.className = 'accordion-body pl-2 pr-2 pl-md-3 pr-md-3';
+        cardBodyEl.appendChild(descriptor.bodyContentElement);
+
+        return cardContainer;
+    }
+
+    /**
+     *
+     * @param {{}} descriptor
+     * @param {string} descriptor.cardId
+     * @param {string} descriptor.cardHeadingId
+     * @param {boolean} descriptor.collapsed
+     * @param {string} descriptor.headingButtonId
+     * @param {string} descriptor.headingHTML
+     * @param {string} [descriptor.headingNonbuttonHTML]
+     * @param {string} descriptor.cardDescriptionId
+     * @param {string} descriptor.parentContainerId
+     * @param {string} descriptor.buttonStyleString
+     * @param {HTMLElement} descriptor.bodyContentElement
+     * @param {{string, string}} descriptor.dataAttributes
+     * @param {string} descriptor.headingValidationWarningHTML
+     *
+     * @returns {HTMLDivElement}
+     */
     card(descriptor) {
         let cardContainer = document.createElement('div');
         cardContainer.id = descriptor.cardId;
@@ -72,8 +168,8 @@ export class Page extends EventHarness {
         if (descriptor.cardHeadingId) {
             cardHeadingEl.id = descriptor.cardHeadingId;
         }
-        cardHeadingEl.setAttribute('data-toggle', 'collapse');
-        cardHeadingEl.setAttribute('data-target', `#${descriptor.cardDescriptionId}`);
+        cardHeadingEl.setAttribute('data-bs-toggle', 'collapse');
+        cardHeadingEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
 
 
         let headingEl = cardHeadingEl.appendChild(document.createElement('h2'));
@@ -87,14 +183,14 @@ export class Page extends EventHarness {
         }
 
         buttonEl.type = 'button';
-        buttonEl.setAttribute('data-toggle', 'collapse');
+        buttonEl.setAttribute('data-bs-toggle', 'collapse');
 
         if (descriptor.buttonStyleString) {
             buttonEl.style.cssText = descriptor.buttonStyleString;
         }
 
         if (descriptor.cardDescriptionId) {
-            buttonEl.setAttribute('data-target', `#${descriptor.cardDescriptionId}`);
+            buttonEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
             buttonEl.setAttribute('aria-controls', descriptor.cardDescriptionId);
         }
 
@@ -140,7 +236,7 @@ export class Page extends EventHarness {
 
     //         `<div class="card-header" id="heading_${occurrence.id}">
     //   <h2 class="mb-0">
-    //     <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')}" id="headingbutton_${occurrence.id}" type="button" data-toggle="collapse" data-target="#description_${occurrence.id}" aria-expanded="true" aria-controls="description_${occurrence.id}">
+    //     <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')}" id="headingbutton_${occurrence.id}" type="button" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}" aria-expanded="true" aria-controls="description_${occurrence.id}">
     //       Heading for (${occurrence.id}, ${taxon.canonical})
     //     </button>
     //   </h2>

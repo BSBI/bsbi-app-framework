@@ -6,7 +6,7 @@ import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {UUID_REGEX} from "../models/Model";
 import {Layout} from "../views/layout/Layout";
 import {App} from "../framework/App";
-import {Modal} from "bootstrap";
+import Modal from 'bootstrap/js/dist/modal';
 
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';

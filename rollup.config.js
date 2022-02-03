@@ -15,16 +15,10 @@ const version = `1.0.3.${Math.floor((Date.now() / 1000))}`;
 export default [
 	{
 		input: 'src/index.js',
-		// output: {
-		// 	file: 'public/backyardbotany.js',
-		// 	format: 'iife', // immediately-invoked function expression — suitable for <script> tags
-		// 	globals: { BsbiDb: 'BsbiDb', jquery: '$' },
-		// 	sourcemap: true,
-		// 	name: 'backyardbotanyapp'
-		// },
 		output: {
 			file: 'dist/bsbiappframework.js',
 			format: 'es', // 'cjs'
+			exports: "named",
 			sourcemap: true,
 			name: 'bsbiappframework',
 			globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
@@ -56,41 +50,40 @@ export default [
 			production && terser() // minify, but only in production
 		]
 	},
-	// {
-	// 	input: 'src/serviceworker/worker.js',
-	// 	output: {
-	// 		file: 'public/serviceworker.js',
-	// 		format: 'iife', // immediately-invoked function expression — suitable for <script> tags
-	// 		globals: { BsbiDb: 'BsbiDb' },
-	// 		sourcemap: true,
-	// 		name: 'backyardbotanyappserviceworker'
-	// 	},
-	// 	external: ['BsbiDb'],
-	//
-	// 	plugins: [
-	// 		resolve(), // tells Rollup how to find files in node_modules
-	// 		replace({
-	// 			values: {
-	// 				BSBI_APP_VERSION: version,
-	// 				// ENVIRONMENT: JSON.stringify('development')
-	// 			},
-	// 		}),
-	// 		string({
-	// 			// Required to be specified
-	// 			include: "**/*.html",
-	//
-	// 			// Undefined by default
-	// 			exclude: ["**/index.html"]
-	// 		}),
-	// 		scss({
-	// 			//output: 'public/appcss/theme.css',
-	// 		}),
-	// 		babel({
-	// 			exclude: 'node_modules/**' // only transpile our source code
-	// 		}),
-	// 		commonjs(), // converts npm packages to ES modules
-	// 		production && terser() // minify, but only in production
-	// 	]
-	// },
+	{
+		input: 'src/index.js',
+		output: {
+			dir: 'dist/esm',
+			format: 'esm',
+			exports: "named",
+			sourcemap: true,
+			globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
+		},
+		external: ['BsbiDb'],
 
+		plugins: [
+			resolve(), // tells Rollup how to find files in node_modules
+			replace({
+				preventAssignment: true,
+				values: {
+					BSBI_APP_VERSION: version,
+					// ENVIRONMENT: JSON.stringify('development')
+				},
+			}),
+
+			string({
+				// Required to be specified
+				include: "**/*.html",
+
+				// Undefined by default
+				exclude: ["**/index.html"]
+			}),
+			// babel({
+			// 	exclude: 'node_modules/**', // only transpile our source code
+			// 	babelHelpers: 'runtime' // building library rather than app
+			// }),
+			commonjs(), // converts npm packages to ES modules
+			production && terser() // minify, but only in production
+		]
+	},
 	];

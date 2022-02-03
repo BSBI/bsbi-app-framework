@@ -11,7 +11,7 @@ import {OccurrenceForm} from "./forms/OccurrenceForm";
 import {OccurrenceImage} from "../models/OccurrenceImage";
 import {ImageField} from "./formfields/ImageField";
 import {App, doubleClickIntercepted} from "..";
-import {Modal} from "bootstrap";
+import Modal from 'bootstrap/js/dist/modal';
 import {MainViewFramework} from "./MainViewFramework";
 
 const LEFT_PANEL_ID = 'col1panel';
@@ -430,7 +430,7 @@ export class MainView extends MainViewFramework {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="${DELETE_OCCURRENCE_MODAL_ID}Title">Delete record?</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -438,8 +438,8 @@ export class MainView extends MainViewFramework {
         Please confirm that you wish to delete the record.
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Back</button>
-        <button type="button" class="btn btn-danger" data-dismiss="modal" id="${DELETE_OCCURRENCE_MODAL_ID}confirmed">Delete record</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="${DELETE_OCCURRENCE_MODAL_ID}confirmed">Delete record</button>
       </div>
     </div>
   </div>
@@ -487,7 +487,7 @@ export class MainView extends MainViewFramework {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="${FINISH_MODAL_ID}Title">Thank you</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -496,7 +496,7 @@ export class MainView extends MainViewFramework {
         <p>We will send you an email with a link to this form, so that you can return to it later if needed.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -519,7 +519,7 @@ export class MainView extends MainViewFramework {
 //     <div class="modal-content">
 //       <div class="modal-header d-none d-md-flex">
 //         <h5 class="modal-title" id="${IMAGE_MODAL_ID}Title">Photo</h5>
-//         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+//         <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 //           <span aria-hidden="true">&times;</span>
 //         </button>
 //       </div>
@@ -528,8 +528,8 @@ export class MainView extends MainViewFramework {
 //         </picture>
 //       </div>
 //       <div class="modal-footer">
-//         <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-toggle="modal" data-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
-//         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+//         <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
+//         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 //       </div>
 //     </div>
 //   </div>
@@ -623,8 +623,8 @@ export class MainView extends MainViewFramework {
         nextButton.className = 'btn btn-primary';
         nextButton.type = 'button';
         nextButton.textContent = 'get started »';
-        nextButton.setAttribute('data-toggle', 'collapse');
-        nextButton.setAttribute('data-target', '#survey-0-about');
+        nextButton.setAttribute('data-bs-toggle', 'collapse');
+        nextButton.setAttribute('data-bs-target', '#survey-0-about');
 
         let cardId = Form.nextId;
 
@@ -696,8 +696,8 @@ export class MainView extends MainViewFramework {
                 // there's another survey section
                 const nextSection = SurveyForm.sections[formIndex + 1];
 
-                nextButton.setAttribute('data-toggle', 'collapse');
-                nextButton.setAttribute('data-target', `#survey-${formIndex + 1}-${nextSection.sectionNavigationKey}`);
+                nextButton.setAttribute('data-bs-toggle', 'collapse');
+                nextButton.setAttribute('data-bs-target', `#survey-${formIndex + 1}-${nextSection.sectionNavigationKey}`);
                 nextButton.title = nextSection.sectionTitle;
                 break;
 
@@ -837,13 +837,13 @@ export class MainView extends MainViewFramework {
 
             const targetButtonEl = event.target.closest('button');
 
-            if (targetButtonEl && targetButtonEl.hasAttribute('data-toggle') && targetButtonEl.getAttribute('data-toggle') === 'modal') {
+            if (targetButtonEl && targetButtonEl.hasAttribute('data-bs-toggle') && targetButtonEl.getAttribute('data-bs-toggle') === 'modal') {
                 // annotate the delete record modal dialogue box with the occurrence id
                 document.getElementById(`${DELETE_OCCURRENCE_MODAL_ID}confirmed`)
                     .setAttribute('data-occurrenceid', targetButtonEl.getAttribute('data-occurrenceid'));
 
                 // display the dialogue box
-                //$(targetButtonEl.getAttribute('data-target')).modal();
+                //$(targetButtonEl.getAttribute('data-bs-target')).modal();
                 this.deleteOccurrenceModal.show();
 
                 event.preventDefault();
@@ -973,19 +973,19 @@ export class MainView extends MainViewFramework {
     }
 
     /**
-     * cardHeadingEl.setAttribute('data-toggle', 'collapse');
-     cardHeadingEl.setAttribute('data-target', `#${descriptor.cardDescriptionId}`);
+     * cardHeadingEl.setAttribute('data-bs-toggle', 'collapse');
+     cardHeadingEl.setAttribute('data-bs-target', `#${descriptor.cardDescriptionId}`);
      *
      * @param {Occurrence} occurrence
      * @return {string}
      */
     #occurrenceSummaryHTML (occurrence) {
-        return `<div class="card-header pointer pl-2 pr-2 pt-2 pb-2" id="heading_${occurrence.id}" data-toggle="collapse" data-target="#description_${occurrence.id}">
+        return `<div class="card-header pointer pl-2 pr-2 pt-2 pb-2" id="heading_${occurrence.id}" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}">
     <div class="float-right">
-        <button type="button" class="btn btn-outline-danger delete-occurrence-button" data-toggle="modal" data-target="#${DELETE_OCCURRENCE_MODAL_ID}" data-occurrenceid="${occurrence.id}"><i class="material-icons">delete</i></button>
+        <button type="button" class="btn btn-outline-danger delete-occurrence-button" data-bs-toggle="modal" data-bs-target="#${DELETE_OCCURRENCE_MODAL_ID}" data-occurrenceid="${occurrence.id}"><i class="material-icons">delete</i></button>
     </div>
     <h2 class="mb-0 pb-0 mt-0 pt-0 pl-0 ml-0">
-        <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')} pt-0 pb-0 pl-0" id="headingbutton_${occurrence.id}" type="button" data-toggle="collapse" data-target="#description_${occurrence.id}" aria-expanded="${(this.controller.currentOccurrenceId === occurrence.id ? 'true' : 'false')}" aria-controls="description_${occurrence.id}">
+        <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')} pt-0 pb-0 pl-0" id="headingbutton_${occurrence.id}" type="button" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}" aria-expanded="${(this.controller.currentOccurrenceId === occurrence.id ? 'true' : 'false')}" aria-controls="description_${occurrence.id}">
           ${this.occurrenceSummaryHeadingHTML(occurrence)}
         </button>
     </h2>

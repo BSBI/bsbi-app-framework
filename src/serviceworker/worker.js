@@ -1,6 +1,6 @@
 // service worker for BSBI app
 
-// currently based around the 'Cache and update' recipe along with many modifications
+// based around the 'Cache and update' recipe along with many modifications
 // see https://serviceworke.rs
 
 'use strict';

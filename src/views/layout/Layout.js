@@ -7,7 +7,7 @@ import saveAllFailureModal from "../../templates/syncFailureModal.html";
 import {EventHarness} from "../../framework/EventHarness";
 import {App} from "../../framework/App";
 import {GPSRequest} from "../../utils/GPSRequest";
-import {Modal, Collapse} from 'bootstrap';
+import Modal from 'bootstrap/js/dist/modal';
 
 export class Layout extends EventHarness {
 
@@ -79,8 +79,8 @@ export class Layout extends EventHarness {
             const element = event.target;
             console.log({'nav content click' : event});
             if (element.tagName === 'A') {
-                console.log('forced navbar collapse');
-                Collapse.getOrCreateInstance(navEl).hide();
+                console.log('forced navbar collapse (inactive)');
+                //Collapse.getOrCreateInstance(navEl).hide();
             }
         });
     }
@@ -149,7 +149,7 @@ export class Layout extends EventHarness {
         document.body.appendChild(modalContent.getElementsByTagName('div')[0]);
 
         // register event handlers once the content is likely to be in the DOM
-        setTimeout(() => {
+        //setTimeout(() => {
             this.newSurveyModal = Modal.getOrCreateInstance(document.getElementById(Layout.NEW_SURVEY_MODAL_ID), {});
             this.resetModal = Modal.getOrCreateInstance(document.getElementById(Layout.RESET_MODAL_ID), {});
             this.saveAllSuccessModal = Modal.getOrCreateInstance(document.getElementById(Layout.SAVE_ALL_SUCCESS_MODAL_ID), {});
@@ -182,7 +182,7 @@ export class Layout extends EventHarness {
                     this.app.fireEvent(App.EVENT_RESET_SURVEYS);
                 }
             });
-        }, 100);
+        //}, 100);
     }
 
     refreshSurveysMenu() {
