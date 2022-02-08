@@ -188,10 +188,10 @@ export class ImageField extends FormField {
             cameraSpan.className = 'input-group-text';
 
             const cameraLabel = cameraSpan.appendChild(document.createElement('label'));
-            cameraLabel.className = 'pl-0 pr-0 ml-0 mr-0 mt-0 mb-0 pt-0 pb-0 material-icons';
+            cameraLabel.className = 'ps-0 pe-0 ms-0 me-0 mt-0 mb-0 pt-0 pb-0 material-icons';
 
             const cameraIcon = cameraLabel.appendChild(document.createElement('i'));
-            cameraIcon.className = 'material-icons pl-0 pr-0 ml-0 mr-0 mt-0 mb-0 pt-0 pb-0';
+            cameraIcon.className = 'material-icons ps-0 pe-0 ms-0 me-0 mt-0 mb-0 pt-0 pb-0';
             cameraIcon.textContent = 'add_a_photo';
 
             const cameraInput = cameraLabel.appendChild(document.createElement('input'));
@@ -411,7 +411,7 @@ export class ImageField extends FormField {
         </picture>
       </div>
       <div class="modal-footer">
-        <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
+        <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button me-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>

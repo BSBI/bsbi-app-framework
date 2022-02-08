@@ -134,7 +134,7 @@ export class Page extends EventHarness {
         }
 
         let cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
-        cardBodyEl.className = 'accordion-body pl-2 pr-2 pl-md-3 pr-md-3';
+        cardBodyEl.className = 'accordion-body ps-2 pe-2 ps-md-3 pe-md-3';
         cardBodyEl.appendChild(descriptor.bodyContentElement);
 
         return cardContainer;
@@ -229,7 +229,7 @@ export class Page extends EventHarness {
         }
 
         let cardBodyEl = cardDescriptionEl.appendChild(document.createElement('div'));
-        cardBodyEl.className = 'card-body pl-2 pr-2 pl-md-3 pr-md-3';
+        cardBodyEl.className = 'card-body ps-2 pe-2 ps-md-3 pe-md-3';
         cardBodyEl.appendChild(descriptor.bodyContentElement);
 
         return cardContainer;

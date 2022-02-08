@@ -72,7 +72,7 @@ export class OccurrenceForm extends Form {
      */
     buildContentContainer(outerContainer) {
         const cardEl = outerContainer.appendChild(document.createElement('div'));
-        cardEl.className = 'card mt-3 ml-0 mr-0 mb-3';
+        cardEl.className = 'card mt-3 ms-0 me-0 mb-3';
 
         const cardHeaderEl = cardEl.appendChild(document.createElement('div'));
         cardHeaderEl.className = 'card-header';

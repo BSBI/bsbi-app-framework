@@ -59,7 +59,7 @@ export default [
 			sourcemap: true,
 			globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
 		},
-		external: ['BsbiDb'],
+		external: ['BsbiDb', 'bootstrap/js/dist/modal'],
 
 		plugins: [
 			resolve(), // tells Rollup how to find files in node_modules
@@ -86,4 +86,40 @@ export default [
 			production && terser() // minify, but only in production
 		]
 	},
+	// {
+	// 	input: 'src/viewindex.js',
+	// 	output: {
+	// 		dir: 'dist/esm',
+	// 		format: 'esm',
+	// 		exports: "named",
+	// 		sourcemap: true,
+	// 		globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
+	// 	},
+	// 	external: ['BsbiDb'],
+	//
+	// 	plugins: [
+	// 		resolve(), // tells Rollup how to find files in node_modules
+	// 		replace({
+	// 			preventAssignment: true,
+	// 			values: {
+	// 				BSBI_APP_VERSION: version,
+	// 				// ENVIRONMENT: JSON.stringify('development')
+	// 			},
+	// 		}),
+	//
+	// 		string({
+	// 			// Required to be specified
+	// 			include: "**/*.html",
+	//
+	// 			// Undefined by default
+	// 			exclude: ["**/index.html"]
+	// 		}),
+	// 		// babel({
+	// 		// 	exclude: 'node_modules/**', // only transpile our source code
+	// 		// 	babelHelpers: 'runtime' // building library rather than app
+	// 		// }),
+	// 		commonjs(), // converts npm packages to ES modules
+	// 		production && terser() // minify, but only in production
+	// 	]
+	// },
 	];

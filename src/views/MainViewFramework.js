@@ -284,14 +284,14 @@ export class MainViewFramework extends Page {
         const buttonContainer = editorContainer.appendChild(document.createElement('div'));
 
         const backButton = buttonContainer.appendChild(document.createElement('button'));
-        backButton.className = 'btn btn-secondary btn-md-lg mt-2 mb-3 mr-2';
+        backButton.className = 'btn btn-secondary btn-md-lg mt-2 mb-3 me-2';
         backButton.type = 'button';
         backButton.textContent = 'back to list';
         backButton.setAttribute('data-buttonaction', 'back');
 
         if (this.occurrenceIsMostRecent(this.controller.currentOccurrence)) {
             const addNewButton = buttonContainer.appendChild(document.createElement('button'));
-            addNewButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3 mr-2';
+            addNewButton.className = 'btn btn-primary btn-md-lg mt-2 mb-3 me-2';
             addNewButton.type = 'button';
             addNewButton.textContent = 'add another';
             addNewButton.setAttribute('data-buttonaction', 'new');
@@ -540,7 +540,7 @@ export class MainViewFramework extends Page {
 //         </picture>
 //       </div>
 //       <div class="modal-footer">
-//         <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button mr-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
+//         <button type="button" id="${IMAGE_MODAL_DELETE_BUTTON_ID}" class="btn btn-outline-danger delete-occurrence-button me-3" data-bs-toggle="modal" data-bs-target="#${DELETE_IMAGE_MODAL_ID}" data-imageid=""><i class="material-icons">delete</i></button>
 //         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 //       </div>
 //     </div>
@@ -646,7 +646,7 @@ export class MainViewFramework extends Page {
         sectionElement.appendChild(nextButton);
 
         const helpLink = document.createElement('span');
-        helpLink.className = 'd-md-none pl-2';
+        helpLink.className = 'd-md-none ps-2';
         // noinspection HtmlUnknownTarget
         helpLink.innerHTML = `(<a href="/app/list/survey/welcome/help" data-navigo="list/survey/welcome/help">more info</a>)`;
         sectionElement.appendChild(helpLink);
@@ -968,7 +968,7 @@ export class MainViewFramework extends Page {
 
         if (occurrence.attributes.hasOwnProperty('images') && occurrence.attributes.images.length) {
             const firstImageId = occurrence.attributes.images[0];
-            html += OccurrenceImage.imageLink(firstImageId, 48, 48, {className : 'mr-1'});
+            html += OccurrenceImage.imageLink(firstImageId, 48, 48, {className : 'me-1'});
         }
 
         if (occurrence.attributes.taxon && occurrence.attributes.taxon.taxonId) {
@@ -992,12 +992,12 @@ export class MainViewFramework extends Page {
      * @return {string}
      */
     #occurrenceSummaryHTML (occurrence) {
-        return `<div class="card-header pointer pl-2 pr-2 pt-2 pb-2" id="heading_${occurrence.id}" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}">
-    <div class="float-right">
+        return `<div class="card-header pointer ps-2 pe-2 pt-2 pb-2" id="heading_${occurrence.id}" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}">
+    <div class="float-end">
         <button type="button" class="btn btn-outline-danger delete-occurrence-button" data-bs-toggle="modal" data-bs-target="#${DELETE_OCCURRENCE_MODAL_ID}" data-occurrenceid="${occurrence.id}"><i class="material-icons">delete</i></button>
     </div>
-    <h2 class="mb-0 pb-0 mt-0 pt-0 pl-0 ml-0">
-        <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')} pt-0 pb-0 pl-0" id="headingbutton_${occurrence.id}" type="button" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}" aria-expanded="${(this.controller.currentOccurrenceId === occurrence.id ? 'true' : 'false')}" aria-controls="description_${occurrence.id}">
+    <h2 class="mb-0 pb-0 mt-0 pt-0 ps-0 ms-0">
+        <button class="btn btn-link${(this.controller.currentOccurrenceId === occurrence.id ? '' : ' collapsed')} pt-0 pb-0 ps-0" id="headingbutton_${occurrence.id}" type="button" data-bs-toggle="collapse" data-bs-target="#description_${occurrence.id}" aria-expanded="${(this.controller.currentOccurrenceId === occurrence.id ? 'true' : 'false')}" aria-controls="description_${occurrence.id}">
           ${this.occurrenceSummaryHeadingHTML(occurrence)}
         </button>
     </h2>
