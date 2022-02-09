@@ -1,8 +1,6 @@
 // App.js
 // base class for single page application
 // allows binding of controllers and routes
-
-import {NotFoundView} from "../views/NotFoundView";
 import {EventHarness} from "./EventHarness";
 import {Survey} from "../models/Survey";
 import {InternalAppError} from "../utils/exceptions/InternalAppError";
@@ -238,8 +236,9 @@ export class App extends EventHarness {
             console.log(`no route found for '${query}'`);
             //this.#router.navigate('/list');
 
-            const view = new NotFoundView();
-            view.display();
+            // const view = new NotFoundView();
+            // view.display();
+            this.notFoundView();
         });
 
         //default homepage

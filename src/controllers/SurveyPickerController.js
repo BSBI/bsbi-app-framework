@@ -4,9 +4,9 @@
 import {AppController} from './AppController';
 import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {UUID_REGEX} from "../models/Model";
-import {Layout} from "../views/layout/Layout";
+//import {Layout} from "../views/layout/Layout";
 import {App} from "../framework/App";
-import Modal from 'bootstrap/js/dist/modal';
+//import Modal from 'bootstrap/js/dist/modal';
 
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
@@ -100,7 +100,8 @@ export class SurveyPickerController extends AppController {
 
     beforeNewHandler(done) {
         //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal();
-        Modal.getOrCreateInstance(Layout.NEW_SURVEY_MODAL_ID).show();
+        //Modal.getOrCreateInstance(Layout.NEW_SURVEY_MODAL_ID).show();
+        this.view.newSurveyDialog();
 
         this.app.router.pause();
 
@@ -116,7 +117,8 @@ export class SurveyPickerController extends AppController {
 
     beforeResetHandler(done) {
         //$(`#${Layout.RESET_MODAL_ID}`).modal();
-        Modal.getOrCreateInstance(Layout.RESET_MODAL_ID).show();
+        //Modal.getOrCreateInstance(Layout.RESET_MODAL_ID).show();
+        this.view.showResetDialog();
 
         this.app.router.pause();
         if (window.history.state) {
@@ -135,15 +137,18 @@ export class SurveyPickerController extends AppController {
 
             if (Array.isArray(result)) {
                 //$(`#${Layout.SAVE_ALL_SUCCESS_MODAL_ID}`).modal();
-                Modal.getOrCreateInstance(Layout.SAVE_ALL_SUCCESS_MODAL_ID).show();
+                //Modal.getOrCreateInstance(Layout.SAVE_ALL_SUCCESS_MODAL_ID).show();
+                this.view.showSaveAllSuccess();
             } else {
                 //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
-                Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+                //Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+                this.view.showSaveAllFailure();
             }
         }, (result) => {
             console.log({'In save all handler, failure result' : result});
             //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
-            Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+            //Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
+            this.view.showSaveAllFailure();
         }).finally(() => {
             // stop the spinner
 

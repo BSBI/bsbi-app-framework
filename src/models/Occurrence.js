@@ -1,6 +1,6 @@
 import {Model} from "./Model";
 import {Taxon} from "./Taxon";
-import {Form} from "../views/forms/Form";
+//import {Form} from "../views/forms/Form";
 
 export class Occurrence extends Model {
 
@@ -58,19 +58,19 @@ export class Occurrence extends Model {
         return this.attributes.taxon && this.attributes.taxon.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
     };
 
-    /**
-     *
-     * @param {OccurrenceForm} form
-     * @returns {OccurrenceForm}
-     */
-    setForm(form) {
-        form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
-
-        if (!this.isNew) {
-            form.liveValidation = true;
-        }
-        return form;
-    }
+    // /**
+    //  *
+    //  * @param {OccurrenceForm} form
+    //  * @returns {OccurrenceForm}
+    //  */
+    // setForm(form) {
+    //     form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
+    //
+    //     if (!this.isNew) {
+    //         form.liveValidation = true;
+    //     }
+    //     return form;
+    // }
 
     /**
      * called after the form has changed, before the values have been read back in to the occurrence

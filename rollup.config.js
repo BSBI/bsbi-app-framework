@@ -5,6 +5,7 @@ import { string } from "rollup-plugin-string";
 import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 
 // `npm run build` -> `production` is true
 // `npm run dev` -> `production` is false
@@ -42,9 +43,11 @@ export default [
 				// Undefined by default
 				exclude: ["**/index.html"]
 			}),
+			sourcemaps(),
 			babel({
 				exclude: 'node_modules/**', // only transpile our source code
-				babelHelpers: 'runtime' // building library rather than app
+				babelHelpers: 'runtime', // building library rather than app
+				inputSourceMap: false, // see https://github.com/rollup/rollup/issues/3457
 			}),
 			commonjs(), // converts npm packages to ES modules
 			production && terser() // minify, but only in production
@@ -59,7 +62,7 @@ export default [
 			sourcemap: true,
 			globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
 		},
-		external: ['BsbiDb', 'bootstrap/js/dist/modal'],
+		external: ['BsbiDb'],
 
 		plugins: [
 			resolve(), // tells Rollup how to find files in node_modules
@@ -78,6 +81,7 @@ export default [
 				// Undefined by default
 				exclude: ["**/index.html"]
 			}),
+			sourcemaps(),
 			// babel({
 			// 	exclude: 'node_modules/**', // only transpile our source code
 			// 	babelHelpers: 'runtime' // building library rather than app

@@ -6,11 +6,10 @@
 // shared, keyed by email.
 
 import {Model} from "./Model";
-import {SurveyForm} from "../views/forms/SurveyForm";
+//import {SurveyForm} from "../views/forms/SurveyForm";
 import {escapeHTML} from "../utils/escapeHTML";
-import {TextGeorefField} from "../views/formfields/TextGeorefField";
-//import {Taxon} from "..";
-import {Form} from "../views/forms/Form";
+//import {TextGeorefField} from "../views/formfields/TextGeorefField";
+//import {Form} from "../views/forms/Form";
 
 export class Survey extends Model {
 
@@ -54,7 +53,7 @@ export class Survey extends Model {
         return this.attributes.georef || {
             gridRef: '',
             rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-            source: TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+            source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
             latLng: null,
             precision: null
         };
@@ -106,21 +105,21 @@ export class Survey extends Model {
         }
     }
 
-    /**
-     *
-     * @param {SurveyForm} form
-     */
-    registerForm(form) {
-        form.model = this;
-        form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
-
-        if (this.isNew) {
-            form.fireEvent(Form.EVENT_INITIALISE_NEW, {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
-            form.liveValidation = false;
-        } else {
-            form.liveValidation = true;
-        }
-    }
+    // /**
+    //  *
+    //  * @param {SurveyForm} form
+    //  */
+    // registerForm(form) {
+    //     form.model = this;
+    //     form.addListener('change', this.formChangedHandler.bind(this));
+    //
+    //     if (this.isNew) {
+    //         form.fireEvent('initialisenew', {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
+    //         form.liveValidation = false;
+    //     } else {
+    //         form.liveValidation = true;
+    //     }
+    // }
 
     /**
      * if not securely saved then makes a post to /savesurvey.php

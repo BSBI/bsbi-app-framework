@@ -6,7 +6,7 @@
 'use strict';
 
 import {BSBIServiceWorker} from "./BSBIServiceWorker";
-import {ExampleApp} from "../framework/ExampleApp";
+import {ExampleApp} from "../../../bsbi-app-framework-view/src/framework/ExampleApp";
 
 const serviceWorker = new BSBIServiceWorker();
 serviceWorker.initialise({

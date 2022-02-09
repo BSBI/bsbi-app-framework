@@ -14,7 +14,7 @@ export {Taxon} from './models/Taxon';
 
 export {BSBIServiceWorker} from './serviceworker/BSBIServiceWorker';
 
-export {PatchedNavigo} from './utils/PatchedNavigo';
+//export {PatchedNavigo} from '../../bsbi-app-framework-view/src/utils/PatchedNavigo';
 
 export {InternalAppError} from './utils/exceptions/InternalAppError';
 export {NotFoundError} from './utils/exceptions/NotFoundError';
@@ -50,7 +50,7 @@ export {escapeHTML} from "./utils/escapeHTML";
 
 export {doubleClickIntercepted} from "./utils/stopDoubleClick";
 
-export * from "british-isles-gridrefs";
+//export * from "british-isles-gridrefs";
 
 //export {GridRef, GridRefCI, GridRefGB, GridRefIE, GridCoords, LatLngWGS84, GridCoordsGB, LatLngGB, GridCoordsIE, LatLngIE, GridCoordsCI, LatLngCI} from "british-isles-gridrefs";
 
