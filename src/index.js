@@ -1,5 +1,5 @@
 export {AppController} from './controllers/AppController';
-export {MainController} from './controllers/MainController';
+//export {MainController} from './controllers/MainController';
 export {StaticContentController} from './controllers/StaticContentController';
 export {SurveyPickerController} from './controllers/SurveyPickerController';
 

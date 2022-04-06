@@ -1,4 +1,4 @@
-// MainController
+// example MainController
 // Controller for app 'homepage' including the top level form settings followed by a list of occurrences
 // probably as an accordion (collapsible list, e.g. https://getbootstrap.com/docs/4.3/components/collapse/#accordion-example)
 // that should target the detailed view of the occurrence into either a full screen (on mobile) or a right-hand panel.
