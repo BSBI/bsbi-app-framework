@@ -440,15 +440,15 @@ export class TaxonSearch {
                 if (taxonString.indexOf(' ') !== -1) {
                     // hybrids of the form Species x nothoname or Species nothoname should be seen as equivalent
 
-                    canonicalQuery = `${TaxonSearch.escapeRegExp(taxonString.substr(0, taxonString.indexOf(' ')))
-                        } (x )?.*\\b${TaxonSearch.generate_hybrid_combinations_regex(taxonString.substr(taxonString.indexOf(' ') + 1))}.*`;
+                    canonicalQuery = `${TaxonSearch.escapeRegExp(taxonString.substring(0, taxonString.indexOf(' ')))
+                        } (x )?.*\\b${TaxonSearch.generate_hybrid_combinations_regex(taxonString.substring(taxonString.indexOf(' ') + 1))}.*`;
 
                     /**
                      * Similar to canonicalQuery/hybridCanonicalQuery but without flexibility (.*) after genus part
                      * used only for result ranking (exact>near>vague)
                      */
-                    nearMatchRegex = new RegExp(`^(?:X\s+)?${TaxonSearch.escapeRegExp(taxonString.substr(0, taxonString.indexOf(' ')))
-                        } (x )?\\b${TaxonSearch.generate_hybrid_combinations_regex(taxonString.substr(taxonString.indexOf(' ') + 1))}.*`, 'i');
+                    nearMatchRegex = new RegExp(`^(?:X\s+)?${TaxonSearch.escapeRegExp(taxonString.substring(0, taxonString.indexOf(' ')))
+                        } (x )?\\b${TaxonSearch.generate_hybrid_combinations_regex(taxonString.substring(taxonString.indexOf(' ') + 1))}.*`, 'i');
                 } else {
                     canonicalQuery = `${escapedTaxonString}.*`;
                     nearMatchRegex = new RegExp(`^${escapedTaxonString}.*`);

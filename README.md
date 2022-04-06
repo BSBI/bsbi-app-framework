@@ -1,9 +1,9 @@
-# backyard-botany-app
+# bsbi-app-framework
 
 This repo implements the recording form used for the BSBI's recording apps
 
 
-*See also https://github.com/japonicus/backyard-botany-app*
+*See also https://github.com/BSBI/bsbi-app-framework-view*
 
 
 ## Getting started
@@ -11,8 +11,8 @@ This repo implements the recording form used for the BSBI's recording apps
 Clone this repository and install its dependencies:
 
 ```bash
-git clone https://github.com/japonicus/backyard-botany-app
-cd backyard-botany-app
+git clone https://github.com/BSBI/bsbi-app-framework
+cd bsbi-app-framework
 npm install
 ```
 

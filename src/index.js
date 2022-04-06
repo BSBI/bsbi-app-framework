@@ -44,11 +44,11 @@ export {TaxaLoadedHook} from './utils/TaxaLoadedHook';
 // export {Page} from './views/Page';
 // export {SurveyPickerView} from './views/SurveyPickerView';
 
-export {GPSRequest} from './utils/GPSRequest';
+// export {GPSRequest} from './utils/GPSRequest';
 export {formattedImplode} from './utils/formattedImplode'
 export {escapeHTML} from "./utils/escapeHTML";
 
-export {doubleClickIntercepted} from "./utils/stopDoubleClick";
+//export {doubleClickIntercepted} from "./utils/stopDoubleClick";
 
 //export * from "british-isles-gridrefs";
 

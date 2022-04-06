@@ -1,4 +1,3 @@
-//import BsbiDb from "BsbiDb";
 import {TaxonError} from "../utils/exceptions/TaxonError";
 import {escapeHTML} from "../utils/escapeHTML";
 
