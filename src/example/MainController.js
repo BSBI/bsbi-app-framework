@@ -3,7 +3,7 @@
 // probably as an accordion (collapsible list, e.g. https://getbootstrap.com/docs/4.3/components/collapse/#accordion-example)
 // that should target the detailed view of the occurrence into either a full screen (on mobile) or a right-hand panel.
 
-import {AppController} from './AppController';
+import {AppController} from '../controllers/AppController';
 import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {Occurrence} from "../models/Occurrence";
 import {InternalAppError} from "../utils/exceptions/InternalAppError";

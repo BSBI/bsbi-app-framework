@@ -59,6 +59,12 @@ export class App extends EventHarness {
     _currentSurvey = null;
 
     /**
+     * @abstract
+     * @type {number}
+     */
+    projectId;
+
+    /**
      *
      * @param {?Survey} survey
      */
@@ -795,6 +801,14 @@ export class App extends EventHarness {
      */
     clearLocalForage() {
         return localforage.clear();
+    }
+
+    /**
+     * @abstract
+     */
+    notFoundView() {
+        // const view = new NotFoundView();
+        // view.display();
     }
 }
 

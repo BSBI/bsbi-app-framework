@@ -99,8 +99,6 @@ export class SurveyPickerController extends AppController {
     }
 
     beforeNewHandler(done) {
-        //$(`#${Layout.NEW_SURVEY_MODAL_ID}`).modal();
-        //Modal.getOrCreateInstance(Layout.NEW_SURVEY_MODAL_ID).show();
         this.view.newSurveyDialog();
 
         this.app.router.pause();
@@ -116,8 +114,6 @@ export class SurveyPickerController extends AppController {
     }
 
     beforeResetHandler(done) {
-        //$(`#${Layout.RESET_MODAL_ID}`).modal();
-        //Modal.getOrCreateInstance(Layout.RESET_MODAL_ID).show();
         this.view.showResetDialog();
 
         this.app.router.pause();
