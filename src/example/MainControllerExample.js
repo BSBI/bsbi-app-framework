@@ -8,7 +8,7 @@ import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {Occurrence} from "../models/Occurrence";
 import {InternalAppError} from "../utils/exceptions/InternalAppError";
 
-export class MainController extends AppController {
+export class MainControllerExample extends AppController {
     route = '/list/:action/:id';
 
     static EVENT_SELECT_OCCURRENCE = 'selectoccurrence';

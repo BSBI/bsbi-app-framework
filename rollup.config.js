@@ -88,7 +88,7 @@ export default [
 			// }),
 			commonjs(), // converts npm packages to ES modules
 			//production && terser() // minify, but only in production
-			terser()
+			//terser()
 		]
 	}
 	];

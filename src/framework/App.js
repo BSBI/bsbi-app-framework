@@ -700,8 +700,17 @@ export class App extends EventHarness {
         });
     }
 
-    setNewSurvey() {
+    /**
+     *
+     * @param {{}|null} attributes
+     */
+    setNewSurvey(attributes) {
         this.currentSurvey = new Survey();
+
+        if (attributes) {
+            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+        }
+
         this.currentSurvey.projectId = this.projectId;
         this.currentSurvey.isPristine = true;
         this.currentSurvey.isNew = true;
