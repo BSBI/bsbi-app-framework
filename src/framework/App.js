@@ -702,7 +702,7 @@ export class App extends EventHarness {
 
     /**
      *
-     * @param {{}|null} attributes
+     * @param {{}|null} [attributes]
      */
     setNewSurvey(attributes) {
         this.currentSurvey = new Survey();

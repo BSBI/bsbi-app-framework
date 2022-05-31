@@ -4781,8 +4781,17 @@ class App extends EventHarness {
         });
     }
 
-    setNewSurvey() {
+    /**
+     *
+     * @param {{}|null} attributes
+     */
+    setNewSurvey(attributes) {
         this.currentSurvey = new Survey();
+
+        if (attributes) {
+            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+        }
+
         this.currentSurvey.projectId = this.projectId;
         this.currentSurvey.isPristine = true;
         this.currentSurvey.isNew = true;
@@ -5489,7 +5498,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1651057460-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1653994866-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
