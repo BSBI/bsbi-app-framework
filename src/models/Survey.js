@@ -159,24 +159,37 @@ export class Survey extends Model {
      * @returns {string} an html-safe string based on the locality and creation date
      */
     generateSurveyName() {
-        let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
+        if (this.attributes.casual) {
+            // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
 
-        const userDate = this.date;
-        let dateString;
-
-        if (userDate) {
-            dateString = userDate;
+            return this.attributes.surveyName ?
+                escapeHTML(this.attributes.surveyName)
+                :
+                `Data-set created on ${(new Date(this.createdStamp * 1000)).toString()}`
         } else {
-            const createdDate = new Date(this.createdStamp * 1000);
+            let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
 
-            try {
-                // 'default' locale fails on Edge
-                dateString = createdDate.toLocaleString('default', {year: 'numeric', month: 'long', day: 'numeric'});
-            } catch (e) {
-                dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
+            const userDate = this.date;
+            let dateString;
+
+            if (userDate) {
+                dateString = userDate;
+            } else {
+                const createdDate = new Date(this.createdStamp * 1000);
+
+                try {
+                    // 'default' locale fails on Edge
+                    dateString = createdDate.toLocaleString('default', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
+                }
             }
-        }
 
-        return `${escapeHTML(place)} ${dateString}`;
+            return `${escapeHTML(place)} ${dateString}`;
+        }
     }
 }

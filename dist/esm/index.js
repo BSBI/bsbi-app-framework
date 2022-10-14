@@ -29,9 +29,28 @@ class AppController {
      */
     app;
 
+    /**
+     *
+     * @type {function|null}
+     */
     beforeRouteHandler = null;
+
+    /**
+     *
+     * @type {function|null}
+     */
     afterRouteHandler = null;
+
+    /**
+     *
+     * @type {function|null}
+     */
     leaveRouteHandler = null;
+
+    /**
+     *
+     * @type {function|null}
+     */
     alreadyRouteHandler = null;
 
     static #handleIndex = 0;
@@ -3103,7 +3122,7 @@ class Model extends EventHarness {
     deleted = false;
 
     /**
-     * unix timestamp
+     * unix timestamp (seconds since epoch)
      * Provided that the created stamp is < the modified stamp then the externally assigned creation stamp will be used
      *
      * @type {number}
@@ -3111,7 +3130,7 @@ class Model extends EventHarness {
     createdStamp;
 
     /**
-     * unix timestamp
+     * unix timestamp (seconds since epoch)
      * modified stamp is generally server assigned - rather than using a potentially discrepant client clock
      * this may increase synchrony and trust between distributed clients
      *
@@ -3586,25 +3605,38 @@ class Survey extends Model {
      * @returns {string} an html-safe string based on the locality and creation date
      */
     generateSurveyName() {
-        let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
+        if (this.attributes.casual) {
+            // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
 
-        const userDate = this.date;
-        let dateString;
-
-        if (userDate) {
-            dateString = userDate;
+            return this.attributes.surveyName ?
+                escapeHTML(this.attributes.surveyName)
+                :
+                `Data-set created on ${(new Date(this.createdStamp * 1000)).toString()}`
         } else {
-            const createdDate = new Date(this.createdStamp * 1000);
+            let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
 
-            try {
-                // 'default' locale fails on Edge
-                dateString = createdDate.toLocaleString('default', {year: 'numeric', month: 'long', day: 'numeric'});
-            } catch (e) {
-                dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
+            const userDate = this.date;
+            let dateString;
+
+            if (userDate) {
+                dateString = userDate;
+            } else {
+                const createdDate = new Date(this.createdStamp * 1000);
+
+                try {
+                    // 'default' locale fails on Edge
+                    dateString = createdDate.toLocaleString('default', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
+                }
             }
-        }
 
-        return `${escapeHTML(place)} ${dateString}`;
+            return `${escapeHTML(place)} ${dateString}`;
+        }
     }
 }
 
@@ -4783,7 +4815,7 @@ class App extends EventHarness {
 
     /**
      *
-     * @param {{}|null} attributes
+     * @param {{}|null} [attributes]
      */
     setNewSurvey(attributes) {
         this.currentSurvey = new Survey();
@@ -5498,7 +5530,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1653994866-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1665755376-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;

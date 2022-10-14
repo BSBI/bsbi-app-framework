@@ -29,9 +29,28 @@ export class AppController {
      */
     app;
 
+    /**
+     *
+     * @type {function|null}
+     */
     beforeRouteHandler = null;
+
+    /**
+     *
+     * @type {function|null}
+     */
     afterRouteHandler = null;
+
+    /**
+     *
+     * @type {function|null}
+     */
     leaveRouteHandler = null;
+
+    /**
+     *
+     * @type {function|null}
+     */
     alreadyRouteHandler = null;
 
     static #handleIndex = 0;

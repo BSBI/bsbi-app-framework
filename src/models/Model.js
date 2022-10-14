@@ -55,7 +55,7 @@ export class Model extends EventHarness {
     deleted = false;
 
     /**
-     * unix timestamp
+     * unix timestamp (seconds since epoch)
      * Provided that the created stamp is < the modified stamp then the externally assigned creation stamp will be used
      *
      * @type {number}
@@ -63,7 +63,7 @@ export class Model extends EventHarness {
     createdStamp;
 
     /**
-     * unix timestamp
+     * unix timestamp (seconds since epoch)
      * modified stamp is generally server assigned - rather than using a potentially discrepant client clock
      * this may increase synchrony and trust between distributed clients
      *
