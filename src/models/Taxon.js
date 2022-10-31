@@ -82,6 +82,13 @@ export class Taxon {
     vernacularRoot = '';
 
     /**
+     * if set then the vernacular name should not be allowed for data entry
+     *
+     * @type {boolean}
+     */
+    badVernacular = false;
+
+    /**
      * @type {boolean}
      */
     used;
@@ -140,6 +147,10 @@ export class Taxon {
         taxon.used = raw[8];
         taxon.sortOrder = raw[9];
         taxon.parentIds = raw[10];
+
+        if (raw[11]) {
+            taxon.badVernacular = true
+        }
 
         return taxon;
     }
