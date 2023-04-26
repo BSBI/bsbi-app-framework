@@ -244,6 +244,10 @@ class EventHarness {
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 function commonjsRequire(path) {
 	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
 }
@@ -3063,10 +3067,11 @@ var localforage$1 = {exports: {}};
 	module.exports = localforage_js;
 
 	},{"3":3}]},{},[4])(4)
-	});
+	}); 
 } (localforage$1));
 
-var localforage = localforage$1.exports;
+var localforageExports = localforage$1.exports;
+var localforage = /*@__PURE__*/getDefaultExportFromCjs(localforageExports);
 
 function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uuid)}
 
@@ -3651,10 +3656,6 @@ class TaxonError extends Error {
 
 }
 
-/**
- * @external BsbiDb
- */
-
 class Taxon {
     /**
      * @typedef RawTaxon
@@ -3676,7 +3677,7 @@ class Taxon {
      *
      * @type {Object.<string, RawTaxon>}
      */
-    static rawTaxa; // = BsbiDb.TaxonNames;
+    static rawTaxa;
 
     /**
      * @type {string}
@@ -3760,6 +3761,10 @@ class Taxon {
      */
     static showVernacular = true;
 
+    static setTaxa(taxa) {
+        Taxon.rawTaxa = taxa;
+    }
+
     /**
      *
      * @param {string} id
@@ -3768,13 +3773,7 @@ class Taxon {
      */
     static fromId (id) {
         if (!Taxon.rawTaxa) {
-            // may not yet have been initialised due to deferred loading
-
-            if (BsbiDb.TaxonNames) {
-                Taxon.rawTaxa = BsbiDb.TaxonNames;
-            } else {
-                throw new TaxonError(`Taxon.fromId() called before taxon list has loaded.`);
-            }
+            throw new TaxonError(`Taxon.fromId() called before taxon list has been initialized.`);
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
@@ -3820,14 +3819,14 @@ class Taxon {
             if (vernacularMatched) {
                 return (acceptedTaxon) ?
                     `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>` +
-                        ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
                     :
                     `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
                     ;
             } else {
                 return (acceptedTaxon) ?
                     `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''
-                        } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
                     :
                     `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''}`
                     ;
@@ -3835,7 +3834,7 @@ class Taxon {
         } else {
             return (acceptedTaxon) ?
                 `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>` +
-                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
                 :
                 `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
                 ;
@@ -5541,7 +5540,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1667211735-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1682505528-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -6029,49 +6028,6 @@ class BSBIServiceWorker {
 }
 
 /**
- * @external BsbiDb
- */
-
-/**
- *
- */
-class TaxaLoadedHook {
-    static callbackStack = [];
-
-    static taxaLoadedEntryPoint() {
-        Taxon.rawTaxa = BsbiDb.TaxonNames;
-        while (TaxaLoadedHook.callbackStack.length) {
-            const callback = TaxaLoadedHook.callbackStack.shift();
-            try {
-                callback();
-            } catch (e) {
-                console.log({'Exception after taxon load' : e});
-            }
-        }
-    }
-
-    /**
-     *
-     * @returns {Promise<any>|Promise<void>}
-     */
-    static onceTaxaLoaded() {
-        if (BsbiDb.hasOwnProperty('TaxonNames')) {
-            return Promise.resolve();
-        } else {
-            if (!BsbiDb.taxonNamesLoadedEntryPoint) {
-                BsbiDb.taxonNamesLoadedEntryPoint = TaxaLoadedHook.taxaLoadedEntryPoint;
-            }
-
-            return new Promise(
-                (resolve) => {
-                    TaxaLoadedHook.callbackStack.push(resolve);
-                }
-            );
-        }
-    }
-}
-
-/**
  *
  * @param {string} separator
  * @param {string} finalSeparator
@@ -6087,5 +6043,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { App, AppController, BSBIServiceWorker, EventHarness, InternalAppError, Model, NotFoundError, Occurrence, OccurrenceImage, StaticContentController, Survey, SurveyPickerController, TaxaLoadedHook, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { App, AppController, BSBIServiceWorker, EventHarness, InternalAppError, Model, NotFoundError, Occurrence, OccurrenceImage, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

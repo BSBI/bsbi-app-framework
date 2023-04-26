@@ -1,10 +1,6 @@
 import {TaxonError} from "../utils/exceptions/TaxonError";
 import {escapeHTML} from "../utils/escapeHTML";
 
-/**
- * @external BsbiDb
- */
-
 export class Taxon {
     /**
      * @typedef RawTaxon
@@ -26,7 +22,7 @@ export class Taxon {
      *
      * @type {Object.<string, RawTaxon>}
      */
-    static rawTaxa; // = BsbiDb.TaxonNames;
+    static rawTaxa;
 
     /**
      * @type {string}
@@ -110,6 +106,10 @@ export class Taxon {
      */
     static showVernacular = true;
 
+    static setTaxa(taxa) {
+        Taxon.rawTaxa = taxa;
+    }
+
     /**
      *
      * @param {string} id
@@ -118,13 +118,7 @@ export class Taxon {
      */
     static fromId (id) {
         if (!Taxon.rawTaxa) {
-            // may not yet have been initialised due to deferred loading
-
-            if (BsbiDb.TaxonNames) {
-                Taxon.rawTaxa = BsbiDb.TaxonNames;
-            } else {
-                throw new TaxonError(`Taxon.fromId() called before taxon list has loaded.`);
-            }
+            throw new TaxonError(`Taxon.fromId() called before taxon list has been initialized.`);
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
@@ -170,14 +164,14 @@ export class Taxon {
             if (vernacularMatched) {
                 return (acceptedTaxon) ?
                     `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>` +
-                        ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
                     :
                     `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
                     ;
             } else {
                 return (acceptedTaxon) ?
                     `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''
-                        } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
                     :
                     `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''}`
                     ;
@@ -185,7 +179,7 @@ export class Taxon {
         } else {
             return (acceptedTaxon) ?
                 `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>` +
-                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
                 :
                 `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
                 ;

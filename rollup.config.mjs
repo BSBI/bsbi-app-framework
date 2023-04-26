@@ -4,7 +4,7 @@ import replace from '@rollup/plugin-replace';
 import { string } from "rollup-plugin-string";
 //import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 
 // `npm run build` -> `production` is true
@@ -60,12 +60,14 @@ export default [
 			format: 'esm',
 			exports: "named",
 			sourcemap: true,
-			globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
+			globals: { MapboxGeocoder: 'MapboxGeocoder' },
 		},
 		external: ['BsbiDb'],
 
 		plugins: [
-			resolve(), // tells Rollup how to find files in node_modules
+			resolve({
+				browser: true
+			}), // tells Rollup how to find files in node_modules
 			replace({
 				preventAssignment: true,
 				values: {

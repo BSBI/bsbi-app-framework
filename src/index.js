@@ -21,7 +21,7 @@ export {NotFoundError} from './utils/exceptions/NotFoundError';
 export {TaxonError} from './utils/exceptions/TaxonError';
 
 //export {TaxonSearch} from './utils/taxonpicker/TaxonSearch';
-export {TaxaLoadedHook} from './utils/TaxaLoadedHook';
+//export {TaxaLoadedHook} from './utils/TaxaLoadedHook';
 
 // export {DateField} from './views/formfields/DateField';
 // export {FormField} from './views/formfields/FormField';
