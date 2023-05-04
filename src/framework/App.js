@@ -736,7 +736,7 @@ export class App extends EventHarness {
         occurrence.isPristine = true; //
 
         if (attributes && Object.keys(attributes).length) {
-            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+            occurrence.attributes = {...occurrence.attributes, ...attributes};
             occurrence.touch(); // now no longer pristine
         }
 

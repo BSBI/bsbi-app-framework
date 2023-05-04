@@ -4858,10 +4858,10 @@ class App extends EventHarness {
         occurrence.isPristine = true; //
 
         if (attributes && Object.keys(attributes).length) {
-            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+            occurrence.attributes = {...occurrence.attributes, ...attributes};
             occurrence.touch(); // now no longer pristine
         }
-        
+
         this.addOccurrence(occurrence);
 
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
@@ -5548,7 +5548,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1683193984-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1683200715-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
