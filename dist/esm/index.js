@@ -3404,7 +3404,6 @@ class Model extends EventHarness {
         }
 
         this._savedLocally = false;
-        //this._savedRemotely = false;
         this.savedRemotely = false;
     }
 
@@ -4844,16 +4843,25 @@ class App extends EventHarness {
     }
 
     /**
+     * Note that if attributes are set here, then the occurrence is regarded as changed and unsaved, rather than pristine
+     * i.e. attributes setting here is *not* intended as a way to set defaults
+     *
+     * @param {{}} [attributes]
      * @return {Occurrence}
      */
-    addNewOccurrence() {
+    addNewOccurrence(attributes) {
         const occurrence = new Occurrence();
         occurrence.surveyId = this.currentSurvey.id;
         occurrence.projectId = this.projectId;
 
         occurrence.isNew = true;
-        occurrence.isPristine = true;
+        occurrence.isPristine = true; //
 
+        if (attributes && Object.keys(attributes).length) {
+            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+            occurrence.touch(); // now no longer pristine
+        }
+        
         this.addOccurrence(occurrence);
 
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
@@ -5540,7 +5548,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1682524954-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1683193984-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;

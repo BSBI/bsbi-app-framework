@@ -332,7 +332,6 @@ export class Model extends EventHarness {
         }
 
         this._savedLocally = false;
-        //this._savedRemotely = false;
         this.savedRemotely = false;
     }
 

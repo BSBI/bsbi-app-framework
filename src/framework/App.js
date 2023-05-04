@@ -721,15 +721,24 @@ export class App extends EventHarness {
     }
 
     /**
+     * Note that if attributes are set here, then the occurrence is regarded as changed and unsaved, rather than pristine
+     * i.e. attributes setting here is *not* intended as a way to set defaults
+     *
+     * @param {{}} [attributes]
      * @return {Occurrence}
      */
-    addNewOccurrence() {
+    addNewOccurrence(attributes) {
         const occurrence = new Occurrence();
         occurrence.surveyId = this.currentSurvey.id;
         occurrence.projectId = this.projectId;
 
         occurrence.isNew = true;
-        occurrence.isPristine = true;
+        occurrence.isPristine = true; //
+
+        if (attributes && Object.keys(attributes).length) {
+            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+            occurrence.touch(); // now no longer pristine
+        }
 
         this.addOccurrence(occurrence);
 
