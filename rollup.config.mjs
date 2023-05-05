@@ -22,9 +22,9 @@ export default [
 	// 		exports: "named",
 	// 		sourcemap: true,
 	// 		name: 'bsbiappframework',
-	// 		globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
+	// 		//globals: { BsbiDb: 'BsbiDb', MapboxGeocoder: 'MapboxGeocoder' },
 	// 	},
-	// 	external: ['BsbiDb'],
+	// 	external: ['british-isles-gridrefs'],
 	//
 	// 	plugins: [
 	// 		resolve(), // tells Rollup how to find files in node_modules
@@ -60,9 +60,9 @@ export default [
 			format: 'esm',
 			exports: "named",
 			sourcemap: true,
-			globals: { MapboxGeocoder: 'MapboxGeocoder' },
+			// globals: { MapboxGeocoder: 'MapboxGeocoder' },
 		},
-		external: ['BsbiDb'],
+		external: ['british-isles-gridrefs'],
 
 		plugins: [
 			resolve({

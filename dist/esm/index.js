@@ -1,3 +1,5 @@
+import { GridRef } from 'british-isles-gridrefs';
+
 // AppController
 // Abstract super-class for page controllers
 
@@ -3458,8 +3460,6 @@ function escapeHTML(text) {
 }
 
 // a Survey captures the currentSurvey meta data
-//import {TextGeorefField} from "../views/formfields/TextGeorefField";
-//import {Form} from "../views/forms/Form";
 
 class Survey extends Model {
 
@@ -3605,10 +3605,13 @@ class Survey extends Model {
     }
 
     /**
-     *
+     * @param {{summarySquarePrecision : number, summarizeTetrad : boolean}} options
      * @returns {string} an html-safe string based on the locality and creation date
      */
-    generateSurveyName() {
+    generateSurveyName(options = {
+        summarySquarePrecision : 1000,
+        summarizeTetrad : false
+    }) {
         if (this.attributes.casual) {
             // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
 
@@ -3617,7 +3620,25 @@ class Survey extends Model {
                 :
                 `Data-set created on ${(new Date(this.createdStamp * 1000)).toString()}`
         } else {
-            let place = (this.attributes.place || (this.attributes.georef && this.attributes.georef.gridRef) || '(unlocalised)').trim();
+            let place;
+
+            if (this.attributes.place) {
+                let summaryGridRef;
+
+                if (options.summarySquarePrecision && this.attributes.georef && this.attributes.georef.gridRef) {
+                    const gridRef = GridRef.from_string(this.attributes.georef.gridRef);
+
+                    summaryGridRef = ` ${gridRef.gridCoords.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length)}`;
+                } else {
+                    summaryGridRef = '';
+                }
+
+                place = `${this.attributes.place}${summaryGridRef}`;
+            } else if (this.attributes.georef && this.attributes.georef.gridRef) {
+                place = this.attributes.georef.gridRef;
+            } else {
+                place = '(unlocalized)';
+            }
 
             const userDate = this.date;
             let dateString;
@@ -5548,7 +5569,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1683200715-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1683283637-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
