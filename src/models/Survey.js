@@ -1,4 +1,4 @@
-// a Survey captures the currentSurvey meta data
+// a Survey captures the currentSurvey meta-data
 // i.e. it captures site details (name, location); user details (name, email)
 //
 // if a user were to submit multiple surveys then they would end up in the contact database multiple times
@@ -6,10 +6,7 @@
 // shared, keyed by email.
 
 import {Model} from "./Model";
-//import {SurveyForm} from "../views/forms/SurveyForm";
 import {escapeHTML} from "../utils/escapeHTML";
-//import {TextGeorefField} from "../views/formfields/TextGeorefField";
-//import {Form} from "../views/forms/Form";
 import {GridRef} from 'british-isles-gridrefs'
 
 export class Survey extends Model {
@@ -17,9 +14,20 @@ export class Survey extends Model {
     /**
      * fired from Survey when the object's contents have been modified
      *
+     * parameter is {surveyId : string}
+     *
      * @type {string}
      */
     static EVENT_MODIFIED = 'modified';
+
+    /**
+     * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+     *
+     * no parameters
+     *
+     * @type {string}
+     */
+    static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
     SAVE_ENDPOINT = '/savesurvey.php';
 
@@ -41,7 +49,7 @@ export class Survey extends Model {
     isNew = false;
 
     /**
-     * kludge to flag once the App singleton has set up a listner for changes on the survey
+     * kludge to flag once the App singleton has set up a listener for changes on the survey
      * @type {boolean}
      */
     hasAppModifiedListener = false;
@@ -106,21 +114,45 @@ export class Survey extends Model {
         }
     }
 
-    // /**
-    //  *
-    //  * @param {SurveyForm} form
-    //  */
-    // registerForm(form) {
-    //     form.model = this;
-    //     form.addListener('change', this.formChangedHandler.bind(this));
-    //
-    //     if (this.isNew) {
-    //         form.fireEvent('initialisenew', {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
-    //         form.liveValidation = false;
-    //     } else {
-    //         form.liveValidation = true;
-    //     }
-    // }
+    /**
+     * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
+     *
+     * @return {{
+     *     tetrad : string,
+     *     monad : string,
+     *     country : string,
+     *     vc : int[]
+     * }|null}
+     */
+    getGeoContext() {
+        const geoRef = this.geoReference;
+
+        const result = {
+            vc : []
+        };
+
+        if (geoRef && geoRef.gridRef) {
+            const gridRef = GridRef.from_string(geoRef.gridRef);
+
+            if (gridRef) {
+                if (gridRef.length <= 1000) {
+                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                }
+
+                if (gridRef.length <= 2000) {
+                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                }
+
+                result.country = gridRef.country;
+            }
+        }
+
+        if (this.attributes.vc) {
+            // @todo read vc from field
+        }
+
+        return {...{tetrad : '', monad : '', country : '', vc : []}, ...result};
+    }
 
     /**
      * if not securely saved then makes a post to /savesurvey.php

@@ -7,8 +7,8 @@ export class Taxon {
      * @type {array}
      * @property {string} 0 - nameString
      * @property {(string|number)} 1 - canonical
-     * @property {string} 2 hybridCanonical, raw entry is 0 if canonical == hybridCanonical
-     * @property {(string|number)} 3 acceptedEntityId or 0 if name is accepted
+     * @property {string} 2 hybridCanonical, raw entry is 0/undefined if canonical == hybridCanonical
+     * @property {(string|number)} 3 acceptedEntityId or 0/undefined if name is accepted
      * @property {string} 4 qualifier
      * @property {string} 5 authority
      * @property {string} 6 vernacular
@@ -16,6 +16,12 @@ export class Taxon {
      * @property {number} 8 used
      * @property {number} 9 sortOrder
      * @property {Array.<string>} 10 parentIds
+     * @property {number} [11] notForEntry (1 === not for entry)
+     * @property {string} [12] GB national status
+     * @property {string} [13] IE national status
+     * @property {string} [14] CI national status
+     * @property {string} [15] GB rare/scarce conservation status
+     * @property {string} [16] IE rare/scarce conservation status
      */
 
     /**
@@ -102,6 +108,25 @@ export class Taxon {
 
     /**
      *
+     * @type {{CI: null|string, GB: null|string, IE: null|string}}
+     */
+    nationalStatus = {
+        GB : null,
+        IE : null,
+        CI : null
+    }
+
+    /**
+     *
+     * @type {{GB: null|string, IE: null|string}}
+     */
+    rareScarceStatus = {
+        GB : null,
+        IE : null
+    }
+
+    /**
+     *
      * @type {boolean}
      */
     static showVernacular = true;
@@ -134,17 +159,25 @@ export class Taxon {
         taxon.canonical = raw[1] || raw[0]; // raw entry is blank if namesString == canonical
         taxon.hybridCanonical = raw[2] || taxon.canonical; // raw entry is blank if canonical == hybridCanonical
         taxon.acceptedEntityId = raw[3] || id;
-        taxon.qualifier = raw[4];
-        taxon.authority = raw[5];
-        taxon.vernacular = raw[6];
-        taxon.vernacularRoot = raw[7];
-        taxon.used = raw[8];
+        taxon.qualifier = raw[4] || '';
+        taxon.authority = raw[5] || '';
+        taxon.vernacular = raw[6] || '';
+        taxon.vernacularRoot = raw[7] || '';
+        taxon.used = !!raw[8];
         taxon.sortOrder = raw[9];
         taxon.parentIds = raw[10];
+        taxon.badVernacular = !!raw[11];
 
-        if (raw[11]) {
-            taxon.badVernacular = true
-        }
+        taxon.nationalStatus = {
+            GB: raw[12] || null,
+            IE: raw[13] || null,
+            CI: raw[14] || null
+        };
+
+        taxon.rareScarceStatus = {
+            GB: raw[15] || null,
+            IE: raw[16] || null
+        };
 
         return taxon;
     }

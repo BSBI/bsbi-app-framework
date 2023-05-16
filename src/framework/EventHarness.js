@@ -1,3 +1,7 @@
+/**
+ * @typedef {number} EventHarness~Handle
+ */
+
 export class EventHarness {
     /**
      *
@@ -7,37 +11,37 @@ export class EventHarness {
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
-    /**
-     *
-     * @param {string} eventName
-     * @param {Object} obj
-     * @param {Function} method
-     * @param {*=} constructionParam
-     * @deprecated use addListener instead
-     * @return {number} handle
-     */
-    bindListener (eventName, obj, method, constructionParam) {
-        this.#eventListeners = this.#eventListeners || [];
-
-        const handlerFunction =
-            function(context, eventName, invocationParam) {
-                return method.call(obj, context, eventName, invocationParam, constructionParam);
-            };
-
-        if (this.#eventListeners[eventName]) {
-            return (this.#eventListeners[eventName].push(handlerFunction))-1;
-        } else {
-            this.#eventListeners[eventName] = [handlerFunction];
-            return 0; // first element in array
-        }
-    };
+    // /**
+    //  *
+    //  * @param {string} eventName
+    //  * @param {Object} obj
+    //  * @param {Function} method
+    //  * @param {*=} constructionParam
+    //  * @deprecated use addListener instead
+    //  * @return {number} handle
+    //  */
+    // bindListener (eventName, obj, method, constructionParam) {
+    //     this.#eventListeners = this.#eventListeners || [];
+    //
+    //     const handlerFunction =
+    //         function(context, eventName, invocationParam) {
+    //             return method.call(obj, context, eventName, invocationParam, constructionParam);
+    //         };
+    //
+    //     if (this.#eventListeners[eventName]) {
+    //         return (this.#eventListeners[eventName].push(handlerFunction))-1;
+    //     } else {
+    //         this.#eventListeners[eventName] = [handlerFunction];
+    //         return 0; // first element in array
+    //     }
+    // };
 
     /**
      *
      * @param {string} eventName
      * @param {Function} handler
      * @param {*=} constructionParam
-     * @return {number} handle
+     * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
         this.#eventListeners = this.#eventListeners || [];

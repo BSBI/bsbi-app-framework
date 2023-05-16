@@ -144,6 +144,10 @@ class NotFoundError extends Error {
     }
 }
 
+/**
+ * @typedef {number} EventHarness~Handle
+ */
+
 class EventHarness {
     /**
      *
@@ -153,37 +157,37 @@ class EventHarness {
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
-    /**
-     *
-     * @param {string} eventName
-     * @param {Object} obj
-     * @param {Function} method
-     * @param {*=} constructionParam
-     * @deprecated use addListener instead
-     * @return {number} handle
-     */
-    bindListener (eventName, obj, method, constructionParam) {
-        this.#eventListeners = this.#eventListeners || [];
-
-        const handlerFunction =
-            function(context, eventName, invocationParam) {
-                return method.call(obj, context, eventName, invocationParam, constructionParam);
-            };
-
-        if (this.#eventListeners[eventName]) {
-            return (this.#eventListeners[eventName].push(handlerFunction))-1;
-        } else {
-            this.#eventListeners[eventName] = [handlerFunction];
-            return 0; // first element in array
-        }
-    };
+    // /**
+    //  *
+    //  * @param {string} eventName
+    //  * @param {Object} obj
+    //  * @param {Function} method
+    //  * @param {*=} constructionParam
+    //  * @deprecated use addListener instead
+    //  * @return {number} handle
+    //  */
+    // bindListener (eventName, obj, method, constructionParam) {
+    //     this.#eventListeners = this.#eventListeners || [];
+    //
+    //     const handlerFunction =
+    //         function(context, eventName, invocationParam) {
+    //             return method.call(obj, context, eventName, invocationParam, constructionParam);
+    //         };
+    //
+    //     if (this.#eventListeners[eventName]) {
+    //         return (this.#eventListeners[eventName].push(handlerFunction))-1;
+    //     } else {
+    //         this.#eventListeners[eventName] = [handlerFunction];
+    //         return 0; // first element in array
+    //     }
+    // };
 
     /**
      *
      * @param {string} eventName
      * @param {Function} handler
      * @param {*=} constructionParam
-     * @return {number} handle
+     * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
         this.#eventListeners = this.#eventListeners || [];
@@ -3459,16 +3463,27 @@ function escapeHTML(text) {
     }
 }
 
-// a Survey captures the currentSurvey meta data
+// a Survey captures the currentSurvey meta-data
 
 class Survey extends Model {
 
     /**
      * fired from Survey when the object's contents have been modified
      *
+     * parameter is {surveyId : string}
+     *
      * @type {string}
      */
     static EVENT_MODIFIED = 'modified';
+
+    /**
+     * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+     *
+     * no parameters
+     *
+     * @type {string}
+     */
+    static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
     SAVE_ENDPOINT = '/savesurvey.php';
 
@@ -3490,7 +3505,7 @@ class Survey extends Model {
     isNew = false;
 
     /**
-     * kludge to flag once the App singleton has set up a listner for changes on the survey
+     * kludge to flag once the App singleton has set up a listener for changes on the survey
      * @type {boolean}
      */
     hasAppModifiedListener = false;
@@ -3555,21 +3570,43 @@ class Survey extends Model {
         }
     }
 
-    // /**
-    //  *
-    //  * @param {SurveyForm} form
-    //  */
-    // registerForm(form) {
-    //     form.model = this;
-    //     form.addListener('change', this.formChangedHandler.bind(this));
-    //
-    //     if (this.isNew) {
-    //         form.fireEvent('initialisenew', {}); // allows first-time initialisation of dynamic default data, e.g. starting a GPS fix
-    //         form.liveValidation = false;
-    //     } else {
-    //         form.liveValidation = true;
-    //     }
-    // }
+    /**
+     * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
+     *
+     * @return {{
+     *     tetrad : string,
+     *     monad : string,
+     *     country : string,
+     *     vc : int[]
+     * }|null}
+     */
+    getGeoContext() {
+        const geoRef = this.geoReference;
+
+        const result = {
+            vc : []
+        };
+
+        if (geoRef && geoRef.gridRef) {
+            const gridRef = GridRef.from_string(geoRef.gridRef);
+
+            if (gridRef) {
+                if (gridRef.length <= 1000) {
+                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                }
+
+                if (gridRef.length <= 2000) {
+                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                }
+
+                result.country = gridRef.country;
+            }
+        }
+
+        if (this.attributes.vc) ;
+
+        return {...{tetrad : '', monad : '', country : '', vc : []}, ...result};
+    }
 
     /**
      * if not securely saved then makes a post to /savesurvey.php
@@ -3682,8 +3719,8 @@ class Taxon {
      * @type {array}
      * @property {string} 0 - nameString
      * @property {(string|number)} 1 - canonical
-     * @property {string} 2 hybridCanonical, raw entry is 0 if canonical == hybridCanonical
-     * @property {(string|number)} 3 acceptedEntityId or 0 if name is accepted
+     * @property {string} 2 hybridCanonical, raw entry is 0/undefined if canonical == hybridCanonical
+     * @property {(string|number)} 3 acceptedEntityId or 0/undefined if name is accepted
      * @property {string} 4 qualifier
      * @property {string} 5 authority
      * @property {string} 6 vernacular
@@ -3691,6 +3728,12 @@ class Taxon {
      * @property {number} 8 used
      * @property {number} 9 sortOrder
      * @property {Array.<string>} 10 parentIds
+     * @property {number} [11] notForEntry (1 === not for entry)
+     * @property {string} [12] GB national status
+     * @property {string} [13] IE national status
+     * @property {string} [14] CI national status
+     * @property {string} [15] GB rare/scarce conservation status
+     * @property {string} [16] IE rare/scarce conservation status
      */
 
     /**
@@ -3777,6 +3820,25 @@ class Taxon {
 
     /**
      *
+     * @type {{CI: null|string, GB: null|string, IE: null|string}}
+     */
+    nationalStatus = {
+        GB : null,
+        IE : null,
+        CI : null
+    }
+
+    /**
+     *
+     * @type {{GB: null|string, IE: null|string}}
+     */
+    rareScarceStatus = {
+        GB : null,
+        IE : null
+    }
+
+    /**
+     *
      * @type {boolean}
      */
     static showVernacular = true;
@@ -3809,17 +3871,25 @@ class Taxon {
         taxon.canonical = raw[1] || raw[0]; // raw entry is blank if namesString == canonical
         taxon.hybridCanonical = raw[2] || taxon.canonical; // raw entry is blank if canonical == hybridCanonical
         taxon.acceptedEntityId = raw[3] || id;
-        taxon.qualifier = raw[4];
-        taxon.authority = raw[5];
-        taxon.vernacular = raw[6];
-        taxon.vernacularRoot = raw[7];
-        taxon.used = raw[8];
+        taxon.qualifier = raw[4] || '';
+        taxon.authority = raw[5] || '';
+        taxon.vernacular = raw[6] || '';
+        taxon.vernacularRoot = raw[7] || '';
+        taxon.used = !!raw[8];
         taxon.sortOrder = raw[9];
         taxon.parentIds = raw[10];
+        taxon.badVernacular = !!raw[11];
 
-        if (raw[11]) {
-            taxon.badVernacular = true;
-        }
+        taxon.nationalStatus = {
+            GB: raw[12] || null,
+            IE: raw[13] || null,
+            CI: raw[14] || null
+        };
+
+        taxon.rareScarceStatus = {
+            GB: raw[15] || null,
+            IE: raw[16] || null
+        };
 
         return taxon;
     }
@@ -4217,6 +4287,8 @@ class App extends EventHarness {
 
             let surveyId = survey ? survey.id : null;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
+
+            this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey : survey});
         }
     }
 
@@ -4268,6 +4340,16 @@ class App extends EventHarness {
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    /**
+     * Fired when the selected current survey id is changed
+     * parameter is {newSurvey : Survey|null}
+     *
+     * (this is not fired for modification of the survey content)
+     *
+     * @type {string}
+     */
+    static EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
 
     /**
      * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
@@ -4528,6 +4610,8 @@ class App extends EventHarness {
                         survey.save();
                     }
                     occurrence.save(survey.id);
+
+                    survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
                 }
             });
     }
@@ -4830,6 +4914,7 @@ class App extends EventHarness {
                             this.setNewSurvey();
                         } else {
                             this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                            this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED);
                         }
                         return Promise.resolve();
                     });
@@ -4886,6 +4971,8 @@ class App extends EventHarness {
         this.addOccurrence(occurrence);
 
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
+
+        this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
 
         return occurrence;
     }
@@ -5569,7 +5656,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1683283637-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1684240970-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;

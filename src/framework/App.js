@@ -74,6 +74,8 @@ export class App extends EventHarness {
 
             let surveyId = survey ? survey.id : null;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
+
+            this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey : survey});
         }
     }
 
@@ -125,6 +127,16 @@ export class App extends EventHarness {
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    /**
+     * Fired when the selected current survey id is changed
+     * parameter is {newSurvey : Survey|null}
+     *
+     * (this is not fired for modification of the survey content)
+     *
+     * @type {string}
+     */
+    static EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
 
     /**
      * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
@@ -385,6 +397,8 @@ export class App extends EventHarness {
                         survey.save();
                     }
                     occurrence.save(survey.id);
+
+                    survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
                 }
             });
     }
@@ -687,6 +701,7 @@ export class App extends EventHarness {
                             this.setNewSurvey();
                         } else {
                             this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                            this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED)
                         }
                         return Promise.resolve();
                     });
@@ -743,6 +758,8 @@ export class App extends EventHarness {
         this.addOccurrence(occurrence);
 
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
+
+        this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
 
         return occurrence;
     }
