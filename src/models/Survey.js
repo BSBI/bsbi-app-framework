@@ -68,6 +68,40 @@ export class Survey extends Model {
         };
     };
 
+    /**
+     * Get the tetrad or monad level square from the survey geo-reference
+     *
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     */
+    get squareReference() {
+        if (this.attributes.georef && this.attributes.georef.gridRef && this.attributes.georef.precision <= 2000) {
+            let newRef;
+
+            if (this.attributes.georef.precision === 2000 || this.attributes.georef.precision === 1000) {
+                newRef = this.attributes.georef.gridRef;
+            } else {
+                const context = this.getGeoContext();
+                newRef = context.monad || context.tetrad;
+            }
+
+            return {
+                gridRef: newRef,
+                rawString: newRef,
+                source: 'unknown',
+                latLng: null,
+                precision: null
+            }
+        } else {
+            return {
+                gridRef: '',
+                rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                latLng: null,
+                precision: null
+            }
+        }
+    }
+
     get date() {
         return this.attributes.date || '';
     }
@@ -118,6 +152,7 @@ export class Survey extends Model {
      * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
      *
      * @return {{
+     *     hectad : string,
      *     tetrad : string,
      *     monad : string,
      *     country : string,
@@ -145,13 +180,15 @@ export class Survey extends Model {
 
                 result.country = gridRef.country;
             }
+
+            result.hectad = gridRef.gridCoords.to_gridref(10000);
         }
 
         if (this.attributes.vc) {
             // @todo read vc from field
         }
 
-        return {...{tetrad : '', monad : '', country : '', vc : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
     }
 
     /**

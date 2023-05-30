@@ -3524,6 +3524,40 @@ class Survey extends Model {
         };
     };
 
+    /**
+     * Get the tetrad or monad level square from the survey geo-reference
+     *
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     */
+    get squareReference() {
+        if (this.attributes.georef && this.attributes.georef.gridRef && this.attributes.georef.precision <= 2000) {
+            let newRef;
+
+            if (this.attributes.georef.precision === 2000 || this.attributes.georef.precision === 1000) {
+                newRef = this.attributes.georef.gridRef;
+            } else {
+                const context = this.getGeoContext();
+                newRef = context.monad || context.tetrad;
+            }
+
+            return {
+                gridRef: newRef,
+                rawString: newRef,
+                source: 'unknown',
+                latLng: null,
+                precision: null
+            }
+        } else {
+            return {
+                gridRef: '',
+                rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                latLng: null,
+                precision: null
+            }
+        }
+    }
+
     get date() {
         return this.attributes.date || '';
     }
@@ -3574,6 +3608,7 @@ class Survey extends Model {
      * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
      *
      * @return {{
+     *     hectad : string,
      *     tetrad : string,
      *     monad : string,
      *     country : string,
@@ -3601,11 +3636,13 @@ class Survey extends Model {
 
                 result.country = gridRef.country;
             }
+
+            result.hectad = gridRef.gridCoords.to_gridref(10000);
         }
 
         if (this.attributes.vc) ;
 
-        return {...{tetrad : '', monad : '', country : '', vc : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
     }
 
     /**
@@ -3734,7 +3771,10 @@ class Taxon {
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
+     * @property {{}} 17 Presence in grid-squares (top-level object is keyed by grid-ref)
      */
+
+    static GR_PRESENCE_KEY = 17;
 
     /**
      *
@@ -3839,6 +3879,12 @@ class Taxon {
 
     /**
      *
+     * @type {{current : number, previous : number, [year] : number}|null}
+     */
+    occurrenceCoverage = null;
+
+    /**
+     *
      * @type {boolean}
      */
     static showVernacular = true;
@@ -3890,6 +3936,8 @@ class Taxon {
             GB: raw[15] || null,
             IE: raw[16] || null
         };
+
+        taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
 
         return taxon;
     }
@@ -4974,6 +5022,9 @@ class App extends EventHarness {
 
         this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
 
+        // occurrence modified event fired to ensure that the occurrence is saved
+        occurrence.fireEvent(Occurrence.EVENT_MODIFIED);
+
         return occurrence;
     }
 
@@ -5656,7 +5707,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1684240970-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1684858375-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;

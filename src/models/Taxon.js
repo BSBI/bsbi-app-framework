@@ -22,7 +22,10 @@ export class Taxon {
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
+     * @property {{}} 17 Presence in grid-squares (top-level object is keyed by grid-ref)
      */
+
+    static GR_PRESENCE_KEY = 17;
 
     /**
      *
@@ -127,6 +130,12 @@ export class Taxon {
 
     /**
      *
+     * @type {{current : number, previous : number, [year] : number}|null}
+     */
+    occurrenceCoverage = null;
+
+    /**
+     *
      * @type {boolean}
      */
     static showVernacular = true;
@@ -178,6 +187,8 @@ export class Taxon {
             GB: raw[15] || null,
             IE: raw[16] || null
         };
+
+        taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
 
         return taxon;
     }

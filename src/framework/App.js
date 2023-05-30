@@ -761,6 +761,9 @@ export class App extends EventHarness {
 
         this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
 
+        // occurrence modified event fired to ensure that the occurrence is saved
+        occurrence.fireEvent(Occurrence.EVENT_MODIFIED);
+
         return occurrence;
     }
 
