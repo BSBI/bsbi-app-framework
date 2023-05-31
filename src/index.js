@@ -11,6 +11,7 @@ export {Occurrence} from './models/Occurrence';
 export {OccurrenceImage} from './models/OccurrenceImage';
 export {Survey} from './models/Survey';
 export {Taxon} from './models/Taxon';
+export {Party} from './models/Party'
 
 export {BSBIServiceWorker} from './serviceworker/BSBIServiceWorker';
 
