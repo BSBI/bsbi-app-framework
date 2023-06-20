@@ -246,9 +246,10 @@ export class Survey extends Model {
                 let summaryGridRef;
 
                 if (options.summarySquarePrecision && this.attributes.georef && this.attributes.georef.gridRef) {
-                    const gridRef = GridRef.from_string(this.attributes.georef.gridRef);
+                    // '<' replacement used simplistically to sanitize against script injection
+                    const gridRef = GridRef.from_string(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
 
-                    summaryGridRef = ` ${gridRef.gridCoords.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length)}`;
+                    summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
                 } else {
                     summaryGridRef = '';
                 }

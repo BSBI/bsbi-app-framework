@@ -3700,9 +3700,10 @@ class Survey extends Model {
                 let summaryGridRef;
 
                 if (options.summarySquarePrecision && this.attributes.georef && this.attributes.georef.gridRef) {
-                    const gridRef = GridRef.from_string(this.attributes.georef.gridRef);
+                    // '<' replacement used simplistically to sanitize against script injection
+                    const gridRef = GridRef.from_string(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
 
-                    summaryGridRef = ` ${gridRef.gridCoords.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length)}`;
+                    summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
                 } else {
                     summaryGridRef = '';
                 }
@@ -3891,6 +3892,22 @@ class Taxon {
 
     static setTaxa(taxa) {
         Taxon.rawTaxa = taxa;
+    }
+
+    static initialiseTaxa(taxa, sourceUrl) {
+        Taxon.rawTaxa = taxa;
+
+        if ((taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
+            console.log(`Taxon list may be stale (stamp is ${taxa.stamp}), prompting re-cache.`);
+            navigator.serviceWorker.ready.then((registration) => {
+                registration.active.postMessage(
+                    {
+                        action: 'recache',
+                        url: sourceUrl
+                    }
+                );
+            });
+        }
     }
 
     /**
@@ -5843,6 +5860,7 @@ class BSBIServiceWorker {
      *  getImageUrlMatch : RegExp,
      *  interceptUrlMatches : RegExp,
      *  ignoreUrlMatches : RegExp,
+     *  staticUrlMatches : RegExp|null,
      *  passThroughNoCache : RegExp,
      *  indexUrl : string,
      *  urlCacheSet : Array.<string>,
@@ -5861,7 +5879,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1685548880-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1686901642-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -5869,6 +5887,13 @@ class BSBIServiceWorker {
         const SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
         const SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
         const SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
+
+        /**
+         * Urls that should be cached, with no need for automatic refresh
+         *
+         * @type {RegExp|null}
+         */
+        const SERVICE_WORKER_STATIC_URL_MATCHES= configuration.staticUrlMatches;
         const INDEX_URL = configuration.indexUrl;
 
         this.URL_CACHE_SET = configuration.urlCacheSet;
@@ -5876,6 +5901,17 @@ class BSBIServiceWorker {
         localforage.config({
             name: configuration.forageName
         });
+
+        self.addEventListener("message", (event) => {
+                console.log({"Message received": event.data});
+
+                switch (event.data.action) {
+                    case 'recache':
+                        event.waitUntil(this.handleRecacheMessage(event.data.url));
+                        break;
+                }
+            }
+        );
 
         // On install, cache some resources.
         self.addEventListener('install', (evt) => {
@@ -5973,13 +6009,18 @@ class BSBIServiceWorker {
                     console.log(`redirecting to the root of the SPA for '${evt.request.url}'`);
                     let spaRequest = new Request(INDEX_URL);
                     evt.respondWith(this.fromCache(spaRequest));
-                    evt.waitUntil(this.update(spaRequest));
+
+                    // don't need to check for fresh, stale is fine here
+                    //evt.waitUntil(this.update(spaRequest));
                 } else if (evt.request.url.match(GET_IMAGE_URL_MATCH)) {
                     console.log(`request is for an image '${evt.request.url}'`);
                     this.handleImageFetch(evt);
                 } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
                     // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
                     evt.respondWith(fetch(evt.request));
+                } else if (SERVICE_WORKER_STATIC_URL_MATCHES?.test(evt.request.url)) {
+                    // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
+                    evt.respondWith(this.fromCache(evt.request));
                 } else {
                     console.log(`request is for non-image '${evt.request.url}'`);
                     // You can use `respondWith()` to answer immediately, without waiting for the
@@ -6313,6 +6354,19 @@ class BSBIServiceWorker {
                 console.log(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
                 return Promise.reject(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
             }
+        });
+    }
+
+    /**
+     *
+     * @param url
+     */
+    handleRecacheMessage(url) {
+        return caches.open(this.CACHE_VERSION).then((cache) => {
+            return cache.add(url);
+        }).catch((error) => {
+            console.log({'Precache failed result' : error});
+            return Promise.resolve();
         });
     }
 
