@@ -203,6 +203,15 @@ export class SurveyPickerController extends AppController {
     }
 
     /**
+     * url fragment to redirect to, following addition of an existing survey, e.g. a pick from the selection list
+     *
+     * should be '/list' or '/list/record'
+     *
+     * @type {string}
+     */
+    restoredSurveyNavigationTarget = '/list';
+
+    /**
      *
      * @param {string} context typically 'survey'
      * @param {('add'|'')} subcontext
@@ -228,7 +237,8 @@ export class SurveyPickerController extends AppController {
                 this.app.markAllNotPristine();
 
                 this.app.router.pause();
-                this.app.router.navigate('/list').resume();
+                //this.app.router.navigate('/list').resume();
+                this.app.router.navigate(this.restoredSurveyNavigationTarget).resume();
                 this.app.router.resolve();
             }, (error) => {
                 console.log({'failed survey restoration' : error});

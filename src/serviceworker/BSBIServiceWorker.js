@@ -422,9 +422,11 @@ export class BSBIServiceWorker {
      * but it does with `undefined` as value.
      *
      * @param {Request} request
+     * @param {boolean} tryRemoteFallback
+     * @param {number} remoteTimeoutMilliseconds (default 0 for no forced timeout)
      * @returns {Promise<Response | Promise<Response>>}
      */
-    fromCache(request) {
+    fromCache(request, tryRemoteFallback= true, remoteTimeoutMilliseconds = 0) {
         // @todo need to serve index.html in place of all Navigo-served pages
         // (an issue if someone returns to a bookmarked page within the app)
 
@@ -440,7 +442,7 @@ export class BSBIServiceWorker {
                     `no cache match for ${request.url}`);
 
                 //return matching || fetch(request); // return cache match or if not cached then go out to network
-                return matching || this.update(request); // return cache match or if not cached then go out to network (and then locally cache the response)
+                return matching || (tryRemoteFallback && this.update(request, remoteTimeoutMilliseconds)); // return cache match or if not cached then go out to network (and then locally cache the response)
             });
         });
     }
@@ -454,7 +456,9 @@ export class BSBIServiceWorker {
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        evt.respondWith(this.fromCache(evt.request).then((response) => {
+        // tryRemoteFallback set to false to ensure rapid response to client when bad network, at the cost of no access to remotely compressed image
+
+        evt.respondWith(this.fromCache(evt.request, true, 5000).then((response) => {
                 console.log('In handleImageFetch promise');
 
                 // response may be a 404
@@ -543,15 +547,34 @@ export class BSBIServiceWorker {
      * storing the new response data.
      *
      * @param {Request} request
+     * @param {number} timeout request timeout in milliseconds (or 0 for no timeout)
      * @returns {Promise<Response>}
      */
-    update(request) {
+    update(request, timeout = 0) {
         request = new Request(request, {mode: 'cors', credentials: 'omit'});
 
         console.log(`Attempting fetch and cache update of ${request.url}`);
 
         return caches.open(this.CACHE_VERSION).then((cache) => {
-            return fetch(request, {cache: "no-cache"}).then((response) => {
+            let signalController;
+            let timeoutId;
+            const fetchOptions = {cache: "no-cache"};
+
+            if (timeout) {
+                signalController = new AbortController();
+                timeoutId = setTimeout(() => {
+                    signalController.abort();
+                    console.log(`User-define update fetch timeout expired after ${timeout} ms`);
+                }, timeout);
+                fetchOptions.signal = signalController.signal;
+            }
+
+            return fetch(request, fetchOptions).then((response) => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
                 if (response.ok) {
                     console.log(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
@@ -563,6 +586,11 @@ export class BSBIServiceWorker {
                     return Promise.reject('Request during cache update failed, not caching.');
                 }
             }).catch((error) => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
                 console.log(`Cache attempt failed for ${request.url}: error was ${error}`);
                 return Promise.reject(`Cache attempt failed for ${request.url}: error was ${error}`);
             });

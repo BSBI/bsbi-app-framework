@@ -17,6 +17,12 @@ export class OccurrenceImage extends Model {
 
     TYPE = 'image';
 
+    occurrenceId = '';
+
+    surveyId = '';
+
+    projectId = '';
+
     /**
      * fetches a url of the image
      * this might be a remote url (or one intercepted by a service worker)
@@ -59,17 +65,35 @@ export class OccurrenceImage extends Model {
      * @returns {Promise}
      */
     save(surveyId, occurrenceId, projectId) {
-        if (!this._savedRemotely) {
+        if (surveyId) {
+            this.surveyId = surveyId;
+        }
 
+        if (projectId) {
+            this.projectId = projectId;
+        }
+
+        if (occurrenceId) {
+            this.occurrenceId = occurrenceId;
+        }
+
+        if (!this._savedRemotely) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
-            formData.append('surveyId', surveyId ? surveyId : ''); // avoid 'undefined'
-            formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+            formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
             formData.append('projectId', projectId ? projectId.toString() : '');
             formData.append('imageId', this.id);
             formData.append('id', this.id);
             formData.append('image', this.file);
             formData.append('deleted', this.deleted.toString());
+            formData.append('created', this.createdStamp.toString());
+            formData.append('modified', this.modifiedStamp.toString());
+
+            if (this.context === 'survey') {
+                formData.append('context', this.context);
+            } else {
+                formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+            }
 
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData);

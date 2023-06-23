@@ -81,7 +81,7 @@ export class Occurrence extends Model {
         console.log('Occurrence change handler invoked.');
 
         // read new values
-        // then fire it's own change event (Occurrence.EVENT_MODIFIED)
+        // then fire its own change event (Occurrence.EVENT_MODIFIED)
         params.form.updateModelFromContent();
 
         // refresh the form's validation state
@@ -131,6 +131,7 @@ export class Occurrence extends Model {
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
             formData.append('created', this.createdStamp.toString());
+            formData.append('modified', this.modifiedStamp.toString());
 
             console.log('queueing occurrence post');
             return this.queuePost(formData);

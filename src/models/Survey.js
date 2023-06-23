@@ -106,6 +106,17 @@ export class Survey extends Model {
         return this.attributes.date || '';
     }
 
+    /**
+     * @type boolean
+     */
+    isToday() {
+        const date = this.date();
+        const now = (new Date).toJSON().slice(0,10);
+
+        console.log(`Date matching '${date}' with '${now}'`);
+        return date === now;
+    }
+
     get place() {
         return this.attributes.place || '';
     }
@@ -230,8 +241,10 @@ export class Survey extends Model {
      */
     generateSurveyName(options = {
         summarySquarePrecision : 1000,
-        summarizeTetrad : false
+        summarizeTetrad : false,
     }) {
+
+
         if (this.attributes.casual) {
             // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
 
@@ -283,5 +296,21 @@ export class Survey extends Model {
 
             return `${escapeHTML(place)} ${dateString}`;
         }
+    }
+
+    /**
+     *
+     * @type {Set<string>}
+     *
+     */
+    extantOccurrenceKeys = new Set();
+
+    /**
+     * @todo need to exclude deleted records
+     * @returns {number}
+     *
+     */
+    countRecords() {
+        return this.extantOccurrenceKeys.size;
     }
 }

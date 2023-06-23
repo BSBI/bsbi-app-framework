@@ -81,6 +81,25 @@ export class App extends EventHarness {
 
     /**
      *
+     * @param {string} key
+     * @param value
+     * @returns {Promise<*>}
+     */
+    forageSetItem(key, value) {
+        return localforage.setItem(key, value);
+    }
+
+    /**
+     *
+     * @param key
+     * @returns {Promise<unknown | null>}
+     */
+    forageGetItem(key) {
+        return localforage.getItem(key);
+    }
+
+    /**
+     *
      * @returns {?Survey}
      */
     get currentSurvey() {
@@ -166,6 +185,7 @@ export class App extends EventHarness {
      * @type {string}
      */
     static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
+    static SESSION_KEY_NAME = 'session';
 
     /**
      *
@@ -502,7 +522,7 @@ export class App extends EventHarness {
             console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
-                if (key !== App.CURRENT_SURVEY_KEY_NAME) {
+                if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
                     let type, id;
 
                     [type, id] = key.split('.', 2);
@@ -757,6 +777,8 @@ export class App extends EventHarness {
 
         this.addOccurrence(occurrence);
 
+        this.currentSurvey.extantOccurrenceKeys.add(occurrence.id);
+
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
         this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
@@ -795,7 +817,12 @@ export class App extends EventHarness {
                             if (occurrence.surveyId === surveyId) {
                                 console.log(`adding occurrence ${occurrenceKey}`);
                                 this.addOccurrence(occurrence);
+                            } else {
+                                // not part of current survey but should still add to key list for counting purposes
+
+                                this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
                             }
+
                         }));
                 }
 

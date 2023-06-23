@@ -3562,6 +3562,17 @@ class Survey extends Model {
         return this.attributes.date || '';
     }
 
+    /**
+     * @type boolean
+     */
+    isToday() {
+        const date = this.date();
+        const now = (new Date).toJSON().slice(0,10);
+
+        console.log(`Date matching '${date}' with '${now}'`);
+        return date === now;
+    }
+
     get place() {
         return this.attributes.place || '';
     }
@@ -3684,8 +3695,10 @@ class Survey extends Model {
      */
     generateSurveyName(options = {
         summarySquarePrecision : 1000,
-        summarizeTetrad : false
+        summarizeTetrad : false,
     }) {
+
+
         if (this.attributes.casual) {
             // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
 
@@ -3737,6 +3750,22 @@ class Survey extends Model {
 
             return `${escapeHTML(place)} ${dateString}`;
         }
+    }
+
+    /**
+     *
+     * @type {Set<string>}
+     *
+     */
+    extantOccurrenceKeys = new Set();
+
+    /**
+     * @todo need to exclude deleted records
+     * @returns {number}
+     *
+     */
+    countRecords() {
+        return this.extantOccurrenceKeys.size;
     }
 }
 
@@ -4078,7 +4107,7 @@ class Occurrence extends Model {
         console.log('Occurrence change handler invoked.');
 
         // read new values
-        // then fire it's own change event (Occurrence.EVENT_MODIFIED)
+        // then fire its own change event (Occurrence.EVENT_MODIFIED)
         params.form.updateModelFromContent();
 
         // refresh the form's validation state
@@ -4128,6 +4157,7 @@ class Occurrence extends Model {
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
             formData.append('created', this.createdStamp.toString());
+            formData.append('modified', this.modifiedStamp.toString());
 
             console.log('queueing occurrence post');
             return this.queuePost(formData);
@@ -4162,6 +4192,12 @@ class OccurrenceImage extends Model {
     static imageCache = new Map;
 
     TYPE = 'image';
+
+    occurrenceId = '';
+
+    surveyId = '';
+
+    projectId = '';
 
     /**
      * fetches a url of the image
@@ -4205,17 +4241,35 @@ class OccurrenceImage extends Model {
      * @returns {Promise}
      */
     save(surveyId, occurrenceId, projectId) {
-        if (!this._savedRemotely) {
+        if (surveyId) {
+            this.surveyId = surveyId;
+        }
 
+        if (projectId) {
+            this.projectId = projectId;
+        }
+
+        if (occurrenceId) {
+            this.occurrenceId = occurrenceId;
+        }
+
+        if (!this._savedRemotely) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
-            formData.append('surveyId', surveyId ? surveyId : ''); // avoid 'undefined'
-            formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+            formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
             formData.append('projectId', projectId ? projectId.toString() : '');
             formData.append('imageId', this.id);
             formData.append('id', this.id);
             formData.append('image', this.file);
             formData.append('deleted', this.deleted.toString());
+            formData.append('created', this.createdStamp.toString());
+            formData.append('modified', this.modifiedStamp.toString());
+
+            if (this.context === 'survey') {
+                formData.append('context', this.context);
+            } else {
+                formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+            }
 
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData);
@@ -4359,6 +4413,25 @@ class App extends EventHarness {
 
     /**
      *
+     * @param {string} key
+     * @param value
+     * @returns {Promise<*>}
+     */
+    forageSetItem(key, value) {
+        return localforage.setItem(key, value);
+    }
+
+    /**
+     *
+     * @param key
+     * @returns {Promise<unknown | null>}
+     */
+    forageGetItem(key) {
+        return localforage.getItem(key);
+    }
+
+    /**
+     *
      * @returns {?Survey}
      */
     get currentSurvey() {
@@ -4444,6 +4517,7 @@ class App extends EventHarness {
      * @type {string}
      */
     static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
+    static SESSION_KEY_NAME = 'session';
 
     /**
      *
@@ -4780,7 +4854,7 @@ class App extends EventHarness {
             console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
-                if (key !== App.CURRENT_SURVEY_KEY_NAME) {
+                if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
                     let type, id;
 
                     [type, id] = key.split('.', 2);
@@ -5035,6 +5109,8 @@ class App extends EventHarness {
 
         this.addOccurrence(occurrence);
 
+        this.currentSurvey.extantOccurrenceKeys.add(occurrence.id);
+
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
         this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
@@ -5073,7 +5149,12 @@ class App extends EventHarness {
                             if (occurrence.surveyId === surveyId) {
                                 console.log(`adding occurrence ${occurrenceKey}`);
                                 this.addOccurrence(occurrence);
+                            } else {
+                                // not part of current survey but should still add to key list for counting purposes
+
+                                this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
                             }
+
                         }));
                 }
 
@@ -5326,6 +5407,15 @@ class SurveyPickerController extends AppController {
     }
 
     /**
+     * url fragment to redirect to, following addition of an existing survey, e.g. a pick from the selection list
+     *
+     * should be '/list' or '/list/record'
+     *
+     * @type {string}
+     */
+    restoredSurveyNavigationTarget = '/list';
+
+    /**
      *
      * @param {string} context typically 'survey'
      * @param {('add'|'')} subcontext
@@ -5351,7 +5441,8 @@ class SurveyPickerController extends AppController {
                 this.app.markAllNotPristine();
 
                 this.app.router.pause();
-                this.app.router.navigate('/list').resume();
+                //this.app.router.navigate('/list').resume();
+                this.app.router.navigate(this.restoredSurveyNavigationTarget).resume();
                 this.app.router.resolve();
             }, (error) => {
                 console.log({'failed survey restoration' : error});
@@ -5879,7 +5970,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1686901642-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1687510717-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -6254,9 +6345,11 @@ class BSBIServiceWorker {
      * but it does with `undefined` as value.
      *
      * @param {Request} request
+     * @param {boolean} tryRemoteFallback
+     * @param {number} remoteTimeoutMilliseconds (default 0 for no forced timeout)
      * @returns {Promise<Response | Promise<Response>>}
      */
-    fromCache(request) {
+    fromCache(request, tryRemoteFallback= true, remoteTimeoutMilliseconds = 0) {
         // @todo need to serve index.html in place of all Navigo-served pages
         // (an issue if someone returns to a bookmarked page within the app)
 
@@ -6272,7 +6365,7 @@ class BSBIServiceWorker {
                     `no cache match for ${request.url}`);
 
                 //return matching || fetch(request); // return cache match or if not cached then go out to network
-                return matching || this.update(request); // return cache match or if not cached then go out to network (and then locally cache the response)
+                return matching || (tryRemoteFallback && this.update(request, remoteTimeoutMilliseconds)); // return cache match or if not cached then go out to network (and then locally cache the response)
             });
         });
     }
@@ -6286,7 +6379,9 @@ class BSBIServiceWorker {
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        evt.respondWith(this.fromCache(evt.request).then((response) => {
+        // tryRemoteFallback set to false to ensure rapid response to client when bad network, at the cost of no access to remotely compressed image
+
+        evt.respondWith(this.fromCache(evt.request, true, 5000).then((response) => {
                 console.log('In handleImageFetch promise');
 
                 // response may be a 404
@@ -6375,15 +6470,34 @@ class BSBIServiceWorker {
      * storing the new response data.
      *
      * @param {Request} request
+     * @param {number} timeout request timeout in milliseconds (or 0 for no timeout)
      * @returns {Promise<Response>}
      */
-    update(request) {
+    update(request, timeout = 0) {
         request = new Request(request, {mode: 'cors', credentials: 'omit'});
 
         console.log(`Attempting fetch and cache update of ${request.url}`);
 
         return caches.open(this.CACHE_VERSION).then((cache) => {
-            return fetch(request, {cache: "no-cache"}).then((response) => {
+            let signalController;
+            let timeoutId;
+            const fetchOptions = {cache: "no-cache"};
+
+            if (timeout) {
+                signalController = new AbortController();
+                timeoutId = setTimeout(() => {
+                    signalController.abort();
+                    console.log(`User-define update fetch timeout expired after ${timeout} ms`);
+                }, timeout);
+                fetchOptions.signal = signalController.signal;
+            }
+
+            return fetch(request, fetchOptions).then((response) => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
                 if (response.ok) {
                     console.log(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
@@ -6395,6 +6509,11 @@ class BSBIServiceWorker {
                     return Promise.reject('Request during cache update failed, not caching.');
                 }
             }).catch((error) => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
                 console.log(`Cache attempt failed for ${request.url}: error was ${error}`);
                 return Promise.reject(`Cache attempt failed for ${request.url}: error was ${error}`);
             });
