@@ -3354,6 +3354,10 @@ class Model extends EventHarness {
         //this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : this.createdStamp; // avoids NaN
         this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : 0; // avoids NaN
         this.projectId = parseInt(descriptor.projectId, 10);
+
+        if (descriptor.userId) {
+            this.userId = descriptor.userId;
+        }
     }
 
     /**
@@ -3512,6 +3516,12 @@ class Survey extends Model {
 
     /**
      *
+     * @type {string}
+     */
+    userId = '';
+
+    /**
+     *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get geoReference() {
@@ -3566,7 +3576,7 @@ class Survey extends Model {
      * @type boolean
      */
     isToday() {
-        const date = this.date();
+        const date = this.date;
         const now = (new Date).toJSON().slice(0,10);
 
         console.log(`Date matching '${date}' with '${now}'`);
@@ -3660,11 +3670,11 @@ class Survey extends Model {
      * if not securely saved then makes a post to /savesurvey.php
      *
      * this may be intercepted by a service worker, which could write the image to indexdb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
-     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
+     * a successful save will result in a json response containing the uri from which the object may be retrieved
+     * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * the object directly to indexdb
      *
      * must test indexdb for this eventuality after the save has returned
      *
@@ -3680,7 +3690,11 @@ class Survey extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp.toString());
+            formData.append('created', this.createdStamp?.toString() || '');
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
 
             console.log('queueing survey post');
             return this.queuePost(formData);
@@ -4026,8 +4040,6 @@ class Taxon {
     }
 }
 
-//import {Form} from "../views/forms/Form";
-
 class Occurrence extends Model {
 
     /**
@@ -4041,6 +4053,12 @@ class Occurrence extends Model {
         //     vernacularMatch: false
         // }
     };
+
+    /**
+     *
+     * @type {string}
+     */
+    userId = '';
 
     // /**
     //  * set if the image has been posted to the server
@@ -4156,8 +4174,12 @@ class Occurrence extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp.toString());
-            formData.append('modified', this.modifiedStamp.toString());
+            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('modified', this.modifiedStamp?.toString() || '');
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
 
             console.log('queueing occurrence post');
             return this.queuePost(formData);
@@ -4240,7 +4262,7 @@ class OccurrenceImage extends Model {
      * @param {number} projectId
      * @returns {Promise}
      */
-    save(surveyId, occurrenceId, projectId) {
+    save(surveyId, occurrenceId, projectId, context = 'occurrence') {
         if (surveyId) {
             this.surveyId = surveyId;
         }
@@ -4262,11 +4284,11 @@ class OccurrenceImage extends Model {
             formData.append('id', this.id);
             formData.append('image', this.file);
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp.toString());
-            formData.append('modified', this.modifiedStamp.toString());
+            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('modified', this.modifiedStamp?.toString() || '');
 
-            if (this.context === 'survey') {
-                formData.append('context', this.context);
+            if (context === 'survey') {
+                formData.append('context', context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
@@ -5082,6 +5104,10 @@ class App extends EventHarness {
         this.currentSurvey.isPristine = true;
         this.currentSurvey.isNew = true;
 
+        if (this?.session.userId) {
+            this.currentSurvey.userId = this.session.userId;
+        }
+
         this.fireEvent(App.EVENT_NEW_SURVEY);
 
         this.addSurvey(this.currentSurvey);
@@ -5099,8 +5125,12 @@ class App extends EventHarness {
         occurrence.surveyId = this.currentSurvey.id;
         occurrence.projectId = this.projectId;
 
+        if (this.currentSurvey.userId) {
+            occurrence.userId = this.currentSurvey.userId;
+        }
+
         occurrence.isNew = true;
-        occurrence.isPristine = true; //
+        occurrence.isPristine = true;
 
         if (attributes && Object.keys(attributes).length) {
             occurrence.attributes = {...occurrence.attributes, ...attributes};
@@ -5838,7 +5868,7 @@ class SurveyResponse extends LocalResponse {
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = this.toSaveLocally.projectId;
-
+        this.returnedToClient.userId = this.toSaveLocally.userId || '';
         return this;
     }
 
@@ -5857,7 +5887,7 @@ class SurveyResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = this.returnedToClient.deleted;
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-
+        this.toSaveLocally.userId = this.returnedToClient.userId || '';
         return this;
     }
 
@@ -5897,6 +5927,7 @@ class OccurrenceResponse extends LocalResponse {
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
+        this.returnedToClient.userId = this.toSaveLocally.userId || '';
         return this;
     }
 
@@ -5916,7 +5947,7 @@ class OccurrenceResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-
+        this.toSaveLocally.userId = this.returnedToClient.userId || '';
         return this;
     }
 
@@ -5970,7 +6001,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1687510717-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1687722440-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -6241,7 +6272,7 @@ class BSBIServiceWorker {
         event.respondWith(
             clonedRequest.formData()
                 .then((formData) => {
-                        console.log('got to form data handler');
+                        console.log({'got to image form data handler' : formData});
                         //console.log({formData});
 
                         return ResponseFactory

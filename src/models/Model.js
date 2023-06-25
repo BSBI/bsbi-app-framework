@@ -276,6 +276,10 @@ export class Model extends EventHarness {
         //this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : this.createdStamp; // avoids NaN
         this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : 0; // avoids NaN
         this.projectId = parseInt(descriptor.projectId, 10);
+
+        if (descriptor.userId) {
+            this.userId = descriptor.userId;
+        }
     }
 
     /**

@@ -24,7 +24,7 @@ export class SurveyResponse extends LocalResponse {
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = this.toSaveLocally.projectId;
-
+        this.returnedToClient.userId = this.toSaveLocally.userId || '';
         return this;
     }
 
@@ -43,7 +43,7 @@ export class SurveyResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = this.returnedToClient.deleted;
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-
+        this.toSaveLocally.userId = this.returnedToClient.userId || '';
         return this;
     }
 

@@ -1,6 +1,5 @@
 import {Model} from "./Model";
 import {Taxon} from "./Taxon";
-//import {Form} from "../views/forms/Form";
 
 export class Occurrence extends Model {
 
@@ -15,6 +14,12 @@ export class Occurrence extends Model {
         //     vernacularMatch: false
         // }
     };
+
+    /**
+     *
+     * @type {string}
+     */
+    userId = '';
 
     // /**
     //  * set if the image has been posted to the server
@@ -130,8 +135,12 @@ export class Occurrence extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp.toString());
-            formData.append('modified', this.modifiedStamp.toString());
+            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('modified', this.modifiedStamp?.toString() || '');
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
 
             console.log('queueing occurrence post');
             return this.queuePost(formData);

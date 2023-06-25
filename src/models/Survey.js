@@ -56,6 +56,12 @@ export class Survey extends Model {
 
     /**
      *
+     * @type {string}
+     */
+    userId = '';
+
+    /**
+     *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get geoReference() {
@@ -110,7 +116,7 @@ export class Survey extends Model {
      * @type boolean
      */
     isToday() {
-        const date = this.date();
+        const date = this.date;
         const now = (new Date).toJSON().slice(0,10);
 
         console.log(`Date matching '${date}' with '${now}'`);
@@ -206,11 +212,11 @@ export class Survey extends Model {
      * if not securely saved then makes a post to /savesurvey.php
      *
      * this may be intercepted by a service worker, which could write the image to indexdb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
-     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
+     * a successful save will result in a json response containing the uri from which the object may be retrieved
+     * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * the object directly to indexdb
      *
      * must test indexdb for this eventuality after the save has returned
      *
@@ -226,7 +232,11 @@ export class Survey extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp.toString());
+            formData.append('created', this.createdStamp?.toString() || '');
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
 
             console.log('queueing survey post');
             return this.queuePost(formData);

@@ -750,6 +750,10 @@ export class App extends EventHarness {
         this.currentSurvey.isPristine = true;
         this.currentSurvey.isNew = true;
 
+        if (this?.session.userId) {
+            this.currentSurvey.userId = this.session.userId;
+        }
+
         this.fireEvent(App.EVENT_NEW_SURVEY);
 
         this.addSurvey(this.currentSurvey);
@@ -767,8 +771,12 @@ export class App extends EventHarness {
         occurrence.surveyId = this.currentSurvey.id;
         occurrence.projectId = this.projectId;
 
+        if (this.currentSurvey.userId) {
+            occurrence.userId = this.currentSurvey.userId;
+        }
+
         occurrence.isNew = true;
-        occurrence.isPristine = true; //
+        occurrence.isPristine = true;
 
         if (attributes && Object.keys(attributes).length) {
             occurrence.attributes = {...occurrence.attributes, ...attributes};

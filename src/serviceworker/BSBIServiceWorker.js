@@ -318,7 +318,7 @@ export class BSBIServiceWorker {
         event.respondWith(
             clonedRequest.formData()
                 .then((formData) => {
-                        console.log('got to form data handler');
+                        console.log({'got to image form data handler' : formData});
                         //console.log({formData});
 
                         return ResponseFactory
