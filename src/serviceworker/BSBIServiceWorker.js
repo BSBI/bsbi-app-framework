@@ -418,8 +418,8 @@ export class BSBIServiceWorker {
 
     /**
      * Open the cache where the assets were stored and search for the requested
-     * resource. Notice that in case of no matching, the promise still resolves
-     * but it does with `undefined` as value.
+     * resource. Notice that in case of no matching, the promise still resolves,
+     * but with `undefined` as value.
      *
      * @param {Request} request
      * @param {boolean} tryRemoteFallback

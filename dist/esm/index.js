@@ -4426,7 +4426,7 @@ class App extends EventHarness {
         if (this._currentSurvey !== survey) {
             this._currentSurvey = survey || null;
 
-            let surveyId = survey ? survey.id : null;
+            let surveyId = survey?.id;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
 
             this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey : survey});
@@ -4445,11 +4445,20 @@ class App extends EventHarness {
 
     /**
      *
-     * @param key
+     * @param {string} key
      * @returns {Promise<unknown | null>}
      */
     forageGetItem(key) {
         return localforage.getItem(key);
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @returns {Promise<unknown | null>}
+     */
+    forageRemoveItem(key) {
+        return localforage.removeItem(key);
     }
 
     /**
@@ -4461,6 +4470,7 @@ class App extends EventHarness {
     }
 
     /**
+     * note that the last survey might not belong to the current user
      *
      * @returns {Promise<string | null>}
      */
@@ -4468,6 +4478,14 @@ class App extends EventHarness {
         return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME)
             .catch((error) => {
                 console.log({'Error retrieving last survey id' : error});
+                return Promise.resolve(null);
+            });
+    }
+
+    clearLastSurveyId() {
+        return localforage.removeItem(App.CURRENT_SURVEY_KEY_NAME)
+            .catch((error) => {
+                console.log({'Error removing last survey id' : error});
                 return Promise.resolve(null);
             });
     }
@@ -4533,6 +4551,10 @@ class App extends EventHarness {
      */
     static EVENT_SYNC_ALL_FAILED = 'syncallfailed';
 
+    static EVENT_USER_LOGIN = 'login';
+
+    static EVENT_USER_LOGOUT = 'logout';
+
     /**
      * IndexedDb key used for storing id of current (last accessed) survey (or null)
      *
@@ -4565,6 +4587,7 @@ class App extends EventHarness {
     reset() {
         this.surveys = new Map();
         this.clearCurrentSurvey();
+        this.clearLastSurveyId();
     }
 
     /**
@@ -4799,6 +4822,10 @@ class App extends EventHarness {
             }
         }
 
+        if (this?.session.userId) {
+            formData.append('userId', this.session.userId);
+        }
+
         return fetch(App.LOAD_SURVEYS_ENDPOINT, {
             method: 'POST',
             body: formData
@@ -4971,10 +4998,10 @@ class App extends EventHarness {
      * @todo this needs a save phase, so that local changes are saved back to the server
      *
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
+     * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
      * @return {Promise}
      */
-    restoreOccurrences(targetSurveyId = '') {
-
+    restoreOccurrences(targetSurveyId = '', neverAddBlank = false) {
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
 
         if (targetSurveyId === 'undefined') {
@@ -4983,24 +5010,31 @@ class App extends EventHarness {
         }
 
         return (targetSurveyId) ?
-            this._restoreOccurrenceImp(targetSurveyId)
+            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank)
             :
             this.getLastSurveyId().then(
                 (lastSurveyId) => {
                     console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
-                    return this._restoreOccurrenceImp(lastSurveyId).catch(() => {
+                    return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank).catch(() => {
                         console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
 
                         this.currentSurvey = null;
-                        return this._restoreOccurrenceImp();
+                        return this._restoreOccurrenceImp('', neverAddBlank);
                     });
                 },
-                () => this._restoreOccurrenceImp()
+                () => this._restoreOccurrenceImp('', neverAddBlank)
             );
     }
 
-    _restoreOccurrenceImp(targetSurveyId) {
+    /**
+     *
+     * @param {string} [targetSurveyId] default ''
+     * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
+     * @returns {Promise<void>|Promise<unknown>}
+     * @private
+     */
+    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false) {
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
         // only present in current App.surveys
@@ -5028,7 +5062,7 @@ class App extends EventHarness {
         }
 
         return this.seekKeys(storedObjectKeys).then((storedObjectKeys) => {
-            if (storedObjectKeys.survey.length) {
+            if (storedObjectKeys.survey.length || this?.session.userId) {
                 return this.refreshFromServer(storedObjectKeys.survey).finally(() => {
                     // re-seek keys from indexed db, to take account of any new occurrences received from the server
                     return this.seekKeys(storedObjectKeys);
@@ -5072,7 +5106,8 @@ class App extends EventHarness {
 
                             // this should probably never happen, as items deleted on the server ought to have been
                             // removed locally
-                            this.setNewSurvey();
+                            this.currentSurvey = null;
+                            neverAddBlank || this.setNewSurvey();
                         } else {
                             this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                             this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED);
@@ -5082,7 +5117,7 @@ class App extends EventHarness {
             } else {
                 console.log('no pre-existing surveys, so creating a new one');
                 // no pre-existing surveys, so create a new one
-                this.setNewSurvey();
+                neverAddBlank || this.setNewSurvey();
 
                 return Promise.resolve();
             }
@@ -6001,7 +6036,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1687722440-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1687791999-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -6372,8 +6407,8 @@ class BSBIServiceWorker {
 
     /**
      * Open the cache where the assets were stored and search for the requested
-     * resource. Notice that in case of no matching, the promise still resolves
-     * but it does with `undefined` as value.
+     * resource. Notice that in case of no matching, the promise still resolves,
+     * but with `undefined` as value.
      *
      * @param {Request} request
      * @param {boolean} tryRemoteFallback
