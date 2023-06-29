@@ -4,9 +4,7 @@
 import {AppController} from './AppController';
 import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {UUID_REGEX} from "../models/Model";
-//import {Layout} from "../views/layout/Layout";
 import {App} from "../framework/App";
-//import Modal from 'bootstrap/js/dist/modal';
 
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
@@ -14,11 +12,6 @@ export class SurveyPickerController extends AppController {
     static EVENT_BACK = 'back';
 
     title = 'Survey picker';
-
-    /**
-     * @type {App}
-     */
-    app;
 
     /**
      *
@@ -132,18 +125,12 @@ export class SurveyPickerController extends AppController {
             console.log({'In save all handler, success result' : result});
 
             if (Array.isArray(result)) {
-                //$(`#${Layout.SAVE_ALL_SUCCESS_MODAL_ID}`).modal();
-                //Modal.getOrCreateInstance(Layout.SAVE_ALL_SUCCESS_MODAL_ID).show();
                 this.view.showSaveAllSuccess();
             } else {
-                //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
-                //Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
                 this.view.showSaveAllFailure();
             }
         }, (result) => {
             console.log({'In save all handler, failure result' : result});
-            //$(`#${Layout.SAVE_ALL_FAILURE_MODAL_ID}`).modal();
-            //Modal.getOrCreateInstance(Layout.SAVE_ALL_FAILURE_MODAL_ID).show();
             this.view.showSaveAllFailure();
         }).finally(() => {
             // stop the spinner

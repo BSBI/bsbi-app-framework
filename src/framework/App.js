@@ -65,83 +65,6 @@ export class App extends EventHarness {
     projectId;
 
     /**
-     *
-     * @param {?Survey} survey
-     */
-    set currentSurvey(survey) {
-        if (this._currentSurvey !== survey) {
-            this._currentSurvey = survey || null;
-
-            let surveyId = survey?.id;
-            localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
-
-            this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey : survey});
-        }
-    }
-
-    /**
-     *
-     * @param {string} key
-     * @param value
-     * @returns {Promise<*>}
-     */
-    forageSetItem(key, value) {
-        return localforage.setItem(key, value);
-    }
-
-    /**
-     *
-     * @param {string} key
-     * @returns {Promise<unknown | null>}
-     */
-    forageGetItem(key) {
-        return localforage.getItem(key);
-    }
-
-    /**
-     *
-     * @param {string} key
-     * @returns {Promise<unknown | null>}
-     */
-    forageRemoveItem(key) {
-        return localforage.removeItem(key);
-    }
-
-    /**
-     *
-     * @returns {?Survey}
-     */
-    get currentSurvey() {
-        return this._currentSurvey;
-    }
-
-    /**
-     * note that the last survey might not belong to the current user
-     *
-     * @returns {Promise<string | null>}
-     */
-    getLastSurveyId() {
-        return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME)
-            .catch((error) => {
-                console.log({'Error retrieving last survey id' : error});
-                return Promise.resolve(null);
-            });
-    }
-
-    clearLastSurveyId() {
-        return localforage.removeItem(App.CURRENT_SURVEY_KEY_NAME)
-            .catch((error) => {
-                console.log({'Error removing last survey id' : error});
-                return Promise.resolve(null);
-            });
-    }
-
-    /**
-     * @type {Layout}
-     */
-    layout;
-
-    /**
      * Event fired when user requests a new blank survey
      * @type {string}
      */
@@ -217,8 +140,88 @@ export class App extends EventHarness {
 
     constructor() {
         super();
-        this.reset();
+        //this.reset();
+
+        this.surveys = new Map();
+        this.clearCurrentSurvey();
     }
+
+    /**
+     *
+     * @param {?Survey} survey
+     */
+    set currentSurvey(survey) {
+        if (this._currentSurvey !== survey) {
+            this._currentSurvey = survey || null;
+
+            let surveyId = survey?.id;
+            localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
+
+            this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey : survey});
+        }
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @param value
+     * @returns {Promise<*>}
+     */
+    forageSetItem(key, value) {
+        return localforage.setItem(key, value);
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @returns {Promise<unknown | null>}
+     */
+    forageGetItem(key) {
+        return localforage.getItem(key);
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @returns {Promise<unknown | null>}
+     */
+    forageRemoveItem(key) {
+        return localforage.removeItem(key);
+    }
+
+    /**
+     *
+     * @returns {?Survey}
+     */
+    get currentSurvey() {
+        return this._currentSurvey;
+    }
+
+    /**
+     * note that the last survey might not belong to the current user
+     *
+     * @returns {Promise<string | null>}
+     */
+    getLastSurveyId() {
+        return localforage.getItem(App.CURRENT_SURVEY_KEY_NAME)
+            .catch((error) => {
+                console.log({'Error retrieving last survey id' : error});
+                return Promise.resolve(null);
+            });
+    }
+
+    clearLastSurveyId() {
+        return localforage.removeItem(App.CURRENT_SURVEY_KEY_NAME)
+            .catch((error) => {
+                console.log({'Error removing last survey id' : error});
+                return Promise.resolve(null);
+            });
+    }
+
+    /**
+     * @type {Layout}
+     */
+    layout;
 
     /**
      *
@@ -497,7 +500,6 @@ export class App extends EventHarness {
                 }
             }
 
-
             return Promise.all(promises);
         });
     }
@@ -545,6 +547,7 @@ export class App extends EventHarness {
      */
     seekKeys(storedObjectKeys) {
         console.log('starting seekKeys');
+
         return localforage.keys().then((keys) => {
             console.log({"in seekKeys: local forage keys" : keys});
 
@@ -591,6 +594,59 @@ export class App extends EventHarness {
                 this.fireEvent(App.EVENT_SYNC_ALL_FAILED);
                 return false;
             });
+    }
+
+    /**
+     *
+     * @param {boolean} [queryFilters.structuredSurvey]
+     * @param {boolean} [queryFilters.isToday]
+     * @param {string} [queryFilters.monad]
+     * @param {string} [queryFilters.tetrad]
+     * @param {string} [queryFilters.userId]
+     * @param {string} [queryFilters.date]
+     * @param {string} [queryFilters.excludeSurveyId]
+     * @returns {Array<Survey>}
+     */
+    queryLocalSurveys(queryFilters) {
+        const matches = [];
+
+        for (const surveyTuple of this.surveys) {
+            const survey = surveyTuple[1];
+
+            if (queryFilters.structuredSurvey && survey.attributes.casual) {
+                continue;
+            }
+
+            if (queryFilters.isToday && !survey.isToday()) {
+                continue;
+            }
+
+            if (queryFilters.monad && survey.getGeoContext()?.monad !== queryFilters.monad) {
+                continue;
+            }
+
+            if (queryFilters.tetrad && survey.getGeoContext()?.tetrad !== queryFilters.tetrad) {
+                continue;
+            }
+
+            if (queryFilters.hasOwnProperty('userId') && queryFilters.userId !== survey.userId) {
+                continue;
+            }
+
+            if (queryFilters.excludeSurveyId === survey.id) {
+                continue;
+            }
+
+            if (queryFilters.date && queryFilters.date !== survey.date) {
+                continue;
+            }
+
+
+
+            matches[matches.length] = survey;
+        }
+
+        return matches;
     }
 
     /**
@@ -678,7 +734,7 @@ export class App extends EventHarness {
      * @param {string} [targetSurveyId] default ''
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
      * @returns {Promise<void>|Promise<unknown>}
-     * @private
+     * @protected
      */
     _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false) {
         // need to check for a special case where restoring a survey that has never been saved even locally
@@ -739,14 +795,14 @@ export class App extends EventHarness {
                     .finally(() => {
                         //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
-                        if (!this.currentSurvey) {
+                        if (!this.currentSurvey && !neverAddBlank) {
                             // survey doesn't actually exist
                             // this could have happened in an invalid survey id was provided as a targetSurveyId
                             console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
                             return Promise.reject(new Error(`Failed to retrieve survey id '${targetSurveyId}'`));
                         }
 
-                        if (this.currentSurvey.deleted) {
+                        if (this.currentSurvey?.deleted) {
                             // unusual case where survey is deleted
                             // substitute a new one
 
@@ -754,16 +810,21 @@ export class App extends EventHarness {
                             // removed locally
                             this.currentSurvey = null;
                             neverAddBlank || this.setNewSurvey();
-                        } else {
-                            this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                            this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED)
                         }
+
+                        this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                        this.currentSurvey?.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED)
+
                         return Promise.resolve();
                     });
             } else {
                 console.log('no pre-existing surveys, so creating a new one');
                 // no pre-existing surveys, so create a new one
-                neverAddBlank || this.setNewSurvey();
+                if (!neverAddBlank) {
+                    this.setNewSurvey(); // this also fires EVENT_SURVEYS_CHANGED
+                } else {
+                    this.fireEvent(App.EVENT_SURVEYS_CHANGED); // survey menu needs refresh
+                }
 
                 return Promise.resolve();
             }
@@ -789,6 +850,13 @@ export class App extends EventHarness {
             this.currentSurvey.userId = this.session.userId;
         }
 
+        this.fireEvent(App.EVENT_NEW_SURVEY);
+
+        this.addSurvey(this.currentSurvey);
+    }
+
+    addAndSetSurvey(survey) {
+        this.currentSurvey = survey;
         this.fireEvent(App.EVENT_NEW_SURVEY);
 
         this.addSurvey(this.currentSurvey);
@@ -843,36 +911,42 @@ export class App extends EventHarness {
     _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
         // retrieve surveys first, then occurrences, then images from indexedDb
 
+        let userIdFilter = this.session?.userId;
+
         let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
             console.log(`retrieving local survey ${surveyId}`);
 
-            if (setAsCurrent) {
-                // the apps occurrences should only relate to the current survey
-                // (the reset are remote or in IndexedDb)
-                this.clearCurrentSurvey();
+            if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter) {
+                if (setAsCurrent) {
+                    // the apps occurrences should only relate to the current survey
+                    // (the reset are remote or in IndexedDb)
+                    this.clearCurrentSurvey();
 
-                this.addSurvey(survey);
-                const occurrenceFetchingPromises = [];
+                    this.addSurvey(survey);
+                    const occurrenceFetchingPromises = [];
 
-                for (let occurrenceKey of storedObjectKeys.occurrence) {
-                    occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                        .then((occurrence) => {
-                            if (occurrence.surveyId === surveyId) {
-                                console.log(`adding occurrence ${occurrenceKey}`);
-                                this.addOccurrence(occurrence);
-                            } else {
-                                // not part of current survey but should still add to key list for counting purposes
+                    for (let occurrenceKey of storedObjectKeys.occurrence) {
+                        occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                            .then((occurrence) => {
+                                if (occurrence.surveyId === surveyId) {
+                                    console.log(`adding occurrence ${occurrenceKey}`);
+                                    this.addOccurrence(occurrence);
+                                } else {
+                                    // not part of current survey but should still add to key list for counting purposes
 
-                                this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
-                            }
+                                    this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
+                                }
 
-                        }));
+                            }));
+                    }
+
+                    return Promise.all(occurrenceFetchingPromises);
+                } else {
+                    // not the current survey, so just add it but don't load occurrences
+                    this.addSurvey(survey);
                 }
-
-                return Promise.all(occurrenceFetchingPromises);
             } else {
-                // not the current survey, so just add it but don't load occurrences
-                this.addSurvey(survey);
+                console.log(`Skipping survey id ${survey.id} that belongs to user ${survey.userId}`);
             }
         });
 
@@ -894,9 +968,11 @@ export class App extends EventHarness {
                         }));
                 }
 
-                this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
+                this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]) || null;
 
-                return Promise.all(imageFetchingPromises);
+                // if the target survey belonged to a different user then could be undefined here
+
+                return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.resolve();
             });
         }
 

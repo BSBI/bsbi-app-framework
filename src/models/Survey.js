@@ -108,19 +108,23 @@ export class Survey extends Model {
         }
     }
 
+    /**
+     *
+     * @returns {string}
+     */
     get date() {
         return this.attributes.date || '';
     }
 
     /**
-     * @type boolean
+     * @returns {boolean}
      */
     isToday() {
-        const date = this.date;
-        const now = (new Date).toJSON().slice(0,10);
+        //const date = this.date;
+        //const now = (new Date).toJSON().slice(0,10);
 
-        console.log(`Date matching '${date}' with '${now}'`);
-        return date === now;
+        //console.log(`Date matching '${date}' with '${now}'`);
+        return this.date === (new Date).toJSON().slice(0,10);
     }
 
     get place() {
@@ -183,7 +187,7 @@ export class Survey extends Model {
             vc : []
         };
 
-        if (geoRef && geoRef.gridRef) {
+        if (geoRef?.gridRef) {
             const gridRef = GridRef.from_string(geoRef.gridRef);
 
             if (gridRef) {
@@ -322,5 +326,23 @@ export class Survey extends Model {
      */
     countRecords() {
         return this.extantOccurrenceKeys.size;
+    }
+
+    /**
+     * @returns {Survey}
+     */
+    duplicate(newAttributes = {}, properties = {}) {
+        const newSurvey = new Survey();
+
+        newSurvey.attributes = Object.assign(structuredClone(this.attributes), newAttributes);
+        newSurvey.userId = properties.hasOwnProperty('userId') ? properties.userId : this.userId;
+        newSurvey.isPristine = true;
+        newSurvey.isNew = false; // don't want GPS override of geo-ref
+        newSurvey._savedLocally = false;
+        newSurvey._savedRemotely = false;
+        newSurvey.deleted = false;
+        newSurvey.projectId = this.projectId;
+
+        return newSurvey;
     }
 }

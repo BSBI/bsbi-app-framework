@@ -187,7 +187,7 @@ export class BSBIServiceWorker {
                     // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
                     evt.respondWith(fetch(evt.request));
                 } else if (SERVICE_WORKER_STATIC_URL_MATCHES?.test(evt.request.url)) {
-                    // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
+                    // typically for content that won't change
                     evt.respondWith(this.fromCache(evt.request));
                 } else {
                     console.log(`request is for non-image '${evt.request.url}'`);
@@ -435,14 +435,24 @@ export class BSBIServiceWorker {
         return caches.open(this.CACHE_VERSION).then((cache) => {
             console.log('cache is open');
 
-            return cache.match(request).then((matching) => {
-                console.log(matching ?
+            return cache.match(request).then((cachedResponse) => {
+                console.log(cachedResponse ?
                     `cache matched ${request.url}`
                     :
                     `no cache match for ${request.url}`);
 
-                //return matching || fetch(request); // return cache match or if not cached then go out to network
-                return matching || (tryRemoteFallback && this.update(request, remoteTimeoutMilliseconds)); // return cache match or if not cached then go out to network (and then locally cache the response)
+                return cachedResponse || (tryRemoteFallback && this.update(request, remoteTimeoutMilliseconds)); // return cache match or if not cached then go out to network (and then locally cache the response)
+
+                // // see https://developer.chrome.com/docs/workbox/caching-strategies-overview/
+                // return cachedResponse || fetch(new Request(request, {mode: 'cors', credentials: 'omit'})).then((fetchedResponse) => {
+                //     // Add the network response to the cache for future visits.
+                //     // Note: we need to make a copy of the response to save it in
+                //     // the cache and use the original as the request response.
+                //     cache.put(request, fetchedResponse.clone());
+                //
+                //     // Return the network response
+                //     return fetchedResponse;
+                // });
             });
         });
     }

@@ -79,7 +79,7 @@ export class Model extends EventHarness {
     projectId;
 
     /**
-     * paired with isNew this marks records that have never been edited
+     * paired with isNew this marks objects that have never been edited
      *
      * @type {boolean}
      */
