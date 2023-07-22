@@ -4,15 +4,33 @@ import {escapeHTML} from "../utils/escapeHTML";
 export class Party {
     /**
      * @typedef RawParty
-     * @type {array}
-     * @property {string} 0 - surname
-     * @property {string} 0 - firstName
-     * @property {string} 0 - orgName
-     * @property {string} 0 - type code
-     * @property {string} 0 - prefix
-     * @property {string} 0 - suffix
-     * @property {string} 0 - disambiguation
+     * @type {object}
+     *
+     * @property {string} 0 - name string
+     * @property {array} 1 - dates (normally blank)
+     * @property {string} 2 - surname
+     * @property {string} 3 - forenames
+     * @property {string} 4 - orgName
+     * @property {string} 5 - initials
+     * @property {string} 6 - id
+     * @property {string} 7 - linked user id
+     * @property {array} 8 - roles
+     *
+     * // these are not implemented
+     * @property {string} [9] - type code
+     * @property {string} [10] - prefix
+     * @property {string} [11] - suffix
+     * @property {string} [12] - disambiguation
      */
+
+    static NAME_INDEX = 0;
+    static SURNAME_INDEX = 2;
+    static FORENAMES_INDEX = 3;
+    static ORGNAME_INDEX = 4;
+    static INITIALS_INDEX = 5;
+    static ID_INDEX = 6;
+    static USERID_INDEX = 7;
+    static ROLES_INDEX = 8;
 
     /**
      *
@@ -79,6 +97,22 @@ export class Party {
 
     static setParties(parties) {
         Party.rawParties = parties;
+    }
+
+    static initialiseParties(parties, sourceUrl) {
+        Party.rawParties = parties;
+
+        if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
+            console.log(`Taxon list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
+            navigator.serviceWorker.ready.then((registration) => {
+                registration.active.postMessage(
+                    {
+                        action: 'recache',
+                        url: sourceUrl
+                    }
+                );
+            });
+        }
     }
 
     /**

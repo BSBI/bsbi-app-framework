@@ -53,10 +53,10 @@ export class AppController {
      */
     alreadyRouteHandler = null;
 
-    static #handleIndex = 0;
+    static _handleIndex = 0;
 
     static get nextHandle() {
-        return AppController.#handleIndex++;
+        return AppController._handleIndex++;
     }
 
     /**

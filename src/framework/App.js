@@ -12,12 +12,12 @@ export class App extends EventHarness {
     /**
      * @type {PatchedNavigo}
      */
-    #router;
+    _router;
 
     /**
      * @type {HTMLElement}
      */
-    #containerEl;
+    _containerEl;
 
     /**
      *
@@ -87,6 +87,8 @@ export class App extends EventHarness {
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    static EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
 
     /**
      * Fired when the selected current survey id is changed
@@ -253,7 +255,7 @@ export class App extends EventHarness {
      * @param {PatchedNavigo} router
      */
     set router(router) {
-        this.#router = router;
+        this._router = router;
     }
 
     /**
@@ -261,7 +263,7 @@ export class App extends EventHarness {
      * @returns {PatchedNavigo}
      */
     get router() {
-        return this.#router;
+        return this._router;
     }
 
     set containerId(containerId) {
@@ -269,12 +271,12 @@ export class App extends EventHarness {
         if (!el) {
             throw new Error(`App container '${containerId}' not found.`);
         } else {
-            this.#containerEl = el;
+            this._containerEl = el;
         }
     }
 
     get container() {
-        return this.#containerEl;
+        return this._containerEl;
     }
 
     /**
@@ -286,19 +288,19 @@ export class App extends EventHarness {
         this.controllers[this.controllers.length] = controller;
 
         controller.app = this;
-        controller.registerRoute(this.#router);
+        controller.registerRoute(this._router);
     }
 
     initialise() {
-        //Page.initialise_layout(this.#containerEl);
+        //Page.initialise_layout(this._containerEl);
         this.layout.initialise();
 
-        this.#router.notFound((query) => {
+        this._router.notFound((query) => {
             // called when there is path specified but
             // there is no route matching
 
             console.log(`no route found for '${query}'`);
-            //this.#router.navigate('/list');
+            //this._router.navigate('/list');
 
             // const view = new NotFoundView();
             // view.display();
@@ -306,21 +308,21 @@ export class App extends EventHarness {
         });
 
         //default homepage
-        this.#router.on(() => {
+        this._router.on(() => {
             // special-case redirect (replacing in history) from '/' to '/list' without updating browser history
 
             console.log("redirecting from '/' to '/list'");
 
-            this.#router.pause();
+            this._router.pause();
             //if (this.clearCurrentSurvey && this.currentSurvey.isPristine) { // this appears to be a bug 'this.clearCurrentSurvey'
             // rather than 'this.clearCurrentSurvey()' is nonsensical
             // and if clearCurrentSurvey() was actually called then the isPristine test would fail (called on null)
             if (this.currentSurvey && this.currentSurvey.isPristine) {
-                this.#router.navigate('/list/survey/welcome').resume();
+                this._router.navigate('/list/survey/welcome').resume();
             } else {
-                this.#router.navigate('/list').resume();
+                this._router.navigate('/list').resume();
             }
-            this.#router.resolve();
+            this._router.resolve();
         });
 
         for (let controller of this.controllers) {
@@ -330,14 +332,14 @@ export class App extends EventHarness {
 
     display() {
         console.log('App display');
-        this.#router.resolve();
+        this._router.resolve();
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
         this.syncAll();
     }
 
     saveRoute() {
-        const lastRoute = this.#router.lastRouteResolved();
+        const lastRoute = this._router.lastRouteResolved();
         if (this.routeHistory.length) {
             if (this.routeHistory[this.routeHistory.length - 1] !== lastRoute) {
                 this.routeHistory[this.routeHistory.length] = lastRoute;

@@ -178,14 +178,18 @@ export class Survey extends Model {
      *     monad : string,
      *     country : string,
      *     vc : int[]
-     * }|null}
+     * }}
      */
     getGeoContext() {
         const geoRef = this.geoReference;
 
-        const result = {
-            vc : []
-        };
+        const result = {};
+
+        if (this.attributes.vc?.selection) {
+            result.vc = [...this.attributes.vc.selection]; // clone rather than reference the VC selection
+        } else {
+            result.vc = [];
+        }
 
         if (geoRef?.gridRef) {
             const gridRef = GridRef.from_string(geoRef.gridRef);
@@ -203,10 +207,6 @@ export class Survey extends Model {
             }
 
             result.hectad = gridRef.gridCoords.to_gridref(10000);
-        }
-
-        if (this.attributes.vc) {
-            // @todo read vc from field
         }
 
         return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};

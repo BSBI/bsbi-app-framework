@@ -1,5 +1,6 @@
 import {Model} from "./Model";
 import {Taxon} from "./Taxon";
+import {GridRef} from 'british-isles-gridrefs'
 
 export class Occurrence extends Model {
 
@@ -157,4 +158,61 @@ export class Occurrence extends Model {
         super._parseDescriptor(descriptor);
         this.surveyId = descriptor.surveyId;
     }
+
+    /**
+     * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
+     *
+     * @return {{
+     *     hectad : string,
+     *     tetrad : string,
+     *     monad : string,
+     *     country : string,
+     *     vc : int[]
+     * }}
+     */
+    getGeoContext() {
+        const geoRef = this.geoReference;
+
+        const result = {};
+
+        if (this.attributes.vc?.selection) {
+            result.vc = [...this.attributes.vc.selection]; // clone rather than reference the VC selection
+        } else {
+            result.vc = [];
+        }
+
+        if (geoRef?.gridRef) {
+            const gridRef = GridRef.from_string(geoRef.gridRef);
+
+            if (gridRef) {
+                if (gridRef.length <= 1000) {
+                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                }
+
+                if (gridRef.length <= 2000) {
+                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                }
+
+                result.country = gridRef.country;
+            }
+
+            result.hectad = gridRef.gridCoords.to_gridref(10000);
+        }
+
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
+    }
+
+    /**
+     *
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     */
+    get geoReference() {
+        return this.attributes.georef || {
+            gridRef: '',
+            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+            latLng: null,
+            precision: null
+        };
+    };
 }

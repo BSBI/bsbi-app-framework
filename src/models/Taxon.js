@@ -22,10 +22,14 @@ export class Taxon {
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
-     * @property {{}} 17 Presence in grid-squares (top-level object is keyed by grid-ref)
+     *
+     * // properties beyond this point are not part of the source file
+     * @property {{}} [17] Presence in grid-squares (top-level object is keyed by grid-ref)
+     * @property {{}} [18] Presence on rpr
      */
 
     static GR_PRESENCE_KEY = 17;
+    static RPR_KEY = 18;
 
     /**
      *
@@ -130,6 +134,12 @@ export class Taxon {
 
     /**
      *
+     * @type {{number, (string|true)}}
+     */
+    rprStatus = {}
+
+    /**
+     *
      * @type {{current : number, previous : number, [year] : number}|null}
      */
     occurrenceCoverage = null;
@@ -203,6 +213,8 @@ export class Taxon {
             GB: raw[15] || null,
             IE: raw[16] || null
         };
+
+        taxon.rprStatus = raw[Taxon.RPR_KEY] || null;
 
         taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
 

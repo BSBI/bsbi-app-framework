@@ -7,7 +7,7 @@ export class EventHarness {
      *
      * @type {*[]}
      */
-    #eventListeners = [];
+    _eventListeners = [];
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
@@ -21,17 +21,17 @@ export class EventHarness {
     //  * @return {number} handle
     //  */
     // bindListener (eventName, obj, method, constructionParam) {
-    //     this.#eventListeners = this.#eventListeners || [];
+    //     this._eventListeners = this._eventListeners || [];
     //
     //     const handlerFunction =
     //         function(context, eventName, invocationParam) {
     //             return method.call(obj, context, eventName, invocationParam, constructionParam);
     //         };
     //
-    //     if (this.#eventListeners[eventName]) {
-    //         return (this.#eventListeners[eventName].push(handlerFunction))-1;
+    //     if (this._eventListeners[eventName]) {
+    //         return (this._eventListeners[eventName].push(handlerFunction))-1;
     //     } else {
-    //         this.#eventListeners[eventName] = [handlerFunction];
+    //         this._eventListeners[eventName] = [handlerFunction];
     //         return 0; // first element in array
     //     }
     // };
@@ -44,17 +44,17 @@ export class EventHarness {
      * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
-        this.#eventListeners = this.#eventListeners || [];
+        this._eventListeners = this._eventListeners || [];
 
         const handlerFunction =
             function(context, eventName, invocationParam = {}) {
                 return handler({context, eventName, ...invocationParam, ...constructionParam});
             };
 
-        if (this.#eventListeners[eventName]) {
-            return (this.#eventListeners[eventName].push(handlerFunction)) - 1;
+        if (this._eventListeners[eventName]) {
+            return (this._eventListeners[eventName].push(handlerFunction)) - 1;
         } else {
-            this.#eventListeners[eventName] = [handlerFunction];
+            this._eventListeners[eventName] = [handlerFunction];
             return 0; // first element in array
         }
     };
@@ -66,8 +66,8 @@ export class EventHarness {
      * @returns undefined
      */
     removeListener(eventName, handle) {
-        if (this.#eventListeners[eventName] && this.#eventListeners[eventName][handle]) {
-            delete this.#eventListeners[eventName][handle];
+        if (this._eventListeners[eventName] && this._eventListeners[eventName][handle]) {
+            delete this._eventListeners[eventName][handle];
         } else {
             console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
         }
@@ -78,7 +78,7 @@ export class EventHarness {
      *
      */
     destructor() {
-        this.#eventListeners = null;
+        this._eventListeners = null;
     };
 
     /**
@@ -90,10 +90,10 @@ export class EventHarness {
     fireEvent (eventName, param) {
         //console.log('fire event "' + eventName + '" called by '+this.fire_event.caller.caller+' invoked by '+this.fire_event.caller.caller.caller+' instigated by '+this.fire_event.caller.caller.caller.caller);
 
-        if (this.#eventListeners) {
-            for (let f in this.#eventListeners[eventName]) {
-                if (this.#eventListeners[eventName].hasOwnProperty(f)) {
-                    if (this.#eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
+        if (this._eventListeners) {
+            for (let f in this._eventListeners[eventName]) {
+                if (this._eventListeners[eventName].hasOwnProperty(f)) {
+                    if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
                         break;
                     }
                 }

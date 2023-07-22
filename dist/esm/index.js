@@ -55,10 +55,10 @@ class AppController {
      */
     alreadyRouteHandler = null;
 
-    static #handleIndex = 0;
+    static _handleIndex = 0;
 
     static get nextHandle() {
-        return AppController.#handleIndex++;
+        return AppController._handleIndex++;
     }
 
     /**
@@ -153,7 +153,7 @@ class EventHarness {
      *
      * @type {*[]}
      */
-    #eventListeners = [];
+    _eventListeners = [];
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
@@ -167,17 +167,17 @@ class EventHarness {
     //  * @return {number} handle
     //  */
     // bindListener (eventName, obj, method, constructionParam) {
-    //     this.#eventListeners = this.#eventListeners || [];
+    //     this._eventListeners = this._eventListeners || [];
     //
     //     const handlerFunction =
     //         function(context, eventName, invocationParam) {
     //             return method.call(obj, context, eventName, invocationParam, constructionParam);
     //         };
     //
-    //     if (this.#eventListeners[eventName]) {
-    //         return (this.#eventListeners[eventName].push(handlerFunction))-1;
+    //     if (this._eventListeners[eventName]) {
+    //         return (this._eventListeners[eventName].push(handlerFunction))-1;
     //     } else {
-    //         this.#eventListeners[eventName] = [handlerFunction];
+    //         this._eventListeners[eventName] = [handlerFunction];
     //         return 0; // first element in array
     //     }
     // };
@@ -190,17 +190,17 @@ class EventHarness {
      * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
-        this.#eventListeners = this.#eventListeners || [];
+        this._eventListeners = this._eventListeners || [];
 
         const handlerFunction =
             function(context, eventName, invocationParam = {}) {
                 return handler({context, eventName, ...invocationParam, ...constructionParam});
             };
 
-        if (this.#eventListeners[eventName]) {
-            return (this.#eventListeners[eventName].push(handlerFunction)) - 1;
+        if (this._eventListeners[eventName]) {
+            return (this._eventListeners[eventName].push(handlerFunction)) - 1;
         } else {
-            this.#eventListeners[eventName] = [handlerFunction];
+            this._eventListeners[eventName] = [handlerFunction];
             return 0; // first element in array
         }
     };
@@ -212,8 +212,8 @@ class EventHarness {
      * @returns undefined
      */
     removeListener(eventName, handle) {
-        if (this.#eventListeners[eventName] && this.#eventListeners[eventName][handle]) {
-            delete this.#eventListeners[eventName][handle];
+        if (this._eventListeners[eventName] && this._eventListeners[eventName][handle]) {
+            delete this._eventListeners[eventName][handle];
         } else {
             console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
         }
@@ -224,7 +224,7 @@ class EventHarness {
      *
      */
     destructor() {
-        this.#eventListeners = null;
+        this._eventListeners = null;
     };
 
     /**
@@ -236,10 +236,10 @@ class EventHarness {
     fireEvent (eventName, param) {
         //console.log('fire event "' + eventName + '" called by '+this.fire_event.caller.caller+' invoked by '+this.fire_event.caller.caller.caller+' instigated by '+this.fire_event.caller.caller.caller.caller);
 
-        if (this.#eventListeners) {
-            for (let f in this.#eventListeners[eventName]) {
-                if (this.#eventListeners[eventName].hasOwnProperty(f)) {
-                    if (this.#eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
+        if (this._eventListeners) {
+            for (let f in this._eventListeners[eventName]) {
+                if (this._eventListeners[eventName].hasOwnProperty(f)) {
+                    if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
                         break;
                     }
                 }
@@ -3638,14 +3638,18 @@ class Survey extends Model {
      *     monad : string,
      *     country : string,
      *     vc : int[]
-     * }|null}
+     * }}
      */
     getGeoContext() {
         const geoRef = this.geoReference;
 
-        const result = {
-            vc : []
-        };
+        const result = {};
+
+        if (this.attributes.vc?.selection) {
+            result.vc = [...this.attributes.vc.selection]; // clone rather than reference the VC selection
+        } else {
+            result.vc = [];
+        }
 
         if (geoRef?.gridRef) {
             const gridRef = GridRef.from_string(geoRef.gridRef);
@@ -3664,8 +3668,6 @@ class Survey extends Model {
 
             result.hectad = gridRef.gridCoords.to_gridref(10000);
         }
-
-        if (this.attributes.vc) ;
 
         return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
     }
@@ -3837,10 +3839,14 @@ class Taxon {
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
-     * @property {{}} 17 Presence in grid-squares (top-level object is keyed by grid-ref)
+     *
+     * // properties beyond this point are not part of the source file
+     * @property {{}} [17] Presence in grid-squares (top-level object is keyed by grid-ref)
+     * @property {{}} [18] Presence on rpr
      */
 
     static GR_PRESENCE_KEY = 17;
+    static RPR_KEY = 18;
 
     /**
      *
@@ -3945,6 +3951,12 @@ class Taxon {
 
     /**
      *
+     * @type {{number, (string|true)}}
+     */
+    rprStatus = {}
+
+    /**
+     *
      * @type {{current : number, previous : number, [year] : number}|null}
      */
     occurrenceCoverage = null;
@@ -4018,6 +4030,8 @@ class Taxon {
             GB: raw[15] || null,
             IE: raw[16] || null
         };
+
+        taxon.rprStatus = raw[Taxon.RPR_KEY] || null;
 
         taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
 
@@ -4218,6 +4232,63 @@ class Occurrence extends Model {
         super._parseDescriptor(descriptor);
         this.surveyId = descriptor.surveyId;
     }
+
+    /**
+     * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
+     *
+     * @return {{
+     *     hectad : string,
+     *     tetrad : string,
+     *     monad : string,
+     *     country : string,
+     *     vc : int[]
+     * }}
+     */
+    getGeoContext() {
+        const geoRef = this.geoReference;
+
+        const result = {};
+
+        if (this.attributes.vc?.selection) {
+            result.vc = [...this.attributes.vc.selection]; // clone rather than reference the VC selection
+        } else {
+            result.vc = [];
+        }
+
+        if (geoRef?.gridRef) {
+            const gridRef = GridRef.from_string(geoRef.gridRef);
+
+            if (gridRef) {
+                if (gridRef.length <= 1000) {
+                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                }
+
+                if (gridRef.length <= 2000) {
+                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                }
+
+                result.country = gridRef.country;
+            }
+
+            result.hectad = gridRef.gridCoords.to_gridref(10000);
+        }
+
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
+    }
+
+    /**
+     *
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     */
+    get geoReference() {
+        return this.attributes.georef || {
+            gridRef: '',
+            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+            latLng: null,
+            precision: null
+        };
+    };
 }
 
 class OccurrenceImage extends Model {
@@ -4388,12 +4459,12 @@ class App extends EventHarness {
     /**
      * @type {PatchedNavigo}
      */
-    #router;
+    _router;
 
     /**
      * @type {HTMLElement}
      */
-    #containerEl;
+    _containerEl;
 
     /**
      *
@@ -4463,6 +4534,8 @@ class App extends EventHarness {
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    static EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
 
     /**
      * Fired when the selected current survey id is changed
@@ -4629,7 +4702,7 @@ class App extends EventHarness {
      * @param {PatchedNavigo} router
      */
     set router(router) {
-        this.#router = router;
+        this._router = router;
     }
 
     /**
@@ -4637,7 +4710,7 @@ class App extends EventHarness {
      * @returns {PatchedNavigo}
      */
     get router() {
-        return this.#router;
+        return this._router;
     }
 
     set containerId(containerId) {
@@ -4645,12 +4718,12 @@ class App extends EventHarness {
         if (!el) {
             throw new Error(`App container '${containerId}' not found.`);
         } else {
-            this.#containerEl = el;
+            this._containerEl = el;
         }
     }
 
     get container() {
-        return this.#containerEl;
+        return this._containerEl;
     }
 
     /**
@@ -4662,19 +4735,19 @@ class App extends EventHarness {
         this.controllers[this.controllers.length] = controller;
 
         controller.app = this;
-        controller.registerRoute(this.#router);
+        controller.registerRoute(this._router);
     }
 
     initialise() {
-        //Page.initialise_layout(this.#containerEl);
+        //Page.initialise_layout(this._containerEl);
         this.layout.initialise();
 
-        this.#router.notFound((query) => {
+        this._router.notFound((query) => {
             // called when there is path specified but
             // there is no route matching
 
             console.log(`no route found for '${query}'`);
-            //this.#router.navigate('/list');
+            //this._router.navigate('/list');
 
             // const view = new NotFoundView();
             // view.display();
@@ -4682,21 +4755,21 @@ class App extends EventHarness {
         });
 
         //default homepage
-        this.#router.on(() => {
+        this._router.on(() => {
             // special-case redirect (replacing in history) from '/' to '/list' without updating browser history
 
             console.log("redirecting from '/' to '/list'");
 
-            this.#router.pause();
+            this._router.pause();
             //if (this.clearCurrentSurvey && this.currentSurvey.isPristine) { // this appears to be a bug 'this.clearCurrentSurvey'
             // rather than 'this.clearCurrentSurvey()' is nonsensical
             // and if clearCurrentSurvey() was actually called then the isPristine test would fail (called on null)
             if (this.currentSurvey && this.currentSurvey.isPristine) {
-                this.#router.navigate('/list/survey/welcome').resume();
+                this._router.navigate('/list/survey/welcome').resume();
             } else {
-                this.#router.navigate('/list').resume();
+                this._router.navigate('/list').resume();
             }
-            this.#router.resolve();
+            this._router.resolve();
         });
 
         for (let controller of this.controllers) {
@@ -4706,14 +4779,14 @@ class App extends EventHarness {
 
     display() {
         console.log('App display');
-        this.#router.resolve();
+        this._router.resolve();
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
         this.syncAll();
     }
 
     saveRoute() {
-        const lastRoute = this.#router.lastRouteResolved();
+        const lastRoute = this._router.lastRouteResolved();
         if (this.routeHistory.length) {
             if (this.routeHistory[this.routeHistory.length - 1] !== lastRoute) {
                 this.routeHistory[this.routeHistory.length] = lastRoute;
@@ -4876,7 +4949,6 @@ class App extends EventHarness {
                 }
             }
 
-
             return Promise.all(promises);
         });
     }
@@ -4978,7 +5050,10 @@ class App extends EventHarness {
      * @param {boolean} [queryFilters.structuredSurvey]
      * @param {boolean} [queryFilters.isToday]
      * @param {string} [queryFilters.monad]
+     * @param {string} [queryFilters.tetrad]
      * @param {string} [queryFilters.userId]
+     * @param {string} [queryFilters.date]
+     * @param {string} [queryFilters.excludeSurveyId]
      * @returns {Array<Survey>}
      */
     queryLocalSurveys(queryFilters) {
@@ -4999,9 +5074,23 @@ class App extends EventHarness {
                 continue;
             }
 
+            if (queryFilters.tetrad && survey.getGeoContext()?.tetrad !== queryFilters.tetrad) {
+                continue;
+            }
+
             if (queryFilters.hasOwnProperty('userId') && queryFilters.userId !== survey.userId) {
                 continue;
             }
+
+            if (queryFilters.excludeSurveyId === survey.id) {
+                continue;
+            }
+
+            if (queryFilters.date && queryFilters.date !== survey.date) {
+                continue;
+            }
+
+
 
             matches[matches.length] = survey;
         }
@@ -5609,15 +5698,33 @@ class PartyError extends Error {
 class Party {
     /**
      * @typedef RawParty
-     * @type {array}
-     * @property {string} 0 - surname
-     * @property {string} 0 - firstName
-     * @property {string} 0 - orgName
-     * @property {string} 0 - type code
-     * @property {string} 0 - prefix
-     * @property {string} 0 - suffix
-     * @property {string} 0 - disambiguation
+     * @type {object}
+     *
+     * @property {string} 0 - name string
+     * @property {array} 1 - dates (normally blank)
+     * @property {string} 2 - surname
+     * @property {string} 3 - forenames
+     * @property {string} 4 - orgName
+     * @property {string} 5 - initials
+     * @property {string} 6 - id
+     * @property {string} 7 - linked user id
+     * @property {array} 8 - roles
+     *
+     * // these are not implemented
+     * @property {string} [9] - type code
+     * @property {string} [10] - prefix
+     * @property {string} [11] - suffix
+     * @property {string} [12] - disambiguation
      */
+
+    static NAME_INDEX = 0;
+    static SURNAME_INDEX = 2;
+    static FORENAMES_INDEX = 3;
+    static ORGNAME_INDEX = 4;
+    static INITIALS_INDEX = 5;
+    static ID_INDEX = 6;
+    static USERID_INDEX = 7;
+    static ROLES_INDEX = 8;
 
     /**
      *
@@ -5684,6 +5791,22 @@ class Party {
 
     static setParties(parties) {
         Party.rawParties = parties;
+    }
+
+    static initialiseParties(parties, sourceUrl) {
+        Party.rawParties = parties;
+
+        if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
+            console.log(`Taxon list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
+            navigator.serviceWorker.ready.then((registration) => {
+                registration.active.postMessage(
+                    {
+                        action: 'recache',
+                        url: sourceUrl
+                    }
+                );
+            });
+        }
     }
 
     /**
@@ -6106,7 +6229,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1688057056-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1689855122-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -6515,7 +6638,7 @@ class BSBIServiceWorker {
             });
         });
     }
-
+    
     /**
      * Special case response for images
      * attempt to serve from local cache first,

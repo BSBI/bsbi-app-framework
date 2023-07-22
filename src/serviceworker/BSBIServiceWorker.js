@@ -456,7 +456,7 @@ export class BSBIServiceWorker {
             });
         });
     }
-
+    
     /**
      * Special case response for images
      * attempt to serve from local cache first,
