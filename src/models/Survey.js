@@ -29,6 +29,13 @@ export class Survey extends Model {
      */
     static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
+    /**
+     * parameter is {currentHectadSubunit : string}
+     *
+     * @type {string}
+     */
+    static EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+
     SAVE_ENDPOINT = '/savesurvey.php';
 
     TYPE = 'survey';
@@ -75,17 +82,96 @@ export class Survey extends Model {
     };
 
     /**
-     * Get the tetrad or monad level square from the survey geo-reference
+     * Set for tetrad structured surveys, where user may be working within a monad subdivision
+     *
+     * @type {string}
+     */
+    currentHectadSubunit = '';
+
+    /**
+     * Get a (current) grid-square from the survey geo-reference
+     * If the user has explicitly specified a centroid-based survey then the result will instead be a centroid
+     *
+     * For structured tetrad surveys squareReference will return the currently selected monad within the tetrad (or tetrad if 2km scale selected)
+     * For monad or 100m square surveys will return grid-ref at that resolution
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get squareReference() {
+        if (this.attributes?.sampleUnit?.selection?.[0]) {
+            let n = parseInt(this.attributes.sampleUnit.selection[0], 10);
+
+            if (n > 0) {
+                // have user-specified square precision value
+
+                if (n === 2000 && this.currentHectadSubunit) {
+                    // special-case treatment of tetrad surveys using a monad subdivision
+
+                    return {
+                        gridRef: this.currentHectadSubunit,
+                        rawString: this.currentHectadSubunit,
+                        source: 'unknown',
+                        latLng: null,
+                        precision: /[A-Z]$/.test(this.currentHectadSubunit) ? 2000 : 1000
+                    }
+                }
+
+                const ref = this.geoReference;
+                const gridRef = GridRef.from_string(ref.gridRef);
+
+                if (gridRef && gridRef.length <= n) {
+                    const newRef = gridRef.gridCoords.to_gridref(n);
+
+                    if (n === 2000) {
+                        this.currentHectadSubunit = newRef;
+                    }
+
+                    return {
+                        gridRef: newRef,
+                        rawString: newRef,
+                        source: 'unknown',
+                        latLng: null,
+                        precision: n
+                    }
+                } else {
+                    return {
+                        gridRef: '',
+                        rawString: '',
+                        source: 'unknown',
+                        latLng: null,
+                        precision: null
+                    }
+                }
+            } else {
+                switch (this.attributes.sampleUnit.selection[0]) {
+                    case 'centroid':
+                        return this.geoReference;
+
+                    case 'other':
+                        return this._infer_square_ref_from_survey_ref();
+
+                    default:
+                        throw new Error(`Unrecognized sample unit value '${this.attributes.sampleUnit.selection[0]}'`);
+                }
+            }
+        } else {
+            return this._infer_square_ref_from_survey_ref();
+        }
+    }
+
+    /**
+     *
+     * @returns {{rawString: string, precision: null, source: string, gridRef: string, latLng: null}|{rawString, precision: null, source: string, gridRef, latLng: null}}
+     * @private
+     */
+    _infer_square_ref_from_survey_ref() {
         if (this.attributes.georef && this.attributes.georef.gridRef && this.attributes.georef.precision <= 2000) {
             let newRef;
 
             if (this.attributes.georef.precision === 2000 || this.attributes.georef.precision === 1000) {
                 newRef = this.attributes.georef.gridRef;
             } else {
+                // this is really inefficient
                 const context = this.getGeoContext();
                 newRef = context.monad || context.tetrad;
             }
@@ -95,7 +181,7 @@ export class Survey extends Model {
                 rawString: newRef,
                 source: 'unknown',
                 latLng: null,
-                precision: null
+                precision: this.attributes.georef.precision
             }
         } else {
             return {
@@ -133,23 +219,24 @@ export class Survey extends Model {
 
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
-     *
+     * read new values
+     * validate
+     * then fire its own change event (Survey.EVENT_MODIFIED)
      * @param {{form: SurveyForm}} params
      */
     formChangedHandler(params) {
         console.log('Survey change handler invoked.');
 
-        // read new values
-        // then fire its own change event (Occurrence.EVENT_MODIFIED)
-        params.form.updateModelFromContent();
+        params.form.updateModelFromContent().then(() => {
 
-        console.log('Survey calling conditional validation.');
+            console.log('Survey calling conditional validation.');
 
-        // refresh the form's validation state
-        params.form.conditionallyValidateForm();
+            // refresh the form's validation state
+            params.form.conditionallyValidateForm();
 
-        this.touch();
-        this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+            this.touch();
+            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
+        });
     }
 
     /**

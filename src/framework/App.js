@@ -86,7 +86,28 @@ export class App extends EventHarness {
 
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
+    /**
+     * Fired when a brand-new occurrence is added
+     *
+     * @type {string}
+     */
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    /**
+     * Fired when a survey is retrieved from local storage
+     * parameter is {survey : Survey}
+     *
+     * @type {string}
+     */
+    static EVENT_SURVEY_LOADED = 'surveyloaded';
+
+    /**
+     * Fired when an occurrence is retrieved from local storage or newly initialised
+     * parameter is {occurrence : Occurrence}
+     *
+     * @type {string}
+     */
+    static EVENT_OCCURRENCE_LOADED = 'occurrenceloaded';
 
     static EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
 
@@ -314,9 +335,7 @@ export class App extends EventHarness {
             console.log("redirecting from '/' to '/list'");
 
             this._router.pause();
-            //if (this.clearCurrentSurvey && this.currentSurvey.isPristine) { // this appears to be a bug 'this.clearCurrentSurvey'
-            // rather than 'this.clearCurrentSurvey()' is nonsensical
-            // and if clearCurrentSurvey() was actually called then the isPristine test would fail (called on null)
+
             if (this.currentSurvey && this.currentSurvey.isPristine) {
                 this._router.navigate('/list/survey/welcome').resume();
             } else {
@@ -376,7 +395,6 @@ export class App extends EventHarness {
             throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
         }
 
-        //if (!this.surveys.has(survey.id)) {
         if (!survey.hasAppModifiedListener) {
             survey.hasAppModifiedListener = true;
 
@@ -423,6 +441,10 @@ export class App extends EventHarness {
             // for a protracted period
 
             const survey = this.surveys.get(occurrence.surveyId);
+            if (!survey) {
+                throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
+            }
+
             survey.createdStamp = occurrence.createdStamp;
         }
         console.log(`in addOccurrence setting id '${occurrence.id}'`);
@@ -449,6 +471,8 @@ export class App extends EventHarness {
                     survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
                 }
             });
+
+        this.fireEvent(App.EVENT_OCCURRENCE_LOADED, {occurrence: occurrence});
     }
 
     /**
@@ -473,7 +497,7 @@ export class App extends EventHarness {
             }
         }
 
-        if (this?.session.userId) {
+        if (this.session?.userId) {
             formData.append('userId', this.session.userId);
         }
 
@@ -766,7 +790,7 @@ export class App extends EventHarness {
         }
 
         return this.seekKeys(storedObjectKeys).then((storedObjectKeys) => {
-            if (storedObjectKeys.survey.length || this?.session.userId) {
+            if (storedObjectKeys.survey.length || this.session?.userId) {
                 return this.refreshFromServer(storedObjectKeys.survey).finally(() => {
                     // re-seek keys from indexed db, to take account of any new occurrences received from the server
                     return this.seekKeys(storedObjectKeys);
@@ -848,7 +872,7 @@ export class App extends EventHarness {
         this.currentSurvey.isPristine = true;
         this.currentSurvey.isNew = true;
 
-        if (this?.session.userId) {
+        if (this.session?.userId) {
             this.currentSurvey.userId = this.session.userId;
         }
 
@@ -918,6 +942,8 @@ export class App extends EventHarness {
         let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
             console.log(`retrieving local survey ${surveyId}`);
 
+            this.fireEvent(App.EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
+
             if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter) {
                 if (setAsCurrent) {
                     // the apps occurrences should only relate to the current survey
@@ -933,6 +959,8 @@ export class App extends EventHarness {
                                 if (occurrence.surveyId === surveyId) {
                                     console.log(`adding occurrence ${occurrenceKey}`);
                                     this.addOccurrence(occurrence);
+
+                                    survey.extantOccurrenceKeys.add(occurrence.id);
                                 } else {
                                     // not part of current survey but should still add to key list for counting purposes
 

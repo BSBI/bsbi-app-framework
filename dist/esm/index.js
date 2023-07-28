@@ -192,10 +192,8 @@ class EventHarness {
     addListener (eventName, handler, constructionParam = {}) {
         this._eventListeners = this._eventListeners || [];
 
-        const handlerFunction =
-            function(context, eventName, invocationParam = {}) {
-                return handler({context, eventName, ...invocationParam, ...constructionParam});
-            };
+        const handlerFunction = (context, eventName, invocationParam = {}) =>
+            handler({context, eventName, ...invocationParam, ...constructionParam});
 
         if (this._eventListeners[eventName]) {
             return (this._eventListeners[eventName].push(handlerFunction)) - 1;
@@ -3344,7 +3342,7 @@ class Model extends EventHarness {
 
     /**
      *
-     * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
+     * @param {{id : string, saveState: string, [userId]: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
      */
     _parseDescriptor(descriptor) {
         this._parseAttributes(descriptor.attributes);
@@ -3489,6 +3487,13 @@ class Survey extends Model {
      */
     static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
+    /**
+     * parameter is {currentHectadSubunit : string}
+     *
+     * @type {string}
+     */
+    static EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+
     SAVE_ENDPOINT = '/savesurvey.php';
 
     TYPE = 'survey';
@@ -3535,17 +3540,96 @@ class Survey extends Model {
     };
 
     /**
-     * Get the tetrad or monad level square from the survey geo-reference
+     * Set for tetrad structured surveys, where user may be working within a monad subdivision
+     *
+     * @type {string}
+     */
+    currentHectadSubunit = '';
+
+    /**
+     * Get a (current) grid-square from the survey geo-reference
+     * If the user has explicitly specified a centroid-based survey then the result will instead be a centroid
+     *
+     * For structured tetrad surveys squareReference will return the currently selected monad within the tetrad (or tetrad if 2km scale selected)
+     * For monad or 100m square surveys will return grid-ref at that resolution
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get squareReference() {
+        if (this.attributes?.sampleUnit?.selection?.[0]) {
+            let n = parseInt(this.attributes.sampleUnit.selection[0], 10);
+
+            if (n > 0) {
+                // have user-specified square precision value
+
+                if (n === 2000 && this.currentHectadSubunit) {
+                    // special-case treatment of tetrad surveys using a monad subdivision
+
+                    return {
+                        gridRef: this.currentHectadSubunit,
+                        rawString: this.currentHectadSubunit,
+                        source: 'unknown',
+                        latLng: null,
+                        precision: /[A-Z]$/.test(this.currentHectadSubunit) ? 2000 : 1000
+                    }
+                }
+
+                const ref = this.geoReference;
+                const gridRef = GridRef.from_string(ref.gridRef);
+
+                if (gridRef && gridRef.length <= n) {
+                    const newRef = gridRef.gridCoords.to_gridref(n);
+
+                    if (n === 2000) {
+                        this.currentHectadSubunit = newRef;
+                    }
+
+                    return {
+                        gridRef: newRef,
+                        rawString: newRef,
+                        source: 'unknown',
+                        latLng: null,
+                        precision: n
+                    }
+                } else {
+                    return {
+                        gridRef: '',
+                        rawString: '',
+                        source: 'unknown',
+                        latLng: null,
+                        precision: null
+                    }
+                }
+            } else {
+                switch (this.attributes.sampleUnit.selection[0]) {
+                    case 'centroid':
+                        return this.geoReference;
+
+                    case 'other':
+                        return this._infer_square_ref_from_survey_ref();
+
+                    default:
+                        throw new Error(`Unrecognized sample unit value '${this.attributes.sampleUnit.selection[0]}'`);
+                }
+            }
+        } else {
+            return this._infer_square_ref_from_survey_ref();
+        }
+    }
+
+    /**
+     *
+     * @returns {{rawString: string, precision: null, source: string, gridRef: string, latLng: null}|{rawString, precision: null, source: string, gridRef, latLng: null}}
+     * @private
+     */
+    _infer_square_ref_from_survey_ref() {
         if (this.attributes.georef && this.attributes.georef.gridRef && this.attributes.georef.precision <= 2000) {
             let newRef;
 
             if (this.attributes.georef.precision === 2000 || this.attributes.georef.precision === 1000) {
                 newRef = this.attributes.georef.gridRef;
             } else {
+                // this is really inefficient
                 const context = this.getGeoContext();
                 newRef = context.monad || context.tetrad;
             }
@@ -3555,7 +3639,7 @@ class Survey extends Model {
                 rawString: newRef,
                 source: 'unknown',
                 latLng: null,
-                precision: null
+                precision: this.attributes.georef.precision
             }
         } else {
             return {
@@ -3593,23 +3677,24 @@ class Survey extends Model {
 
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
-     *
+     * read new values
+     * validate
+     * then fire its own change event (Survey.EVENT_MODIFIED)
      * @param {{form: SurveyForm}} params
      */
     formChangedHandler(params) {
         console.log('Survey change handler invoked.');
 
-        // read new values
-        // then fire its own change event (Occurrence.EVENT_MODIFIED)
-        params.form.updateModelFromContent();
+        params.form.updateModelFromContent().then(() => {
 
-        console.log('Survey calling conditional validation.');
+            console.log('Survey calling conditional validation.');
 
-        // refresh the form's validation state
-        params.form.conditionallyValidateForm();
+            // refresh the form's validation state
+            params.form.conditionallyValidateForm();
 
-        this.touch();
-        this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+            this.touch();
+            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
+        });
     }
 
     /**
@@ -4162,13 +4247,13 @@ class Occurrence extends Model {
 
         // read new values
         // then fire its own change event (Occurrence.EVENT_MODIFIED)
-        params.form.updateModelFromContent();
+        params.form.updateModelFromContent().then(() => {
+            // refresh the form's validation state
+            params.form.conditionallyValidateForm();
 
-        // refresh the form's validation state
-        params.form.conditionallyValidateForm();
-
-        this.touch();
-        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId : this.id});
+            this.touch();
+            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
+        });
     }
 
     delete() {
@@ -4533,7 +4618,28 @@ class App extends EventHarness {
 
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
+    /**
+     * Fired when a brand-new occurrence is added
+     *
+     * @type {string}
+     */
     static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+    /**
+     * Fired when a survey is retrieved from local storage
+     * parameter is {survey : Survey}
+     *
+     * @type {string}
+     */
+    static EVENT_SURVEY_LOADED = 'surveyloaded';
+
+    /**
+     * Fired when an occurrence is retrieved from local storage or newly initialised
+     * parameter is {occurrence : Occurrence}
+     *
+     * @type {string}
+     */
+    static EVENT_OCCURRENCE_LOADED = 'occurrenceloaded';
 
     static EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
 
@@ -4761,9 +4867,7 @@ class App extends EventHarness {
             console.log("redirecting from '/' to '/list'");
 
             this._router.pause();
-            //if (this.clearCurrentSurvey && this.currentSurvey.isPristine) { // this appears to be a bug 'this.clearCurrentSurvey'
-            // rather than 'this.clearCurrentSurvey()' is nonsensical
-            // and if clearCurrentSurvey() was actually called then the isPristine test would fail (called on null)
+
             if (this.currentSurvey && this.currentSurvey.isPristine) {
                 this._router.navigate('/list/survey/welcome').resume();
             } else {
@@ -4823,7 +4927,6 @@ class App extends EventHarness {
             throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
         }
 
-        //if (!this.surveys.has(survey.id)) {
         if (!survey.hasAppModifiedListener) {
             survey.hasAppModifiedListener = true;
 
@@ -4870,6 +4973,10 @@ class App extends EventHarness {
             // for a protracted period
 
             const survey = this.surveys.get(occurrence.surveyId);
+            if (!survey) {
+                throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
+            }
+
             survey.createdStamp = occurrence.createdStamp;
         }
         console.log(`in addOccurrence setting id '${occurrence.id}'`);
@@ -4896,6 +5003,8 @@ class App extends EventHarness {
                     survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
                 }
             });
+
+        this.fireEvent(App.EVENT_OCCURRENCE_LOADED, {occurrence: occurrence});
     }
 
     /**
@@ -4920,7 +5029,7 @@ class App extends EventHarness {
             }
         }
 
-        if (this?.session.userId) {
+        if (this.session?.userId) {
             formData.append('userId', this.session.userId);
         }
 
@@ -5213,7 +5322,7 @@ class App extends EventHarness {
         }
 
         return this.seekKeys(storedObjectKeys).then((storedObjectKeys) => {
-            if (storedObjectKeys.survey.length || this?.session.userId) {
+            if (storedObjectKeys.survey.length || this.session?.userId) {
                 return this.refreshFromServer(storedObjectKeys.survey).finally(() => {
                     // re-seek keys from indexed db, to take account of any new occurrences received from the server
                     return this.seekKeys(storedObjectKeys);
@@ -5295,7 +5404,7 @@ class App extends EventHarness {
         this.currentSurvey.isPristine = true;
         this.currentSurvey.isNew = true;
 
-        if (this?.session.userId) {
+        if (this.session?.userId) {
             this.currentSurvey.userId = this.session.userId;
         }
 
@@ -5365,6 +5474,8 @@ class App extends EventHarness {
         let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
             console.log(`retrieving local survey ${surveyId}`);
 
+            this.fireEvent(App.EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
+
             if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter) {
                 if (setAsCurrent) {
                     // the apps occurrences should only relate to the current survey
@@ -5380,6 +5491,8 @@ class App extends EventHarness {
                                 if (occurrence.surveyId === surveyId) {
                                     console.log(`adding occurrence ${occurrenceKey}`);
                                     this.addOccurrence(occurrence);
+
+                                    survey.extantOccurrenceKeys.add(occurrence.id);
                                 } else {
                                     // not part of current survey but should still add to key list for counting purposes
 
@@ -6229,7 +6342,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1689855122-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1690533278-${configuration.version}`;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;

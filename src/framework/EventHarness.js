@@ -46,10 +46,8 @@ export class EventHarness {
     addListener (eventName, handler, constructionParam = {}) {
         this._eventListeners = this._eventListeners || [];
 
-        const handlerFunction =
-            function(context, eventName, invocationParam = {}) {
-                return handler({context, eventName, ...invocationParam, ...constructionParam});
-            };
+        const handlerFunction = (context, eventName, invocationParam = {}) =>
+            handler({context, eventName, ...invocationParam, ...constructionParam});
 
         if (this._eventListeners[eventName]) {
             return (this._eventListeners[eventName].push(handlerFunction)) - 1;

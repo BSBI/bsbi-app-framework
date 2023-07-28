@@ -22,7 +22,7 @@
     "localforage": "^1.10.0"
   },
   "peerDependencies": {
-    "british-isles-gridrefs": "file:C:\\Users\\Tom\\Documents\\GitHub\\js-british-isles-gridrefs"
+    "british-isles-gridrefs": "file:D:\\appframework\\js-british-isles-gridrefs"
   },
   "scripts": {
     "build": "rollup -c --strictDeprecations",

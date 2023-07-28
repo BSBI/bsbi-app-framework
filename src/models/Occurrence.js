@@ -88,13 +88,13 @@ export class Occurrence extends Model {
 
         // read new values
         // then fire its own change event (Occurrence.EVENT_MODIFIED)
-        params.form.updateModelFromContent();
+        params.form.updateModelFromContent().then(() => {
+            // refresh the form's validation state
+            params.form.conditionallyValidateForm();
 
-        // refresh the form's validation state
-        params.form.conditionallyValidateForm();
-
-        this.touch();
-        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId : this.id});
+            this.touch();
+            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
+        });
     }
 
     delete() {

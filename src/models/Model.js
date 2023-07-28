@@ -266,7 +266,7 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
+     * @param {{id : string, saveState: string, [userId]: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
      */
     _parseDescriptor(descriptor) {
         this._parseAttributes(descriptor.attributes);
