@@ -345,58 +345,87 @@ export class Survey extends Model {
         summarizeTetrad : false,
     }) {
 
-
         if (this.attributes.casual) {
             // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
 
             return this.attributes.surveyName ?
                 escapeHTML(this.attributes.surveyName)
                 :
-                `Data-set created on ${(new Date(this.createdStamp * 1000)).toString()}`
+                `Data-set created on ${this._createdDateString()}`;
         } else {
             let place;
 
             if (this.attributes.place) {
-                let summaryGridRef;
+                let summaryGridRef = this._summarySquareString(options.summarySquarePrecision);
 
-                if (options.summarySquarePrecision && this.attributes.georef && this.attributes.georef.gridRef) {
-                    // '<' replacement used simplistically to sanitize against script injection
-                    const gridRef = GridRef.from_string(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
+                // if (options.summarySquarePrecision && this.attributes.georef?.gridRef) {
+                //     // '<' replacement used simplistically to sanitize against script injection
+                //     const gridRef = GridRef.from_string(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
+                //
+                //     summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
+                // } else {
+                //     summaryGridRef = '';
+                // }
 
-                    summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
-                } else {
-                    summaryGridRef = '';
-                }
-
-                place = `${this.attributes.place}${summaryGridRef}`;
+                place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
             } else if (this.attributes.georef && this.attributes.georef.gridRef) {
-                place = this.attributes.georef.gridRef;
+                place = this._summarySquareString(options.summarySquarePrecision);
             } else {
                 place = '(unlocalized)';
             }
 
-            const userDate = this.date;
-            let dateString;
+            return `${escapeHTML(place)} ${this.date || this._createdDateString()}`;
+        }
+    }
 
-            if (userDate) {
-                dateString = userDate;
-            } else {
-                const createdDate = new Date(this.createdStamp * 1000);
+    /**
+     * if survey has specified grid-unit then use that instead of the fallBackPrecision option
+     *
+     * @param {number|null} fallBackPrecision
+     * @returns {string}
+     * @private
+     */
+    _summarySquareString(fallBackPrecision) {
+        if (this.attributes.georef?.gridRef) {
+            let sampleUnit;
 
-                try {
-                    // 'default' locale fails on Edge
-                    dateString = createdDate.toLocaleString('default', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                } catch (e) {
-                    dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
-                }
+            // '<' replacement used simplistically to sanitize against script injection
+            const rawGridRef = this.attributes.georef.gridRef.replace(/[<&\s]/g, '');
+
+            if (this.attributes.sampleUnit) {
+                sampleUnit = parseInt(this.attributes.sampleUnit?.selection[0], 10) || null;
             }
 
-            return `${escapeHTML(place)} ${dateString}`;
+            const precision = sampleUnit || fallBackPrecision;
+
+            if (precision) {
+                const gridRef = GridRef.from_string(rawGridRef);
+
+                return gridRef?.gridCoords?.to_gridref(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
+            } else {
+                return rawGridRef;
+            }
+        } else {
+            return '';
         }
+    }
+
+    _createdDateString() {
+        const createdDate = new Date(this.createdStamp * 1000);
+        let dateString;
+
+        try {
+            // 'default' locale fails on Edge
+            dateString = createdDate.toLocaleString('default', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (e) {
+            dateString = createdDate.toLocaleString('en-GB', {year: 'numeric', month: 'long', day: 'numeric'});
+        }
+
+        return dateString;
     }
 
     /**

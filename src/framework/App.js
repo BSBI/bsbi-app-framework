@@ -862,19 +862,23 @@ export class App extends EventHarness {
      * @param {{}|null} [attributes]
      */
     setNewSurvey(attributes) {
-        this.currentSurvey = new Survey();
+        const newSurvey = new Survey();
 
         if (attributes) {
-            this.currentSurvey.attributes = {...this.currentSurvey.attributes, ...attributes};
+            newSurvey.attributes = {...newSurvey.attributes, ...attributes};
         }
 
-        this.currentSurvey.projectId = this.projectId;
-        this.currentSurvey.isPristine = true;
-        this.currentSurvey.isNew = true;
+        newSurvey.projectId = this.projectId;
+        newSurvey.isPristine = true;
+        newSurvey.isNew = true;
 
         if (this.session?.userId) {
-            this.currentSurvey.userId = this.session.userId;
+            newSurvey.userId = this.session.userId;
         }
+
+        // Important: don't set this.currentSurvey until default attributes have been set,
+        // as currentSurvey setter fires an event that may depend on these attributes
+        this.currentSurvey = newSurvey;
 
         this.fireEvent(App.EVENT_NEW_SURVEY);
 
@@ -897,11 +901,13 @@ export class App extends EventHarness {
      */
     addNewOccurrence(attributes) {
         const occurrence = new Occurrence();
-        occurrence.surveyId = this.currentSurvey.id;
+        const currentSurvey = this.currentSurvey; // avoid too many getter lookups
+
+        occurrence.surveyId = currentSurvey.id;
         occurrence.projectId = this.projectId;
 
-        if (this.currentSurvey.userId) {
-            occurrence.userId = this.currentSurvey.userId;
+        if (currentSurvey.userId) {
+            occurrence.userId = currentSurvey.userId;
         }
 
         occurrence.isNew = true;
@@ -914,11 +920,11 @@ export class App extends EventHarness {
 
         this.addOccurrence(occurrence);
 
-        this.currentSurvey.extantOccurrenceKeys.add(occurrence.id);
+        currentSurvey.extantOccurrenceKeys.add(occurrence.id);
 
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
-        this.currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
+        currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
 
         // occurrence modified event fired to ensure that the occurrence is saved
         occurrence.fireEvent(Occurrence.EVENT_MODIFIED);
