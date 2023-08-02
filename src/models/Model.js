@@ -215,13 +215,11 @@ export class Model extends EventHarness {
                     switch (responseData.saveState) {
                         case SAVE_STATE_SERVER:
                             this._savedLocally = true;
-                            //this._savedRemotely = true;
                             this.savedRemotely = true;
                             break;
 
                         case SAVE_STATE_LOCAL:
                             this._savedLocally = true;
-                            //this._savedRemotely = false;
                             this.savedRemotely = false;
                             break;
 
@@ -308,13 +306,11 @@ export class Model extends EventHarness {
     _parseSavedState(saveState) {
         switch (saveState) {
             case SAVE_STATE_LOCAL:
-                //this._savedRemotely = false;
                 this.savedRemotely = false;
                 this._savedLocally = true;
                 break;
 
             case SAVE_STATE_SERVER:
-                //this._savedRemotely = true;
                 this.savedRemotely = true;
                 this._savedLocally = true;
                 break;

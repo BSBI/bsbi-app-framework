@@ -264,7 +264,8 @@ export class Survey extends Model {
      *     tetrad : string,
      *     monad : string,
      *     country : string,
-     *     vc : int[]
+     *     vc : int[],
+     *     interleavedGridRef : string,
      * }}
      */
     getGeoContext() {
@@ -294,9 +295,11 @@ export class Survey extends Model {
             }
 
             result.hectad = gridRef.gridCoords.to_gridref(10000);
+
+            result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
     }
 
     /**
