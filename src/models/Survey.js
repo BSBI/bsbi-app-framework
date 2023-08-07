@@ -117,7 +117,7 @@ export class Survey extends Model {
                 }
 
                 const ref = this.geoReference;
-                const gridRef = GridRef.from_string(ref.gridRef);
+                const gridRef = GridRef.fromString(ref.gridRef);
 
                 if (gridRef && gridRef.length <= n) {
                     const newRef = gridRef.gridCoords.to_gridref(n);
@@ -280,7 +280,7 @@ export class Survey extends Model {
         }
 
         if (geoRef?.gridRef) {
-            const gridRef = GridRef.from_string(geoRef.gridRef);
+            const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {
@@ -332,6 +332,8 @@ export class Survey extends Model {
                 formData.append('userId', this.userId);
             }
 
+            formData.append('appVersion', Model.bsbiAppVersion);
+
             console.log('queueing survey post');
             return this.queuePost(formData);
         } else {
@@ -363,7 +365,7 @@ export class Survey extends Model {
 
                 // if (options.summarySquarePrecision && this.attributes.georef?.gridRef) {
                 //     // '<' replacement used simplistically to sanitize against script injection
-                //     const gridRef = GridRef.from_string(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
+                //     const gridRef = GridRef.fromString(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
                 //
                 //     summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
                 // } else {
@@ -402,7 +404,7 @@ export class Survey extends Model {
             const precision = sampleUnit || fallBackPrecision;
 
             if (precision) {
-                const gridRef = GridRef.from_string(rawGridRef);
+                const gridRef = GridRef.fromString(rawGridRef);
 
                 return gridRef?.gridCoords?.to_gridref(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {

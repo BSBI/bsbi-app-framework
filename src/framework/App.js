@@ -896,10 +896,11 @@ export class App extends EventHarness {
      * Note that if attributes are set here, then the occurrence is regarded as changed and unsaved, rather than pristine
      * i.e. attributes setting here is *not* intended as a way to set defaults
      *
-     * @param {{}} [attributes]
+     * @param {{}|null} [attributes]
+     * @param {{}|null} [pristineAttributes] additional attributes, that if set, don't count as edits
      * @return {Occurrence}
      */
-    addNewOccurrence(attributes) {
+    addNewOccurrence(attributes, pristineAttributes) {
         const occurrence = new Occurrence();
         const currentSurvey = this.currentSurvey; // avoid too many getter lookups
 
@@ -916,6 +917,11 @@ export class App extends EventHarness {
         if (attributes && Object.keys(attributes).length) {
             occurrence.attributes = {...occurrence.attributes, ...attributes};
             occurrence.touch(); // now no longer pristine
+        }
+
+        if (pristineAttributes && Object.keys(pristineAttributes).length) {
+            // unlike above, setting these doesn't affect the modified state of the object
+            occurrence.attributes = {...occurrence.attributes, ...pristineAttributes};
         }
 
         this.addOccurrence(occurrence);

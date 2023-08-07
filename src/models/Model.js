@@ -27,6 +27,8 @@ export class Model extends EventHarness {
 
     static EVENT_SAVED_REMOTELY = 'savedremotely';
 
+    static bsbiAppVersion = '';
+
     /**
      *
      * @param {Boolean} savedFlag

@@ -41,11 +41,11 @@ export class AppController {
      */
     afterRouteHandler = null;
 
-    /**
-     *
-     * @type {function|null}
-     */
-    leaveRouteHandler = null;
+    // /**
+    //  *
+    //  * @type {function|null}
+    //  */
+    // leaveRouteHandler = null;
 
     /**
      *
@@ -98,5 +98,20 @@ export class AppController {
      */
     routeHandler(params, query) {
 
+    }
+
+    leaveRouteHandler(params) {
+        console.log('leave route handler');
+        document.body.classList.remove('hide-controls');
+
+        for(let element of document.querySelectorAll('.needs-bsbi-controls')) {
+            if (!element.classList.contains('bsbi-controls')) {
+                element.classList.add('bsbi-controls');
+            }
+        }
+
+        for(let element of document.querySelectorAll('.dropdown-focused')) {
+            element.classList.remove('dropdown-focused');
+        }
     }
 }

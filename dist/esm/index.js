@@ -43,11 +43,11 @@ class AppController {
      */
     afterRouteHandler = null;
 
-    /**
-     *
-     * @type {function|null}
-     */
-    leaveRouteHandler = null;
+    // /**
+    //  *
+    //  * @type {function|null}
+    //  */
+    // leaveRouteHandler = null;
 
     /**
      *
@@ -100,6 +100,21 @@ class AppController {
      */
     routeHandler(params, query) {
 
+    }
+
+    leaveRouteHandler(params) {
+        console.log('leave route handler');
+        document.body.classList.remove('hide-controls');
+
+        for(let element of document.querySelectorAll('.needs-bsbi-controls')) {
+            if (!element.classList.contains('bsbi-controls')) {
+                element.classList.add('bsbi-controls');
+            }
+        }
+
+        for(let element of document.querySelectorAll('.dropdown-focused')) {
+            element.classList.remove('dropdown-focused');
+        }
     }
 }
 
@@ -3103,6 +3118,8 @@ class Model extends EventHarness {
 
     static EVENT_SAVED_REMOTELY = 'savedremotely';
 
+    static bsbiAppVersion = '';
+
     /**
      *
      * @param {Boolean} savedFlag
@@ -3571,7 +3588,7 @@ class Survey extends Model {
                 }
 
                 const ref = this.geoReference;
-                const gridRef = GridRef.from_string(ref.gridRef);
+                const gridRef = GridRef.fromString(ref.gridRef);
 
                 if (gridRef && gridRef.length <= n) {
                     const newRef = gridRef.gridCoords.to_gridref(n);
@@ -3718,7 +3735,8 @@ class Survey extends Model {
      *     tetrad : string,
      *     monad : string,
      *     country : string,
-     *     vc : int[]
+     *     vc : int[],
+     *     interleavedGridRef : string,
      * }}
      */
     getGeoContext() {
@@ -3733,7 +3751,7 @@ class Survey extends Model {
         }
 
         if (geoRef?.gridRef) {
-            const gridRef = GridRef.from_string(geoRef.gridRef);
+            const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {
@@ -3748,9 +3766,11 @@ class Survey extends Model {
             }
 
             result.hectad = gridRef.gridCoords.to_gridref(10000);
+
+            result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
     }
 
     /**
@@ -3783,6 +3803,8 @@ class Survey extends Model {
                 formData.append('userId', this.userId);
             }
 
+            formData.append('appVersion', Model.bsbiAppVersion);
+
             console.log('queueing survey post');
             return this.queuePost(formData);
         } else {
@@ -3814,7 +3836,7 @@ class Survey extends Model {
 
                 // if (options.summarySquarePrecision && this.attributes.georef?.gridRef) {
                 //     // '<' replacement used simplistically to sanitize against script injection
-                //     const gridRef = GridRef.from_string(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
+                //     const gridRef = GridRef.fromString(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
                 //
                 //     summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
                 // } else {
@@ -3853,7 +3875,7 @@ class Survey extends Model {
             const precision = sampleUnit || fallBackPrecision;
 
             if (precision) {
-                const gridRef = GridRef.from_string(rawGridRef);
+                const gridRef = GridRef.fromString(rawGridRef);
 
                 return gridRef?.gridCoords?.to_gridref(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {
@@ -4086,7 +4108,7 @@ class Taxon {
 
         if ((taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Taxon list may be stale (stamp is ${taxa.stamp}), prompting re-cache.`);
-            navigator.serviceWorker.ready.then((registration) => {
+            navigator?.serviceWorker?.ready.then((registration) => {
                 registration.active.postMessage(
                     {
                         action: 'recache',
@@ -4327,6 +4349,8 @@ class Occurrence extends Model {
                 formData.append('userId', this.userId);
             }
 
+            formData.append('appVersion', Model.bsbiAppVersion);
+
             console.log('queueing occurrence post');
             return this.queuePost(formData);
         } else {
@@ -4351,7 +4375,8 @@ class Occurrence extends Model {
      *     tetrad : string,
      *     monad : string,
      *     country : string,
-     *     vc : int[]
+     *     vc : int[],
+     *     interleavedGridRef : string,
      * }}
      */
     getGeoContext() {
@@ -4366,7 +4391,7 @@ class Occurrence extends Model {
         }
 
         if (geoRef?.gridRef) {
-            const gridRef = GridRef.from_string(geoRef.gridRef);
+            const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {
@@ -4381,9 +4406,11 @@ class Occurrence extends Model {
             }
 
             result.hectad = gridRef.gridCoords.to_gridref(10000);
+
+            result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : []}, ...result};
     }
 
     /**
@@ -4495,6 +4522,12 @@ class OccurrenceImage extends Model {
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
+
+            formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData);
@@ -5453,10 +5486,11 @@ class App extends EventHarness {
      * Note that if attributes are set here, then the occurrence is regarded as changed and unsaved, rather than pristine
      * i.e. attributes setting here is *not* intended as a way to set defaults
      *
-     * @param {{}} [attributes]
+     * @param {{}|null} [attributes]
+     * @param {{}|null} [pristineAttributes] additional attributes, that if set, don't count as edits
      * @return {Occurrence}
      */
-    addNewOccurrence(attributes) {
+    addNewOccurrence(attributes, pristineAttributes) {
         const occurrence = new Occurrence();
         const currentSurvey = this.currentSurvey; // avoid too many getter lookups
 
@@ -5473,6 +5507,11 @@ class App extends EventHarness {
         if (attributes && Object.keys(attributes).length) {
             occurrence.attributes = {...occurrence.attributes, ...attributes};
             occurrence.touch(); // now no longer pristine
+        }
+
+        if (pristineAttributes && Object.keys(pristineAttributes).length) {
+            // unlike above, setting these doesn't affect the modified state of the object
+            occurrence.attributes = {...occurrence.attributes, ...pristineAttributes};
         }
 
         this.addOccurrence(occurrence);
@@ -5942,7 +5981,7 @@ class Party {
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Taxon list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
-            navigator.serviceWorker.ready.then((registration) => {
+            navigator?.serviceWorker?.ready.then((registration) => {
                 registration.active.postMessage(
                     {
                         action: 'recache',
@@ -6373,7 +6412,9 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1690889573-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1691156229-${configuration.version}`;
+
+        Model.bsbiAppVersion = configuration.version;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -6782,7 +6823,7 @@ class BSBIServiceWorker {
             });
         });
     }
-    
+
     /**
      * Special case response for images
      * attempt to serve from local cache first,
@@ -6934,6 +6975,44 @@ class BSBIServiceWorker {
     }
 }
 
+class DeviceType extends EventHarness {
+	static DEVICE_TYPE_UNKNOWN = 'unknown';
+	static DEVICE_TYPE_UNCHECKED = 'unchecked';
+	static DEVICE_TYPE_MOBILE = 'mobile';
+	static DEVICE_TYPE_IMMOBILE = 'immobile';
+
+	/**
+	 * global flag affecting behaviour of some GPS functionality
+	 * e.g. on a non-mobile device, don't automatically seek GPS locality for new records
+	 * @private
+	 *
+	 * @type {string}
+	 */
+	static _deviceType = DeviceType.DEVICE_TYPE_UNCHECKED;
+
+	/**
+	 * @returns {string}
+	 */
+	static getDeviceType() {
+		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
+			if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
+				DeviceType._deviceType = navigator.userAgentData.mobile ?
+					DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
+				console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
+			} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+				// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
+				console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+			} else {
+				console.log('Flagging device type as unknown.');
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
+			}
+		}
+
+		return DeviceType._deviceType;
+	}
+}
+
 /**
  *
  * @param {string} separator
@@ -6950,5 +7029,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { App, AppController, BSBIServiceWorker, EventHarness, InternalAppError, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

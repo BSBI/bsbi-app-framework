@@ -49,6 +49,8 @@ export class BSBIServiceWorker {
 
         this.CACHE_VERSION = `version-BSBI_APP_VERSION-${configuration.version}`;
 
+        Model.bsbiAppVersion = configuration.version;
+
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
         const GET_IMAGE_URL_MATCH = configuration.getImageUrlMatch;
@@ -456,7 +458,7 @@ export class BSBIServiceWorker {
             });
         });
     }
-    
+
     /**
      * Special case response for images
      * attempt to serve from local cache first,

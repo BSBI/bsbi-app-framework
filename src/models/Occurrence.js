@@ -143,6 +143,8 @@ export class Occurrence extends Model {
                 formData.append('userId', this.userId);
             }
 
+            formData.append('appVersion', Model.bsbiAppVersion);
+
             console.log('queueing occurrence post');
             return this.queuePost(formData);
         } else {
@@ -183,7 +185,7 @@ export class Occurrence extends Model {
         }
 
         if (geoRef?.gridRef) {
-            const gridRef = GridRef.from_string(geoRef.gridRef);
+            const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {

@@ -95,6 +95,12 @@ export class OccurrenceImage extends Model {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
 
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
+
+            formData.append('appVersion', Model.bsbiAppVersion);
+
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData);
         } else {
