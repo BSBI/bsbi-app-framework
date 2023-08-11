@@ -839,7 +839,8 @@ export class App extends EventHarness {
                         }
 
                         this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                        this.currentSurvey?.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED)
+                        this.currentSurvey?.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED);
+                        this.currentSurvey?.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
 
                         return Promise.resolve();
                     });
@@ -931,6 +932,7 @@ export class App extends EventHarness {
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
         currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
+        currentSurvey.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
 
         // occurrence modified event fired to ensure that the occurrence is saved
         occurrence.fireEvent(Occurrence.EVENT_MODIFIED);

@@ -1,6 +1,7 @@
 import {Model} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
+import {Survey} from "./Survey";
 
 export class Occurrence extends Model {
 

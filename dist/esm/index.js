@@ -3501,6 +3501,15 @@ class Survey extends Model {
     static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
     /**
+     * fired on Survey when one of its occurrences has been added, deleted or reloaded
+     *
+     * no parameters
+     *
+     * @type {string}
+     */
+    static EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
+
+    /**
      * parameter is {currentHectadSubunit : string}
      *
      * @type {string}
@@ -3674,14 +3683,28 @@ class Survey extends Model {
     }
 
     /**
+     * returns survey date string, with special formatting for 'today' and 'yesterday'
+     *
+     * @returns {string}
+     */
+    get prettyDate() {
+        const date = this.attributes.date || '';
+        const today = new Date;
+
+        if (date === today.toISOString().slice(0,10)) {
+            return 'today';
+        } else if (date === (new Date(today.valueOf() - (3600*24*1000))).toISOString().slice(0,10)) {
+            return 'yesterday';
+        } else {
+            return date;
+        }
+    }
+
+    /**
      * @returns {boolean}
      */
     isToday() {
-        //const date = this.date;
-        //const now = (new Date).toJSON().slice(0,10);
-
-        //console.log(`Date matching '${date}' with '${now}'`);
-        return this.date === (new Date).toJSON().slice(0,10);
+        return this.date === (new Date).toISOString().slice(0,10);
     }
 
     get place() {
@@ -3735,8 +3758,10 @@ class Survey extends Model {
      *     tetrad : string,
      *     monad : string,
      *     country : string,
-     *     vc : int[],
+     *     vc : number[],
      *     interleavedGridRef : string,
+     *     [surveyGridUnit] : number,
+     *     [hectare] : string,
      * }}
      */
     getGeoContext() {
@@ -3748,6 +3773,12 @@ class Survey extends Model {
             result.vc = [...this.attributes.vc.selection]; // clone rather than reference the VC selection
         } else {
             result.vc = [];
+        }
+
+        const surveyGridUnit = parseInt(this.attributes?.sampleUnit?.selection[0], 10) || null;
+
+        if (surveyGridUnit) {
+            result.surveyGridUnit = surveyGridUnit;
         }
 
         if (geoRef?.gridRef) {
@@ -3768,6 +3799,10 @@ class Survey extends Model {
             result.hectad = gridRef.gridCoords.to_gridref(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
+
+            if (surveyGridUnit === 100) {
+                result.hectare = gridRef.gridCoords.to_gridref(100);
+            }
         }
 
         return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
@@ -3834,15 +3869,6 @@ class Survey extends Model {
             if (this.attributes.place) {
                 let summaryGridRef = this._summarySquareString(options.summarySquarePrecision);
 
-                // if (options.summarySquarePrecision && this.attributes.georef?.gridRef) {
-                //     // '<' replacement used simplistically to sanitize against script injection
-                //     const gridRef = GridRef.fromString(this.attributes.georef.gridRef.replace(/[<&]/g, ''));
-                //
-                //     summaryGridRef = ` ${gridRef?.gridCoords?.to_gridref(gridRef.length <= options.summarySquarePrecision ? options.summarySquarePrecision : gridRef.length) || this.attributes.georef.gridRef}`;
-                // } else {
-                //     summaryGridRef = '';
-                // }
-
                 place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
             } else if (this.attributes.georef && this.attributes.georef.gridRef) {
                 place = this._summarySquareString(options.summarySquarePrecision);
@@ -3850,7 +3876,7 @@ class Survey extends Model {
                 place = '(unlocalized)';
             }
 
-            return `${escapeHTML(place)} ${this.date || this._createdDateString()}`;
+            return `${escapeHTML(place)} ${this.prettyDate || this._createdDateString()}`;
         }
     }
 
@@ -5430,6 +5456,7 @@ class App extends EventHarness {
 
                         this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                         this.currentSurvey?.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED);
+                        this.currentSurvey?.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
 
                         return Promise.resolve();
                     });
@@ -5521,6 +5548,7 @@ class App extends EventHarness {
         this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
         currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
+        currentSurvey.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
 
         // occurrence modified event fired to ensure that the occurrence is saved
         occurrence.fireEvent(Occurrence.EVENT_MODIFIED);
@@ -6412,7 +6440,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1691156229-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1691747182-${configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
 
