@@ -47,16 +47,16 @@ export class SurveyPickerController extends AppController {
      * @param {PatchedNavigo} router
      */
     registerRoute(router) {
-        router.on(
-            '/survey',
-            this.mainRouteHandler.bind(this, 'survey', '', ''),
-            {
-                // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-                // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-                // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-                // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-            }
-        );
+        // router.on(
+        //     '/survey',
+        //     this.mainRouteHandler.bind(this, 'survey', '', ''),
+        //     {
+        //         // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+        //         // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+        //         // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+        //         // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+        //     }
+        // );
 
         router.on(
             '/survey/new',
@@ -121,7 +121,7 @@ export class SurveyPickerController extends AppController {
     beforeSaveAllHandler(done) {
         // invoke sync of any/all unsaved data
         // show pop-ups on success and failure
-        this.app.syncAll().then((result) => {
+        this.app.syncAll(false).then((result) => {
             console.log({'In save all handler, success result' : result});
 
             if (Array.isArray(result)) {
@@ -165,18 +165,20 @@ export class SurveyPickerController extends AppController {
         console.log("reached addNewSurveyHandler");
         this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
-        // the apps occurrences should only relate to the current survey
-        // (the reset are remote or in IndexedDb)
-        this.app.clearCurrentSurvey();
-
-        this.app.setNewSurvey();
-
         // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.app.syncAll();
+        this.app.syncAll(true).finally(() => {
 
-        this.app.router.pause();
-        this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
-        this.app.router.resolve();
+            // the apps occurrences should only relate to the current survey
+            // (the reset are remote or in IndexedDb)
+            this.app.clearCurrentSurvey().then(() => {
+
+                this.app.setNewSurvey();
+
+                this.app.router.pause();
+                this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+                this.app.router.resolve();
+            });
+        });
     }
 
     /**
@@ -184,7 +186,8 @@ export class SurveyPickerController extends AppController {
      */
     resetSurveysHandler() {
         this.app.clearLocalForage().then(() => {
-            this.app.reset();
+            return this.app.reset();
+        }).finally(() => {
             this.addNewSurveyHandler();
         });
     }
@@ -224,7 +227,6 @@ export class SurveyPickerController extends AppController {
                 this.app.markAllNotPristine();
 
                 this.app.router.pause();
-                //this.app.router.navigate('/list').resume();
                 this.app.router.navigate(this.restoredSurveyNavigationTarget).resume();
                 this.app.router.resolve();
             }, (error) => {

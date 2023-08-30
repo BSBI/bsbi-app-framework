@@ -17,21 +17,28 @@ export class OccurrenceImage extends Model {
 
     TYPE = 'image';
 
+    /**
+     * Only relevant for occurrence-linked images
+     *
+     * @type {string}
+     */
     occurrenceId = '';
 
     surveyId = '';
 
     projectId = '';
 
+    context = 'occurrence';
+
     /**
-     * fetches a url of the image
+     * fetches a URL of the image
      * this might be a remote url (or one intercepted by a service worker)
      * or a data url of the raw image, (not yet uploaded)
      *
      * @returns {string}
      */
     getUrl () {
-
+        throw new Error('OccurrenceImage getUrl() not implemented.')
     }
 
     SAVE_ENDPOINT = '/saveimage.php';
@@ -61,10 +68,10 @@ export class OccurrenceImage extends Model {
      *
      * @param {string} surveyId
      * @param {string} occurrenceId
-     * @param {number} projectId
+     * @param {number|null} projectId
      * @returns {Promise}
      */
-    save(surveyId, occurrenceId, projectId, context = 'occurrence') {
+    save(surveyId = '', occurrenceId = '', projectId = null) {
         if (surveyId) {
             this.surveyId = surveyId;
         }
@@ -77,7 +84,7 @@ export class OccurrenceImage extends Model {
             this.occurrenceId = occurrenceId;
         }
 
-        if (!this._savedRemotely) {
+        if (!this.unsaved()) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
             formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
@@ -89,8 +96,8 @@ export class OccurrenceImage extends Model {
             formData.append('created', this.createdStamp?.toString() || '');
             formData.append('modified', this.modifiedStamp?.toString() || '');
 
-            if (context === 'survey') {
-                formData.append('context', context);
+            if (this.context === 'survey') {
+                formData.append('context', this.context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
@@ -122,7 +129,8 @@ export class OccurrenceImage extends Model {
      */
     static placeholder(id) {
         let placeholderObject = new OccurrenceImage;
-        placeholderObject._id = id;
+        //placeholderObject._id = id;
+        placeholderObject.id = id; // should use setter, to enforce validation
 
         OccurrenceImage.imageCache.set(id, placeholderObject);
 
@@ -131,14 +139,35 @@ export class OccurrenceImage extends Model {
 
     /**
      *
-     * @param {{surveyId: string, occurrenceId: string, [image]: File}} descriptor
+     *
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      [userId]: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: (number|string),
+     *      modified: (number|string),
+     *      projectId: (number|string),
+     *      surveyId: string,
+     *      occurrenceId: string,
+     *      [image]: File
+     *      [context]: string
+     *      }} descriptor
      * @private
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
-        this.surveyId = descriptor.surveyId; // note lower case
-        this.occurrenceId = descriptor.occurrenceId; // note lower case
+        this.surveyId = descriptor.surveyId;
+
+        if (descriptor.occurrenceId) {
+            this.occurrenceId = descriptor.occurrenceId;
+        }
         this.file = descriptor.image;
+
+        if (descriptor.context) {
+            this.context = descriptor.context;
+        }
     }
 
     /**

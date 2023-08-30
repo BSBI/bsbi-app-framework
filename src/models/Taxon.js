@@ -26,10 +26,12 @@ export class Taxon {
      * // properties beyond this point are not part of the source file
      * @property {{}} [17] Presence in grid-squares (top-level object is keyed by grid-ref)
      * @property {{}} [18] Presence on rpr
+     * @property {{}} [19] Presence in county (top-level object is keyed by vc code string, including prefix)
      */
 
     static GR_PRESENCE_KEY = 17;
     static RPR_KEY = 18;
+    static VC_PRESENCE_KEY = 19;
 
     /**
      *
@@ -124,8 +126,9 @@ export class Taxon {
     }
 
     /**
+     * if rated, then the string is 'scarce' or 'rare'
      *
-     * @type {{GB: null|string, IE: null|string}}
+     * @type {{GB: null|('rare'|'scarce'), IE: null|('rare'|'scarce')}}
      */
     rareScarceStatus = {
         GB : null,
@@ -139,10 +142,16 @@ export class Taxon {
     rprStatus = {}
 
     /**
-     *
-     * @type {{current : number, previous : number, [year] : number}|null}
+     * keyed by grid-square string
+     * @type {Object<string, {current : number, previous : number, [year] : number, [status] : string}>|null}
      */
     occurrenceCoverage = null;
+
+    /**
+     * keyed by vc code string
+     * @type {Object<string, {current : number, previous : number, [year] : number}>|null}
+     */
+    vcPresence = null;
 
     /**
      *
@@ -150,10 +159,19 @@ export class Taxon {
      */
     static showVernacular = true;
 
+    /**
+     *
+     * @param {Object.<string, RawTaxon>} taxa
+     */
     static setTaxa(taxa) {
         Taxon.rawTaxa = taxa;
     }
 
+    /**
+     *
+     * @param {Object.<string, RawTaxon>} taxa
+     * @param {string} sourceUrl
+     */
     static initialiseTaxa(taxa, sourceUrl) {
         Taxon.rawTaxa = taxa;
 
@@ -182,6 +200,7 @@ export class Taxon {
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
+            console.error(`Taxon id '${id}' not found.`);
             throw new TaxonError(`Taxon id '${id}' not found.`);
         }
 
@@ -217,6 +236,8 @@ export class Taxon {
         taxon.rprStatus = raw[Taxon.RPR_KEY] || null;
 
         taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
+
+        taxon.vcPresence = raw[Taxon.VC_PRESENCE_KEY] || null;
 
         return taxon;
     }

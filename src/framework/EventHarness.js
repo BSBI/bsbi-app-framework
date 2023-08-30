@@ -11,30 +11,29 @@ export class EventHarness {
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
-    // /**
-    //  *
-    //  * @param {string} eventName
-    //  * @param {Object} obj
-    //  * @param {Function} method
-    //  * @param {*=} constructionParam
-    //  * @deprecated use addListener instead
-    //  * @return {number} handle
-    //  */
-    // bindListener (eventName, obj, method, constructionParam) {
-    //     this._eventListeners = this._eventListeners || [];
-    //
-    //     const handlerFunction =
-    //         function(context, eventName, invocationParam) {
-    //             return method.call(obj, context, eventName, invocationParam, constructionParam);
-    //         };
-    //
-    //     if (this._eventListeners[eventName]) {
-    //         return (this._eventListeners[eventName].push(handlerFunction))-1;
-    //     } else {
-    //         this._eventListeners[eventName] = [handlerFunction];
-    //         return 0; // first element in array
-    //     }
-    // };
+    addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
+        this._eventListeners = this._eventListeners || [];
+
+        const weakWrapped = new WeakRef(handlerObject);
+        handlerObject = null;
+
+        const handlerFunction = (context, eventName, invocationParam = {}) => {
+            let weakObject = weakWrapped.deref();
+
+            if (weakObject) {
+                weakObject[handlerMethodName]({context, eventName, ...invocationParam, ...constructionParam});
+            } else {
+                console.warn(`A ${eventName} handler (${handlerMethodName}) has been garbage collected`);
+            }
+        }
+
+        if (this._eventListeners[eventName]) {
+            return (this._eventListeners[eventName].push(handlerFunction)) - 1;
+        } else {
+            this._eventListeners[eventName] = [handlerFunction];
+            return 0; // first element in array
+        }
+    };
 
     /**
      *
@@ -64,7 +63,7 @@ export class EventHarness {
      * @returns undefined
      */
     removeListener(eventName, handle) {
-        if (this._eventListeners[eventName] && this._eventListeners[eventName][handle]) {
+        if (this._eventListeners[eventName]?.[handle]) {
             delete this._eventListeners[eventName][handle];
         } else {
             console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
@@ -86,8 +85,6 @@ export class EventHarness {
      * @return void
      */
     fireEvent (eventName, param) {
-        //console.log('fire event "' + eventName + '" called by '+this.fire_event.caller.caller+' invoked by '+this.fire_event.caller.caller.caller+' instigated by '+this.fire_event.caller.caller.caller.caller);
-
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
                 if (this._eventListeners[eventName].hasOwnProperty(f)) {

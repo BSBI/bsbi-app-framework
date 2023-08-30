@@ -172,30 +172,29 @@ class EventHarness {
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
-    // /**
-    //  *
-    //  * @param {string} eventName
-    //  * @param {Object} obj
-    //  * @param {Function} method
-    //  * @param {*=} constructionParam
-    //  * @deprecated use addListener instead
-    //  * @return {number} handle
-    //  */
-    // bindListener (eventName, obj, method, constructionParam) {
-    //     this._eventListeners = this._eventListeners || [];
-    //
-    //     const handlerFunction =
-    //         function(context, eventName, invocationParam) {
-    //             return method.call(obj, context, eventName, invocationParam, constructionParam);
-    //         };
-    //
-    //     if (this._eventListeners[eventName]) {
-    //         return (this._eventListeners[eventName].push(handlerFunction))-1;
-    //     } else {
-    //         this._eventListeners[eventName] = [handlerFunction];
-    //         return 0; // first element in array
-    //     }
-    // };
+    addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
+        this._eventListeners = this._eventListeners || [];
+
+        const weakWrapped = new WeakRef(handlerObject);
+        handlerObject = null;
+
+        const handlerFunction = (context, eventName, invocationParam = {}) => {
+            let weakObject = weakWrapped.deref();
+
+            if (weakObject) {
+                weakObject[handlerMethodName]({context, eventName, ...invocationParam, ...constructionParam});
+            } else {
+                console.warn(`A ${eventName} handler (${handlerMethodName}) has been garbage collected`);
+            }
+        };
+
+        if (this._eventListeners[eventName]) {
+            return (this._eventListeners[eventName].push(handlerFunction)) - 1;
+        } else {
+            this._eventListeners[eventName] = [handlerFunction];
+            return 0; // first element in array
+        }
+    };
 
     /**
      *
@@ -225,7 +224,7 @@ class EventHarness {
      * @returns undefined
      */
     removeListener(eventName, handle) {
-        if (this._eventListeners[eventName] && this._eventListeners[eventName][handle]) {
+        if (this._eventListeners[eventName]?.[handle]) {
             delete this._eventListeners[eventName][handle];
         } else {
             console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
@@ -247,8 +246,6 @@ class EventHarness {
      * @return void
      */
     fireEvent (eventName, param) {
-        //console.log('fire event "' + eventName + '" called by '+this.fire_event.caller.caller+' invoked by '+this.fire_event.caller.caller.caller+' instigated by '+this.fire_event.caller.caller.caller.caller);
-
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
                 if (this._eventListeners[eventName].hasOwnProperty(f)) {
@@ -3122,7 +3119,7 @@ class Model extends EventHarness {
 
     /**
      *
-     * @param {Boolean} savedFlag
+     * @param {boolean} savedFlag
      */
     set savedRemotely(savedFlag) {
         if (this._savedRemotely !== savedFlag) {
@@ -3212,12 +3209,17 @@ class Model extends EventHarness {
      * @param {string} newId
      */
     set id(newId) {
-        // only allow an id to be set if not present already
 
-        if (this._id && newId !== this._id) {
-            throw new Error(`Occurrence id has already been set, when trying to set new id '${newId}'.`);
+        if (!newId.match(UUID_REGEX)) {
+            throw new Error(`Cannot set malformed object id '${newId}'.`);
+        } else {
+            // only allow an id to be set if not present already
+
+            if (this._id && newId !== this._id) {
+                throw new Error(`Object id has already been set, when trying to set new id '${newId}'.`);
+            }
+            this._id = newId;
         }
-        this._id = newId;
     }
 
     /**
@@ -3330,6 +3332,9 @@ class Model extends EventHarness {
                 // try instead to write the data to local storage
 
                 console.log('Save failed, presumably service worker is missing and there is no network connection. Should write to IndexedDb here.');
+                this._savedLocally = false;
+                this.savedRemotely = false;
+
                 return Promise.reject('IndexedDb storage not yet implemented');
             }
         });
@@ -3357,7 +3362,16 @@ class Model extends EventHarness {
 
     /**
      *
-     * @param {{id : string, saveState: string, [userId]: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      [userId]: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: (number|string),
+     *      modified: (number|string),
+     *      projectId: (number|string)
+     *      }} descriptor
      */
     _parseDescriptor(descriptor) {
         this._parseAttributes(descriptor.attributes);
@@ -3385,7 +3399,7 @@ class Model extends EventHarness {
         if (Array.isArray(attributes)) {
             // problematic bug, where empty attributes come back as an array rather than as an object
 
-            console.log('Attributes were spuriously represented as an array rather than as an empty object');
+            //console.log('Attributes were spuriously represented as an array rather than as an empty object');
             this.attributes = {};
         } else {
             this.attributes = attributes;
@@ -3578,7 +3592,7 @@ class Survey extends Model {
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get squareReference() {
-        if (this.attributes?.sampleUnit?.selection?.[0]) {
+        if (this.attributes.sampleUnit?.selection?.[0]) {
             let n = parseInt(this.attributes.sampleUnit.selection[0], 10);
 
             if (n > 0) {
@@ -3645,7 +3659,7 @@ class Survey extends Model {
      * @private
      */
     _infer_square_ref_from_survey_ref() {
-        if (this.attributes.georef && this.attributes.georef.gridRef && this.attributes.georef.precision <= 2000) {
+        if (this.attributes.georef?.gridRef && this.attributes.georef.precision <= 2000) {
             let newRef;
 
             if (this.attributes.georef.precision === 2000 || this.attributes.georef.precision === 1000) {
@@ -3775,7 +3789,7 @@ class Survey extends Model {
             result.vc = [];
         }
 
-        const surveyGridUnit = parseInt(this.attributes?.sampleUnit?.selection[0], 10) || null;
+        const surveyGridUnit = parseInt(this.attributes.sampleUnit?.selection?.[0], 10) || null;
 
         if (surveyGridUnit) {
             result.surveyGridUnit = surveyGridUnit;
@@ -3820,15 +3834,17 @@ class Survey extends Model {
      *
      * must test indexdb for this eventuality after the save has returned
      *
+     * @param {boolean} [forceSave]
+     *
      * @returns {Promise}
      */
-    save() {
-        if (!this._savedRemotely) {
+    save(forceSave = false) {
+        if (forceSave || !this.unsaved()) {
             const formData = new FormData;
 
             formData.append('type', this.TYPE);
             formData.append('surveyId', this.id);
-            formData.append('id', this.id);
+            formData.append('id', this.id); // this is incorrect duplication
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
@@ -3870,7 +3886,7 @@ class Survey extends Model {
                 let summaryGridRef = this._summarySquareString(options.summarySquarePrecision);
 
                 place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
-            } else if (this.attributes.georef && this.attributes.georef.gridRef) {
+            } else if (this.attributes.georef?.gridRef) {
                 place = this._summarySquareString(options.summarySquarePrecision);
             } else {
                 place = '(unlocalized)';
@@ -3952,6 +3968,7 @@ class Survey extends Model {
     duplicate(newAttributes = {}, properties = {}) {
         const newSurvey = new Survey();
 
+        // @todo need to be certain that are not cloning image attribute
         newSurvey.attributes = Object.assign(structuredClone(this.attributes), newAttributes);
         newSurvey.userId = properties.hasOwnProperty('userId') ? properties.userId : this.userId;
         newSurvey.isPristine = true;
@@ -3960,6 +3977,7 @@ class Survey extends Model {
         newSurvey._savedRemotely = false;
         newSurvey.deleted = false;
         newSurvey.projectId = this.projectId;
+        newSurvey.id; // trigger id generation
 
         return newSurvey;
     }
@@ -4001,10 +4019,12 @@ class Taxon {
      * // properties beyond this point are not part of the source file
      * @property {{}} [17] Presence in grid-squares (top-level object is keyed by grid-ref)
      * @property {{}} [18] Presence on rpr
+     * @property {{}} [19] Presence in county (top-level object is keyed by vc code string, including prefix)
      */
 
     static GR_PRESENCE_KEY = 17;
     static RPR_KEY = 18;
+    static VC_PRESENCE_KEY = 19;
 
     /**
      *
@@ -4099,8 +4119,9 @@ class Taxon {
     }
 
     /**
+     * if rated, then the string is 'scarce' or 'rare'
      *
-     * @type {{GB: null|string, IE: null|string}}
+     * @type {{GB: null|('rare'|'scarce'), IE: null|('rare'|'scarce')}}
      */
     rareScarceStatus = {
         GB : null,
@@ -4114,10 +4135,16 @@ class Taxon {
     rprStatus = {}
 
     /**
-     *
-     * @type {{current : number, previous : number, [year] : number}|null}
+     * keyed by grid-square string
+     * @type {Object<string, {current : number, previous : number, [year] : number, [status] : string}>|null}
      */
     occurrenceCoverage = null;
+
+    /**
+     * keyed by vc code string
+     * @type {Object<string, {current : number, previous : number, [year] : number}>|null}
+     */
+    vcPresence = null;
 
     /**
      *
@@ -4125,10 +4152,19 @@ class Taxon {
      */
     static showVernacular = true;
 
+    /**
+     *
+     * @param {Object.<string, RawTaxon>} taxa
+     */
     static setTaxa(taxa) {
         Taxon.rawTaxa = taxa;
     }
 
+    /**
+     *
+     * @param {Object.<string, RawTaxon>} taxa
+     * @param {string} sourceUrl
+     */
     static initialiseTaxa(taxa, sourceUrl) {
         Taxon.rawTaxa = taxa;
 
@@ -4157,6 +4193,7 @@ class Taxon {
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
+            console.error(`Taxon id '${id}' not found.`);
             throw new TaxonError(`Taxon id '${id}' not found.`);
         }
 
@@ -4192,6 +4229,8 @@ class Taxon {
         taxon.rprStatus = raw[Taxon.RPR_KEY] || null;
 
         taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
+
+        taxon.vcPresence = raw[Taxon.VC_PRESENCE_KEY] || null;
 
         return taxon;
     }
@@ -4293,7 +4332,7 @@ class Occurrence extends Model {
      * @returns {(Taxon|null)} returns null for unmatched taxa specified by name
      */
     get taxon() {
-        return this.attributes.taxon && this.attributes.taxon.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
+        return this.attributes.taxon?.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
     };
 
     // /**
@@ -4350,21 +4389,27 @@ class Occurrence extends Model {
      *
      * must test indexdb for this eventuality after the save has returned
      *
-     * @param {string} surveyId
+     * @param {string} [surveyId] only set if want to override, otherwise '' (*currently ignored and should be deprecated*)
+     * @param {boolean} [forceSave]
      * @returns {Promise}
      */
-    save(surveyId) {
-        if (!this._savedRemotely) {
+    save(surveyId = '', forceSave = false) {
+        if (this.unsaved() || forceSave) {
             const formData = new FormData;
 
-            if (!surveyId && this.surveyId) {
-                surveyId = this.surveyId;
+            // @todo potentially setting surveyId here seems like a serious design fault!
+            // if (!surveyId && this.surveyId) {
+            //     surveyId = this.surveyId;
+            // }
+
+            if (!this.surveyId) {
+                throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
             }
 
             formData.append('type', this.TYPE);
-            formData.append('surveyId', surveyId);
+            formData.append('surveyId', this.surveyId);
             formData.append('occurrenceId', this.id);
-            formData.append('id', this.id);
+            formData.append('id', this.id); // this is incorrect duplication
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
@@ -4436,12 +4481,12 @@ class Occurrence extends Model {
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
     }
 
     /**
      *
-     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null), [defaultSurveyGridRef]: string}|null)}
      */
     get geoReference() {
         return this.attributes.georef || {
@@ -4471,21 +4516,28 @@ class OccurrenceImage extends Model {
 
     TYPE = 'image';
 
+    /**
+     * Only relevant for occurrence-linked images
+     *
+     * @type {string}
+     */
     occurrenceId = '';
 
     surveyId = '';
 
     projectId = '';
 
+    context = 'occurrence';
+
     /**
-     * fetches a url of the image
+     * fetches a URL of the image
      * this might be a remote url (or one intercepted by a service worker)
      * or a data url of the raw image, (not yet uploaded)
      *
      * @returns {string}
      */
     getUrl () {
-
+        throw new Error('OccurrenceImage getUrl() not implemented.')
     }
 
     SAVE_ENDPOINT = '/saveimage.php';
@@ -4515,10 +4567,10 @@ class OccurrenceImage extends Model {
      *
      * @param {string} surveyId
      * @param {string} occurrenceId
-     * @param {number} projectId
+     * @param {number|null} projectId
      * @returns {Promise}
      */
-    save(surveyId, occurrenceId, projectId, context = 'occurrence') {
+    save(surveyId = '', occurrenceId = '', projectId = null) {
         if (surveyId) {
             this.surveyId = surveyId;
         }
@@ -4531,7 +4583,7 @@ class OccurrenceImage extends Model {
             this.occurrenceId = occurrenceId;
         }
 
-        if (!this._savedRemotely) {
+        if (!this.unsaved()) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
             formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
@@ -4543,8 +4595,8 @@ class OccurrenceImage extends Model {
             formData.append('created', this.createdStamp?.toString() || '');
             formData.append('modified', this.modifiedStamp?.toString() || '');
 
-            if (context === 'survey') {
-                formData.append('context', context);
+            if (this.context === 'survey') {
+                formData.append('context', this.context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
@@ -4576,7 +4628,8 @@ class OccurrenceImage extends Model {
      */
     static placeholder(id) {
         let placeholderObject = new OccurrenceImage;
-        placeholderObject._id = id;
+        //placeholderObject._id = id;
+        placeholderObject.id = id; // should use setter, to enforce validation
 
         OccurrenceImage.imageCache.set(id, placeholderObject);
 
@@ -4585,14 +4638,35 @@ class OccurrenceImage extends Model {
 
     /**
      *
-     * @param {{surveyId: string, occurrenceId: string, [image]: File}} descriptor
+     *
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      [userId]: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: (number|string),
+     *      modified: (number|string),
+     *      projectId: (number|string),
+     *      surveyId: string,
+     *      occurrenceId: string,
+     *      [image]: File
+     *      [context]: string
+     *      }} descriptor
      * @private
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
-        this.surveyId = descriptor.surveyId; // note lower case
-        this.occurrenceId = descriptor.occurrenceId; // note lower case
+        this.surveyId = descriptor.surveyId;
+
+        if (descriptor.occurrenceId) {
+            this.occurrenceId = descriptor.occurrenceId;
+        }
         this.file = descriptor.image;
+
+        if (descriptor.context) {
+            this.context = descriptor.context;
+        }
     }
 
     /**
@@ -4620,6 +4694,91 @@ class OccurrenceImage extends Model {
 
         return `<picture><source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=webp" type="image/webp"><img${attributesString} src="/image.php?imageid=${id}&amp;width=${width}&amp;height=${height}&amp;format=jpeg" ${renderingConstraint} alt="photo"></picture>`;
     }
+}
+
+class Logger {
+
+    /**
+     * @type {App}
+     */
+    static app;
+
+    /**
+     * reports a javascript error
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @param {string|number|null} [line]
+     * @param {number|null} [column]
+     * @param {Error|null} [errorObj]
+     */
+    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
+
+        window.onerror = null;
+
+        console.error(message, url, line, errorObj);
+
+        if (console.trace) {
+            console.trace('Trace');
+        }
+
+        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
+        const error = doc.createElement('error');
+
+        if (line !== null && line !== undefined) {
+            error.setAttribute('line', line);
+        }
+
+        if (errorObj && ('stack' in errorObj)) {
+            error.setAttribute('stack', errorObj.stack);
+        }
+
+        if (url !== null && url !== undefined && url !== '') {
+            error.setAttribute('url', url);
+        }
+
+        if (window.location.href) {
+            error.setAttribute('referrer', window.location.href);
+        }
+
+        if (window.location.search) {
+            error.setAttribute('urlquery', window.location.search);
+        }
+
+        if (window.location.hash) {
+            error.setAttribute('urlhash', window.location.hash);
+        }
+
+        if (Logger.app?.session?.userId) {
+            error.setAttribute('userid', Logger.app.session.userId);
+        }
+
+        // noinspection PlatformDetectionJS
+        error.setAttribute('browser', navigator.appName);
+        error.setAttribute('browserv', navigator.appVersion);
+        error.setAttribute('userAgent', navigator.userAgent);
+        error.setAttribute('versions', Model.bsbiAppVersion);
+
+        error.appendChild(doc.createTextNode(message));
+
+        doc.documentElement.appendChild(error);
+
+        fetch('/javascriptErrorLog.php', {
+            method: "POST", // *GET, POST, PUT, DELETE, etc.
+            mode: "cors", // no-cors, *cors, same-origin
+            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: "include", // include, *same-origin, omit
+            headers: {
+                "Content-Type": "text/xml",
+            },
+            redirect: "follow", // manual, *follow, error
+            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: (new XMLSerializer()).serializeToString(doc),
+        });
+
+        window.onerror = Logger.logError; // turn on error handling again
+        return true; // suppress normal error reporting
+    };
 }
 
 // App.js
@@ -4660,14 +4819,14 @@ class App extends EventHarness {
      *
      * @type {Map.<string,Occurrence>}
      */
-    occurrences;
+    occurrences= new Map();
 
     /**
      * keyed by survey id (a UUID string)
      *
      * @type {Map.<string,Survey>}
      */
-    surveys;
+    surveys= new Map();
 
     /**
      * @type {?Survey}
@@ -4748,12 +4907,14 @@ class App extends EventHarness {
      * Fired after fully-successful sync-all
      * (or if sync-all resolved with nothing to send)
      *
+     * @todo this is misleading as in fact is fired when all saved to indexdb or to server
+     *
      * @type {string}
      */
     static EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
 
     /**
-     * fired if sync-all called, but one or more objects failed to be saved to the server
+     * fired if sync-all called, but one or more objects failed to be stored
      *
      * @type {string}
      */
@@ -4779,10 +4940,6 @@ class App extends EventHarness {
 
     constructor() {
         super();
-        //this.reset();
-
-        this.surveys = new Map();
-        this.clearCurrentSurvey();
     }
 
     /**
@@ -4794,9 +4951,10 @@ class App extends EventHarness {
             this._currentSurvey = survey || null;
 
             let surveyId = survey?.id;
-            localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId);
-
-            this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey : survey});
+            localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId)
+                .then(() => {
+                    this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
+                });
         }
     }
 
@@ -4872,19 +5030,28 @@ class App extends EventHarness {
         });
     }
 
+    /**
+     *
+     * @returns {Promise<void | null>}
+     */
     reset() {
-        this.surveys = new Map();
-        this.clearCurrentSurvey();
-        this.clearLastSurveyId();
+        {
+            return Promise.resolve();
+        }
     }
 
     /**
      * unset the current survey and its associated list of occurrences
      * called when switching surveys and during startup
+     *
+     * updates local storage last saved survey id
+     *
+     * @returns {Promise<void | null>}
      */
     clearCurrentSurvey() {
         this.occurrences = new Map();
-        this.currentSurvey = null;
+        this._currentSurvey = null; // must not use setter here otherwise local storage saved previous id will be lost
+        return this.clearLastSurveyId();
     }
 
     /**
@@ -4966,11 +5133,12 @@ class App extends EventHarness {
     }
 
     display() {
-        console.log('App display');
-        this._router.resolve();
+        //console.log('App display');
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.syncAll();
+        this.syncAll(true).then(() => {
+            this._router.resolve();
+        });
     }
 
     saveRoute() {
@@ -5014,12 +5182,13 @@ class App extends EventHarness {
         if (!survey.hasAppModifiedListener) {
             survey.hasAppModifiedListener = true;
 
-            console.log("setting survey's modified/save handler");
+            //console.log("setting survey's modified/save handler");
             survey.addListener(
                 Survey.EVENT_MODIFIED,
                 () => {
-                    this.fireEvent(App.EVENT_SURVEYS_CHANGED);
-                    return survey.save();
+                    survey.save().finally(() => {
+                        this.fireEvent(App.EVENT_SURVEYS_CHANGED);
+                    });
                 }
             );
         }
@@ -5063,7 +5232,7 @@ class App extends EventHarness {
 
             survey.createdStamp = occurrence.createdStamp;
         }
-        console.log(`in addOccurrence setting id '${occurrence.id}'`);
+        //console.log(`in addOccurrence setting id '${occurrence.id}'`);
         this.occurrences.set(occurrence.id, occurrence);
 
         occurrence.addListener(Occurrence.EVENT_MODIFIED,
@@ -5078,13 +5247,18 @@ class App extends EventHarness {
                     // need to ensure that currentSurvey is saved before occurrence
                     // rather than using a promise chain here, instead rely on enforced queuing of post requests in Model
                     // otherwise there are problems with queue-jumping (e.g. when an image needs to be saved after both previous requests)
-                    if (survey.unsaved()) {
-                        // noinspection JSIgnoredPromiseFromCall
-                        survey.save();
-                    }
-                    occurrence.save(survey.id);
+                    // if (survey.unsaved()) {
+                    //     // noinspection JSIgnoredPromiseFromCall
+                    //     survey.save();
+                    // }
 
-                    survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
+                    // against a backdrop where surveys are somehow going unsaved, always force a survey re-save
+                    // @todo need to watch if this is creating a mess of identical survey revisions
+                    survey.save(true);
+
+                    occurrence.save().finally(() => {
+                        survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
+                    });
                 }
             });
 
@@ -5169,14 +5343,14 @@ class App extends EventHarness {
                     // }
 
                     if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
-                        console.log(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
+                        console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
                         return Promise.resolve();
                     }
                 }
 
                 // no local copy or stale copy
                 // so store response locally
-                console.log(`Adding or replacing local copy of ${key}`);
+                console.info(`Adding or replacing local copy of ${key}`);
                 return localforage.setItem(key, externalVersion);
             });
     }
@@ -5184,14 +5358,14 @@ class App extends EventHarness {
     /**
      * retrieve the full set of keys from local storage (IndexedDb)
      *
-     * @param {{survey: Array.<string>, occurrence : Array.<string>, image: Array.<string>}} storedObjectKeys
-     * @returns {Promise}
+     * @param {{survey: Array<string>, occurrence : Array<string>, image: Array<string>}} storedObjectKeys
+     * @returns {Promise<{survey: Array<string>, occurrence: Array<string>, image: Array<string>}>}
      */
     seekKeys(storedObjectKeys) {
-        console.log('starting seekKeys');
+        //console.log('starting seekKeys');
 
         return localforage.keys().then((keys) => {
-            console.log({"in seekKeys: local forage keys" : keys});
+            //console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
                 if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
@@ -5204,7 +5378,7 @@ class App extends EventHarness {
                             storedObjectKeys[type].push(id);
                         }
                     } else {
-                        console.log(`Unrecognised stored key type '${type}.`);
+                        console.error(`Unrecognised stored key type '${type}.`);
                     }
                 }
             }
@@ -5214,9 +5388,11 @@ class App extends EventHarness {
     }
 
     /**
+     * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
+     * This should allow surveys to be switched etc. without disrupting the on-going save process.
      * @returns {Promise}
      */
-    syncAll() {
+    syncAll(fastReturn = true) {
         const storedObjectKeys = {
             survey : [],
             occurrence : [],
@@ -5225,14 +5401,19 @@ class App extends EventHarness {
 
         return this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
-                return this._syncLocalUnsaved(storedObjectKeys)
+                return this._syncLocalUnsaved(storedObjectKeys, fastReturn)
                     .then((result) => {
-                        this.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
+                        if (!fastReturn) {
+                            // Can only trigger the event once the whole process is complete, rather than after
+                            // a short-cut fast return.
+                            this.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
+                        }
 
                         return result;
                     });
             }, (failedResult) => {
-                console.log(`Failed to sync all: ${failedResult}`);
+                console.error(`Failed to sync all: ${failedResult}`);
+                Logger.logError(`Failed to sync all: ${failedResult}`);
                 this.fireEvent(App.EVENT_SYNC_ALL_FAILED);
                 return false;
             });
@@ -5293,19 +5474,25 @@ class App extends EventHarness {
 
     /**
      *
-     * @param storedObjectKeys
+     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>}} storedObjectKeys
      * @returns {Promise}
      * @private
      */
-    _syncLocalUnsaved(storedObjectKeys) {
+    _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
         // synchronises surveys first, then occurrences, then images from indexedDb
 
         const promises = [];
+
+        if (fastReturn) {
+            // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
+            promises[0] = Promise.resolve(true);
+        }
+
         for(let surveyKey of storedObjectKeys.survey) {
             promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
-                .then((survey) => {
-                    if (survey.unsaved()) {
-                        return survey.save();
+                .then((/** Survey */ survey) => {
+                    if (survey.unsaved() || this.session?.userId === '2cd4p9h.31ecsw') {
+                        return survey.save(true);
                     }
                 })
             );
@@ -5313,9 +5500,9 @@ class App extends EventHarness {
 
         for(let occurrenceKey of storedObjectKeys.occurrence) {
             promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                .then((occurrence) => {
-                    if (occurrence.unsaved()) {
-                        return occurrence.save();
+                .then((/** Occurrence */ occurrence) => {
+                    if (occurrence.unsaved() || this.session?.userId === '2cd4p9h.31ecsw') {
+                        return occurrence.save('', true);
                     }
                 })
             );
@@ -5323,7 +5510,7 @@ class App extends EventHarness {
 
         for(let imageKey of storedObjectKeys.image) {
             promises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
-                .then((image) => {
+                .then((/** OccurrenceImage */ image) => {
                     if (image.unsaved()) {
                         return image.save();
                     }
@@ -5331,10 +5518,16 @@ class App extends EventHarness {
             );
         }
 
-        return Promise.all(promises).catch((result) => {
-            console.log(`Save failure: ${result}`);
-            return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-        });
+        if (fastReturn) {
+            // this will return near instantaneously as there is an already resolved promise at the head of the array
+            // the other promises will continue to resolve
+            return Promise.race(promises);
+        } else {
+            return Promise.all(promises).catch((result) => {
+                console.log(`Save failure: ${result}`);
+                return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
+            });
+        }
     }
 
     /**
@@ -5367,6 +5560,7 @@ class App extends EventHarness {
                         return this._restoreOccurrenceImp('', neverAddBlank);
                     });
                 },
+                // probably can't reach this catch phase
                 () => this._restoreOccurrenceImp('', neverAddBlank)
             );
     }
@@ -5387,14 +5581,19 @@ class App extends EventHarness {
             const localSurvey = this.surveys.get(targetSurveyId);
 
             if (localSurvey.isPristine) {
-                this.clearCurrentSurvey(); // clear occurrences from the previous survey
-
-                this.currentSurvey = localSurvey;
-                this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                return Promise.resolve();
+                // clear occurrences from the previous survey
+                this.clearCurrentSurvey().then(() => {
+                    this.currentSurvey = localSurvey;
+                    this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                    return Promise.resolve();
+                });
             }
         }
 
+        /**
+         *
+         * @type {{image: Array<string>, survey: Array<string>, occurrence: Array<string>}}
+         */
         const storedObjectKeys = {
             survey: [],
             occurrence: [],
@@ -5405,7 +5604,7 @@ class App extends EventHarness {
             storedObjectKeys.survey[0] = targetSurveyId;
         }
 
-        return this.seekKeys(storedObjectKeys).then((storedObjectKeys) => {
+        return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys)).then((storedObjectKeys) => {
             if (storedObjectKeys.survey.length || this.session?.userId) {
                 return this.refreshFromServer(storedObjectKeys.survey).finally(() => {
                     // re-seek keys from indexed db, to take account of any new occurrences received from the server
@@ -5420,7 +5619,7 @@ class App extends EventHarness {
 
             console.log({storedObjectKeys});
 
-            if (storedObjectKeys && storedObjectKeys.survey && storedObjectKeys.survey.length) {
+            if (storedObjectKeys?.survey?.length) {
 
                 const surveyFetchingPromises = [];
                 let n = 0;
@@ -5437,7 +5636,7 @@ class App extends EventHarness {
                     .finally(() => {
                         //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
-                        if (!this.currentSurvey && !neverAddBlank) {
+                        if (!this.currentSurvey && neverAddBlank) {
                             // survey doesn't actually exist
                             // this could have happened in an invalid survey id was provided as a targetSurveyId
                             console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
@@ -5445,13 +5644,17 @@ class App extends EventHarness {
                         }
 
                         if (this.currentSurvey?.deleted) {
-                            // unusual case where survey is deleted
+                            // unusual case where survey is deleted or was not found
                             // substitute a new one
 
                             // this should probably never happen, as items deleted on the server ought to have been
                             // removed locally
                             this.currentSurvey = null;
-                            neverAddBlank || this.setNewSurvey();
+                            if (neverAddBlank) {
+                                return Promise.reject(new Error(`Survey id '${targetSurveyId}' ${this.currentSurvey?.deleted ? 'is deleted' : 'not found'}.`));
+                            } else {
+                                this.setNewSurvey();
+                            }
                         }
 
                         this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
@@ -5461,15 +5664,17 @@ class App extends EventHarness {
                         return Promise.resolve();
                     });
             } else {
-                console.log('no pre-existing surveys, so creating a new one');
-                // no pre-existing surveys, so create a new one
-                if (!neverAddBlank) {
-                    this.setNewSurvey(); // this also fires EVENT_SURVEYS_CHANGED
-                } else {
-                    this.fireEvent(App.EVENT_SURVEYS_CHANGED); // survey menu needs refresh
-                }
+                // no pre-existing surveys
 
-                return Promise.resolve();
+                if (neverAddBlank) {
+                    console.log('no pre-existing survey');
+                    this.fireEvent(App.EVENT_SURVEYS_CHANGED); // survey menu needs refresh
+                    return Promise.reject(new Error(`Failed to match survey.`));
+                } else {
+                    console.log('no pre-existing surveys, so creating a new one');
+                    this.setNewSurvey(); // this also fires EVENT_SURVEYS_CHANGED
+                    return Promise.resolve();
+                }
             }
         });
     }
@@ -5480,6 +5685,8 @@ class App extends EventHarness {
      */
     setNewSurvey(attributes) {
         const newSurvey = new Survey();
+
+        newSurvey.id; // trigger id initialisation
 
         if (attributes) {
             newSurvey.attributes = {...newSurvey.attributes, ...attributes};
@@ -5496,17 +5703,14 @@ class App extends EventHarness {
         // Important: don't set this.currentSurvey until default attributes have been set,
         // as currentSurvey setter fires an event that may depend on these attributes
         this.currentSurvey = newSurvey;
-
+        this.addSurvey(newSurvey);
         this.fireEvent(App.EVENT_NEW_SURVEY);
-
-        this.addSurvey(this.currentSurvey);
     }
 
     addAndSetSurvey(survey) {
         this.currentSurvey = survey;
+        this.addSurvey(survey);
         this.fireEvent(App.EVENT_NEW_SURVEY);
-
-        this.addSurvey(this.currentSurvey);
     }
 
     /**
@@ -5521,6 +5725,11 @@ class App extends EventHarness {
         const occurrence = new Occurrence();
         const currentSurvey = this.currentSurvey; // avoid too many getter lookups
 
+        if (!currentSurvey) {
+            throw new Error(`Current survey unset when adding new occurrence.`);
+        }
+
+        occurrence.id; // force initialisation of occurrence id
         occurrence.surveyId = currentSurvey.id;
         occurrence.projectId = this.projectId;
 
@@ -5577,30 +5786,30 @@ class App extends EventHarness {
             if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter) {
                 if (setAsCurrent) {
                     // the apps occurrences should only relate to the current survey
-                    // (the reset are remote or in IndexedDb)
-                    this.clearCurrentSurvey();
+                    // (the reset records are remote or in IndexedDb)
+                    this.clearCurrentSurvey().then(() => {
+                        this.addSurvey(survey);
+                        const occurrenceFetchingPromises = [];
 
-                    this.addSurvey(survey);
-                    const occurrenceFetchingPromises = [];
+                        for (let occurrenceKey of storedObjectKeys.occurrence) {
+                            occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                                .then((occurrence) => {
+                                    if (occurrence.surveyId === surveyId) {
+                                        //console.log(`adding occurrence ${occurrenceKey}`);
+                                        this.addOccurrence(occurrence);
 
-                    for (let occurrenceKey of storedObjectKeys.occurrence) {
-                        occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                            .then((occurrence) => {
-                                if (occurrence.surveyId === surveyId) {
-                                    console.log(`adding occurrence ${occurrenceKey}`);
-                                    this.addOccurrence(occurrence);
+                                        survey.extantOccurrenceKeys.add(occurrence.id);
+                                    } else {
+                                        // not part of current survey but should still add to key list for counting purposes
 
-                                    survey.extantOccurrenceKeys.add(occurrence.id);
-                                } else {
-                                    // not part of current survey but should still add to key list for counting purposes
+                                        this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
+                                    }
 
-                                    this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
-                                }
+                                }));
+                        }
 
-                            }));
-                    }
-
-                    return Promise.all(occurrenceFetchingPromises);
+                        return Promise.all(occurrenceFetchingPromises);
+                    });
                 } else {
                     // not the current survey, so just add it but don't load occurrences
                     this.addSurvey(survey);
@@ -5699,16 +5908,16 @@ class SurveyPickerController extends AppController {
      * @param {PatchedNavigo} router
      */
     registerRoute(router) {
-        router.on(
-            '/survey',
-            this.mainRouteHandler.bind(this, 'survey', '', ''),
-            {
-                // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-                // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-                // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-                // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-            }
-        );
+        // router.on(
+        //     '/survey',
+        //     this.mainRouteHandler.bind(this, 'survey', '', ''),
+        //     {
+        //         // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+        //         // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+        //         // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+        //         // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+        //     }
+        // );
 
         router.on(
             '/survey/new',
@@ -5773,7 +5982,7 @@ class SurveyPickerController extends AppController {
     beforeSaveAllHandler(done) {
         // invoke sync of any/all unsaved data
         // show pop-ups on success and failure
-        this.app.syncAll().then((result) => {
+        this.app.syncAll(false).then((result) => {
             console.log({'In save all handler, success result' : result});
 
             if (Array.isArray(result)) {
@@ -5817,18 +6026,20 @@ class SurveyPickerController extends AppController {
         console.log("reached addNewSurveyHandler");
         this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
-        // the apps occurrences should only relate to the current survey
-        // (the reset are remote or in IndexedDb)
-        this.app.clearCurrentSurvey();
-
-        this.app.setNewSurvey();
-
         // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.app.syncAll();
+        this.app.syncAll(true).finally(() => {
 
-        this.app.router.pause();
-        this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
-        this.app.router.resolve();
+            // the apps occurrences should only relate to the current survey
+            // (the reset are remote or in IndexedDb)
+            this.app.clearCurrentSurvey().then(() => {
+
+                this.app.setNewSurvey();
+
+                this.app.router.pause();
+                this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+                this.app.router.resolve();
+            });
+        });
     }
 
     /**
@@ -5836,7 +6047,8 @@ class SurveyPickerController extends AppController {
      */
     resetSurveysHandler() {
         this.app.clearLocalForage().then(() => {
-            this.app.reset();
+            return this.app.reset();
+        }).finally(() => {
             this.addNewSurveyHandler();
         });
     }
@@ -5876,7 +6088,6 @@ class SurveyPickerController extends AppController {
                 this.app.markAllNotPristine();
 
                 this.app.router.pause();
-                //this.app.router.navigate('/list').resume();
                 this.app.router.navigate(this.restoredSurveyNavigationTarget).resume();
                 this.app.router.resolve();
             }, (error) => {
@@ -6242,12 +6453,16 @@ class ImageResponse extends LocalResponse {
         this.returnedToClient.imageId = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
         this.returnedToClient.type = 'image';
         this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
-        this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
         this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
         this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
+        this.returnedToClient.context = this.toSaveLocally.context;
+
+        if (this.toSaveLocally.context !== 'survey') {
+            this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
+        }
 
         return this;
     }
@@ -6260,7 +6475,6 @@ class ImageResponse extends LocalResponse {
     populateLocalSave() {
         this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
         this.toSaveLocally.type = 'image';
-        this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
         this.toSaveLocally.imageId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
         this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
         this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
@@ -6268,6 +6482,11 @@ class ImageResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
+        this.toSaveLocally.context = this.returnedToClient.context;
+
+        if (this.returnedToClient.context !== 'survey') {
+            this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
+        }
 
         return this;
     }
@@ -6413,6 +6632,21 @@ class BSBIServiceWorker {
     URL_CACHE_SET;
 
     /**
+     * @var {string}
+     */
+    CACHE_VERSION;
+
+    /**
+     * @var {string}
+     */
+    DATA_CACHE_VERSION;
+
+    /**
+     * @var {RegExp}
+     */
+    SERVICE_WORKER_DATA_URL_MATCHES;
+
+    /**
      *
      * @param {{
      *  forageName : string,
@@ -6420,12 +6654,14 @@ class BSBIServiceWorker {
      *  postImageUrlMatch : RegExp,
      *  getImageUrlMatch : RegExp,
      *  interceptUrlMatches : RegExp,
+     *  [dataUrlMatches] : RegExp,
      *  ignoreUrlMatches : RegExp,
      *  staticUrlMatches : RegExp|null,
      *  passThroughNoCache : RegExp,
      *  indexUrl : string,
      *  urlCacheSet : Array.<string>,
-     *  version : string
+     *  version : string,
+     *  [dataVersion] : string
      * }} configuration
      */
     initialise(configuration) {
@@ -6440,7 +6676,8 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1691747182-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1693387702-${configuration.version}`;
+        this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
 
@@ -6450,6 +6687,8 @@ class BSBIServiceWorker {
         const SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
         const SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
         const SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
+
+        this.SERVICE_WORKER_DATA_URL_MATCHES = configuration.dataUrlMatches || /^NO_MATCHING$/;
 
         /**
          * Urls that should be cached, with no need for automatic refresh
@@ -6513,7 +6752,12 @@ class BSBIServiceWorker {
                             cacheNames.map((cacheName) => {
                                 // test for 'version' prefix to avoid deleting mapbox tiles
                                 if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
-                                    console.log('[ServiceWorker] Deleting old cache:', cacheName);
+                                    console.log('[ServiceWorker] Deleting old code cache:', cacheName);
+                                    return caches.delete(cacheName);
+                                }
+
+                                if (cacheName.startsWith('bsbi-data') && cacheName !== this.DATA_CACHE_VERSION) {
+                                    console.log('[ServiceWorker] Deleting old data cache:', cacheName);
                                     return caches.delete(cacheName);
                                 }
                             })
@@ -6544,18 +6788,18 @@ class BSBIServiceWorker {
 
                 //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
                 if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
-                    console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
+                    //console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-                    console.log(`Passing through nocache list post request for: ${evt.request.url}`);
+                    //console.log(`Passing through nocache list post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else {
                     //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
                     if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
-                        console.log(`Got an image post request: '${evt.request.url}'`);
+                        //console.log(`Got an image post request: '${evt.request.url}'`);
                         this.handle_image_post(evt);
                     } else {
-                        console.log(`Got post request: '${evt.request.url}'`);
+                        //console.log(`Got post request: '${evt.request.url}'`);
                         this.handle_post(evt);
                     }
                 }
@@ -6822,13 +7066,18 @@ class BSBIServiceWorker {
      * @returns {Promise<Response | Promise<Response>>}
      */
     fromCache(request, tryRemoteFallback= true, remoteTimeoutMilliseconds = 0) {
-        // @todo need to serve index.html in place of all Navigo-served pages
-        // (an issue if someone returns to a bookmarked page within the app)
+        //console.log('attempting fromCache response');
 
-        console.log('attempting fromCache response');
+        let cacheName;
 
-        return caches.open(this.CACHE_VERSION).then((cache) => {
-            console.log('cache is open');
+        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url)) {
+            cacheName = this.DATA_CACHE_VERSION;
+        } else {
+            cacheName = this.CACHE_VERSION;
+        }
+
+        return caches.open(cacheName).then((cache) => {
+            //console.log('cache is open');
 
             return cache.match(request).then((cachedResponse) => {
                 console.log(cachedResponse ?
@@ -6861,30 +7110,30 @@ class BSBIServiceWorker {
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        // tryRemoteFallback set to false to ensure rapid response to client when bad network, at the cost of no access to remotely compressed image
+        // tryRemoteFallback set to false to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
 
         evt.respondWith(this.fromCache(evt.request, true, 5000).then((response) => {
-                console.log('In handleImageFetch promise');
+                //console.log('In handleImageFetch promise');
 
                 // response may be a 404
                 if (response && response.ok) {
-                    console.log('Responding with image from cache (or remotely if no cache).');
+                    console.info('Responding with image from cache (or remotely if no cache).');
                     return response;
                 } else {
                     // not cached and no network access
                     // try to respond from local storage
 
                     const url = evt.request.url;
-                    console.log(`Attempting image match for '${url}'`);
+                    console.info(`Attempting image match for '${url}'`);
 
                     const matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
 
                     if (matches) {
                         const imageId = matches[1];
-                        console.log(`Returning image match for '${url}' from local database`);
+                        console.info(`Returning image match for '${url}' from local database`);
                         return this.imageFromLocalDatabase(imageId);
                     } else {
-                        console.log(`Failed to match image id in url '${url}'`);
+                        console.error(`Failed to match image id in url '${url}'`);
                     }
                 }
             })
@@ -6900,7 +7149,7 @@ class BSBIServiceWorker {
                         console.log(`(via catch) Returning image match for '${url}' from local database`);
                         return this.imageFromLocalDatabase(imageId);
                     } else {
-                        console.log(`(via catch) Failed to match image id in url '${url}'`);
+                        console.error(`(via catch) Failed to match image id in url '${url}'`);
                         return Promise.reject(null);
                     }
                 })
@@ -6915,7 +7164,7 @@ class BSBIServiceWorker {
     imageFromLocalDatabase(imageId) {
         const image = new OccurrenceImage();
 
-        console.log('attempting retrieval of image data from local database');
+        console.info('attempting retrieval of image data from local database');
 
         return Model.retrieveFromLocal(imageId, image).then((image) => {
             console.log(`Retrieved image '${imageId}' from indexeddb.`);
@@ -6928,7 +7177,7 @@ class BSBIServiceWorker {
                     "statusText": "OK image response from IndexedDb"
                 });
             } else {
-                console.log(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
+                console.error(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
                 return Promise.reject(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
             }
         });
@@ -6939,10 +7188,18 @@ class BSBIServiceWorker {
      * @param url
      */
     handleRecacheMessage(url) {
-        return caches.open(this.CACHE_VERSION).then((cache) => {
+        let cacheName;
+
+        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(url)) {
+            cacheName = this.DATA_CACHE_VERSION;
+        } else {
+            cacheName = this.CACHE_VERSION;
+        }
+
+        return caches.open(cacheName).then((cache) => {
             return cache.add(url);
         }).catch((error) => {
-            console.log({'Precache failed result' : error});
+            console.error({'Precache failed result' : error});
             return Promise.resolve();
         });
     }
@@ -6956,11 +7213,19 @@ class BSBIServiceWorker {
      * @returns {Promise<Response>}
      */
     update(request, timeout = 0) {
+        let cacheName;
+
+        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url)) {
+            cacheName = this.DATA_CACHE_VERSION;
+        } else {
+            cacheName = this.CACHE_VERSION;
+        }
+
         request = new Request(request, {mode: 'cors', credentials: 'omit'});
 
-        console.log(`Attempting fetch and cache update of ${request.url}`);
+        console.info(`Attempting fetch and cache update of ${request.url}`);
 
-        return caches.open(this.CACHE_VERSION).then((cache) => {
+        return caches.open(cacheName).then((cache) => {
             let signalController;
             let timeoutId;
             const fetchOptions = {cache: "no-cache"};
@@ -6981,13 +7246,13 @@ class BSBIServiceWorker {
                 }
 
                 if (response.ok) {
-                    console.log(`(re-)caching ${request.url}`);
+                    console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
                         return cache.match(request);
                     });
                 } else {
-                    console.log(`Request during cache update failed for ${request.url}`);
-                    console.log({'failed cache response': response});
+                    console.error(`Request during cache update failed for ${request.url}`);
+                    console.error({'failed cache response': response});
                     return Promise.reject('Request during cache update failed, not caching.');
                 }
             }).catch((error) => {
@@ -7057,5 +7322,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Logger, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

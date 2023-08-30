@@ -107,7 +107,7 @@ export class Survey extends Model {
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
     get squareReference() {
-        if (this.attributes?.sampleUnit?.selection?.[0]) {
+        if (this.attributes.sampleUnit?.selection?.[0]) {
             let n = parseInt(this.attributes.sampleUnit.selection[0], 10);
 
             if (n > 0) {
@@ -174,7 +174,7 @@ export class Survey extends Model {
      * @private
      */
     _infer_square_ref_from_survey_ref() {
-        if (this.attributes.georef && this.attributes.georef.gridRef && this.attributes.georef.precision <= 2000) {
+        if (this.attributes.georef?.gridRef && this.attributes.georef.precision <= 2000) {
             let newRef;
 
             if (this.attributes.georef.precision === 2000 || this.attributes.georef.precision === 1000) {
@@ -304,7 +304,7 @@ export class Survey extends Model {
             result.vc = [];
         }
 
-        const surveyGridUnit = parseInt(this.attributes?.sampleUnit?.selection[0], 10) || null;
+        const surveyGridUnit = parseInt(this.attributes.sampleUnit?.selection?.[0], 10) || null;
 
         if (surveyGridUnit) {
             result.surveyGridUnit = surveyGridUnit;
@@ -349,15 +349,17 @@ export class Survey extends Model {
      *
      * must test indexdb for this eventuality after the save has returned
      *
+     * @param {boolean} [forceSave]
+     *
      * @returns {Promise}
      */
-    save() {
-        if (!this._savedRemotely) {
+    save(forceSave = false) {
+        if (forceSave || !this.unsaved()) {
             const formData = new FormData;
 
             formData.append('type', this.TYPE);
             formData.append('surveyId', this.id);
-            formData.append('id', this.id);
+            formData.append('id', this.id); // this is incorrect duplication
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
@@ -399,7 +401,7 @@ export class Survey extends Model {
                 let summaryGridRef = this._summarySquareString(options.summarySquarePrecision);
 
                 place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
-            } else if (this.attributes.georef && this.attributes.georef.gridRef) {
+            } else if (this.attributes.georef?.gridRef) {
                 place = this._summarySquareString(options.summarySquarePrecision);
             } else {
                 place = '(unlocalized)';
@@ -481,6 +483,7 @@ export class Survey extends Model {
     duplicate(newAttributes = {}, properties = {}) {
         const newSurvey = new Survey();
 
+        // @todo need to be certain that are not cloning image attribute
         newSurvey.attributes = Object.assign(structuredClone(this.attributes), newAttributes);
         newSurvey.userId = properties.hasOwnProperty('userId') ? properties.userId : this.userId;
         newSurvey.isPristine = true;
@@ -489,6 +492,7 @@ export class Survey extends Model {
         newSurvey._savedRemotely = false;
         newSurvey.deleted = false;
         newSurvey.projectId = this.projectId;
+        newSurvey.id; // trigger id generation
 
         return newSurvey;
     }

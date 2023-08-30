@@ -31,7 +31,7 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @param {Boolean} savedFlag
+     * @param {boolean} savedFlag
      */
     set savedRemotely(savedFlag) {
         if (this._savedRemotely !== savedFlag) {
@@ -121,12 +121,17 @@ export class Model extends EventHarness {
      * @param {string} newId
      */
     set id(newId) {
-        // only allow an id to be set if not present already
 
-        if (this._id && newId !== this._id) {
-            throw new Error(`Occurrence id has already been set, when trying to set new id '${newId}'.`);
+        if (!newId.match(UUID_REGEX)) {
+            throw new Error(`Cannot set malformed object id '${newId}'.`);
+        } else {
+            // only allow an id to be set if not present already
+
+            if (this._id && newId !== this._id) {
+                throw new Error(`Object id has already been set, when trying to set new id '${newId}'.`);
+            }
+            this._id = newId;
         }
-        this._id = newId;
     }
 
     /**
@@ -239,6 +244,9 @@ export class Model extends EventHarness {
                 // try instead to write the data to local storage
 
                 console.log('Save failed, presumably service worker is missing and there is no network connection. Should write to IndexedDb here.');
+                this._savedLocally = false;
+                this.savedRemotely = false;
+
                 return Promise.reject('IndexedDb storage not yet implemented');
             }
         });
@@ -266,7 +274,16 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @param {{id : string, saveState: string, [userId]: string, attributes: Object.<string, *>, deleted: boolean|string, created: (number|string), modified: (number|string), projectId: (number|string)}} descriptor
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      [userId]: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: (number|string),
+     *      modified: (number|string),
+     *      projectId: (number|string)
+     *      }} descriptor
      */
     _parseDescriptor(descriptor) {
         this._parseAttributes(descriptor.attributes);
@@ -294,7 +311,7 @@ export class Model extends EventHarness {
         if (Array.isArray(attributes)) {
             // problematic bug, where empty attributes come back as an array rather than as an object
 
-            console.log('Attributes were spuriously represented as an array rather than as an empty object');
+            //console.log('Attributes were spuriously represented as an array rather than as an empty object');
             this.attributes = {};
         } else {
             this.attributes = attributes;

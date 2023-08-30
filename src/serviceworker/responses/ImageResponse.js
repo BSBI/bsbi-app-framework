@@ -19,12 +19,16 @@ export class ImageResponse extends LocalResponse {
         this.returnedToClient.imageId = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
         this.returnedToClient.type = 'image';
         this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
-        this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
         this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
         this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
+        this.returnedToClient.context = this.toSaveLocally.context;
+
+        if (this.toSaveLocally.context !== 'survey') {
+            this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
+        }
 
         return this;
     }
@@ -37,7 +41,6 @@ export class ImageResponse extends LocalResponse {
     populateLocalSave() {
         this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
         this.toSaveLocally.type = 'image';
-        this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
         this.toSaveLocally.imageId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
         this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
         this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
@@ -45,6 +48,11 @@ export class ImageResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
+        this.toSaveLocally.context = this.returnedToClient.context;
+
+        if (this.returnedToClient.context !== 'survey') {
+            this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
+        }
 
         return this;
     }

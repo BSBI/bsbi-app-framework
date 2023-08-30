@@ -62,7 +62,7 @@ export class Occurrence extends Model {
      * @returns {(Taxon|null)} returns null for unmatched taxa specified by name
      */
     get taxon() {
-        return this.attributes.taxon && this.attributes.taxon.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
+        return this.attributes.taxon?.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
     };
 
     // /**
@@ -119,21 +119,27 @@ export class Occurrence extends Model {
      *
      * must test indexdb for this eventuality after the save has returned
      *
-     * @param {string} surveyId
+     * @param {string} [surveyId] only set if want to override, otherwise '' (*currently ignored and should be deprecated*)
+     * @param {boolean} [forceSave]
      * @returns {Promise}
      */
-    save(surveyId) {
-        if (!this._savedRemotely) {
+    save(surveyId = '', forceSave = false) {
+        if (this.unsaved() || forceSave) {
             const formData = new FormData;
 
-            if (!surveyId && this.surveyId) {
-                surveyId = this.surveyId;
+            // @todo potentially setting surveyId here seems like a serious design fault!
+            // if (!surveyId && this.surveyId) {
+            //     surveyId = this.surveyId;
+            // }
+
+            if (!this.surveyId) {
+                throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
             }
 
             formData.append('type', this.TYPE);
-            formData.append('surveyId', surveyId);
+            formData.append('surveyId', this.surveyId);
             formData.append('occurrenceId', this.id);
-            formData.append('id', this.id);
+            formData.append('id', this.id); // this is incorrect duplication
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
@@ -205,12 +211,12 @@ export class Occurrence extends Model {
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : []}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
     }
 
     /**
      *
-     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null), [defaultSurveyGridRef]: string}|null)}
      */
     get geoReference() {
         return this.attributes.georef || {

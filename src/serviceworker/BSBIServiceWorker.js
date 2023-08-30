@@ -20,6 +20,21 @@ export class BSBIServiceWorker {
     URL_CACHE_SET;
 
     /**
+     * @var {string}
+     */
+    CACHE_VERSION;
+
+    /**
+     * @var {string}
+     */
+    DATA_CACHE_VERSION;
+
+    /**
+     * @var {RegExp}
+     */
+    SERVICE_WORKER_DATA_URL_MATCHES;
+
+    /**
      *
      * @param {{
      *  forageName : string,
@@ -27,12 +42,14 @@ export class BSBIServiceWorker {
      *  postImageUrlMatch : RegExp,
      *  getImageUrlMatch : RegExp,
      *  interceptUrlMatches : RegExp,
+     *  [dataUrlMatches] : RegExp,
      *  ignoreUrlMatches : RegExp,
      *  staticUrlMatches : RegExp|null,
      *  passThroughNoCache : RegExp,
      *  indexUrl : string,
      *  urlCacheSet : Array.<string>,
-     *  version : string
+     *  version : string,
+     *  [dataVersion] : string
      * }} configuration
      */
     initialise(configuration) {
@@ -48,6 +65,7 @@ export class BSBIServiceWorker {
         OccurrenceResponse.register();
 
         this.CACHE_VERSION = `version-BSBI_APP_VERSION-${configuration.version}`;
+        this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
 
@@ -57,6 +75,8 @@ export class BSBIServiceWorker {
         const SERVICE_WORKER_INTERCEPT_URL_MATCHES = configuration.interceptUrlMatches;
         const SERVICE_WORKER_IGNORE_URL_MATCHES = configuration.ignoreUrlMatches;
         const SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
+
+        this.SERVICE_WORKER_DATA_URL_MATCHES = configuration.dataUrlMatches || /^NO_MATCHING$/;
 
         /**
          * Urls that should be cached, with no need for automatic refresh
@@ -120,7 +140,12 @@ export class BSBIServiceWorker {
                             cacheNames.map((cacheName) => {
                                 // test for 'version' prefix to avoid deleting mapbox tiles
                                 if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
-                                    console.log('[ServiceWorker] Deleting old cache:', cacheName);
+                                    console.log('[ServiceWorker] Deleting old code cache:', cacheName);
+                                    return caches.delete(cacheName);
+                                }
+
+                                if (cacheName.startsWith('bsbi-data') && cacheName !== this.DATA_CACHE_VERSION) {
+                                    console.log('[ServiceWorker] Deleting old data cache:', cacheName);
                                     return caches.delete(cacheName);
                                 }
                             })
@@ -151,18 +176,18 @@ export class BSBIServiceWorker {
 
                 //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
                 if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
-                    console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
+                    //console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-                    console.log(`Passing through nocache list post request for: ${evt.request.url}`);
+                    //console.log(`Passing through nocache list post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else {
                     //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
                     if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
-                        console.log(`Got an image post request: '${evt.request.url}'`);
+                        //console.log(`Got an image post request: '${evt.request.url}'`);
                         this.handle_image_post(evt);
                     } else {
-                        console.log(`Got post request: '${evt.request.url}'`);
+                        //console.log(`Got post request: '${evt.request.url}'`);
                         this.handle_post(evt);
                     }
                 }
@@ -429,13 +454,18 @@ export class BSBIServiceWorker {
      * @returns {Promise<Response | Promise<Response>>}
      */
     fromCache(request, tryRemoteFallback= true, remoteTimeoutMilliseconds = 0) {
-        // @todo need to serve index.html in place of all Navigo-served pages
-        // (an issue if someone returns to a bookmarked page within the app)
+        //console.log('attempting fromCache response');
 
-        console.log('attempting fromCache response');
+        let cacheName;
 
-        return caches.open(this.CACHE_VERSION).then((cache) => {
-            console.log('cache is open');
+        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url)) {
+            cacheName = this.DATA_CACHE_VERSION
+        } else {
+            cacheName = this.CACHE_VERSION;
+        }
+
+        return caches.open(cacheName).then((cache) => {
+            //console.log('cache is open');
 
             return cache.match(request).then((cachedResponse) => {
                 console.log(cachedResponse ?
@@ -468,30 +498,30 @@ export class BSBIServiceWorker {
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        // tryRemoteFallback set to false to ensure rapid response to client when bad network, at the cost of no access to remotely compressed image
+        // tryRemoteFallback set to false to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
 
         evt.respondWith(this.fromCache(evt.request, true, 5000).then((response) => {
-                console.log('In handleImageFetch promise');
+                //console.log('In handleImageFetch promise');
 
                 // response may be a 404
                 if (response && response.ok) {
-                    console.log('Responding with image from cache (or remotely if no cache).');
+                    console.info('Responding with image from cache (or remotely if no cache).');
                     return response;
                 } else {
                     // not cached and no network access
                     // try to respond from local storage
 
                     const url = evt.request.url;
-                    console.log(`Attempting image match for '${url}'`);
+                    console.info(`Attempting image match for '${url}'`);
 
                     const matches = url.match(/imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
 
                     if (matches) {
                         const imageId = matches[1];
-                        console.log(`Returning image match for '${url}' from local database`);
+                        console.info(`Returning image match for '${url}' from local database`);
                         return this.imageFromLocalDatabase(imageId);
                     } else {
-                        console.log(`Failed to match image id in url '${url}'`);
+                        console.error(`Failed to match image id in url '${url}'`);
                     }
                 }
             })
@@ -507,7 +537,7 @@ export class BSBIServiceWorker {
                         console.log(`(via catch) Returning image match for '${url}' from local database`);
                         return this.imageFromLocalDatabase(imageId);
                     } else {
-                        console.log(`(via catch) Failed to match image id in url '${url}'`);
+                        console.error(`(via catch) Failed to match image id in url '${url}'`);
                         return Promise.reject(null);
                     }
                 })
@@ -522,7 +552,7 @@ export class BSBIServiceWorker {
     imageFromLocalDatabase(imageId) {
         const image = new OccurrenceImage();
 
-        console.log('attempting retrieval of image data from local database');
+        console.info('attempting retrieval of image data from local database');
 
         return Model.retrieveFromLocal(imageId, image).then((image) => {
             console.log(`Retrieved image '${imageId}' from indexeddb.`);
@@ -535,7 +565,7 @@ export class BSBIServiceWorker {
                     "statusText": "OK image response from IndexedDb"
                 });
             } else {
-                console.log(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
+                console.error(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
                 return Promise.reject(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
             }
         });
@@ -546,10 +576,18 @@ export class BSBIServiceWorker {
      * @param url
      */
     handleRecacheMessage(url) {
-        return caches.open(this.CACHE_VERSION).then((cache) => {
+        let cacheName;
+
+        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(url)) {
+            cacheName = this.DATA_CACHE_VERSION
+        } else {
+            cacheName = this.CACHE_VERSION;
+        }
+
+        return caches.open(cacheName).then((cache) => {
             return cache.add(url);
         }).catch((error) => {
-            console.log({'Precache failed result' : error});
+            console.error({'Precache failed result' : error});
             return Promise.resolve();
         });
     }
@@ -563,11 +601,19 @@ export class BSBIServiceWorker {
      * @returns {Promise<Response>}
      */
     update(request, timeout = 0) {
+        let cacheName;
+
+        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url)) {
+            cacheName = this.DATA_CACHE_VERSION
+        } else {
+            cacheName = this.CACHE_VERSION;
+        }
+
         request = new Request(request, {mode: 'cors', credentials: 'omit'});
 
-        console.log(`Attempting fetch and cache update of ${request.url}`);
+        console.info(`Attempting fetch and cache update of ${request.url}`);
 
-        return caches.open(this.CACHE_VERSION).then((cache) => {
+        return caches.open(cacheName).then((cache) => {
             let signalController;
             let timeoutId;
             const fetchOptions = {cache: "no-cache"};
@@ -588,13 +634,13 @@ export class BSBIServiceWorker {
                 }
 
                 if (response.ok) {
-                    console.log(`(re-)caching ${request.url}`);
+                    console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
                         return cache.match(request);
                     });
                 } else {
-                    console.log(`Request during cache update failed for ${request.url}`);
-                    console.log({'failed cache response': response});
+                    console.error(`Request during cache update failed for ${request.url}`);
+                    console.error({'failed cache response': response});
                     return Promise.reject('Request during cache update failed, not caching.');
                 }
             }).catch((error) => {

@@ -14,7 +14,7 @@ export {InternalAppError} from './utils/exceptions/InternalAppError';
 export {NotFoundError} from './utils/exceptions/NotFoundError';
 export {TaxonError} from './utils/exceptions/TaxonError';
 export {DeviceType} from './utils/DeviceType';
-
+export {Logger} from './utils/Logger';
 export {formattedImplode} from './utils/formattedImplode'
 export {escapeHTML} from "./utils/escapeHTML";
 
