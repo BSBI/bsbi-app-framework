@@ -5220,15 +5220,18 @@ class App extends EventHarness {
             throw new InternalAppError('Survey id must set prior to registering occurrence.');
         }
 
-        if (this.occurrences.size === 0) {
-            // this is the first occurrence added, set the survey creation stamp to match
-            // this avoids anomalies where a 'stale' survey created when the form was first opened but not used sits around
-            // for a protracted period
 
-            const survey = this.surveys.get(occurrence.surveyId);
-            if (!survey) {
-                throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
-            }
+        // set the survey creation stamp to match the earliest extant occurrence
+        // this avoids anomalies where a 'stale' survey created when the form was first opened but not used sits around
+        // for a protracted period
+
+        const survey = this.surveys.get(occurrence.surveyId);
+        if (!survey) {
+            throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
+        }
+
+        if (occurrence.createdStamp &&
+            (this.occurrences.size === 0 || survey.createdStamp > occurrence.createdStamp)) {
 
             survey.createdStamp = occurrence.createdStamp;
         }
@@ -5787,7 +5790,7 @@ class App extends EventHarness {
                 if (setAsCurrent) {
                     // the apps occurrences should only relate to the current survey
                     // (the reset records are remote or in IndexedDb)
-                    this.clearCurrentSurvey().then(() => {
+                    return this.clearCurrentSurvey().then(() => {
                         this.addSurvey(survey);
                         const occurrenceFetchingPromises = [];
 
@@ -6676,7 +6679,7 @@ class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1693387702-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1693392346-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
