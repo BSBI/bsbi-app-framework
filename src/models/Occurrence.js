@@ -108,16 +108,16 @@ export class Occurrence extends Model {
     }
 
     /**
-     * if not securely saved then makes a post to /saveoccurrence.php
+     * If not securely saved then makes a post to /saveoccurrence.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
-     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
+     * This should be intercepted by a service worker, which could write the object to indexeddb
+     * A successful save (local or to server) will result in a json response containing the object
+     * and also the state of persistence.
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * the object directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * Must test indexeddb for this eventuality after the save has returned.
      *
      * @param {string} [surveyId] only set if want to override, otherwise '' (*currently ignored and should be deprecated*)
      * @param {boolean} [forceSave]
@@ -155,7 +155,7 @@ export class Occurrence extends Model {
             console.log('queueing occurrence post');
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`${this.id} has already been saved.`);
+            return Promise.reject(`Occurrence ${this.id} has already been saved.`);
         }
     }
 

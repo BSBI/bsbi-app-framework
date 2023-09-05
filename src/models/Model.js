@@ -190,14 +190,14 @@ export class Model extends EventHarness {
     /**
      * if not securely saved then makes a post to /save<object>
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
+     * this may be intercepted by a service worker, which could write the image to indexeddb
      * a successful save will result in a json response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * the image directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * must test indexeddb for this eventuality after the save has returned
      *
      * @param {FormData} formData
      * @returns {Promise}
@@ -290,7 +290,6 @@ export class Model extends EventHarness {
         this._parseSavedState(descriptor.saveState);
         this.deleted = (descriptor.deleted === true) || (descriptor.deleted === 'true'); // cast stringified boolean to true boolean
         this.createdStamp = parseInt(descriptor.created, 10);
-        //this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : this.createdStamp; // avoids NaN
         this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : 0; // avoids NaN
         this.projectId = parseInt(descriptor.projectId, 10);
 

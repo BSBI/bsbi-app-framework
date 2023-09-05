@@ -57,14 +57,14 @@ export class OccurrenceImage extends Model {
     /**
      * if not securely saved then makes a post to /saveimage.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
+     * this may be intercepted by a service worker, which could write the image to indexeddb
      * a successful save will result in a json response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * the image directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * must test indexeddb for this eventuality after the save has returned
      *
      * @param {string} surveyId
      * @param {string} occurrenceId
@@ -111,7 +111,7 @@ export class OccurrenceImage extends Model {
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`${this.id} has already been saved.`);
+            return Promise.reject(`Image ${this.id} has already been saved.`);
         }
     }
 

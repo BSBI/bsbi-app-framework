@@ -8,6 +8,7 @@ import {Occurrence} from "../models/Occurrence";
 import localforage from "localforage";
 import {OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
+import {uuid} from "../models/Model";
 
 export class App extends EventHarness {
     /**
@@ -133,7 +134,7 @@ export class App extends EventHarness {
      * Fired after fully-successful sync-all
      * (or if sync-all resolved with nothing to send)
      *
-     * @todo this is misleading as in fact is fired when all saved to indexdb or to server
+     * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
      *
      * @type {string}
      */
@@ -157,6 +158,13 @@ export class App extends EventHarness {
      */
     static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
     static SESSION_KEY_NAME = 'session';
+    static DEVICE_ID_KEY_NAME = 'deviceid';
+
+    static RESERVED_KEY_NAMES = [
+        App.CURRENT_SURVEY_KEY_NAME,
+        App.SESSION_KEY_NAME,
+        App.DEVICE_ID_KEY_NAME
+    ];
 
     /**
      *
@@ -182,6 +190,41 @@ export class App extends EventHarness {
                     this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
                 });
         }
+    }
+
+    _deviceId = '';
+
+    /**
+     * @return Promise<string>
+     */
+    initialiseDeviceId() {
+        if (!this._deviceId) {
+            return localforage.getItem(App.DEVICE_ID_KEY_NAME)
+                .then((deviceId) => {
+                    if (deviceId) {
+                        this._deviceId = deviceId;
+                        return deviceId;
+                    } else {
+                        const deviceId = uuid();
+
+                        return localforage.setItem(App.DEVICE_ID_KEY_NAME, deviceId)
+                            .then(() => {
+                                this._deviceId = deviceId;
+                                return deviceId;
+                            })
+                    }
+                });
+        } else {
+            return Promise.resolve(this._deviceId);
+        }
+    }
+
+    deviceId() {
+        if (!this._deviceId) {
+            throw new Error("Device ID has not been initialised.");
+        }
+
+        return this._deviceId;
     }
 
     /**
@@ -601,7 +644,8 @@ export class App extends EventHarness {
             //console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
-                if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
+                //if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
+                if (!App.RESERVED_KEY_NAMES.includes(key)) {
                     let type, id;
 
                     [type, id] = key.split('.', 2);
@@ -611,7 +655,10 @@ export class App extends EventHarness {
                             storedObjectKeys[type].push(id);
                         }
                     } else {
-                        console.error(`Unrecognised stored key type '${type}.`);
+                        // 'track' records not wanted here, but not an error
+                        if (type !== 'track') {
+                            console.error(`Unrecognised stored key type '${type}.`);
+                        }
                     }
                 }
             }
@@ -708,6 +755,7 @@ export class App extends EventHarness {
     /**
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>}} storedObjectKeys
+     * @param {boolean} fastReturn default false
      * @returns {Promise}
      * @private
      */
@@ -724,7 +772,7 @@ export class App extends EventHarness {
         for(let surveyKey of storedObjectKeys.survey) {
             promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
                 .then((/** Survey */ survey) => {
-                    if (survey.unsaved() || this.session?.userId === '2cd4p9h.31ecsw') {
+                    if (survey.unsaved()) { //} || this.session?.userId === '2cd4p9h.31ecsw') {
                         return survey.save(true);
                     }
                 })
@@ -734,7 +782,7 @@ export class App extends EventHarness {
         for(let occurrenceKey of storedObjectKeys.occurrence) {
             promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
                 .then((/** Occurrence */ occurrence) => {
-                    if (occurrence.unsaved() || this.session?.userId === '2cd4p9h.31ecsw') {
+                    if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
                         return occurrence.save('', true);
                     }
                 })
@@ -815,7 +863,7 @@ export class App extends EventHarness {
 
             if (localSurvey.isPristine) {
                 // clear occurrences from the previous survey
-                this.clearCurrentSurvey().then(() => {
+                return this.clearCurrentSurvey().then(() => {
                     this.currentSurvey = localSurvey;
                     this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                     return Promise.resolve();

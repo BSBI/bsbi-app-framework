@@ -8,7 +8,8 @@ export {Occurrence} from './models/Occurrence';
 export {OccurrenceImage} from './models/OccurrenceImage';
 export {Survey} from './models/Survey';
 export {Taxon} from './models/Taxon';
-export {Party} from './models/Party'
+export {Party} from './models/Party';
+export {Track} from './models/Track';
 export {BSBIServiceWorker} from './serviceworker/BSBIServiceWorker';
 export {InternalAppError} from './utils/exceptions/InternalAppError';
 export {NotFoundError} from './utils/exceptions/NotFoundError';

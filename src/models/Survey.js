@@ -51,7 +51,23 @@ export class Survey extends Model {
 
     /**
      *
-     * @type {Object.<string, *>}
+     * @type {{
+     *     [sampleUnit] : {selection : Array<string>, [precision] : number}
+     *     [georef] : {
+     *          rawString: string,
+     *          precision: number|null,
+     *          source: string|null,
+     *          gridRef: string,
+     *          latLng: {lat : number, lng : number}|null,
+     *          [defaultSurveyGridRef]: string|null,
+     *          [defaultSurveyPrecision]: number|null
+     *          },
+ *         [date] : string|null,
+     *     [place] : string|null,
+     *     [surveyName] : string|null,
+     *     [casual] : "1"|null
+     *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null
+     * }}
      */
     attributes = {
 
@@ -95,10 +111,10 @@ export class Survey extends Model {
      *
      * @type {string}
      */
-    currentHectadSubunit = '';
+    currentTetradSubunit = '';
 
     /**
-     * Get a (current) grid-square from the survey geo-reference
+     * Get a summarised geo-ref from the survey geo-reference, based on the survey unit type and precision
      * If the user has explicitly specified a centroid-based survey then the result will instead be a centroid
      *
      * For structured tetrad surveys squareReference will return the currently selected monad within the tetrad (or tetrad if 2km scale selected)
@@ -106,22 +122,22 @@ export class Survey extends Model {
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
-    get squareReference() {
+    get summaryReference() {
         if (this.attributes.sampleUnit?.selection?.[0]) {
             let n = parseInt(this.attributes.sampleUnit.selection[0], 10);
 
             if (n > 0) {
                 // have user-specified square precision value
 
-                if (n === 2000 && this.currentHectadSubunit) {
+                if (n === 2000 && this.currentTetradSubunit) {
                     // special-case treatment of tetrad surveys using a monad subdivision
 
                     return {
-                        gridRef: this.currentHectadSubunit,
-                        rawString: this.currentHectadSubunit,
+                        gridRef: this.currentTetradSubunit,
+                        rawString: this.currentTetradSubunit,
                         source: 'unknown',
                         latLng: null,
-                        precision: /[A-Z]$/.test(this.currentHectadSubunit) ? 2000 : 1000
+                        precision: /[A-Z]$/.test(this.currentTetradSubunit) ? 2000 : 1000
                     }
                 }
 
@@ -132,7 +148,9 @@ export class Survey extends Model {
                     const newRef = gridRef.gridCoords.to_gridref(n);
 
                     if (n === 2000) {
-                        this.currentHectadSubunit = newRef;
+                        this.currentTetradSubunit = newRef;
+                    } else {
+                        this.currentTetradSubunit = '';
                     }
 
                     return {
@@ -154,7 +172,15 @@ export class Survey extends Model {
             } else {
                 switch (this.attributes.sampleUnit.selection[0]) {
                     case 'centroid':
-                        return this.geoReference;
+                        const georef = this.geoReference; // avoid calling getter repeatedly
+
+                        return {
+                            gridRef: georef.gridRef,
+                            rawString: '',
+                            source: 'unknown',
+                            latLng: georef.latLng,
+                            precision: this.attributes.sampleUnit.precision || 1000
+                        };
 
                     case 'other':
                         return this._infer_square_ref_from_survey_ref();
@@ -259,6 +285,10 @@ export class Survey extends Model {
 
             this.touch();
             this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
+        })
+        .catch((error) => {
+            // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want survey to save
+            console.log({"In survey form handler promise rejected (probably normal cancellation of dialogue box)" : error});
         });
     }
 
@@ -340,21 +370,21 @@ export class Survey extends Model {
     /**
      * if not securely saved then makes a post to /savesurvey.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
+     * this may be intercepted by a service worker, which could write the image to indexeddb
      * a successful save will result in a json response containing the uri from which the object may be retrieved
      * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the object directly to indexdb
+     * the object directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * must test indexeddb for this eventuality after the save has returned
      *
      * @param {boolean} [forceSave]
      *
      * @returns {Promise}
      */
     save(forceSave = false) {
-        if (forceSave || !this.unsaved()) {
+        if (forceSave || this.unsaved()) {
             const formData = new FormData;
 
             formData.append('type', this.TYPE);
@@ -374,7 +404,7 @@ export class Survey extends Model {
             console.log('queueing survey post');
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`${this.id} has already been saved.`);
+            return Promise.reject(`Survey ${this.id} has already been saved.`);
         }
     }
 

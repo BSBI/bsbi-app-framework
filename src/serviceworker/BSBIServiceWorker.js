@@ -11,6 +11,7 @@ import {SurveyResponse} from "./responses/SurveyResponse";
 import {OccurrenceResponse} from "./responses/OccurrenceResponse";
 import {OccurrenceImage} from "../models/OccurrenceImage";
 import {Model} from "../models/Model";
+import {TrackResponse} from "./responses/TrackResponse";
 
 export class BSBIServiceWorker {
 
@@ -63,6 +64,7 @@ export class BSBIServiceWorker {
         ImageResponse.register();
         SurveyResponse.register();
         OccurrenceResponse.register();
+        TrackResponse.register();
 
         this.CACHE_VERSION = `version-BSBI_APP_VERSION-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;

@@ -3278,14 +3278,14 @@ class Model extends EventHarness {
     /**
      * if not securely saved then makes a post to /save<object>
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
+     * this may be intercepted by a service worker, which could write the image to indexeddb
      * a successful save will result in a json response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * the image directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * must test indexeddb for this eventuality after the save has returned
      *
      * @param {FormData} formData
      * @returns {Promise}
@@ -3378,7 +3378,6 @@ class Model extends EventHarness {
         this._parseSavedState(descriptor.saveState);
         this.deleted = (descriptor.deleted === true) || (descriptor.deleted === 'true'); // cast stringified boolean to true boolean
         this.createdStamp = parseInt(descriptor.created, 10);
-        //this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : this.createdStamp; // avoids NaN
         this.modifiedStamp = descriptor.modified ? parseInt(descriptor.modified, 10) : 0; // avoids NaN
         this.projectId = parseInt(descriptor.projectId, 10);
 
@@ -3536,7 +3535,23 @@ class Survey extends Model {
 
     /**
      *
-     * @type {Object.<string, *>}
+     * @type {{
+     *     [sampleUnit] : {selection : Array<string>, [precision] : number}
+     *     [georef] : {
+     *          rawString: string,
+     *          precision: number|null,
+     *          source: string|null,
+     *          gridRef: string,
+     *          latLng: {lat : number, lng : number}|null,
+     *          [defaultSurveyGridRef]: string|null,
+     *          [defaultSurveyPrecision]: number|null
+     *          },
+ *         [date] : string|null,
+     *     [place] : string|null,
+     *     [surveyName] : string|null,
+     *     [casual] : "1"|null
+     *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null
+     * }}
      */
     attributes = {
 
@@ -3580,10 +3595,10 @@ class Survey extends Model {
      *
      * @type {string}
      */
-    currentHectadSubunit = '';
+    currentTetradSubunit = '';
 
     /**
-     * Get a (current) grid-square from the survey geo-reference
+     * Get a summarised geo-ref from the survey geo-reference, based on the survey unit type and precision
      * If the user has explicitly specified a centroid-based survey then the result will instead be a centroid
      *
      * For structured tetrad surveys squareReference will return the currently selected monad within the tetrad (or tetrad if 2km scale selected)
@@ -3591,22 +3606,22 @@ class Survey extends Model {
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
-    get squareReference() {
+    get summaryReference() {
         if (this.attributes.sampleUnit?.selection?.[0]) {
             let n = parseInt(this.attributes.sampleUnit.selection[0], 10);
 
             if (n > 0) {
                 // have user-specified square precision value
 
-                if (n === 2000 && this.currentHectadSubunit) {
+                if (n === 2000 && this.currentTetradSubunit) {
                     // special-case treatment of tetrad surveys using a monad subdivision
 
                     return {
-                        gridRef: this.currentHectadSubunit,
-                        rawString: this.currentHectadSubunit,
+                        gridRef: this.currentTetradSubunit,
+                        rawString: this.currentTetradSubunit,
                         source: 'unknown',
                         latLng: null,
-                        precision: /[A-Z]$/.test(this.currentHectadSubunit) ? 2000 : 1000
+                        precision: /[A-Z]$/.test(this.currentTetradSubunit) ? 2000 : 1000
                     }
                 }
 
@@ -3617,7 +3632,9 @@ class Survey extends Model {
                     const newRef = gridRef.gridCoords.to_gridref(n);
 
                     if (n === 2000) {
-                        this.currentHectadSubunit = newRef;
+                        this.currentTetradSubunit = newRef;
+                    } else {
+                        this.currentTetradSubunit = '';
                     }
 
                     return {
@@ -3639,7 +3656,15 @@ class Survey extends Model {
             } else {
                 switch (this.attributes.sampleUnit.selection[0]) {
                     case 'centroid':
-                        return this.geoReference;
+                        const georef = this.geoReference; // avoid calling getter repeatedly
+
+                        return {
+                            gridRef: georef.gridRef,
+                            rawString: '',
+                            source: 'unknown',
+                            latLng: georef.latLng,
+                            precision: this.attributes.sampleUnit.precision || 1000
+                        };
 
                     case 'other':
                         return this._infer_square_ref_from_survey_ref();
@@ -3744,6 +3769,10 @@ class Survey extends Model {
 
             this.touch();
             this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
+        })
+        .catch((error) => {
+            // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want survey to save
+            console.log({"In survey form handler promise rejected (probably normal cancellation of dialogue box)" : error});
         });
     }
 
@@ -3825,21 +3854,21 @@ class Survey extends Model {
     /**
      * if not securely saved then makes a post to /savesurvey.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
+     * this may be intercepted by a service worker, which could write the image to indexeddb
      * a successful save will result in a json response containing the uri from which the object may be retrieved
      * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the object directly to indexdb
+     * the object directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * must test indexeddb for this eventuality after the save has returned
      *
      * @param {boolean} [forceSave]
      *
      * @returns {Promise}
      */
     save(forceSave = false) {
-        if (forceSave || !this.unsaved()) {
+        if (forceSave || this.unsaved()) {
             const formData = new FormData;
 
             formData.append('type', this.TYPE);
@@ -3859,7 +3888,7 @@ class Survey extends Model {
             console.log('queueing survey post');
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`${this.id} has already been saved.`);
+            return Promise.reject(`Survey ${this.id} has already been saved.`);
         }
     }
 
@@ -4378,16 +4407,16 @@ class Occurrence extends Model {
     }
 
     /**
-     * if not securely saved then makes a post to /saveoccurrence.php
+     * If not securely saved then makes a post to /saveoccurrence.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
-     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
+     * This should be intercepted by a service worker, which could write the object to indexeddb
+     * A successful save (local or to server) will result in a json response containing the object
+     * and also the state of persistence.
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * the object directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * Must test indexeddb for this eventuality after the save has returned.
      *
      * @param {string} [surveyId] only set if want to override, otherwise '' (*currently ignored and should be deprecated*)
      * @param {boolean} [forceSave]
@@ -4425,7 +4454,7 @@ class Occurrence extends Model {
             console.log('queueing occurrence post');
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`${this.id} has already been saved.`);
+            return Promise.reject(`Occurrence ${this.id} has already been saved.`);
         }
     }
 
@@ -4556,14 +4585,14 @@ class OccurrenceImage extends Model {
     /**
      * if not securely saved then makes a post to /saveimage.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexdb
+     * this may be intercepted by a service worker, which could write the image to indexeddb
      * a successful save will result in a json response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexdb
+     * the image directly to indexeddb
      *
-     * must test indexdb for this eventuality after the save has returned
+     * must test indexeddb for this eventuality after the save has returned
      *
      * @param {string} surveyId
      * @param {string} occurrenceId
@@ -4610,7 +4639,7 @@ class OccurrenceImage extends Model {
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`${this.id} has already been saved.`);
+            return Promise.reject(`Image ${this.id} has already been saved.`);
         }
     }
 
@@ -4907,7 +4936,7 @@ class App extends EventHarness {
      * Fired after fully-successful sync-all
      * (or if sync-all resolved with nothing to send)
      *
-     * @todo this is misleading as in fact is fired when all saved to indexdb or to server
+     * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
      *
      * @type {string}
      */
@@ -4931,6 +4960,13 @@ class App extends EventHarness {
      */
     static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
     static SESSION_KEY_NAME = 'session';
+    static DEVICE_ID_KEY_NAME = 'deviceid';
+
+    static RESERVED_KEY_NAMES = [
+        App.CURRENT_SURVEY_KEY_NAME,
+        App.SESSION_KEY_NAME,
+        App.DEVICE_ID_KEY_NAME
+    ];
 
     /**
      *
@@ -4956,6 +4992,41 @@ class App extends EventHarness {
                     this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
                 });
         }
+    }
+
+    _deviceId = '';
+
+    /**
+     * @return Promise<string>
+     */
+    initialiseDeviceId() {
+        if (!this._deviceId) {
+            return localforage.getItem(App.DEVICE_ID_KEY_NAME)
+                .then((deviceId) => {
+                    if (deviceId) {
+                        this._deviceId = deviceId;
+                        return deviceId;
+                    } else {
+                        const deviceId = uuid();
+
+                        return localforage.setItem(App.DEVICE_ID_KEY_NAME, deviceId)
+                            .then(() => {
+                                this._deviceId = deviceId;
+                                return deviceId;
+                            })
+                    }
+                });
+        } else {
+            return Promise.resolve(this._deviceId);
+        }
+    }
+
+    deviceId() {
+        if (!this._deviceId) {
+            throw new Error("Device ID has not been initialised.");
+        }
+
+        return this._deviceId;
     }
 
     /**
@@ -5371,7 +5442,8 @@ class App extends EventHarness {
             //console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
-                if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
+                //if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
+                if (!App.RESERVED_KEY_NAMES.includes(key)) {
                     let type, id;
 
                     [type, id] = key.split('.', 2);
@@ -5381,7 +5453,10 @@ class App extends EventHarness {
                             storedObjectKeys[type].push(id);
                         }
                     } else {
-                        console.error(`Unrecognised stored key type '${type}.`);
+                        // 'track' records not wanted here, but not an error
+                        if (type !== 'track') {
+                            console.error(`Unrecognised stored key type '${type}.`);
+                        }
                     }
                 }
             }
@@ -5478,6 +5553,7 @@ class App extends EventHarness {
     /**
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>}} storedObjectKeys
+     * @param {boolean} fastReturn default false
      * @returns {Promise}
      * @private
      */
@@ -5494,7 +5570,7 @@ class App extends EventHarness {
         for(let surveyKey of storedObjectKeys.survey) {
             promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
                 .then((/** Survey */ survey) => {
-                    if (survey.unsaved() || this.session?.userId === '2cd4p9h.31ecsw') {
+                    if (survey.unsaved()) { //} || this.session?.userId === '2cd4p9h.31ecsw') {
                         return survey.save(true);
                     }
                 })
@@ -5504,7 +5580,7 @@ class App extends EventHarness {
         for(let occurrenceKey of storedObjectKeys.occurrence) {
             promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
                 .then((/** Occurrence */ occurrence) => {
-                    if (occurrence.unsaved() || this.session?.userId === '2cd4p9h.31ecsw') {
+                    if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
                         return occurrence.save('', true);
                     }
                 })
@@ -5585,7 +5661,7 @@ class App extends EventHarness {
 
             if (localSurvey.isPristine) {
                 // clear occurrences from the previous survey
-                this.clearCurrentSurvey().then(() => {
+                return this.clearCurrentSurvey().then(() => {
                     this.currentSurvey = localSurvey;
                     this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                     return Promise.resolve();
@@ -6304,6 +6380,162 @@ class Party {
     }
 }
 
+//import {Survey} from "./Survey";
+
+class Track extends Model {
+
+    /**
+     * @typedef PointTriplet
+     * @type {array}
+     * @property {number} 0 lng
+     * @property {number} 1 lat
+     * @property {number} 2 stamp (seconds since epoch)
+     */
+
+    /**
+     * @typedef PointSeries
+     * @type {array}
+     * @property {Array<PointTriplet>} 0 points
+     * @property {string} 1 end reason code
+     */
+
+    /**
+     *
+     * @type {Object}
+     */
+    attributes = {};
+
+    /**
+     *
+     * @type {Array<PointSeries>}
+     */
+    points = []
+
+    /**
+     * next index to write to in points
+     * Following a successful save to the server, the earlier values will be cleared locally, but pointIndex will continue
+     *
+     * @type {number}
+     */
+    pointIndex = 0;
+
+    /**
+     *
+     * @type {string}
+     */
+    userId = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    surveyId = '';
+
+    /**
+     * route tracking should be maintained separately on each device
+     * (e.g. if multiple people linked to a single live survey)
+     *
+     * @type {string}
+     */
+    deviceId = '';
+
+    // /**
+    //  * set if the image has been posted to the server
+    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedRemotely = false;
+
+    // /**
+    //  * set if the image has been added to a temporary store (e.g. indexedDb)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedLocally = false;
+
+    SAVE_ENDPOINT = '/savetrack.php';
+
+    TYPE = 'track';
+
+    /**
+     * if not securely saved then makes a post to /savetrack.php
+     *
+     * This should be intercepted by a service worker, which could write the object to indexeddb
+     * A successful save (local or to server) will result in a json response containing the object
+     * and also the state of persistence. After a save to the server the points list may be cleared,
+     * but pointIndex will be maintained so that tracking can resume.
+     *
+     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * the object directly to indexeddb
+     *
+     * Must test indexeddb for this eventuality after the save has returned.
+     *
+     * @param {boolean} [forceSave]
+     * @returns {Promise}
+     */
+    save(forceSave = false) {
+        if (this.unsaved() || forceSave) {
+            const formData = new FormData;
+
+            if (!this.surveyId) {
+                throw new Error(`Survey id must be set before saving an occurrence.`);
+            }
+
+            if (!this.deviceId) {
+                throw new Error(`Device id must be set before saving an occurrence.`);
+            }
+
+            formData.append('type', this.TYPE);
+            formData.append('surveyId', this.surveyId);
+            formData.append('deviceId', this.deviceId);
+            formData.append('id', `${this.surveyId}.${this.deviceId}`);
+            formData.append('projectId', this.projectId.toString());
+            formData.append('pointIndex', this.pointIndex.toString());
+            formData.append('points', JSON.stringify(this.points));
+            formData.append('attributes', JSON.stringify(this.attributes));
+            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('modified', this.modifiedStamp?.toString() || '');
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
+
+            formData.append('appVersion', Model.bsbiAppVersion);
+
+            console.log('queueing Track post');
+            return this.queuePost(formData);
+        } else {
+            return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
+        }
+    }
+
+    /**
+     *
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: number,
+     *      modified: number,
+     *      projectId: number,
+     *      surveyId: string,
+     *      deviceId: string,
+     *      pointIndex: string,
+     *      points: string,
+     *      }} descriptor
+     * @param {string} descriptor.points JSON-serialized Array<PointSeries>
+     */
+    _parseDescriptor(descriptor) {
+        super._parseDescriptor(descriptor);
+        this.surveyId = descriptor.surveyId;
+        this.deviceId = descriptor.deviceId;
+        this.pointIndex = parseInt(descriptor.pointIndex, 10);
+        this.points = JSON.parse(descriptor.points);
+    }
+}
+
 class ResponseFactory {
     static responses = {};
 
@@ -6520,8 +6752,8 @@ class SurveyResponse extends LocalResponse {
      * @returns {this}
      */
     populateClientResponse() {
-        this.toSaveLocally.surveyId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId; // hedging
-        this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId; // hedging
+        this.returnedToClient.surveyId = this.toSaveLocally.id ? this.toSaveLocally.id : this.toSaveLocally.surveyId; // hedging
+        this.returnedToClient.id = this.toSaveLocally.id ? this.toSaveLocally.id : this.toSaveLocally.surveyId; // hedging
         this.returnedToClient.type = 'survey';
         this.returnedToClient.attributes = this.toSaveLocally.attributes;
         this.returnedToClient.created = this.toSaveLocally.created; // stamps from server always take precedence
@@ -6625,6 +6857,68 @@ class OccurrenceResponse extends LocalResponse {
     }
 }
 
+class TrackResponse extends LocalResponse {
+    failureErrorMessage = 'Failed to store tracking data.';
+    failureErrorHelp = 'Your internet connection may have failed (or there could be a problem with the server). ' +
+        'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
+        'Please try to re-establish a network connection and try again.';
+
+    /**
+     * called to build the response to the post that is returned to the client
+     * in the absence of the remote server
+     *
+     * @returns {this}
+     */
+    populateClientResponse() {
+        this.returnedToClient.surveyId = this.toSaveLocally.surveyId;
+        this.returnedToClient.deviceId = this.toSaveLocally.deviceId;
+        this.returnedToClient.type = 'track';
+        this.returnedToClient.attributes = this.toSaveLocally.attributes;
+        this.returnedToClient.created = this.toSaveLocally.created; // stamps from server always take precedence
+        this.returnedToClient.modified = this.toSaveLocally.modified;
+        this.returnedToClient.saveState = SAVE_STATE_LOCAL;
+        this.returnedToClient.deleted = this.toSaveLocally.deleted || '';
+        this.returnedToClient.projectId = this.toSaveLocally.projectId;
+        this.returnedToClient.userId = this.toSaveLocally.userId || '';
+        this.returnedToClient.pointIndex = this.toSaveLocally.pointIndex;
+        this.returnedToClient.points = this.toSaveLocally.points;
+        return this;
+    }
+
+    /**
+     * called to mirror a response from the server locally
+     *
+     * @returns {this}
+     */
+    populateLocalSave() {
+        this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
+        this.toSaveLocally.deviceId = this.returnedToClient.deviceId;
+        this.toSaveLocally.type = 'track';
+        this.toSaveLocally.attributes = this.returnedToClient.attributes;
+        this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
+        this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
+        this.toSaveLocally.saveState = SAVE_STATE_SERVER;
+        this.toSaveLocally.deleted = this.returnedToClient.deleted;
+        this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
+        this.toSaveLocally.userId = this.returnedToClient.userId || '';
+        this.toSaveLocally.pointIndex = parseInt(this.returnedToClient.pointIndex, 10);
+        this.toSaveLocally.points = this.returnedToClient.points; // may eventually want to truncate this to save local space
+        return this;
+    }
+
+    /**
+     *
+     * @returns {string}
+     */
+    localKey() {
+        return `track.${this.toSaveLocally.surveyId}.${this.toSaveLocally.deviceId}`;
+    }
+
+    static register() {
+        ResponseFactory.responses.survey = TrackResponse;
+    }
+}
+
 // service worker for BSBI app
 
 class BSBIServiceWorker {
@@ -6678,8 +6972,9 @@ class BSBIServiceWorker {
         ImageResponse.register();
         SurveyResponse.register();
         OccurrenceResponse.register();
+        TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1693392346-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1693920619-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -7325,5 +7620,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Logger, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Logger, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map
