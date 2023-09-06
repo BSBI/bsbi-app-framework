@@ -153,4 +153,15 @@ export class Track extends Model {
         this.pointIndex = parseInt(descriptor.pointIndex, 10);
         this.points = JSON.parse(descriptor.points);
     }
+
+    /**
+     * @todo implement Track.registerSurvey()
+     *
+     * @param {Survey} survey
+     * @param {App} app
+     *
+     */
+    registerSurvey(survey, app) {
+
+    }
 }

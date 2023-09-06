@@ -120,6 +120,7 @@ class AppController {
 
 // StaticContentController
 
+
 class StaticContentController extends AppController {
     /**
      * @type {string}
@@ -3491,7 +3492,180 @@ function escapeHTML(text) {
     }
 }
 
+//import {Survey} from "./Survey";
+
+class Track extends Model {
+
+    /**
+     * @typedef PointTriplet
+     * @type {array}
+     * @property {number} 0 lng
+     * @property {number} 1 lat
+     * @property {number} 2 stamp (seconds since epoch)
+     */
+
+    /**
+     * @typedef PointSeries
+     * @type {array}
+     * @property {Array<PointTriplet>} 0 points
+     * @property {string} 1 end reason code
+     */
+
+    /**
+     *
+     * @type {Object}
+     */
+    attributes = {};
+
+    /**
+     *
+     * @type {Array<PointSeries>}
+     */
+    points = []
+
+    /**
+     * next index to write to in points
+     * Following a successful save to the server, the earlier values will be cleared locally, but pointIndex will continue
+     *
+     * @type {number}
+     */
+    pointIndex = 0;
+
+    /**
+     *
+     * @type {string}
+     */
+    userId = '';
+
+    /**
+     *
+     * @type {string}
+     */
+    surveyId = '';
+
+    /**
+     * route tracking should be maintained separately on each device
+     * (e.g. if multiple people linked to a single live survey)
+     *
+     * @type {string}
+     */
+    deviceId = '';
+
+    // /**
+    //  * set if the image has been posted to the server
+    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedRemotely = false;
+
+    // /**
+    //  * set if the image has been added to a temporary store (e.g. indexedDb)
+    //  *
+    //  * @type {boolean}
+    //  */
+    // _savedLocally = false;
+
+    SAVE_ENDPOINT = '/savetrack.php';
+
+    TYPE = 'track';
+
+    /**
+     * if not securely saved then makes a post to /savetrack.php
+     *
+     * This should be intercepted by a service worker, which could write the object to indexeddb
+     * A successful save (local or to server) will result in a json response containing the object
+     * and also the state of persistence. After a save to the server the points list may be cleared,
+     * but pointIndex will be maintained so that tracking can resume.
+     *
+     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * the object directly to indexeddb
+     *
+     * Must test indexeddb for this eventuality after the save has returned.
+     *
+     * @param {boolean} [forceSave]
+     * @returns {Promise}
+     */
+    save(forceSave = false) {
+        if (this.unsaved() || forceSave) {
+            const formData = new FormData;
+
+            if (!this.surveyId) {
+                throw new Error(`Survey id must be set before saving an occurrence.`);
+            }
+
+            if (!this.deviceId) {
+                throw new Error(`Device id must be set before saving an occurrence.`);
+            }
+
+            formData.append('type', this.TYPE);
+            formData.append('surveyId', this.surveyId);
+            formData.append('deviceId', this.deviceId);
+            formData.append('id', `${this.surveyId}.${this.deviceId}`);
+            formData.append('projectId', this.projectId.toString());
+            formData.append('pointIndex', this.pointIndex.toString());
+            formData.append('points', JSON.stringify(this.points));
+            formData.append('attributes', JSON.stringify(this.attributes));
+            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('modified', this.modifiedStamp?.toString() || '');
+
+            if (this.userId) {
+                formData.append('userId', this.userId);
+            }
+
+            formData.append('appVersion', Model.bsbiAppVersion);
+
+            console.log('queueing Track post');
+            return this.queuePost(formData);
+        } else {
+            return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
+        }
+    }
+
+    /**
+     *
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: number,
+     *      modified: number,
+     *      projectId: number,
+     *      surveyId: string,
+     *      deviceId: string,
+     *      pointIndex: string,
+     *      points: string,
+     *      }} descriptor
+     * @param {string} descriptor.points JSON-serialized Array<PointSeries>
+     */
+    _parseDescriptor(descriptor) {
+        super._parseDescriptor(descriptor);
+        this.surveyId = descriptor.surveyId;
+        this.deviceId = descriptor.deviceId;
+        this.pointIndex = parseInt(descriptor.pointIndex, 10);
+        this.points = JSON.parse(descriptor.points);
+    }
+
+    /**
+     * @todo implement Track.registerSurvey()
+     *
+     * @param {Survey} survey
+     * @param {App} app
+     *
+     */
+    registerSurvey(survey, app) {
+
+    }
+}
+
 // a Survey captures the currentSurvey meta-data
+// i.e. it captures site details (name, location); user details (name, email)
+//
+// if a user were to submit multiple surveys then they would end up in the contact database multiple times
+// this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
+// shared, keyed by email.
+
 
 class Survey extends Model {
 
@@ -3575,6 +3749,13 @@ class Survey extends Model {
      * @type {string}
      */
     userId = '';
+
+    /**
+     *
+     * @type {Track|null}
+     * @private
+     */
+    _track = null;
 
     /**
      *
@@ -4009,6 +4190,35 @@ class Survey extends Model {
         newSurvey.id; // trigger id generation
 
         return newSurvey;
+    }
+
+    /**
+     *
+     * @param {App} app
+     */
+    initialiseNewTracker(app) {
+        const track = new Track();
+        track.surveyId = this.id;
+        track.deviceId = app.deviceId;
+
+        this.track = track;
+        track.registerSurvey(this, app);
+    }
+
+    /**
+     *
+     * @returns {Track|null}
+     */
+    get track() {
+        return this._track;
+    }
+
+    /**
+     *
+     * @param {Track|null} track
+     */
+    set track(track) {
+        this._track = track;
     }
 }
 
@@ -4811,6 +5021,8 @@ class Logger {
 }
 
 // App.js
+// base class for single page application
+// allows binding of controllers and routes
 
 class App extends EventHarness {
     /**
@@ -5786,6 +5998,11 @@ class App extends EventHarness {
         this.fireEvent(App.EVENT_NEW_SURVEY);
     }
 
+    /**
+     * Add and set a *new* survey
+     *
+     * @param survey
+     */
     addAndSetSurvey(survey) {
         this.currentSurvey = survey;
         this.addSurvey(survey);
@@ -5945,6 +6162,8 @@ class App extends EventHarness {
 }
 
 // SurveyPickerController
+//
+
 
 class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
@@ -6380,162 +6599,6 @@ class Party {
     }
 }
 
-//import {Survey} from "./Survey";
-
-class Track extends Model {
-
-    /**
-     * @typedef PointTriplet
-     * @type {array}
-     * @property {number} 0 lng
-     * @property {number} 1 lat
-     * @property {number} 2 stamp (seconds since epoch)
-     */
-
-    /**
-     * @typedef PointSeries
-     * @type {array}
-     * @property {Array<PointTriplet>} 0 points
-     * @property {string} 1 end reason code
-     */
-
-    /**
-     *
-     * @type {Object}
-     */
-    attributes = {};
-
-    /**
-     *
-     * @type {Array<PointSeries>}
-     */
-    points = []
-
-    /**
-     * next index to write to in points
-     * Following a successful save to the server, the earlier values will be cleared locally, but pointIndex will continue
-     *
-     * @type {number}
-     */
-    pointIndex = 0;
-
-    /**
-     *
-     * @type {string}
-     */
-    userId = '';
-
-    /**
-     *
-     * @type {string}
-     */
-    surveyId = '';
-
-    /**
-     * route tracking should be maintained separately on each device
-     * (e.g. if multiple people linked to a single live survey)
-     *
-     * @type {string}
-     */
-    deviceId = '';
-
-    // /**
-    //  * set if the image has been posted to the server
-    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
-    //  *
-    //  * @type {boolean}
-    //  */
-    // _savedRemotely = false;
-
-    // /**
-    //  * set if the image has been added to a temporary store (e.g. indexedDb)
-    //  *
-    //  * @type {boolean}
-    //  */
-    // _savedLocally = false;
-
-    SAVE_ENDPOINT = '/savetrack.php';
-
-    TYPE = 'track';
-
-    /**
-     * if not securely saved then makes a post to /savetrack.php
-     *
-     * This should be intercepted by a service worker, which could write the object to indexeddb
-     * A successful save (local or to server) will result in a json response containing the object
-     * and also the state of persistence. After a save to the server the points list may be cleared,
-     * but pointIndex will be maintained so that tracking can resume.
-     *
-     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
-     * the object directly to indexeddb
-     *
-     * Must test indexeddb for this eventuality after the save has returned.
-     *
-     * @param {boolean} [forceSave]
-     * @returns {Promise}
-     */
-    save(forceSave = false) {
-        if (this.unsaved() || forceSave) {
-            const formData = new FormData;
-
-            if (!this.surveyId) {
-                throw new Error(`Survey id must be set before saving an occurrence.`);
-            }
-
-            if (!this.deviceId) {
-                throw new Error(`Device id must be set before saving an occurrence.`);
-            }
-
-            formData.append('type', this.TYPE);
-            formData.append('surveyId', this.surveyId);
-            formData.append('deviceId', this.deviceId);
-            formData.append('id', `${this.surveyId}.${this.deviceId}`);
-            formData.append('projectId', this.projectId.toString());
-            formData.append('pointIndex', this.pointIndex.toString());
-            formData.append('points', JSON.stringify(this.points));
-            formData.append('attributes', JSON.stringify(this.attributes));
-            formData.append('created', this.createdStamp?.toString() || '');
-            formData.append('modified', this.modifiedStamp?.toString() || '');
-
-            if (this.userId) {
-                formData.append('userId', this.userId);
-            }
-
-            formData.append('appVersion', Model.bsbiAppVersion);
-
-            console.log('queueing Track post');
-            return this.queuePost(formData);
-        } else {
-            return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
-        }
-    }
-
-    /**
-     *
-     * @param {{
-     *      id : string,
-     *      saveState: string,
-     *      attributes: Object.<string, *>,
-     *      deleted: boolean|string,
-     *      created: number,
-     *      modified: number,
-     *      projectId: number,
-     *      surveyId: string,
-     *      deviceId: string,
-     *      pointIndex: string,
-     *      points: string,
-     *      }} descriptor
-     * @param {string} descriptor.points JSON-serialized Array<PointSeries>
-     */
-    _parseDescriptor(descriptor) {
-        super._parseDescriptor(descriptor);
-        this.surveyId = descriptor.surveyId;
-        this.deviceId = descriptor.deviceId;
-        this.pointIndex = parseInt(descriptor.pointIndex, 10);
-        this.points = JSON.parse(descriptor.points);
-    }
-}
-
 class ResponseFactory {
     static responses = {};
 
@@ -6921,6 +6984,7 @@ class TrackResponse extends LocalResponse {
 
 // service worker for BSBI app
 
+
 class BSBIServiceWorker {
 
     /**
@@ -6974,7 +7038,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1693920619-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1694005140-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

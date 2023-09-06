@@ -8,6 +8,7 @@
 import {Model} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
+import {Track} from "./Track";
 
 export class Survey extends Model {
 
@@ -91,6 +92,13 @@ export class Survey extends Model {
      * @type {string}
      */
     userId = '';
+
+    /**
+     *
+     * @type {Track|null}
+     * @private
+     */
+    _track = null;
 
     /**
      *
@@ -525,5 +533,34 @@ export class Survey extends Model {
         newSurvey.id; // trigger id generation
 
         return newSurvey;
+    }
+
+    /**
+     *
+     * @param {App} app
+     */
+    initialiseNewTracker(app) {
+        const track = new Track();
+        track.surveyId = this.id;
+        track.deviceId = app.deviceId;
+
+        this.track = track;
+        track.registerSurvey(this, app);
+    }
+
+    /**
+     *
+     * @returns {Track|null}
+     */
+    get track() {
+        return this._track;
+    }
+
+    /**
+     *
+     * @param {Track|null} track
+     */
+    set track(track) {
+        this._track = track;
     }
 }

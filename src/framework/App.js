@@ -988,6 +988,11 @@ export class App extends EventHarness {
         this.fireEvent(App.EVENT_NEW_SURVEY);
     }
 
+    /**
+     * Add and set a *new* survey
+     *
+     * @param survey
+     */
     addAndSetSurvey(survey) {
         this.currentSurvey = survey;
         this.addSurvey(survey);
