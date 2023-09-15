@@ -3492,7 +3492,52 @@ function escapeHTML(text) {
     }
 }
 
+class DeviceType extends EventHarness {
+	static DEVICE_TYPE_UNKNOWN = 'unknown';
+	static DEVICE_TYPE_UNCHECKED = 'unchecked';
+	static DEVICE_TYPE_MOBILE = 'mobile';
+	static DEVICE_TYPE_IMMOBILE = 'immobile';
+
+	/**
+	 * global flag affecting behaviour of some GPS functionality
+	 * e.g. on a non-mobile device, don't automatically seek GPS locality for new records
+	 * @private
+	 *
+	 * @type {string}
+	 */
+	static _deviceType = DeviceType.DEVICE_TYPE_UNCHECKED;
+
+	/**
+	 * @returns {string}
+	 */
+	static getDeviceType() {
+		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
+			if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
+				DeviceType._deviceType = navigator.userAgentData.mobile ?
+					DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
+				console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
+			} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+				// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
+				console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+			} else {
+				console.log('Flagging device type as unknown.');
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
+			}
+		}
+
+		return DeviceType._deviceType;
+	}
+}
+
 //import {Survey} from "./Survey";
+
+/**
+ * Used for saving current survey track that is still open
+ * @type {number}
+ */
+const TRACK_END_REASON_SURVEY_OPEN = 0;
+const TRACK_END_REASON_SURVEY_CHANGED = 3;
 
 class Track extends Model {
 
@@ -3508,7 +3553,7 @@ class Track extends Model {
      * @typedef PointSeries
      * @type {array}
      * @property {Array<PointTriplet>} 0 points
-     * @property {string} 1 end reason code
+     * @property {number} 1 end reason code
      */
 
     /**
@@ -3569,6 +3614,160 @@ class Track extends Model {
     SAVE_ENDPOINT = '/savetrack.php';
 
     TYPE = 'track';
+
+    /**
+     * @type {App}
+     */
+    static _app;
+
+    /**
+     * Tracking is active if GPS watching is turned on,
+     * the current survey is from the same day and the device id matches
+     *
+     * @type {boolean}
+     */
+    static trackingIsActive = false;
+
+    /**
+     *
+     * @type {null|string}
+     * @private
+     */
+    static _currentlyTrackedSurveyId = null;
+
+    /**
+     *
+     * @type {null|string}
+     * @private
+     */
+    static _currentlyTrackedDeviceId = null;
+
+    /**
+     * keyed by survey id and then by device id
+     *
+     * @type {Map<string, Map<string,Track>>}
+     * @private
+     */
+    static _tracks = new Map();
+
+    /**
+     * Unix timestamp of most recent co-ordinate ping, in ms
+     * @type {number}
+     */
+    static lastPingStamp = 0;
+
+    /**
+     * Minimum interval between position updates
+     * @type {number}
+     */
+    static msInterval = 30 * 1000;
+
+    /**
+     *
+     * @type {EventHarness~Handle|null}
+     */
+    _surveyChangeListenerHandle = null;
+
+    /**
+     * Need to listen for change of current survey
+     *
+     * @param {App} app
+     */
+    static registerApp(app) {
+        Track._app = app;
+
+        if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
+            app.addListener(App.EVENT_SURVEYS_CHANGED, () => {
+                const survey = Track._app.currentSurvey;
+
+                if (Track._currentlyTrackedSurveyId !== survey.id) {
+                    if (Track._currentlyTrackedSurveyId) {
+                        const oldTrack =
+                            Track._tracks.get(Track._currentlyTrackedSurveyId)
+                                .get(Track._currentlyTrackedDeviceId);
+
+                        if (oldTrack._surveyChangeListenerHandle) {
+                            oldTrack.removeSurveyChangeListener();
+                        }
+                        oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+
+                        oldTrack.save().then(() => {
+                           console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`);
+                        });
+
+                        Track._currentlyTrackedSurveyId = null;
+                        Track._currentlyTrackedDeviceId = null;
+                    }
+
+                    if (!survey.attributes?.casual && survey.isToday()) {
+                        // resume existing tracking, or start a new track
+
+                        let surveyTracks = Track._tracks.get(survey.id);
+                        let track;
+
+                        if (!surveyTracks) {
+                            surveyTracks = Track._tracks.set(survey.id, new Map());
+                        }
+
+                        const deviceId = Track._app.deviceId();
+
+                        if (surveyTracks.has(deviceId)) {
+                            track = surveyTracks.get(deviceId);
+                        } else {
+                            track = survey.initialiseNewTracker(Track._app);
+                            surveyTracks.set(deviceId, track);
+                        }
+
+                        track.registerSurvey(survey);
+                    }
+                }
+
+
+            });
+        }
+    }
+
+    /**
+     * Appends a new point series and advances this.pointIndex
+     * Does not close previous series and does not mark series as unsaved (which happens only
+     * once co-ordinate data starts to be added)
+     *
+     */
+    startPointSeries() {
+        const pointSeries = [
+            [], // empty array of PointTriplets
+            TRACK_END_REASON_SURVEY_OPEN
+        ];
+
+        this.points[this.points.length] = pointSeries;
+
+        this.pointIndex++;
+    }
+
+    /**
+     * Called only if tracking is currently enabled
+     *
+     * @param {number} reason
+     */
+    endCurrentSeries(reason) {
+        if (this.points.length) {
+
+            const lastEntry = this.points[this.points.length - 1];
+
+            if (lastEntry[0].length) {
+                // co-ordinates have been added
+
+                lastEntry[1] = reason;
+            } else {
+                // this is ann empty series, so just delete it
+
+                delete this.points[this.points.length - 1];
+                this.pointIndex--;
+            }
+        } else {
+            throw new Error("Track.endCurrentSeries called when no series in progress.");
+        }
+    }
 
     /**
      * if not securely saved then makes a post to /savetrack.php
@@ -3650,12 +3849,32 @@ class Track extends Model {
     /**
      * @todo implement Track.registerSurvey()
      *
+     * Listen for survey changes (e.g. to date) that might abort tracking
+     *
+     * surveyId and deviceId will already have been set
+     * The track must already have been added to Track._tracks
+     *
      * @param {Survey} survey
-     * @param {App} app
      *
      */
-    registerSurvey(survey, app) {
+    registerSurvey(survey) {
+        Track._currentlyTrackedSurveyId = this.surveyId;
+        Track._currentlyTrackedDeviceId = Track._app.deviceId();
 
+        if (!this._surveyChangeListenerHandle) {
+            this._surveyChangeListenerHandle = survey.addListener(Survey.EVENT_MODIFIED, () => {
+                // need to check for change to date
+
+
+            });
+        }
+    }
+
+    removeSurveyChangeListener() {
+        const survey = Track._app.surveys.get(this.surveyId);
+
+        survey?.removeListener(Survey.EVENT_MODIFIED, this._surveyChangeListenerHandle);
+        this._surveyChangeListenerHandle = null;
     }
 }
 
@@ -4195,6 +4414,7 @@ class Survey extends Model {
     /**
      *
      * @param {App} app
+     * @returns {Track}
      */
     initialiseNewTracker(app) {
         const track = new Track();
@@ -4202,10 +4422,13 @@ class Survey extends Model {
         track.deviceId = app.deviceId;
 
         this.track = track;
-        track.registerSurvey(this, app);
+        track.registerSurvey(this);
+
+        return track;
     }
 
     /**
+     * returns the currently active track (other tracks may exist if the survey has shifted between devices etc.)
      *
      * @returns {Track|null}
      */
@@ -5164,6 +5387,8 @@ class App extends EventHarness {
     static EVENT_USER_LOGIN = 'login';
 
     static EVENT_USER_LOGOUT = 'logout';
+
+    static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
 
     /**
      * IndexedDb key used for storing id of current (last accessed) survey (or null)
@@ -6242,9 +6467,16 @@ class SurveyPickerController extends AppController {
         );
 
         router.on(
+            '/survey/add/:surveyId/:occurrenceId',
+            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+        );
+
+        router.on(
             '/survey/add/:surveyId',
             this.addSurveyHandler.bind(this, 'survey', 'add', '')
         );
+
+
 
         this.app.addListener(App.EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
         this.app.addListener(App.EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
@@ -7038,7 +7270,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1694005140-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1694705699-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -7628,44 +7860,6 @@ class BSBIServiceWorker {
             });
         });
     }
-}
-
-class DeviceType extends EventHarness {
-	static DEVICE_TYPE_UNKNOWN = 'unknown';
-	static DEVICE_TYPE_UNCHECKED = 'unchecked';
-	static DEVICE_TYPE_MOBILE = 'mobile';
-	static DEVICE_TYPE_IMMOBILE = 'immobile';
-
-	/**
-	 * global flag affecting behaviour of some GPS functionality
-	 * e.g. on a non-mobile device, don't automatically seek GPS locality for new records
-	 * @private
-	 *
-	 * @type {string}
-	 */
-	static _deviceType = DeviceType.DEVICE_TYPE_UNCHECKED;
-
-	/**
-	 * @returns {string}
-	 */
-	static getDeviceType() {
-		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
-			if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
-				DeviceType._deviceType = navigator.userAgentData.mobile ?
-					DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
-				console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
-			} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
-				// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
-				console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
-				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
-			} else {
-				console.log('Flagging device type as unknown.');
-				DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
-			}
-		}
-
-		return DeviceType._deviceType;
-	}
 }
 
 /**

@@ -83,9 +83,16 @@ export class SurveyPickerController extends AppController {
         );
 
         router.on(
+            '/survey/add/:surveyId/:occurrenceId',
+            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+        );
+
+        router.on(
             '/survey/add/:surveyId',
             this.addSurveyHandler.bind(this, 'survey', 'add', '')
         );
+
+
 
         this.app.addListener(App.EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
         this.app.addListener(App.EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));

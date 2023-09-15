@@ -538,6 +538,7 @@ export class Survey extends Model {
     /**
      *
      * @param {App} app
+     * @returns {Track}
      */
     initialiseNewTracker(app) {
         const track = new Track();
@@ -545,10 +546,13 @@ export class Survey extends Model {
         track.deviceId = app.deviceId;
 
         this.track = track;
-        track.registerSurvey(this, app);
+        track.registerSurvey(this);
+
+        return track;
     }
 
     /**
+     * returns the currently active track (other tracks may exist if the survey has shifted between devices etc.)
      *
      * @returns {Track|null}
      */

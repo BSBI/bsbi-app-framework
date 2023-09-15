@@ -151,6 +151,10 @@ export class App extends EventHarness {
 
     static EVENT_USER_LOGOUT = 'logout';
 
+    static EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
+
+    static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
+
     /**
      * IndexedDb key used for storing id of current (last accessed) survey (or null)
      *

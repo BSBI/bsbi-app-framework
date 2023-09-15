@@ -1,5 +1,18 @@
 import {Model} from "./Model";
+import {DeviceType} from "../utils/DeviceType";
+import {App} from "../framework/App";
+import {Survey} from "./Survey";
 //import {Survey} from "./Survey";
+
+/**
+ * Used for saving current survey track that is still open
+ * @type {number}
+ */
+const TRACK_END_REASON_SURVEY_OPEN = 0;
+
+const TRACK_END_REASON_WATCHING_ENDED = 1;
+const TRACK_END_REASON_SURVEY_DATE = 2;
+const TRACK_END_REASON_SURVEY_CHANGED = 3;
 
 export class Track extends Model {
 
@@ -15,7 +28,7 @@ export class Track extends Model {
      * @typedef PointSeries
      * @type {array}
      * @property {Array<PointTriplet>} 0 points
-     * @property {string} 1 end reason code
+     * @property {number} 1 end reason code
      */
 
     /**
@@ -76,6 +89,175 @@ export class Track extends Model {
     SAVE_ENDPOINT = '/savetrack.php';
 
     TYPE = 'track';
+
+    /**
+     * @type {App}
+     */
+    static _app;
+
+    /**
+     * Tracking is active if GPS watching is turned on,
+     * the current survey is from the same day and the device id matches
+     *
+     * @type {boolean}
+     */
+    static trackingIsActive = false;
+
+    /**
+     *
+     * @type {null|string}
+     * @private
+     */
+    static _currentlyTrackedSurveyId = null;
+
+    /**
+     *
+     * @type {null|string}
+     * @private
+     */
+    static _currentlyTrackedDeviceId = null;
+
+    /**
+     * keyed by survey id and then by device id
+     *
+     * @type {Map<string, Map<string,Track>>}
+     * @private
+     */
+    static _tracks = new Map();
+
+    /**
+     * Unix timestamp of most recent co-ordinate ping, in ms
+     * @type {number}
+     */
+    static lastPingStamp = 0;
+
+    /**
+     * Minimum interval between position updates
+     * @type {number}
+     */
+    static msInterval = 30 * 1000;
+
+    /**
+     *
+     * @type {EventHarness~Handle|null}
+     */
+    _surveyChangeListenerHandle = null;
+
+    /**
+     * Need to listen for change of current survey
+     *
+     * @param {App} app
+     */
+    static registerApp(app) {
+        Track._app = app;
+
+        if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
+            app.addListener(App.EVENT_SURVEYS_CHANGED, () => {
+                const survey = Track._app.currentSurvey;
+
+                if (Track._currentlyTrackedSurveyId !== survey.id) {
+                    if (Track._currentlyTrackedSurveyId) {
+                        const oldTrack =
+                            Track._tracks.get(Track._currentlyTrackedSurveyId)
+                                .get(Track._currentlyTrackedDeviceId);
+
+                        if (oldTrack._surveyChangeListenerHandle) {
+                            oldTrack.removeSurveyChangeListener();
+                        }
+                        oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+
+                        oldTrack.save().then(() => {
+                           console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
+                        });
+
+                        Track._currentlyTrackedSurveyId = null;
+                        Track._currentlyTrackedDeviceId = null;
+                    }
+
+                    if (!survey.attributes?.casual && survey.isToday()) {
+                        // resume existing tracking, or start a new track
+
+                        let surveyTracks = Track._tracks.get(survey.id);
+                        let track;
+
+                        if (!surveyTracks) {
+                            surveyTracks = Track._tracks.set(survey.id, new Map());
+                        }
+
+                        const deviceId = Track._app.deviceId();
+
+                        if (surveyTracks.has(deviceId)) {
+                            track = surveyTracks.get(deviceId);
+                        } else {
+                            track = survey.initialiseNewTracker(Track._app);
+                            surveyTracks.set(deviceId, track);
+                        }
+
+                        track.registerSurvey(survey);
+                    }
+                }
+            });
+        }
+
+        Track._app.addListener(App.EVENT_WATCH_GPS_USER_REQUEST, () => {
+
+        });
+
+        Track._app.addListener(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+            
+        });
+    }
+
+    /**
+     *
+     * @param {GeolocationPosition} position
+     * @param {GridCoords} gridCoords
+     */
+    static ping(position, gridCoords) {
+
+    }
+
+    /**
+     * Appends a new point series and advances this.pointIndex
+     * Does not close previous series and does not mark series as unsaved (which happens only
+     * once co-ordinate data starts to be added)
+     *
+     */
+    startPointSeries() {
+        const pointSeries = [
+            [], // empty array of PointTriplets
+            TRACK_END_REASON_SURVEY_OPEN
+        ];
+
+        this.points[this.points.length] = pointSeries;
+
+        this.pointIndex++;
+    }
+
+    /**
+     * Called only if tracking is currently enabled
+     *
+     * @param {number} reason
+     */
+    endCurrentSeries(reason) {
+        if (this.points.length) {
+
+            const lastEntry = this.points[this.points.length - 1];
+
+            if (lastEntry[0].length) {
+                // co-ordinates have been added
+
+                lastEntry[1] = reason;
+            } else {
+                // this is ann empty series, so just delete it
+
+                delete this.points[this.points.length - 1];
+                this.pointIndex--;
+            }
+        } else {
+            throw new Error("Track.endCurrentSeries called when no series in progress.");
+        }
+    }
 
     /**
      * if not securely saved then makes a post to /savetrack.php
@@ -157,11 +339,31 @@ export class Track extends Model {
     /**
      * @todo implement Track.registerSurvey()
      *
+     * Listen for survey changes (e.g. to date) that might abort tracking
+     *
+     * surveyId and deviceId will already have been set
+     * The track must already have been added to Track._tracks
+     *
      * @param {Survey} survey
-     * @param {App} app
      *
      */
-    registerSurvey(survey, app) {
+    registerSurvey(survey) {
+        Track._currentlyTrackedSurveyId = this.surveyId;
+        Track._currentlyTrackedDeviceId = Track._app.deviceId();
 
+        if (!this._surveyChangeListenerHandle) {
+            this._surveyChangeListenerHandle = survey.addListener(Survey.EVENT_MODIFIED, () => {
+                // need to check for change to date
+
+
+            });
+        }
+    }
+
+    removeSurveyChangeListener() {
+        const survey = Track._app.surveys.get(this.surveyId);
+
+        survey?.removeListener(Survey.EVENT_MODIFIED, this._surveyChangeListenerHandle);
+        this._surveyChangeListenerHandle = null;
     }
 }
