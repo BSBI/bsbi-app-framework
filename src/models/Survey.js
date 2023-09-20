@@ -5,7 +5,7 @@
 // this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
-import {Model} from "./Model";
+import {Model, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
@@ -63,7 +63,7 @@ export class Survey extends Model {
      *          [defaultSurveyGridRef]: string|null,
      *          [defaultSurveyPrecision]: number|null
      *          },
- *         [date] : string|null,
+     *     [date] : string|null,
      *     [place] : string|null,
      *     [surveyName] : string|null,
      *     [casual] : "1"|null
@@ -101,6 +101,16 @@ export class Survey extends Model {
     _track = null;
 
     /**
+     * Used to tie together linked surveys
+     * (e.g. deliberately duplicated, or generated automatically by movement to a new grid-square)
+     *
+     * Tracking of location can continue seamlessly across linked surveys.
+     *
+     * @type {string}
+     */
+     _baseSurveyId = '';
+
+    /**
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
@@ -113,6 +123,47 @@ export class Survey extends Model {
             precision: null
         };
     };
+
+    /**
+     * @returns {string}
+     */
+    get baseSurveyId() {
+        if (!this._baseSurveyId || this._baseSurveyId === 'undefined') {
+            this._baseSurveyId = this._id;
+        }
+
+        return this._baseSurveyId;
+    }
+
+    /**
+     *
+     * @param {string} id
+     */
+    set baseSurveyId(id) {
+        this._baseSurveyId = id;
+    }
+
+    /**
+     * string
+     */
+    get id() {
+        if (!this._id) {
+            this._id = uuid();
+
+            if (!this._baseSurveyId) {
+                this._baseSurveyId = this._id;
+            }
+        } else if (this._id === 'undefined') {
+            console.error("id is literal 'undefined', am forcing new id");
+            this._id = uuid();
+
+            if (!this._baseSurveyId) {
+                this._baseSurveyId = this._id;
+            }
+        }
+
+        return this._id;
+    }
 
     /**
      * Set for tetrad structured surveys, where user may be working within a monad subdivision
@@ -402,6 +453,7 @@ export class Survey extends Model {
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
             formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('baseSurveyId', this.baseSurveyId || this.id);
 
             if (this.userId) {
                 formData.append('userId', this.userId);
@@ -516,6 +568,25 @@ export class Survey extends Model {
     }
 
     /**
+     *
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      [userId]: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: (number|string),
+     *      modified: (number|string),
+     *      projectId: (number|string),
+     *      [baseSurveyId]: (string),
+     *      }} descriptor
+     */
+    _parseDescriptor(descriptor) {
+        super._parseDescriptor(descriptor);
+        this._baseSurveyId = descriptor.baseSurveyId;
+    }
+
+    /**
      * @returns {Survey}
      */
     duplicate(newAttributes = {}, properties = {}) {
@@ -530,6 +601,7 @@ export class Survey extends Model {
         newSurvey._savedRemotely = false;
         newSurvey.deleted = false;
         newSurvey.projectId = this.projectId;
+        newSurvey.baseSurveyId = this.baseSurveyId;
         newSurvey.id; // trigger id generation
 
         return newSurvey;
@@ -544,6 +616,8 @@ export class Survey extends Model {
         const track = new Track();
         track.surveyId = this.id;
         track.deviceId = app.deviceId;
+        track.projectId = app.projectId;
+        track.isPristine = true;
 
         this.track = track;
         track.registerSurvey(this);

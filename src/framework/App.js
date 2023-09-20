@@ -151,6 +151,11 @@ export class App extends EventHarness {
 
     static EVENT_USER_LOGOUT = 'logout';
 
+    /**
+     * Fired when watching of GPS has been granted following user request.
+     *
+     * @type {string}
+     */
     static EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
 
     static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
@@ -223,7 +228,7 @@ export class App extends EventHarness {
         }
     }
 
-    deviceId() {
+    get deviceId() {
         if (!this._deviceId) {
             throw new Error("Device ID has not been initialised.");
         }
@@ -638,8 +643,8 @@ export class App extends EventHarness {
     /**
      * retrieve the full set of keys from local storage (IndexedDb)
      *
-     * @param {{survey: Array<string>, occurrence : Array<string>, image: Array<string>}} storedObjectKeys
-     * @returns {Promise<{survey: Array<string>, occurrence: Array<string>, image: Array<string>}>}
+     * @param {{survey: Array<string>, occurrence : Array<string>, image: Array<string>, [track]: Array<string>}} storedObjectKeys
+     * @returns {Promise<{survey: Array<string>, occurrence: Array<string>, image: Array<string>, [track]: Array<string>}>}
      */
     seekKeys(storedObjectKeys) {
         //console.log('starting seekKeys');
@@ -659,7 +664,7 @@ export class App extends EventHarness {
                             storedObjectKeys[type].push(id);
                         }
                     } else {
-                        // 'track' records not wanted here, but not an error
+                        // 'track' records not always wanted here, but not an error
                         if (type !== 'track') {
                             console.error(`Unrecognised stored key type '${type}.`);
                         }
@@ -673,14 +678,15 @@ export class App extends EventHarness {
 
     /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
-     * This should allow surveys to be switched etc. without disrupting the on-going save process.
+     * This should allow surveys to be switched etc. without disrupting the ongoing save process.
      * @returns {Promise}
      */
     syncAll(fastReturn = true) {
         const storedObjectKeys = {
             survey : [],
             occurrence : [],
-            image : []
+            image : [],
+            track : [],
         };
 
         return this.seekKeys(storedObjectKeys)

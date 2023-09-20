@@ -262,7 +262,7 @@ export class Model extends EventHarness {
         return localforage.getItem(`${modelObject.TYPE}.${id}`)
             .then((descriptor) => {
                 if (descriptor) {
-                    modelObject.id = id;
+                    modelObject._id = id; // _id must be set directly rather than through the setter, as a spurious id already set for the empty may need to be overwritten
                     modelObject._parseDescriptor(descriptor);
 
                     return modelObject;

@@ -26,7 +26,7 @@ export class Track extends Model {
 
     /**
      * @typedef PointSeries
-     * @type {array}
+     * @type {Array<Array<PointTriplet>|number>}
      * @property {Array<PointTriplet>} 0 points
      * @property {number} 1 end reason code
      */
@@ -132,7 +132,7 @@ export class Track extends Model {
     static lastPingStamp = 0;
 
     /**
-     * Minimum interval between position updates
+     * Minimum interval between position updates in milliseconds
      * @type {number}
      */
     static msInterval = 30 * 1000;
@@ -152,14 +152,22 @@ export class Track extends Model {
         Track._app = app;
 
         if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-            app.addListener(App.EVENT_SURVEYS_CHANGED, () => {
+            app.addListener(App.EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;
 
                 if (Track._currentlyTrackedSurveyId !== survey.id) {
+                    /**
+                     *
+                     * @type {null|Survey}
+                     */
+                    let previouslyTrackedSurvey = null;
+
                     if (Track._currentlyTrackedSurveyId) {
                         const oldTrack =
                             Track._tracks.get(Track._currentlyTrackedSurveyId)
                                 .get(Track._currentlyTrackedDeviceId);
+
+                        previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
                         if (oldTrack._surveyChangeListenerHandle) {
                             oldTrack.removeSurveyChangeListener();
@@ -174,38 +182,78 @@ export class Track extends Model {
                         Track._currentlyTrackedDeviceId = null;
                     }
 
-                    if (!survey.attributes?.casual && survey.isToday()) {
-                        // resume existing tracking, or start a new track
+                    // Tracking should only resume automatically if the survey change was an automatic switch
+                    // to a new square.
 
-                        let surveyTracks = Track._tracks.get(survey.id);
-                        let track;
-
-                        if (!surveyTracks) {
-                            surveyTracks = Track._tracks.set(survey.id, new Map());
-                        }
-
-                        const deviceId = Track._app.deviceId();
-
-                        if (surveyTracks.has(deviceId)) {
-                            track = surveyTracks.get(deviceId);
-                        } else {
-                            track = survey.initialiseNewTracker(Track._app);
-                            surveyTracks.set(deviceId, track);
-                        }
-
-                        track.registerSurvey(survey);
+                    // otherwise, there is a risk that a survey switch will lead to spurious new points
+                    if (!survey.attributes?.casual && survey.isToday() && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
+                        // Resume existing tracking, or start a new track.
+                        Track._trackSurvey(survey);
+                        Track.trackingIsActive = true;
+                    } else {
+                        Track._app.fireEvent(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
                     }
                 }
             });
         }
 
         Track._app.addListener(App.EVENT_WATCH_GPS_USER_REQUEST, () => {
+            const survey = this._app.currentSurvey;
 
+            if (survey) {
+                if (!survey.attributes?.casual && survey.isToday()) {
+                    // Resume existing tracking, or start a new track.
+                    Track._trackSurvey(survey);
+                    Track.trackingIsActive = true;
+                }
+            }
         });
 
         Track._app.addListener(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
-            
+
+            if (Track.trackingIsActive) {
+                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get(Track._currentlyTrackedDeviceId);
+
+                if (track) {
+                    track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
+
+                    track.save().then(() => {
+                        console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
+                    });
+                }
+
+                Track._currentlyTrackedSurveyId = null;
+                Track._currentlyTrackedDeviceId = null;
+                Track.trackingIsActive = false;
+            }
         });
+    }
+
+    /**
+     * Resume existing tracking, or start a new track.
+     *
+     * @param survey
+     * @private
+     */
+    static _trackSurvey(survey) {
+        let surveyTracks = Track._tracks.get(survey.id);
+        let track;
+
+        if (!surveyTracks) {
+            surveyTracks = new Map();
+            Track._tracks.set(survey.id, surveyTracks);
+        }
+
+        const deviceId = Track._app.deviceId;
+
+        if (surveyTracks.has(deviceId)) {
+            track = surveyTracks.get(deviceId);
+        } else {
+            track = survey.initialiseNewTracker(Track._app);
+            surveyTracks.set(deviceId, track);
+        }
+
+        track.registerSurvey(survey);
     }
 
     /**
@@ -214,7 +262,31 @@ export class Track extends Model {
      * @param {GridCoords} gridCoords
      */
     static ping(position, gridCoords) {
+        const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get(Track._currentlyTrackedDeviceId);
 
+        track?.addPoint(position, gridCoords);
+        Track.lastPingStamp = position.timestamp;
+    }
+
+    /**
+     *
+     * @param {GeolocationPosition} position
+     * @param {GridCoords} gridCoords
+     */
+    addPoint(position, gridCoords) {
+        let series = this.points[this.points.length - 1];
+
+        if (!series || series?.[1] !== TRACK_END_REASON_SURVEY_OPEN) {
+            series = this.startPointSeries();
+        }
+
+        series[0][series[0].length] = [
+            position.coords.longitude,
+            position.coords.latitude,
+            position.timestamp
+        ];
+
+        this.touch();
     }
 
     /**
@@ -222,6 +294,7 @@ export class Track extends Model {
      * Does not close previous series and does not mark series as unsaved (which happens only
      * once co-ordinate data starts to be added)
      *
+     * @returns {PointSeries}
      */
     startPointSeries() {
         const pointSeries = [
@@ -232,6 +305,8 @@ export class Track extends Model {
         this.points[this.points.length] = pointSeries;
 
         this.pointIndex++;
+
+        return pointSeries;
     }
 
     /**
@@ -241,7 +316,6 @@ export class Track extends Model {
      */
     endCurrentSeries(reason) {
         if (this.points.length) {
-
             const lastEntry = this.points[this.points.length - 1];
 
             if (lastEntry[0].length) {
@@ -337,25 +411,55 @@ export class Track extends Model {
     }
 
     /**
-     * @todo implement Track.registerSurvey()
+     *
      *
      * Listen for survey changes (e.g. to date) that might abort tracking
      *
      * surveyId and deviceId will already have been set
      * The track must already have been added to Track._tracks
      *
+     * sets Track._currentlyTrackedSurveyId and Track._currentlyTrackedDeviceId
+     *
      * @param {Survey} survey
      *
      */
     registerSurvey(survey) {
         Track._currentlyTrackedSurveyId = this.surveyId;
-        Track._currentlyTrackedDeviceId = Track._app.deviceId();
+        Track._currentlyTrackedDeviceId = Track._app.deviceId;
+
+        if (survey.attributes.casual) {
+            throw new Error('Attempt to register tracking for casual survey.');
+        }
 
         if (!this._surveyChangeListenerHandle) {
             this._surveyChangeListenerHandle = survey.addListener(Survey.EVENT_MODIFIED, () => {
                 // need to check for change to date
 
+                if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId) {
+                    if (!survey.isToday()) {
+                        this.endCurrentSeries(TRACK_END_REASON_SURVEY_DATE);
 
+                        this.save().then(() => {
+                            console.log(`Tracking for survey ${this.surveyId} saved following survey date change.`)
+                        });
+
+                        Track._currentlyTrackedSurveyId = null;
+                        Track._currentlyTrackedDeviceId = null;
+                        Track.trackingIsActive = false;
+                    }
+                }
+            });
+        }
+
+        if (!this._surveyOccurrencesChangeListenerHandle) {
+            this._surveyOccurrencesChangeListenerHandle = survey.addListener(Survey.EVENT_OCCURRENCES_CHANGED, () => {
+                // if occurrences have changed, then worth ensuring that tracking is up-to-date
+
+                if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId && !this.isPristine && this.unsaved()) {
+                    this.save().then(() => {
+                        console.log(`Tracking for survey ${this.surveyId} saved following occurrence change.`)
+                    });
+                }
             });
         }
     }

@@ -60,6 +60,6 @@ export class TrackResponse extends LocalResponse {
     }
 
     static register() {
-        ResponseFactory.responses.survey = TrackResponse;
+        ResponseFactory.responses.track = TrackResponse;
     }
 }

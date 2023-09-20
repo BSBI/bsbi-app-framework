@@ -26,7 +26,7 @@ export class OccurrenceImage extends Model {
 
     surveyId = '';
 
-    projectId = '';
+    //projectId = '';
 
     context = 'occurrence';
 

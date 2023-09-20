@@ -15,8 +15,9 @@ export class SurveyResponse extends LocalResponse {
      * @returns {this}
      */
     populateClientResponse() {
-        this.returnedToClient.surveyId = this.toSaveLocally.id ? this.toSaveLocally.id : this.toSaveLocally.surveyId; // hedging
+        this.returnedToClient.surveyId = this.toSaveLocally.id || this.toSaveLocally.surveyId; // hedging
         this.returnedToClient.id = this.toSaveLocally.id ? this.toSaveLocally.id : this.toSaveLocally.surveyId; // hedging
+        this.returnedToClient.baseSurveyId = this.toSaveLocally.baseSurveyId || this.returnedToClient.id;
         this.returnedToClient.type = 'survey';
         this.returnedToClient.attributes = this.toSaveLocally.attributes;
         this.returnedToClient.created = this.toSaveLocally.created; // stamps from server always take precedence
@@ -36,6 +37,7 @@ export class SurveyResponse extends LocalResponse {
     populateLocalSave() {
         this.toSaveLocally.surveyId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId;
         this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.surveyId;
+        this.toSaveLocally.baseSurveyId = this.returnedToClient.baseSurveyId || this.toSaveLocally.id;
         this.toSaveLocally.type = 'survey';
         this.toSaveLocally.attributes = this.returnedToClient.attributes;
         this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
