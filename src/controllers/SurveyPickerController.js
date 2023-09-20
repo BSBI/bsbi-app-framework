@@ -229,6 +229,9 @@ export class SurveyPickerController extends AppController {
 
         surveyId = surveyId.toLowerCase();
 
+        // hide the left panel before loading, otherwise there can be a confusing delay
+        this.view.hideLeftPanel();
+
         this.app.restoreOccurrences(surveyId)
             .then(() => {
                 this.app.markAllNotPristine();
@@ -243,7 +246,11 @@ export class SurveyPickerController extends AppController {
                 // either the survey was not found or there was no network connection
 
                 // should switch to displaying a list of available surveys and an option to start a new survey
-            });
+            })
+            .finally(() => {
+                this.view.restoreLeftPanel();
+            })
+        ;
     }
 
     /**

@@ -6817,6 +6817,9 @@ class SurveyPickerController extends AppController {
 
         surveyId = surveyId.toLowerCase();
 
+        // hide the left panel before loading, otherwise there can be a confusing delay
+        this.view.hideLeftPanel();
+
         this.app.restoreOccurrences(surveyId)
             .then(() => {
                 this.app.markAllNotPristine();
@@ -6831,7 +6834,11 @@ class SurveyPickerController extends AppController {
                 // either the survey was not found or there was no network connection
 
                 // should switch to displaying a list of available surveys and an option to start a new survey
-            });
+            })
+            .finally(() => {
+                this.view.restoreLeftPanel();
+            })
+        ;
     }
 
     /**
@@ -7476,7 +7483,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1695238269-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1695246124-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
