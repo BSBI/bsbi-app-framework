@@ -84,7 +84,7 @@ export class OccurrenceImage extends Model {
             this.occurrenceId = occurrenceId;
         }
 
-        if (!this.unsaved()) {
+        if (this.unsaved()) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
             formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'

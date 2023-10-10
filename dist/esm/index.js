@@ -3671,6 +3671,13 @@ class Track extends Model {
      */
     _surveyChangeListenerHandle = null;
 
+    static reset() {
+        Track._tracks = new Map();
+        Track.trackingIsActive = false;
+        Track._currentlyTrackedSurveyId = null;
+        Track.lastPingStamp = 0;
+    }
+
     /**
      * Need to listen for change of current survey
      *
@@ -3693,18 +3700,23 @@ class Track extends Model {
                     if (Track._currentlyTrackedSurveyId) {
                         const oldTrack =
                             Track._tracks.get(Track._currentlyTrackedSurveyId)
-                                .get(Track._currentlyTrackedDeviceId);
+                                ?.get(Track._currentlyTrackedDeviceId);
 
                         previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
-                        if (oldTrack._surveyChangeListenerHandle) {
-                            oldTrack.removeSurveyChangeListener();
-                        }
-                        oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+                        if (oldTrack) {
+                            if (oldTrack._surveyChangeListenerHandle) {
+                                oldTrack.removeSurveyChangeListener();
+                            }
 
-                        oldTrack.save().then(() => {
-                           console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`);
-                        });
+                            oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+
+                            oldTrack.save().then(() => {
+                                console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`);
+                            });
+                        } else {
+                            console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`);
+                        }
 
                         Track._currentlyTrackedSurveyId = null;
                         Track._currentlyTrackedDeviceId = null;
@@ -3857,7 +3869,8 @@ class Track extends Model {
                 this.pointIndex--;
             }
         } else {
-            throw new Error("Track.endCurrentSeries called when no series in progress.");
+            //throw new Error("Track.endCurrentSeries called when no series in progress.");
+            console.error("Track.endCurrentSeries called when no series in progress.");
         }
     }
 
@@ -3909,7 +3922,8 @@ class Track extends Model {
             console.log('queueing Track post');
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
+            return Promise.resolve();
+            //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
         }
     }
 
@@ -3982,6 +3996,8 @@ class Track extends Model {
         if (!this._surveyOccurrencesChangeListenerHandle) {
             this._surveyOccurrencesChangeListenerHandle = survey.addListener(Survey.EVENT_OCCURRENCES_CHANGED, () => {
                 // if occurrences have changed, then worth ensuring that tracking is up-to-date
+
+                this.isPristine = false; // probably not required, but safety fallback to ensure survey is saved
 
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId && !this.isPristine && this.unsaved()) {
                     this.save().then(() => {
@@ -4064,7 +4080,8 @@ class Survey extends Model {
      *     [date] : string|null,
      *     [place] : string|null,
      *     [surveyName] : string|null,
-     *     [casual] : "1"|null
+     *     [casual] : "1"|null,
+     *     [defaultCasual] : "1"|null,
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null
      * }}
      */
@@ -5241,7 +5258,7 @@ class OccurrenceImage extends Model {
             this.occurrenceId = occurrenceId;
         }
 
-        if (!this.unsaved()) {
+        if (this.unsaved()) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
             formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
@@ -5746,9 +5763,17 @@ class App extends EventHarness {
      * @returns {Promise<void | null>}
      */
     reset() {
-        {
-            return Promise.resolve();
-        }
+        this.surveys = new Map();
+        Track.reset();
+        return this.clearCurrentSurvey().then(this.clearLastSurveyId);
+
+        // if (false) {
+        //     // currently disabled during testing to minimise data loss potential
+        //     this.surveys = new Map();
+        //     return this.clearCurrentSurvey().then(this.clearLastSurveyId);
+        // } else {
+        //     return Promise.resolve();
+        // }
     }
 
     /**
@@ -6147,6 +6172,7 @@ class App extends EventHarness {
      * @param {string} [queryFilters.userId]
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
+     * @param {boolean} [queryFilters.defaultCasual]
      * @returns {Array<Survey>}
      */
     queryLocalSurveys(queryFilters) {
@@ -6156,6 +6182,10 @@ class App extends EventHarness {
             const survey = surveyTuple[1];
 
             if (queryFilters.structuredSurvey && survey.attributes.casual) {
+                continue;
+            }
+
+            if (queryFilters.defaultCasual && !survey.attributes.defaultCasual) {
                 continue;
             }
 
@@ -6508,7 +6538,7 @@ class App extends EventHarness {
 
             this.fireEvent(App.EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 
-            if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter) {
+            if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter || this.session?.superAdmin) {
                 if (setAsCurrent) {
                     // the apps occurrences should only relate to the current survey
                     // (the reset records are remote or in IndexedDb)
@@ -7483,7 +7513,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1695246124-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1696720055-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

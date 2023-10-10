@@ -66,7 +66,8 @@ export class Survey extends Model {
      *     [date] : string|null,
      *     [place] : string|null,
      *     [surveyName] : string|null,
-     *     [casual] : "1"|null
+     *     [casual] : "1"|null,
+     *     [defaultCasual] : "1"|null,
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null
      * }}
      */

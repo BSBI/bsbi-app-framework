@@ -9,6 +9,7 @@ import localforage from "localforage";
 import {OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
 import {uuid} from "../models/Model";
+import {Track} from "../models/Track";
 
 export class App extends EventHarness {
     /**
@@ -313,13 +314,17 @@ export class App extends EventHarness {
      * @returns {Promise<void | null>}
      */
     reset() {
-        if (false) {
-            // currently disabled during testing to minimise data loss potential
-            this.surveys = new Map();
-            return this.clearCurrentSurvey().then(this.clearLastSurveyId);
-        } else {
-            return Promise.resolve();
-        }
+        this.surveys = new Map();
+        Track.reset();
+        return this.clearCurrentSurvey().then(this.clearLastSurveyId);
+
+        // if (false) {
+        //     // currently disabled during testing to minimise data loss potential
+        //     this.surveys = new Map();
+        //     return this.clearCurrentSurvey().then(this.clearLastSurveyId);
+        // } else {
+        //     return Promise.resolve();
+        // }
     }
 
     /**
@@ -718,6 +723,7 @@ export class App extends EventHarness {
      * @param {string} [queryFilters.userId]
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
+     * @param {boolean} [queryFilters.defaultCasual]
      * @returns {Array<Survey>}
      */
     queryLocalSurveys(queryFilters) {
@@ -727,6 +733,10 @@ export class App extends EventHarness {
             const survey = surveyTuple[1];
 
             if (queryFilters.structuredSurvey && survey.attributes.casual) {
+                continue;
+            }
+
+            if (queryFilters.defaultCasual && !survey.attributes.defaultCasual) {
                 continue;
             }
 
@@ -1079,7 +1089,7 @@ export class App extends EventHarness {
 
             this.fireEvent(App.EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 
-            if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter) {
+            if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter || this.session?.superAdmin) {
                 if (setAsCurrent) {
                     // the apps occurrences should only relate to the current survey
                     // (the reset records are remote or in IndexedDb)

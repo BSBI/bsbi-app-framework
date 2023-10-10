@@ -143,6 +143,13 @@ export class Track extends Model {
      */
     _surveyChangeListenerHandle = null;
 
+    static reset() {
+        Track._tracks = new Map();
+        Track.trackingIsActive = false;
+        Track._currentlyTrackedSurveyId = null;
+        Track.lastPingStamp = 0;
+    }
+
     /**
      * Need to listen for change of current survey
      *
@@ -165,18 +172,23 @@ export class Track extends Model {
                     if (Track._currentlyTrackedSurveyId) {
                         const oldTrack =
                             Track._tracks.get(Track._currentlyTrackedSurveyId)
-                                .get(Track._currentlyTrackedDeviceId);
+                                ?.get(Track._currentlyTrackedDeviceId);
 
                         previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
-                        if (oldTrack._surveyChangeListenerHandle) {
-                            oldTrack.removeSurveyChangeListener();
-                        }
-                        oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+                        if (oldTrack) {
+                            if (oldTrack._surveyChangeListenerHandle) {
+                                oldTrack.removeSurveyChangeListener();
+                            }
 
-                        oldTrack.save().then(() => {
-                           console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
-                        });
+                            oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+
+                            oldTrack.save().then(() => {
+                                console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
+                            });
+                        } else {
+                            console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`)
+                        }
 
                         Track._currentlyTrackedSurveyId = null;
                         Track._currentlyTrackedDeviceId = null;
@@ -329,7 +341,8 @@ export class Track extends Model {
                 this.pointIndex--;
             }
         } else {
-            throw new Error("Track.endCurrentSeries called when no series in progress.");
+            //throw new Error("Track.endCurrentSeries called when no series in progress.");
+            console.error("Track.endCurrentSeries called when no series in progress.");
         }
     }
 
@@ -381,7 +394,8 @@ export class Track extends Model {
             console.log('queueing Track post');
             return this.queuePost(formData);
         } else {
-            return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
+            return Promise.resolve();
+            //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
         }
     }
 
@@ -454,6 +468,8 @@ export class Track extends Model {
         if (!this._surveyOccurrencesChangeListenerHandle) {
             this._surveyOccurrencesChangeListenerHandle = survey.addListener(Survey.EVENT_OCCURRENCES_CHANGED, () => {
                 // if occurrences have changed, then worth ensuring that tracking is up-to-date
+
+                this.isPristine = false; // probably not required, but safety fallback to ensure survey is saved
 
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId && !this.isPristine && this.unsaved()) {
                     this.save().then(() => {
