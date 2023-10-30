@@ -355,7 +355,7 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @param {{}} formSectionProperties
+     * @param {Object.<string,{field: typeof FormField, [validator]: function, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>} formSectionProperties
      * @return {{requiredFieldsPresent: boolean, validity: Object.<string, boolean>}}
      */
     evaluateCompletionStatus(formSectionProperties) {

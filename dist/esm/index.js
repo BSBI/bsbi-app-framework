@@ -3444,7 +3444,7 @@ class Model extends EventHarness {
 
     /**
      *
-     * @param {{}} formSectionProperties
+     * @param {Object.<string,{field: typeof FormField, [validator]: function, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>} formSectionProperties
      * @return {{requiredFieldsPresent: boolean, validity: Object.<string, boolean>}}
      */
     evaluateCompletionStatus(formSectionProperties) {
@@ -4418,6 +4418,10 @@ class Survey extends Model {
             const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
+                if (gridRef.length <= 100 && surveyGridUnit === 100) {
+                    result.hectare = gridRef.gridCoords.to_gridref(100);
+                }
+
                 if (gridRef.length <= 1000) {
                     result.monad = gridRef.gridCoords.to_gridref(1000);
                 }
@@ -4432,13 +4436,9 @@ class Survey extends Model {
             result.hectad = gridRef.gridCoords.to_gridref(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
-
-            if (surveyGridUnit === 100) {
-                result.hectare = gridRef.gridCoords.to_gridref(100);
-            }
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', hectare : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
     }
 
     /**
@@ -6169,6 +6169,7 @@ class App extends EventHarness {
      * @param {boolean} [queryFilters.isToday]
      * @param {string} [queryFilters.monad]
      * @param {string} [queryFilters.tetrad]
+     * @param {string} [queryFilters.sampleUnit]
      * @param {string} [queryFilters.userId]
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
@@ -6198,6 +6199,10 @@ class App extends EventHarness {
             }
 
             if (queryFilters.tetrad && survey.getGeoContext()?.tetrad !== queryFilters.tetrad) {
+                continue;
+            }
+
+            if (queryFilters.sampleUnit && survey.attributes?.sampleUnit?.selection[0] !== queryFilters.sampleUnit) {
                 continue;
             }
 
@@ -7513,7 +7518,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1696720055-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1698652949-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

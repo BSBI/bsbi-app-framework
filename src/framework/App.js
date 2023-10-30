@@ -720,6 +720,7 @@ export class App extends EventHarness {
      * @param {boolean} [queryFilters.isToday]
      * @param {string} [queryFilters.monad]
      * @param {string} [queryFilters.tetrad]
+     * @param {string} [queryFilters.sampleUnit]
      * @param {string} [queryFilters.userId]
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
@@ -749,6 +750,10 @@ export class App extends EventHarness {
             }
 
             if (queryFilters.tetrad && survey.getGeoContext()?.tetrad !== queryFilters.tetrad) {
+                continue;
+            }
+
+            if (queryFilters.sampleUnit && survey.attributes?.sampleUnit?.selection[0] !== queryFilters.sampleUnit) {
                 continue;
             }
 

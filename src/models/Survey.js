@@ -404,6 +404,10 @@ export class Survey extends Model {
             const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
+                if (gridRef.length <= 100 && surveyGridUnit === 100) {
+                    result.hectare = gridRef.gridCoords.to_gridref(100);
+                }
+
                 if (gridRef.length <= 1000) {
                     result.monad = gridRef.gridCoords.to_gridref(1000);
                 }
@@ -418,13 +422,9 @@ export class Survey extends Model {
             result.hectad = gridRef.gridCoords.to_gridref(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
-
-            if (surveyGridUnit === 100) {
-                result.hectare = gridRef.gridCoords.to_gridref(100);
-            }
         }
 
-        return {...{hectad : '', tetrad : '', monad : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
+        return {...{hectad : '', tetrad : '', monad : '', hectare : '', country : '', vc : [], interleavedGridRef : ''}, ...result};
     }
 
     /**
