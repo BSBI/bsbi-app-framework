@@ -216,7 +216,7 @@ export class Occurrence extends Model {
 
     /**
      *
-     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null), [defaultSurveyGridRef]: string}|null)}
+     * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null), [defaultSurveyGridRef]: string, [defaultSurveyPrecision]: number}|null)}
      */
     get geoReference() {
         return this.attributes.georef || {
