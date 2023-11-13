@@ -140,12 +140,12 @@ export class Party {
     /**
      *
      * @param {string} userId
-     * @return Promise
+     * @returns {Promise}
      */
     static addUserParties(userId) {
         //Party.rawParties = {...Party.rawParties, ...parties};
 
-
+        return Promise.resolve();
     }
 
     /**
