@@ -93,9 +93,13 @@ export class Occurrence extends Model {
             // refresh the form's validation state
             params.form.conditionallyValidateForm();
 
-            this.touch();
-            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
+           this.changeApplied();
         });
+    }
+
+    changeApplied() {
+        this.touch();
+        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
     }
 
     delete() {

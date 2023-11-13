@@ -33,14 +33,30 @@ export class Party {
     static ROLES_INDEX = 8;
 
     /**
+     * Generic party list, not tied to a particular user id
      *
      * @type {Object.<string, RawParty>}
      */
-    static rawParties;
+    static _baseParties = {};
+
+    /**
+     * Current party working set, combining base set with per-user extras
+     *
+     * @type {Object.<string, RawParty>}
+     */
+    static rawParties = {};
+
+    /**
+     *
+     * @type {string|null}
+     */
+    static loadedUserId = null;
 
     static TYPE_PERSON = 'p';
     static TYPE_ORGANISATION = 'u';
     static TYPE_UNKNOWN = '?';
+
+    static USER_PARTIES_URL = '/';
 
     /**
      * @type {string}
@@ -95,15 +111,21 @@ export class Party {
      */
     disambiguation = '';
 
-    static setParties(parties) {
-        Party.rawParties = parties;
-    }
+    // static setParties(parties) {
+    //     Party.rawParties = parties;
+    // }
 
+    /**
+     *
+     * @param {Object.<string, RawParty>} parties
+     * @param {string} sourceUrl
+     */
     static initialiseParties(parties, sourceUrl) {
-        Party.rawParties = parties;
+        Party._baseParties = parties;
+        Party.rawParties = {...Party._baseParties, ...parties};
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
-            console.log(`Taxon list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
+            console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
             navigator?.serviceWorker?.ready.then((registration) => {
                 registration.active.postMessage(
                     {
@@ -113,6 +135,17 @@ export class Party {
                 );
             });
         }
+    }
+
+    /**
+     *
+     * @param {string} userId
+     * @return Promise
+     */
+    static addUserParties(userId) {
+        //Party.rawParties = {...Party.rawParties, ...parties};
+
+
     }
 
     /**

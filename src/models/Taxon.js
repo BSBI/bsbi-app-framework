@@ -1,6 +1,13 @@
 import {TaxonError} from "../utils/exceptions/TaxonError";
 import {escapeHTML} from "../utils/escapeHTML";
 
+export const SORT_ORDER_GENUS = 28;
+export const SORT_ORDER_SPECIES = 56;
+export const SORT_ORDER_CULTIVAR = 120;
+
+const AGG_QUALIFIER = 'agg.';
+const SL_QUALIFIER = 's.l.';
+
 export class Taxon {
     /**
      * @typedef RawTaxon
@@ -15,7 +22,7 @@ export class Taxon {
      * @property {string} 7 vernacularRoot
      * @property {number} 8 used
      * @property {number} 9 sortOrder
-     * @property {Array.<string>} 10 parentIds
+     * @property {Array.<string>} 10 parentIds id(s) of *immediate* parent(s)
      * @property {number} [11] notForEntry (1 === not for entry)
      * @property {string} [12] GB national status
      * @property {string} [13] IE national status
@@ -200,7 +207,7 @@ export class Taxon {
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
-            console.error(`Taxon id '${id}' not found.`);
+            //console.error(`Taxon id '${id}' not found.`);
             throw new TaxonError(`Taxon id '${id}' not found.`);
         }
 
@@ -240,6 +247,45 @@ export class Taxon {
         taxon.vcPresence = raw[Taxon.VC_PRESENCE_KEY] || null;
 
         return taxon;
+    }
+
+    /**
+     *
+     * @param {number} maxSortOrder lowest matching rank to accept
+     * @param {number} minSortOrder highest rank to allow (return null if fails)
+     * @param {boolean} excludeAggregates ignore aggregate parents
+     * @param {boolean} excludeCultivars if set and current taxon is a cultivar then return null
+     * @return {Taxon|null}
+     */
+    seekRankedAncestor(maxSortOrder, minSortOrder = SORT_ORDER_SPECIES, excludeAggregates = true, excludeCultivars = true) {
+        const parentStack = [this];
+        do {
+            let taxon = parentStack.pop();
+
+            if (taxon.sortOrder <= maxSortOrder && taxon.sortOrder >= minSortOrder) {
+                // potentially have an acceptable taxon already
+
+                if (!excludeAggregates || (taxon.qualifier !== AGG_QUALIFIER && taxon.qualifier !== SL_QUALIFIER)) {
+                    return taxon;
+                }
+            }
+
+            if (taxon.sortOrder < minSortOrder || (excludeCultivars && taxon.sortOrder === SORT_ORDER_CULTIVAR)) {
+                continue;
+            }
+
+            if (this.parentIds?.length) {
+                for (let parentId of this.parentIds) {
+                    try {
+                        parentStack[parentStack.length] = Taxon.fromId(parentId);
+                    } catch {
+
+                    }
+                }
+            }
+        } while (parentStack.length);
+
+        return null;
     }
 
     /**

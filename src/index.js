@@ -7,7 +7,7 @@ export {Model, UUID_REGEX, uuid} from './models/Model';
 export {Occurrence} from './models/Occurrence';
 export {OccurrenceImage} from './models/OccurrenceImage';
 export {Survey} from './models/Survey';
-export {Taxon} from './models/Taxon';
+export {Taxon, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES} from './models/Taxon';
 export {Party} from './models/Party';
 export {Track} from './models/Track';
 export {BSBIServiceWorker} from './serviceworker/BSBIServiceWorker';

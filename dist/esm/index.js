@@ -4669,6 +4669,13 @@ class TaxonError extends Error {
 
 }
 
+const SORT_ORDER_GENUS = 28;
+const SORT_ORDER_SPECIES = 56;
+const SORT_ORDER_CULTIVAR = 120;
+
+const AGG_QUALIFIER = 'agg.';
+const SL_QUALIFIER = 's.l.';
+
 class Taxon {
     /**
      * @typedef RawTaxon
@@ -4683,7 +4690,7 @@ class Taxon {
      * @property {string} 7 vernacularRoot
      * @property {number} 8 used
      * @property {number} 9 sortOrder
-     * @property {Array.<string>} 10 parentIds
+     * @property {Array.<string>} 10 parentIds id(s) of *immediate* parent(s)
      * @property {number} [11] notForEntry (1 === not for entry)
      * @property {string} [12] GB national status
      * @property {string} [13] IE national status
@@ -4868,7 +4875,7 @@ class Taxon {
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
-            console.error(`Taxon id '${id}' not found.`);
+            //console.error(`Taxon id '${id}' not found.`);
             throw new TaxonError(`Taxon id '${id}' not found.`);
         }
 
@@ -4908,6 +4915,45 @@ class Taxon {
         taxon.vcPresence = raw[Taxon.VC_PRESENCE_KEY] || null;
 
         return taxon;
+    }
+
+    /**
+     *
+     * @param {number} maxSortOrder lowest matching rank to accept
+     * @param {number} minSortOrder highest rank to allow (return null if fails)
+     * @param {boolean} excludeAggregates ignore aggregate parents
+     * @param {boolean} excludeCultivars if set and current taxon is a cultivar then return null
+     * @return {Taxon|null}
+     */
+    seekRankedAncestor(maxSortOrder, minSortOrder = SORT_ORDER_SPECIES, excludeAggregates = true, excludeCultivars = true) {
+        const parentStack = [this];
+        do {
+            let taxon = parentStack.pop();
+
+            if (taxon.sortOrder <= maxSortOrder && taxon.sortOrder >= minSortOrder) {
+                // potentially have an acceptable taxon already
+
+                if (!excludeAggregates || (taxon.qualifier !== AGG_QUALIFIER && taxon.qualifier !== SL_QUALIFIER)) {
+                    return taxon;
+                }
+            }
+
+            if (taxon.sortOrder < minSortOrder || (excludeCultivars && taxon.sortOrder === SORT_ORDER_CULTIVAR)) {
+                continue;
+            }
+
+            if (this.parentIds?.length) {
+                for (let parentId of this.parentIds) {
+                    try {
+                        parentStack[parentStack.length] = Taxon.fromId(parentId);
+                    } catch {
+
+                    }
+                }
+            }
+        } while (parentStack.length);
+
+        return null;
     }
 
     /**
@@ -5038,9 +5084,13 @@ class Occurrence extends Model {
             // refresh the form's validation state
             params.form.conditionallyValidateForm();
 
-            this.touch();
-            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
+           this.changeApplied();
         });
+    }
+
+    changeApplied() {
+        this.touch();
+        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
     }
 
     delete() {
@@ -6925,14 +6975,30 @@ class Party {
     static ROLES_INDEX = 8;
 
     /**
+     * Generic party list, not tied to a particular user id
      *
      * @type {Object.<string, RawParty>}
      */
-    static rawParties;
+    static _baseParties = {};
+
+    /**
+     * Current party working set, combining base set with per-user extras
+     *
+     * @type {Object.<string, RawParty>}
+     */
+    static rawParties = {};
+
+    /**
+     *
+     * @type {string|null}
+     */
+    static loadedUserId = null;
 
     static TYPE_PERSON = 'p';
     static TYPE_ORGANISATION = 'u';
     static TYPE_UNKNOWN = '?';
+
+    static USER_PARTIES_URL = '/';
 
     /**
      * @type {string}
@@ -6987,15 +7053,21 @@ class Party {
      */
     disambiguation = '';
 
-    static setParties(parties) {
-        Party.rawParties = parties;
-    }
+    // static setParties(parties) {
+    //     Party.rawParties = parties;
+    // }
 
+    /**
+     *
+     * @param {Object.<string, RawParty>} parties
+     * @param {string} sourceUrl
+     */
     static initialiseParties(parties, sourceUrl) {
-        Party.rawParties = parties;
+        Party._baseParties = parties;
+        Party.rawParties = {...Party._baseParties, ...parties};
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
-            console.log(`Taxon list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
+            console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
             navigator?.serviceWorker?.ready.then((registration) => {
                 registration.active.postMessage(
                     {
@@ -7005,6 +7077,17 @@ class Party {
                 );
             });
         }
+    }
+
+    /**
+     *
+     * @param {string} userId
+     * @return Promise
+     */
+    static addUserParties(userId) {
+        //Party.rawParties = {...Party.rawParties, ...parties};
+
+
     }
 
     /**
@@ -7518,7 +7601,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1698929449-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1699894759-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -8126,5 +8209,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Logger, Model, NotFoundError, Occurrence, OccurrenceImage, Party, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Logger, Model, NotFoundError, Occurrence, OccurrenceImage, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map
