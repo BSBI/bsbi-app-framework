@@ -35,16 +35,16 @@ export class Party {
     /**
      * Generic party list, not tied to a particular user id
      *
-     * @type {Object.<string, RawParty>}
+     * @type {Array.<RawParty>}
      */
-    static _baseParties = {};
+    static _baseParties = [];
 
     /**
      * Current party working set, combining base set with per-user extras
      *
-     * @type {Object.<string, RawParty>}
+     * @type {Array.<RawParty>}
      */
-    static rawParties = {};
+    static rawParties = [];
 
     /**
      *
@@ -117,12 +117,13 @@ export class Party {
 
     /**
      *
-     * @param {Object.<string, RawParty>} parties
+     * @param {Array.<RawParty>} parties
      * @param {string} sourceUrl
      */
     static initialiseParties(parties, sourceUrl) {
         Party._baseParties = parties;
-        Party.rawParties = {...Party._baseParties, ...parties};
+        //Party.rawParties = [...Party._baseParties, ...parties];
+        Party.rawParties = Party._baseParties;
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
@@ -143,7 +144,8 @@ export class Party {
      * @returns {Promise}
      */
     static addUserParties(userId) {
-        //Party.rawParties = {...Party.rawParties, ...parties};
+        // where parties are the newly-loaded extra set
+        //Party.rawParties = [...Party._baseParties, ...parties];
 
         return Promise.resolve();
     }

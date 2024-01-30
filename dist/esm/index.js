@@ -4676,6 +4676,8 @@ const SORT_ORDER_CULTIVAR = 120;
 const AGG_QUALIFIER = 'agg.';
 const SL_QUALIFIER = 's.l.';
 
+const INFO_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/></svg>';
+
 class Taxon {
     /**
      * @typedef RawTaxon
@@ -4697,22 +4699,32 @@ class Taxon {
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
+     * @property {number|null} [17] (optionally) NYPH percentile ranking or null
+     * @property {number} [18] documentation (Atlas captions etc.)
      *
      * // properties beyond this point are not part of the source file
-     * @property {{}} [17] Presence in grid-squares (top-level object is keyed by grid-ref)
-     * @property {{}} [18] Presence on rpr
-     * @property {{}} [19] Presence in county (top-level object is keyed by vc code string, including prefix)
+     * @property {{}} [18] Presence in grid-squares (top-level object is keyed by grid-ref)
+     * @property {{}} [19] Presence on rpr
+     * @property {{}} [20] Presence in county (top-level object is keyed by vc code string, including prefix)
      */
 
-    static GR_PRESENCE_KEY = 17;
-    static RPR_KEY = 18;
-    static VC_PRESENCE_KEY = 19;
+    static PARENT_IDS_KEY = 10;
+
+    static GR_PRESENCE_KEY = 18;
+    static RPR_KEY = 19;
+    static VC_PRESENCE_KEY = 20;
 
     /**
      *
      * @type {Object.<string, RawTaxon>}
      */
     static rawTaxa;
+
+    /**
+     *
+     * @type {boolean}
+     */
+    static includeAtlasDocumentation = false;
 
     /**
      * @type {string}
@@ -4830,6 +4842,18 @@ class Taxon {
 
     /**
      *
+     * @type {number|null}
+     */
+    nyphRanking = null;
+
+    /**
+     *
+     * @type {null|{{description: string, trends: string, biogeog: string}}
+     */
+    documentation = null;
+
+    /**
+     *
      * @type {boolean}
      */
     static showVernacular = true;
@@ -4896,6 +4920,7 @@ class Taxon {
         taxon.sortOrder = raw[9];
         taxon.parentIds = raw[10];
         taxon.badVernacular = !!raw[11];
+        taxon.nyphRanking = raw[17] || null;
 
         taxon.nationalStatus = {
             GB: raw[12] || null,
@@ -4942,8 +4967,8 @@ class Taxon {
                 continue;
             }
 
-            if (this.parentIds?.length) {
-                for (let parentId of this.parentIds) {
+            if (taxon.parentIds?.length) {
+                for (let parentId of taxon.parentIds) {
                     try {
                         parentStack[parentStack.length] = Taxon.fromId(parentId);
                     } catch {
@@ -4967,30 +4992,46 @@ class Taxon {
             acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
         }
 
+        let infoLink = '';
+        if (Taxon.includeAtlasDocumentation) {
+            const preferredTaxon = acceptedTaxon || this;
+
+            if (preferredTaxon?.documentation?.description) {
+                infoLink = ` <a href="#" title="taxon description" data-taxon-info-link="${preferredTaxon.id}">${INFO_ICON_SVG}</a>`;
+            }
+        }
+
         if (Taxon.showVernacular) {
             if (vernacularMatched) {
                 return (acceptedTaxon) ?
                     `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>` +
-                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>${infoLink}`
                     :
-                    `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
+                    `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${infoLink}`
                     ;
             } else {
                 return (acceptedTaxon) ?
                     `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''
-                    } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                    } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>${infoLink}`
                     :
-                    `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''}`
+                    `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>${infoLink}` : ''}`
                     ;
             }
         } else {
             return (acceptedTaxon) ?
                 `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>` +
-                ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
+                ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>${infoLink}`
                 :
-                `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
+                `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${infoLink}`
                 ;
         }
+    }
+
+    /**
+     * @returns boolean
+     */
+    isAggregate() {
+        return (this.qualifier === 's.l.' || this.qualifier === 'agg.');
     }
 }
 
@@ -6977,16 +7018,16 @@ class Party {
     /**
      * Generic party list, not tied to a particular user id
      *
-     * @type {Object.<string, RawParty>}
+     * @type {Array.<RawParty>}
      */
-    static _baseParties = {};
+    static _baseParties = [];
 
     /**
      * Current party working set, combining base set with per-user extras
      *
-     * @type {Object.<string, RawParty>}
+     * @type {Array.<RawParty>}
      */
-    static rawParties = {};
+    static rawParties = [];
 
     /**
      *
@@ -7059,12 +7100,13 @@ class Party {
 
     /**
      *
-     * @param {Object.<string, RawParty>} parties
+     * @param {Array.<RawParty>} parties
      * @param {string} sourceUrl
      */
     static initialiseParties(parties, sourceUrl) {
         Party._baseParties = parties;
-        Party.rawParties = {...Party._baseParties, ...parties};
+        //Party.rawParties = [...Party._baseParties, ...parties];
+        Party.rawParties = Party._baseParties;
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
@@ -7085,7 +7127,8 @@ class Party {
      * @returns {Promise}
      */
     static addUserParties(userId) {
-        //Party.rawParties = {...Party.rawParties, ...parties};
+        // where parties are the newly-loaded extra set
+        //Party.rawParties = [...Party._baseParties, ...parties];
 
         return Promise.resolve();
     }
@@ -7601,7 +7644,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1699894961-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1706608640-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -8004,7 +8047,7 @@ class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
 
-            return cache.match(request).then((cachedResponse) => {
+            return cache.match(request, {ignoreVary : true}).then((cachedResponse) => {
                 console.log(cachedResponse ?
                     `cache matched ${request.url}`
                     :
@@ -8173,7 +8216,7 @@ class BSBIServiceWorker {
                 if (response.ok) {
                     console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
-                        return cache.match(request);
+                        return cache.match(request, {ignoreVary : true});
                     });
                 } else {
                     console.error(`Request during cache update failed for ${request.url}`);

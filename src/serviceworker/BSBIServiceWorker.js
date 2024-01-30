@@ -469,7 +469,7 @@ export class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
 
-            return cache.match(request).then((cachedResponse) => {
+            return cache.match(request, {ignoreVary : true}).then((cachedResponse) => {
                 console.log(cachedResponse ?
                     `cache matched ${request.url}`
                     :
@@ -638,7 +638,7 @@ export class BSBIServiceWorker {
                 if (response.ok) {
                     console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
-                        return cache.match(request);
+                        return cache.match(request, {ignoreVary : true});
                     });
                 } else {
                     console.error(`Request during cache update failed for ${request.url}`);
