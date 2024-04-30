@@ -93,8 +93,8 @@ export class OccurrenceImage extends Model {
             formData.append('id', this.id);
             formData.append('image', this.file);
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString() || '');
-            formData.append('modified', this.modifiedStamp?.toString() || '');
+            formData.append('created', this.createdStamp?.toString?.() || '');
+            formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
             if (this.context === 'survey') {
                 formData.append('context', this.context);

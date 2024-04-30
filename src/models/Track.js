@@ -172,7 +172,7 @@ export class Track extends Model {
                     if (Track._currentlyTrackedSurveyId) {
                         const oldTrack =
                             Track._tracks.get(Track._currentlyTrackedSurveyId)
-                                ?.get(Track._currentlyTrackedDeviceId);
+                                ?.get?.(Track._currentlyTrackedDeviceId);
 
                         previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
@@ -224,7 +224,7 @@ export class Track extends Model {
         Track._app.addListener(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
 
             if (Track.trackingIsActive) {
-                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get(Track._currentlyTrackedDeviceId);
+                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
                 if (track) {
                     track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
@@ -274,9 +274,9 @@ export class Track extends Model {
      * @param {GridCoords} gridCoords
      */
     static ping(position, gridCoords) {
-        const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get(Track._currentlyTrackedDeviceId);
+        const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
-        track?.addPoint(position, gridCoords);
+        track?.addPoint?.(position, gridCoords);
         Track.lastPingStamp = position.timestamp;
     }
 

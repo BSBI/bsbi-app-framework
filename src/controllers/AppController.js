@@ -91,12 +91,8 @@ export class AppController {
         );
     }
 
-    /**
-     *
-     * @param {object} params
-     * @param {string} query
-     */
-    routeHandler(params, query) {
+
+    routeHandler(context, subcontext, rhs, queryParameters) {
 
     }
 

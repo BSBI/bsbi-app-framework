@@ -127,7 +127,7 @@ export class Party {
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
-            navigator?.serviceWorker?.ready.then((registration) => {
+            navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
                     {
                         action: 'recache',

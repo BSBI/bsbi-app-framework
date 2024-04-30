@@ -147,8 +147,8 @@ export class Occurrence extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString() || '');
-            formData.append('modified', this.modifiedStamp?.toString() || '');
+            formData.append('created', this.createdStamp?.toString?.() || '');
+            formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
             if (this.userId) {
                 formData.append('userId', this.userId);

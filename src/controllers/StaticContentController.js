@@ -22,12 +22,7 @@ export class StaticContentController extends AppController {
         this.handle = AppController.nextHandle;
     }
 
-    /**
-     *
-     * @param {object} params
-     * @param {string} query
-     */
-    routeHandler(params, query) {
+    routeHandler(context, subcontext, rhs, queryParameters) {
         // console.log("reached route handler for StaticContentController.js");
 
         this.app.currentControllerHandle = this.handle;

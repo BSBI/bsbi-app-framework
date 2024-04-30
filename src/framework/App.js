@@ -964,8 +964,8 @@ export class App extends EventHarness {
                         }
 
                         this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                        this.currentSurvey?.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED);
-                        this.currentSurvey?.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
+                        this.currentSurvey?.fireEvent?.(Survey.EVENT_OCCURRENCES_CHANGED);
+                        this.currentSurvey?.fireEvent?.(Survey.EVENT_LIST_LENGTH_CHANGED);
 
                         return Promise.resolve();
                     });
@@ -1113,7 +1113,7 @@ export class App extends EventHarness {
                                     } else {
                                         // not part of current survey but should still add to key list for counting purposes
 
-                                        this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
+                                        this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
                                     }
 
                                 }));
@@ -1151,8 +1151,8 @@ export class App extends EventHarness {
                 this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]) || null;
 
                 // if the target survey belonged to a different user then could be undefined here
-
-                return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.resolve();
+                // failed state should reject rather than resolve the promise
+                return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.reject();
             });
         }
 

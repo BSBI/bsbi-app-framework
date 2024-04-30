@@ -93,12 +93,8 @@ class AppController {
         );
     }
 
-    /**
-     *
-     * @param {object} params
-     * @param {string} query
-     */
-    routeHandler(params, query) {
+
+    routeHandler(context, subcontext, rhs, queryParameters) {
 
     }
 
@@ -141,12 +137,7 @@ class StaticContentController extends AppController {
         this.handle = AppController.nextHandle;
     }
 
-    /**
-     *
-     * @param {object} params
-     * @param {string} query
-     */
-    routeHandler(params, query) {
+    routeHandler(context, subcontext, rhs, queryParameters) {
         // console.log("reached route handler for StaticContentController.js");
 
         this.app.currentControllerHandle = this.handle;
@@ -3700,7 +3691,7 @@ class Track extends Model {
                     if (Track._currentlyTrackedSurveyId) {
                         const oldTrack =
                             Track._tracks.get(Track._currentlyTrackedSurveyId)
-                                ?.get(Track._currentlyTrackedDeviceId);
+                                ?.get?.(Track._currentlyTrackedDeviceId);
 
                         previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
@@ -3752,7 +3743,7 @@ class Track extends Model {
         Track._app.addListener(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
 
             if (Track.trackingIsActive) {
-                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get(Track._currentlyTrackedDeviceId);
+                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
                 if (track) {
                     track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
@@ -3802,9 +3793,9 @@ class Track extends Model {
      * @param {GridCoords} gridCoords
      */
     static ping(position, gridCoords) {
-        const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get(Track._currentlyTrackedDeviceId);
+        const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
-        track?.addPoint(position, gridCoords);
+        track?.addPoint?.(position, gridCoords);
         Track.lastPingStamp = position.timestamp;
     }
 
@@ -4467,7 +4458,7 @@ class Survey extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('baseSurveyId', this.baseSurveyId || this.id);
 
             if (this.userId) {
@@ -4539,7 +4530,7 @@ class Survey extends Model {
             if (precision) {
                 const gridRef = GridRef.fromString(rawGridRef);
 
-                return gridRef?.gridCoords?.to_gridref(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
+                return gridRef?.gridCoords?.to_gridref?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {
                 return rawGridRef;
             }
@@ -4876,7 +4867,7 @@ class Taxon {
 
         if ((taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Taxon list may be stale (stamp is ${taxa.stamp}), prompting re-cache.`);
-            navigator?.serviceWorker?.ready.then((registration) => {
+            navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
                     {
                         action: 'recache',
@@ -5179,8 +5170,8 @@ class Occurrence extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString() || '');
-            formData.append('modified', this.modifiedStamp?.toString() || '');
+            formData.append('created', this.createdStamp?.toString?.() || '');
+            formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
             if (this.userId) {
                 formData.append('userId', this.userId);
@@ -5358,8 +5349,8 @@ class OccurrenceImage extends Model {
             formData.append('id', this.id);
             formData.append('image', this.file);
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString() || '');
-            formData.append('modified', this.modifiedStamp?.toString() || '');
+            formData.append('created', this.createdStamp?.toString?.() || '');
+            formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
             if (this.context === 'survey') {
                 formData.append('context', this.context);
@@ -6504,8 +6495,8 @@ class App extends EventHarness {
                         }
 
                         this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                        this.currentSurvey?.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED);
-                        this.currentSurvey?.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
+                        this.currentSurvey?.fireEvent?.(Survey.EVENT_OCCURRENCES_CHANGED);
+                        this.currentSurvey?.fireEvent?.(Survey.EVENT_LIST_LENGTH_CHANGED);
 
                         return Promise.resolve();
                     });
@@ -6653,7 +6644,7 @@ class App extends EventHarness {
                                     } else {
                                         // not part of current survey but should still add to key list for counting purposes
 
-                                        this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add(occurrence.id);
+                                        this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
                                     }
 
                                 }));
@@ -6691,8 +6682,8 @@ class App extends EventHarness {
                 this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]) || null;
 
                 // if the target survey belonged to a different user then could be undefined here
-
-                return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.resolve();
+                // failed state should reject rather than resolve the promise
+                return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.reject();
             });
         }
 
@@ -7110,7 +7101,7 @@ class Party {
 
         if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
-            navigator?.serviceWorker?.ready.then((registration) => {
+            navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
                     {
                         action: 'recache',
@@ -7644,7 +7635,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1706608640-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1713302012-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

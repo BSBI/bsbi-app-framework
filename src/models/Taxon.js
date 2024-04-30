@@ -208,7 +208,7 @@ export class Taxon {
 
         if ((taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Taxon list may be stale (stamp is ${taxa.stamp}), prompting re-cache.`);
-            navigator?.serviceWorker?.ready.then((registration) => {
+            navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
                     {
                         action: 'recache',

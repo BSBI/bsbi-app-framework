@@ -453,7 +453,7 @@ export class Survey extends Model {
             formData.append('projectId', this.projectId.toString());
             formData.append('attributes', JSON.stringify(this.attributes));
             formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString() || '');
+            formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('baseSurveyId', this.baseSurveyId || this.id);
 
             if (this.userId) {
@@ -525,7 +525,7 @@ export class Survey extends Model {
             if (precision) {
                 const gridRef = GridRef.fromString(rawGridRef);
 
-                return gridRef?.gridCoords?.to_gridref(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
+                return gridRef?.gridCoords?.to_gridref?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {
                 return rawGridRef;
             }
