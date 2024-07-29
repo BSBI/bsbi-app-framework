@@ -247,7 +247,7 @@ export class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject('IndexedDb storage not yet implemented');
+                return Promise.reject('IndexedDb storage not yet implemented (probably no service worker).');
             }
         });
     }

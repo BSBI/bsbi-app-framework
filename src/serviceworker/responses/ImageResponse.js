@@ -24,7 +24,7 @@ export class ImageResponse extends LocalResponse {
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
-        this.returnedToClient.context = this.toSaveLocally.context;
+        this.returnedToClient.context = this.toSaveLocally.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
 
         if (this.toSaveLocally.context !== 'survey') {
             this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
@@ -48,7 +48,7 @@ export class ImageResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-        this.toSaveLocally.context = this.returnedToClient.context;
+        this.toSaveLocally.context = this.returnedToClient.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
 
         if (this.returnedToClient.context !== 'survey') {
             this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;

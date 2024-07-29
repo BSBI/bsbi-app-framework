@@ -5,14 +5,14 @@
 export class EventHarness {
     /**
      *
-     * @type {*[]}
+     * @type {Object<string,Array<function>>}
      */
-    _eventListeners = [];
+    _eventListeners = {};
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
-        this._eventListeners = this._eventListeners || [];
+        //this._eventListeners = this._eventListeners || [];
 
         const weakWrapped = new WeakRef(handlerObject);
         handlerObject = null;
@@ -33,7 +33,7 @@ export class EventHarness {
             this._eventListeners[eventName] = [handlerFunction];
             return 0; // first element in array
         }
-    };
+    }
 
     /**
      *
@@ -43,7 +43,7 @@ export class EventHarness {
      * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
-        this._eventListeners = this._eventListeners || [];
+        //this._eventListeners = this._eventListeners || [];
 
         const handlerFunction = (context, eventName, invocationParam = {}) =>
             handler({context, eventName, ...invocationParam, ...constructionParam});
@@ -54,7 +54,7 @@ export class EventHarness {
             this._eventListeners[eventName] = [handlerFunction];
             return 0; // first element in array
         }
-    };
+    }
 
     /**
      *
@@ -69,14 +69,14 @@ export class EventHarness {
             console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
         }
         return undefined;
-    };
+    }
 
     /**
      *
      */
     destructor() {
-        this._eventListeners = null;
-    };
+        this._eventListeners = {};
+    }
 
     /**
      *
@@ -87,12 +87,12 @@ export class EventHarness {
     fireEvent (eventName, param) {
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
-                if (this._eventListeners[eventName].hasOwnProperty(f)) {
+                //if (this._eventListeners[eventName].hasOwnProperty(f)) {
                     if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
                         break;
                     }
-                }
+                //}
             }
         }
-    };
+    }
 }

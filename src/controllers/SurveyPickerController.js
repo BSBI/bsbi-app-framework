@@ -5,6 +5,7 @@ import {AppController} from './AppController';
 import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {UUID_REGEX} from "../models/Model";
 import {App} from "../framework/App";
+import {Logger} from "../utils/Logger";
 
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
@@ -134,10 +135,12 @@ export class SurveyPickerController extends AppController {
             if (Array.isArray(result)) {
                 this.view.showSaveAllSuccess();
             } else {
+                Logger.logError(`Failed to sync all (line 138): ${result}`);
                 this.view.showSaveAllFailure();
             }
         }, (result) => {
             console.log({'In save all handler, failure result' : result});
+            Logger.logError(`Failed to sync all (line 143): ${result}`);
             this.view.showSaveAllFailure();
         }).finally(() => {
             // stop the spinner

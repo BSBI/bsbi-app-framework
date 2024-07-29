@@ -779,7 +779,7 @@ export class App extends EventHarness {
 
     /**
      *
-     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>}} storedObjectKeys
+     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
      * @param {boolean} fastReturn default false
      * @returns {Promise}
      * @private

@@ -158,14 +158,14 @@ class NotFoundError extends Error {
 class EventHarness {
     /**
      *
-     * @type {*[]}
+     * @type {Object<string,Array<function>>}
      */
-    _eventListeners = [];
+    _eventListeners = {};
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
-        this._eventListeners = this._eventListeners || [];
+        //this._eventListeners = this._eventListeners || [];
 
         const weakWrapped = new WeakRef(handlerObject);
         handlerObject = null;
@@ -186,7 +186,7 @@ class EventHarness {
             this._eventListeners[eventName] = [handlerFunction];
             return 0; // first element in array
         }
-    };
+    }
 
     /**
      *
@@ -196,7 +196,7 @@ class EventHarness {
      * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
-        this._eventListeners = this._eventListeners || [];
+        //this._eventListeners = this._eventListeners || [];
 
         const handlerFunction = (context, eventName, invocationParam = {}) =>
             handler({context, eventName, ...invocationParam, ...constructionParam});
@@ -207,7 +207,7 @@ class EventHarness {
             this._eventListeners[eventName] = [handlerFunction];
             return 0; // first element in array
         }
-    };
+    }
 
     /**
      *
@@ -222,14 +222,14 @@ class EventHarness {
             console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
         }
         return undefined;
-    };
+    }
 
     /**
      *
      */
     destructor() {
-        this._eventListeners = null;
-    };
+        this._eventListeners = {};
+    }
 
     /**
      *
@@ -240,14 +240,14 @@ class EventHarness {
     fireEvent (eventName, param) {
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
-                if (this._eventListeners[eventName].hasOwnProperty(f)) {
+                //if (this._eventListeners[eventName].hasOwnProperty(f)) {
                     if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
                         break;
                     }
-                }
+                //}
             }
         }
-    };
+    }
 }
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -3327,7 +3327,7 @@ class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject('IndexedDb storage not yet implemented');
+                return Promise.reject('IndexedDb storage not yet implemented (probably no service worker).');
             }
         });
     }
@@ -5256,6 +5256,9 @@ class Occurrence extends Model {
     };
 }
 
+const CONTEXT_SURVEY = 'survey';
+const CONTEXT_OCCURRENCE = 'occurrence';
+
 class OccurrenceImage extends Model {
 
     /**
@@ -5284,7 +5287,10 @@ class OccurrenceImage extends Model {
 
     //projectId = '';
 
-    context = 'occurrence';
+    static CONTEXT_SURVEY = CONTEXT_SURVEY;
+    static CONTEXT_OCCURRENCE = CONTEXT_OCCURRENCE;
+
+    context = OccurrenceImage.CONTEXT_OCCURRENCE;
 
     /**
      * fetches a URL of the image
@@ -5352,7 +5358,7 @@ class OccurrenceImage extends Model {
             formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
-            if (this.context === 'survey') {
+            if (this.context === OccurrenceImage.CONTEXT_SURVEY) {
                 formData.append('context', this.context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
@@ -6310,7 +6316,7 @@ class App extends EventHarness {
 
     /**
      *
-     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>}} storedObjectKeys
+     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
      * @param {boolean} fastReturn default false
      * @returns {Promise}
      * @private
@@ -6839,10 +6845,12 @@ class SurveyPickerController extends AppController {
             if (Array.isArray(result)) {
                 this.view.showSaveAllSuccess();
             } else {
+                Logger.logError(`Failed to sync all (line 138): ${result}`);
                 this.view.showSaveAllFailure();
             }
         }, (result) => {
             console.log({'In save all handler, failure result' : result});
+            Logger.logError(`Failed to sync all (line 143): ${result}`);
             this.view.showSaveAllFailure();
         }).finally(() => {
             // stop the spinner
@@ -7351,7 +7359,7 @@ class ImageResponse extends LocalResponse {
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
-        this.returnedToClient.context = this.toSaveLocally.context;
+        this.returnedToClient.context = this.toSaveLocally.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
 
         if (this.toSaveLocally.context !== 'survey') {
             this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
@@ -7375,7 +7383,7 @@ class ImageResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-        this.toSaveLocally.context = this.returnedToClient.context;
+        this.toSaveLocally.context = this.returnedToClient.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
 
         if (this.returnedToClient.context !== 'survey') {
             this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
@@ -7635,7 +7643,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1713302012-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1722261101-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

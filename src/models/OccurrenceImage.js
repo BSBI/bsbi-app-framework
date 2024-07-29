@@ -1,5 +1,8 @@
 import {Model} from "./Model";
 
+export const CONTEXT_SURVEY = 'survey';
+export const CONTEXT_OCCURRENCE = 'occurrence';
+
 export class OccurrenceImage extends Model {
 
     /**
@@ -28,7 +31,10 @@ export class OccurrenceImage extends Model {
 
     //projectId = '';
 
-    context = 'occurrence';
+    static CONTEXT_SURVEY = CONTEXT_SURVEY;
+    static CONTEXT_OCCURRENCE = CONTEXT_OCCURRENCE;
+
+    context = OccurrenceImage.CONTEXT_OCCURRENCE;
 
     /**
      * fetches a URL of the image
@@ -96,7 +102,7 @@ export class OccurrenceImage extends Model {
             formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
-            if (this.context === 'survey') {
+            if (this.context === OccurrenceImage.CONTEXT_SURVEY) {
                 formData.append('context', this.context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
