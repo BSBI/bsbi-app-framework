@@ -1,7 +1,7 @@
 import {Model} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
-import {Survey} from "./Survey";
+//import {Survey} from "./Survey";
 
 export class Occurrence extends Model {
 
@@ -78,6 +78,18 @@ export class Occurrence extends Model {
     //     }
     //     return form;
     // }
+
+    /**
+     * Returns true or false based on occurrence date compatibility of *this* occurrence,
+     * or null if individual occurrences are not dated (i.e. part of a dated survey)
+     *
+     * @returns {boolean|null}
+     */
+    isToday() {
+        const date = this.attributes.date || '';
+
+        return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
+    }
 
     /**
      * called after the form has changed, before the values have been read back in to the occurrence

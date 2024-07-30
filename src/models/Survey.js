@@ -316,10 +316,14 @@ export class Survey extends Model {
     }
 
     /**
-     * @returns {boolean}
+     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
+     *
+     * @returns {boolean|null}
      */
     isToday() {
-        return this.date === (new Date).toISOString().slice(0,10);
+        const date = this.date;
+
+        return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
     }
 
     get place() {

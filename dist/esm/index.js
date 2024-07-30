@@ -3521,8 +3521,6 @@ class DeviceType extends EventHarness {
 	}
 }
 
-//import {Survey} from "./Survey";
-
 /**
  * Used for saving current survey track that is still open
  * @type {number}
@@ -3828,6 +3826,10 @@ class Track extends Model {
      * @returns {PointSeries}
      */
     startPointSeries() {
+        /**
+         *
+         * @type {PointSeries}
+         */
         const pointSeries = [
             [], // empty array of PointTriplets
             TRACK_END_REASON_SURVEY_OPEN
@@ -3957,6 +3959,10 @@ class Track extends Model {
      *
      */
     registerSurvey(survey) {
+        if (!survey) {
+            throw new Error('Attempt to register null survey in Track.registerSurvey()');
+        }
+
         Track._currentlyTrackedSurveyId = this.surveyId;
         Track._currentlyTrackedDeviceId = Track._app.deviceId;
 
@@ -4321,10 +4327,14 @@ class Survey extends Model {
     }
 
     /**
-     * @returns {boolean}
+     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
+     *
+     * @returns {boolean|null}
      */
     isToday() {
-        return this.date === (new Date).toISOString().slice(0,10);
+        const date = this.date;
+
+        return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
     }
 
     get place() {
@@ -5026,6 +5036,8 @@ class Taxon {
     }
 }
 
+//import {Survey} from "./Survey";
+
 class Occurrence extends Model {
 
     /**
@@ -5101,6 +5113,18 @@ class Occurrence extends Model {
     //     }
     //     return form;
     // }
+
+    /**
+     * Returns true or false based on occurrence date compatibility of *this* occurrence,
+     * or null if individual occurrences are not dated (i.e. part of a dated survey)
+     *
+     * @returns {boolean|null}
+     */
+    isToday() {
+        const date = this.attributes.date || '';
+
+        return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
+    }
 
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
@@ -5606,6 +5630,7 @@ class App extends EventHarness {
 
     /**
      * Event fired when user requests a new blank survey
+     *
      * @type {string}
      */
     static EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';
@@ -7643,7 +7668,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1722261101-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1722371637-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

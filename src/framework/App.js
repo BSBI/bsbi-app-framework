@@ -69,6 +69,7 @@ export class App extends EventHarness {
 
     /**
      * Event fired when user requests a new blank survey
+     *
      * @type {string}
      */
     static EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';

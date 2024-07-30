@@ -2,7 +2,6 @@ import {Model} from "./Model";
 import {DeviceType} from "../utils/DeviceType";
 import {App} from "../framework/App";
 import {Survey} from "./Survey";
-//import {Survey} from "./Survey";
 
 /**
  * Used for saving current survey track that is still open
@@ -309,6 +308,10 @@ export class Track extends Model {
      * @returns {PointSeries}
      */
     startPointSeries() {
+        /**
+         *
+         * @type {PointSeries}
+         */
         const pointSeries = [
             [], // empty array of PointTriplets
             TRACK_END_REASON_SURVEY_OPEN
@@ -438,6 +441,10 @@ export class Track extends Model {
      *
      */
     registerSurvey(survey) {
+        if (!survey) {
+            throw new Error('Attempt to register null survey in Track.registerSurvey()');
+        }
+
         Track._currentlyTrackedSurveyId = this.surveyId;
         Track._currentlyTrackedDeviceId = Track._app.deviceId;
 
