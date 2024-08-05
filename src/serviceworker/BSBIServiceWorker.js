@@ -469,7 +469,7 @@ export class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
 
-            return cache.match(request, {ignoreVary : true}).then((cachedResponse) => {
+            return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)}).then((cachedResponse) => {
                 console.log(cachedResponse ?
                     `cache matched ${request.url}`
                     :
@@ -500,7 +500,7 @@ export class BSBIServiceWorker {
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        // tryRemoteFallback set to false to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
+        // tryRemoteFallback is set to false, to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
 
         evt.respondWith(this.fromCache(evt.request, true, 5000).then((response) => {
                 //console.log('In handleImageFetch promise');
@@ -638,7 +638,7 @@ export class BSBIServiceWorker {
                 if (response.ok) {
                     console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
-                        return cache.match(request, {ignoreVary : true});
+                        return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)});
                     });
                 } else {
                     console.error(`Request during cache update failed for ${request.url}`);

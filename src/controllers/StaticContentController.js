@@ -1,6 +1,9 @@
 // StaticContentController
 
 import {AppController} from './AppController';
+/**
+ * @typedef {import('bsbi-app-framework-view').Page} Page
+ */
 
 export class StaticContentController extends AppController {
     /**

@@ -22,7 +22,9 @@
     "localforage": "^1.10.0"
   },
   "peerDependencies": {
-    "british-isles-gridrefs": "file:C:\\GitHub\\js-british-isles-gridrefs"
+    "british-isles-gridrefs": "file:C:\\GitHub\\js-british-isles-gridrefs",
+    "bsbi-app-framework-view": "file:C:\\GitHub\\bsbi-app-framework-view",
+    "navigo": "^7.1.2"
   },
   "scripts": {
     "build": "rollup -c --strictDeprecations",

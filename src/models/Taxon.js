@@ -180,7 +180,7 @@ export class Taxon {
 
     /**
      *
-     * @type {null|{{description: string, trends: string, biogeog: string}}
+     * @type {null|{description: string, trends: string, biogeog: string}}
      */
     documentation = null;
 

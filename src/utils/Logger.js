@@ -67,6 +67,7 @@ export class Logger {
 
         doc.documentElement.appendChild(error);
 
+        // noinspection JSIgnoredPromiseFromCall
         fetch('/javascriptErrorLog.php', {
             method: "POST", // *GET, POST, PUT, DELETE, etc.
             mode: "cors", // no-cors, *cors, same-origin

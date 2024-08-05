@@ -1,7 +1,12 @@
 import {Model} from "./Model";
 import {DeviceType} from "../utils/DeviceType";
-import {App} from "../framework/App";
+//import {App} from "../framework/App";
 import {Survey} from "./Survey";
+import {
+    APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
+    APP_EVENT_CURRENT_SURVEY_CHANGED,
+    APP_EVENT_WATCH_GPS_USER_REQUEST
+} from "../framework/AppEvents";
 
 /**
  * Used for saving current survey track that is still open
@@ -16,11 +21,14 @@ const TRACK_END_REASON_SURVEY_CHANGED = 3;
 export class Track extends Model {
 
     /**
+     * @todo consider whether PointTriplet should also include accuracy
+     * @todo consider whether to change from milliseconds to seconds
+     *
      * @typedef PointTriplet
      * @type {array}
      * @property {number} 0 lng
      * @property {number} 1 lat
-     * @property {number} 2 stamp (seconds since epoch)
+     * @property {number} 2 stamp (milliseconds since epoch)
      */
 
     /**
@@ -158,7 +166,7 @@ export class Track extends Model {
         Track._app = app;
 
         if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-            app.addListener(App.EVENT_CURRENT_SURVEY_CHANGED, () => {
+            app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;
 
                 if (Track._currentlyTrackedSurveyId !== survey.id) {
@@ -202,13 +210,13 @@ export class Track extends Model {
                         Track._trackSurvey(survey);
                         Track.trackingIsActive = true;
                     } else {
-                        Track._app.fireEvent(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
+                        Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
                     }
                 }
             });
         }
 
-        Track._app.addListener(App.EVENT_WATCH_GPS_USER_REQUEST, () => {
+        Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
             const survey = this._app.currentSurvey;
 
             if (survey) {
@@ -220,9 +228,12 @@ export class Track extends Model {
             }
         });
 
-        Track._app.addListener(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+        Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
 
             if (Track.trackingIsActive) {
+                /**
+                 * @type {Track|null}
+                 */
                 const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
                 if (track) {
@@ -277,6 +288,8 @@ export class Track extends Model {
 
         track?.addPoint?.(position, gridCoords);
         Track.lastPingStamp = position.timestamp;
+
+        track?.save?.();
     }
 
     /**
@@ -294,7 +307,7 @@ export class Track extends Model {
         series[0][series[0].length] = [
             position.coords.longitude,
             position.coords.latitude,
-            position.timestamp
+            position.timestamp, // @todo consider changing to seconds instead of milliseconds
         ];
 
         this.touch();
@@ -313,7 +326,7 @@ export class Track extends Model {
          * @type {PointSeries}
          */
         const pointSeries = [
-            [], // empty array of PointTriplets
+            /** @type {Array<PointTriplet>} */ [], // empty array of PointTriplets
             TRACK_END_REASON_SURVEY_OPEN
         ];
 
@@ -447,6 +460,7 @@ export class Track extends Model {
 
         Track._currentlyTrackedSurveyId = this.surveyId;
         Track._currentlyTrackedDeviceId = Track._app.deviceId;
+        Track.lastPingStamp = 0;
 
         if (survey.attributes.casual) {
             throw new Error('Attempt to register tracking for casual survey.');

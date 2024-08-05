@@ -20,6 +20,7 @@ export class DeviceType extends EventHarness {
 	 */
 	static getDeviceType() {
 		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
+			// noinspection JSUnresolvedReference
 			if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
 				DeviceType._deviceType = navigator.userAgentData.mobile ?
 					DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;

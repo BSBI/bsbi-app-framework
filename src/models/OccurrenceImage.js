@@ -1,7 +1,7 @@
 import {Model} from "./Model";
 
-export const CONTEXT_SURVEY = 'survey';
-export const CONTEXT_OCCURRENCE = 'occurrence';
+export const IMAGE_CONTEXT_SURVEY = 'survey';
+export const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
 
 export class OccurrenceImage extends Model {
 
@@ -31,10 +31,10 @@ export class OccurrenceImage extends Model {
 
     //projectId = '';
 
-    static CONTEXT_SURVEY = CONTEXT_SURVEY;
-    static CONTEXT_OCCURRENCE = CONTEXT_OCCURRENCE;
+    //static CONTEXT_SURVEY = IMAGE_CONTEXT_SURVEY;
+    //static CONTEXT_OCCURRENCE = IMAGE_CONTEXT_OCCURRENCE;
 
-    context = OccurrenceImage.CONTEXT_OCCURRENCE;
+    context = IMAGE_CONTEXT_OCCURRENCE;
 
     /**
      * fetches a URL of the image
@@ -102,7 +102,7 @@ export class OccurrenceImage extends Model {
             formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
-            if (this.context === OccurrenceImage.CONTEXT_SURVEY) {
+            if (this.context === IMAGE_CONTEXT_SURVEY) {
                 formData.append('context', this.context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
@@ -199,6 +199,12 @@ export class OccurrenceImage extends Model {
             :
             `height="${height}"`;
 
-        return `<picture><source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=webp" type="image/webp"><img${attributesString} src="/image.php?imageid=${id}&amp;width=${width}&amp;height=${height}&amp;format=jpeg" ${renderingConstraint} alt="photo"></picture>`;
+        // try sized images first, before falling back to un-sized jpeg, that may match an offline cache
+        return `<picture>` +
+    //<source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=avif" type="image/avif">
+    `<source srcset="/image.php?imageid=${id}&amp;height=${width}&amp;format=webp" type="image/webp">
+    <source srcset="/image.php?imageid=${id}&amp;width=${width}&amp;format=jpeg" type="image/jpeg">
+    <img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">
+    </picture>`;
     }
 }

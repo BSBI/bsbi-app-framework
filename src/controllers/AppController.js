@@ -1,6 +1,11 @@
 // AppController
 // Abstract super-class for page controllers
 
+/**
+ * @typedef {import('bsbi-app-framework-view').Page} Page
+ * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
+ */
+
 export class AppController {
 
     /**

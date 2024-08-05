@@ -3,6 +3,11 @@ import { GridRef } from 'british-isles-gridrefs';
 // AppController
 // Abstract super-class for page controllers
 
+/**
+ * @typedef {import('bsbi-app-framework-view').Page} Page
+ * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
+ */
+
 class AppController {
 
     /**
@@ -116,6 +121,9 @@ class AppController {
 
 // StaticContentController
 
+/**
+ * @typedef {import('bsbi-app-framework-view').Page} Page
+ */
 
 class StaticContentController extends AppController {
     /**
@@ -3081,6 +3089,10 @@ var localforage$1 = {exports: {}};
 var localforageExports = localforage$1.exports;
 var localforage = /*@__PURE__*/getDefaultExportFromCjs(localforageExports);
 
+/**
+ * @typedef {import('bsbi-app-framework-view').FormField} FormField
+ */
+
 function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uuid)}
 
 /**
@@ -3091,6 +3103,8 @@ const UUID_REGEX = /^[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$/;
 
 const SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
 const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
+
+const MODEL_EVENT_SAVED_REMOTELY = 'savedremotely';
 
 class Model extends EventHarness {
     /**
@@ -3105,7 +3119,7 @@ class Model extends EventHarness {
      */
     _savedRemotely = false;
 
-    static EVENT_SAVED_REMOTELY = 'savedremotely';
+    static EVENT_SAVED_REMOTELY = MODEL_EVENT_SAVED_REMOTELY;
 
     static bsbiAppVersion = '';
 
@@ -3118,7 +3132,7 @@ class Model extends EventHarness {
             this._savedRemotely = !!savedFlag;
 
             if (this._savedRemotely) {
-                this.fireEvent(Model.EVENT_SAVED_REMOTELY, {id : this.id});
+                this.fireEvent(MODEL_EVENT_SAVED_REMOTELY, {id : this.id});
             }
         }
     }
@@ -3465,6 +3479,456 @@ class Model extends EventHarness {
     }
 }
 
+class Logger {
+
+    /**
+     * @type {App}
+     */
+    static app;
+
+    /**
+     * reports a javascript error
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @param {string|number|null} [line]
+     * @param {number|null} [column]
+     * @param {Error|null} [errorObj]
+     */
+    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
+
+        window.onerror = null;
+
+        console.error(message, url, line, errorObj);
+
+        if (console.trace) {
+            console.trace('Trace');
+        }
+
+        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
+        const error = doc.createElement('error');
+
+        if (line !== null && line !== undefined) {
+            error.setAttribute('line', line);
+        }
+
+        if (errorObj && ('stack' in errorObj)) {
+            error.setAttribute('stack', errorObj.stack);
+        }
+
+        if (url !== null && url !== undefined && url !== '') {
+            error.setAttribute('url', url);
+        }
+
+        if (window.location.href) {
+            error.setAttribute('referrer', window.location.href);
+        }
+
+        if (window.location.search) {
+            error.setAttribute('urlquery', window.location.search);
+        }
+
+        if (window.location.hash) {
+            error.setAttribute('urlhash', window.location.hash);
+        }
+
+        if (Logger.app?.session?.userId) {
+            error.setAttribute('userid', Logger.app.session.userId);
+        }
+
+        // noinspection PlatformDetectionJS
+        error.setAttribute('browser', navigator.appName);
+        error.setAttribute('browserv', navigator.appVersion);
+        error.setAttribute('userAgent', navigator.userAgent);
+        error.setAttribute('versions', Model.bsbiAppVersion);
+
+        error.appendChild(doc.createTextNode(message));
+
+        doc.documentElement.appendChild(error);
+
+        // noinspection JSIgnoredPromiseFromCall
+        fetch('/javascriptErrorLog.php', {
+            method: "POST", // *GET, POST, PUT, DELETE, etc.
+            mode: "cors", // no-cors, *cors, same-origin
+            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: "include", // include, *same-origin, omit
+            headers: {
+                "Content-Type": "text/xml",
+            },
+            redirect: "follow", // manual, *follow, error
+            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: (new XMLSerializer()).serializeToString(doc),
+        });
+
+        window.onerror = Logger.logError; // turn on error handling again
+        return true; // suppress normal error reporting
+    };
+}
+
+/**
+ * Event fired when user requests a new blank survey
+ *
+ * @type {string}
+ */
+const APP_EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';
+
+/**
+ * Event fired when user requests a reset (local clearance) of all surveys
+ * @type {string}
+ */
+const APP_EVENT_RESET_SURVEYS = 'userresetsurveys';
+
+/**
+ * Fired after App.currentSurvey has been set to a new blank survey
+ * the survey will be accessible in App.currentSurvey
+ *
+ * @type {string}
+ */
+const APP_EVENT_NEW_SURVEY = 'newsurvey';
+
+/**
+ * Fired when a brand-new occurrence is added
+ *
+ * @type {string}
+ */
+const APP_EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+/**
+ * Fired when a survey is retrieved from local storage
+ * parameter is {survey : Survey}
+ *
+ * @type {string}
+ */
+const APP_EVENT_SURVEY_LOADED = 'surveyloaded';
+
+/**
+ * Fired when an occurrence is retrieved from local storage or newly initialised
+ * parameter is {occurrence : Occurrence}
+ *
+ * @type {string}
+ */
+const APP_EVENT_OCCURRENCE_LOADED = 'occurrenceloaded';
+
+const APP_EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
+
+/**
+ * Fired when the selected current survey id is changed
+ * parameter is {newSurvey : Survey|null}
+ *
+ * (this is not fired for modification of the survey content)
+ *
+ * @type {string}
+ */
+const APP_EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
+
+/**
+ * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
+ *
+ * @type {string}
+ */
+const APP_EVENT_SURVEYS_CHANGED = 'surveyschanged';
+
+/**
+ * Fired after fully-successful sync-all
+ * (or if sync-all resolved with nothing to send)
+ *
+ * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
+ *
+ * @type {string}
+ */
+const APP_EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
+
+/**
+ * fired if sync-all called, but one or more objects failed to be stored
+ *
+ * @type {string}
+ */
+const APP_EVENT_SYNC_ALL_FAILED = 'syncallfailed';
+
+const APP_EVENT_USER_LOGIN = 'login';
+
+const APP_EVENT_USER_LOGOUT = 'logout';
+
+/**
+ * Fired when watching of GPS has been granted following user request.
+ *
+ * @type {string}
+ */
+const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
+
+const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
+
+// SurveyPickerController
+//
+
+
+/**
+ * @typedef {import('bsbi-app-framework-view').SurveyPickerView} SurveyPickerView
+ * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
+ */
+
+class SurveyPickerController extends AppController {
+    route = '/survey/:action/:id';
+
+    static EVENT_BACK = 'back';
+
+    title = 'Survey picker';
+
+    /**
+     *
+     * @type {SurveyPickerView}
+     */
+    view;
+
+    /**
+     *
+     * @returns {Survey}
+     */
+    get survey() {
+        return this.app.currentSurvey;
+    }
+
+    /**
+     *
+     * @param {SurveyPickerView} view
+     */
+    constructor (view) {
+        super();
+
+        this.view = view;
+        view.controller = this;
+
+        this.handle = AppController.nextHandle;
+    }
+
+    /**
+     * registers the default route from this.route
+     * or alternatively is overridden in a child class
+     *
+     * @param {PatchedNavigo} router
+     */
+    registerRoute(router) {
+        // router.on(
+        //     '/survey',
+        //     this.mainRouteHandler.bind(this, 'survey', '', ''),
+        //     {
+        //         // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
+        //         // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
+        //         // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
+        //         // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
+        //     }
+        // );
+
+        router.on(
+            '/survey/new',
+            this.newSurveyHandler.bind(this, 'survey', 'new', ''),
+            {
+                before : this.beforeNewHandler.bind(this)
+            }
+        );
+
+        router.on(
+            '/survey/reset',
+            this.mainRouteHandler.bind(this, 'survey', 'reset', ''),
+            {
+                before : this.beforeResetHandler.bind(this)
+            }
+        );
+
+        router.on(
+            '/survey/save',
+            this.mainRouteHandler.bind(this, 'survey', 'save', ''),
+            {
+                before : this.beforeSaveAllHandler.bind(this)
+            }
+        );
+
+        router.on(
+            '/survey/add/:surveyId/:occurrenceId',
+            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+        );
+
+        router.on(
+            '/survey/add/:surveyId',
+            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+        );
+
+
+
+        this.app.addListener(APP_EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
+        this.app.addListener(APP_EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
+    }
+
+    beforeNewHandler(done) {
+        this.view.newSurveyDialog();
+
+        this.app.router.pause();
+
+        console.log({'route history' : this.app.routeHistory});
+
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
+        this.app.router.resume();
+
+        done(false); // block navigation
+    }
+
+    beforeResetHandler(done) {
+        this.view.showResetDialog();
+
+        this.app.router.pause();
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
+        this.app.router.resume();
+
+        done(false); // block navigation
+    }
+
+    beforeSaveAllHandler(done) {
+        // invoke sync of any/all unsaved data
+        // show pop-ups on success and failure
+        this.app.syncAll(false).then((result) => {
+            console.log({'In save all handler, success result' : result});
+
+            if (Array.isArray(result)) {
+                this.view.showSaveAllSuccess();
+            } else {
+                Logger.logError(`Failed to sync all (line 138): ${result}`);
+                this.view.showSaveAllFailure();
+            }
+        }, (result) => {
+            console.log({'In save all handler, failure result' : result});
+            Logger.logError(`Failed to sync all (line 143): ${result}`);
+            this.view.showSaveAllFailure();
+        }).finally(() => {
+            // stop the spinner
+
+        });
+
+        this.app.router.pause();
+        if (window.history.state) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
+        this.app.router.resume();
+
+        done(false); // block navigation
+    }
+
+    /**
+     *
+     * @param {string} context typically 'survey'
+     * @param {('new'|'')} subcontext
+     * @param {(''|'help')} rhs currently not used
+     * @param {Object.<string, string>} queryParameters surveyId
+     */
+    newSurveyHandler(context, subcontext, rhs, queryParameters) {
+        // should not get here, as beforeNewHandler ought to have been invoked first
+    }
+
+    /**
+     * called after user has confirmed add new survey dialog box
+     *
+     */
+    addNewSurveyHandler() {
+        console.log("reached addNewSurveyHandler");
+        this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
+
+        // it's opportune at this point to try to ping the server again to save anything left outstanding
+        this.app.syncAll(true).finally(() => {
+
+            // the apps occurrences should only relate to the current survey
+            // (the reset are remote or in IndexedDb)
+            this.app.clearCurrentSurvey().then(() => {
+
+                this.app.setNewSurvey();
+
+                this.app.router.pause();
+                this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+                this.app.router.resolve();
+            });
+        });
+    }
+
+    /**
+     * called after user has confirmed reset surveys dialog box
+     */
+    resetSurveysHandler() {
+        this.app.clearLocalForage().then(() => {
+            return this.app.reset();
+        }).finally(() => {
+            this.addNewSurveyHandler();
+        });
+    }
+
+    /**
+     * url fragment to redirect to, following addition of an existing survey, e.g. a pick from the selection list
+     *
+     * should be '/list' or '/list/record'
+     *
+     * @type {string}
+     */
+    restoredSurveyNavigationTarget = '/list';
+
+    /**
+     *
+     * @param {string} context typically 'survey'
+     * @param {('add'|'')} subcontext
+     * @param {(''|'help')} rhs currently not used
+     * @param {Object.<string, string>} queryParameters surveyId
+     */
+    addSurveyHandler(context, subcontext, rhs, queryParameters) {
+        console.log("reached addSurveyHandler");
+        console.log({context: context, params: subcontext, query: queryParameters});
+
+        this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
+
+        let surveyId = queryParameters.surveyId;
+
+        if (!surveyId || !surveyId.match(UUID_REGEX)) {
+            throw new NotFoundError(`Failed to match survey id '${surveyId}', the id format appears to be incorrect`);
+        }
+
+        surveyId = surveyId.toLowerCase();
+
+        // hide the left panel before loading, otherwise there can be a confusing delay
+        this.view.hideLeftPanel();
+
+        this.app.restoreOccurrences(surveyId)
+            .then(() => {
+                this.app.markAllNotPristine();
+
+                this.app.router.pause();
+                this.app.router.navigate(this.restoredSurveyNavigationTarget).resume();
+                this.app.router.resolve();
+            }, (error) => {
+                console.log({'failed survey restoration' : error});
+
+                // should display a modal error message
+                // either the survey was not found or there was no network connection
+
+                // should switch to displaying a list of available surveys and an option to start a new survey
+            })
+            .finally(() => {
+                this.view.restoreLeftPanel();
+            })
+        ;
+    }
+
+    /**
+     *
+     * @param {string} context typically 'survey'
+     * @param {('add'|'')} subcontext
+     * @param {(''|'help')} rhs currently not used
+     * @param {Object.<string, string>} queryParameters surveyId
+     */
+    mainRouteHandler(context, subcontext, rhs, queryParameters) {
+        console.log("reached special route handler for SurveyPickerController.js");
+        console.log({context: context, params: subcontext, query: queryParameters});
+    }
+}
+
 /**
  *
  * @param text
@@ -3503,6 +3967,7 @@ class DeviceType extends EventHarness {
 	 */
 	static getDeviceType() {
 		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
+			// noinspection JSUnresolvedReference
 			if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
 				DeviceType._deviceType = navigator.userAgentData.mobile ?
 					DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
@@ -3534,11 +3999,14 @@ const TRACK_END_REASON_SURVEY_CHANGED = 3;
 class Track extends Model {
 
     /**
+     * @todo consider whether PointTriplet should also include accuracy
+     * @todo consider whether to change from milliseconds to seconds
+     *
      * @typedef PointTriplet
      * @type {array}
      * @property {number} 0 lng
      * @property {number} 1 lat
-     * @property {number} 2 stamp (seconds since epoch)
+     * @property {number} 2 stamp (milliseconds since epoch)
      */
 
     /**
@@ -3676,7 +4144,7 @@ class Track extends Model {
         Track._app = app;
 
         if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-            app.addListener(App.EVENT_CURRENT_SURVEY_CHANGED, () => {
+            app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;
 
                 if (Track._currentlyTrackedSurveyId !== survey.id) {
@@ -3720,13 +4188,13 @@ class Track extends Model {
                         Track._trackSurvey(survey);
                         Track.trackingIsActive = true;
                     } else {
-                        Track._app.fireEvent(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
+                        Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
                     }
                 }
             });
         }
 
-        Track._app.addListener(App.EVENT_WATCH_GPS_USER_REQUEST, () => {
+        Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
             const survey = this._app.currentSurvey;
 
             if (survey) {
@@ -3738,9 +4206,12 @@ class Track extends Model {
             }
         });
 
-        Track._app.addListener(App.EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+        Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
 
             if (Track.trackingIsActive) {
+                /**
+                 * @type {Track|null}
+                 */
                 const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
                 if (track) {
@@ -3795,6 +4266,8 @@ class Track extends Model {
 
         track?.addPoint?.(position, gridCoords);
         Track.lastPingStamp = position.timestamp;
+
+        track?.save?.();
     }
 
     /**
@@ -3812,7 +4285,7 @@ class Track extends Model {
         series[0][series[0].length] = [
             position.coords.longitude,
             position.coords.latitude,
-            position.timestamp
+            position.timestamp, // @todo consider changing to seconds instead of milliseconds
         ];
 
         this.touch();
@@ -3831,7 +4304,7 @@ class Track extends Model {
          * @type {PointSeries}
          */
         const pointSeries = [
-            [], // empty array of PointTriplets
+            /** @type {Array<PointTriplet>} */ [], // empty array of PointTriplets
             TRACK_END_REASON_SURVEY_OPEN
         ];
 
@@ -3965,6 +4438,7 @@ class Track extends Model {
 
         Track._currentlyTrackedSurveyId = this.surveyId;
         Track._currentlyTrackedDeviceId = Track._app.deviceId;
+        Track.lastPingStamp = 0;
 
         if (survey.attributes.casual) {
             throw new Error('Attempt to register tracking for casual survey.');
@@ -4020,6 +4494,10 @@ class Track extends Model {
 // this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
+
+/**
+ * @typedef {import('bsbi-app-framework-view').SurveyForm} SurveyForm
+ */
 
 class Survey extends Model {
 
@@ -4849,7 +5327,7 @@ class Taxon {
 
     /**
      *
-     * @type {null|{{description: string, trends: string, biogeog: string}}
+     * @type {null|{description: string, trends: string, biogeog: string}}
      */
     documentation = null;
 
@@ -5036,7 +5514,9 @@ class Taxon {
     }
 }
 
-//import {Survey} from "./Survey";
+/**
+ * @typedef {import('bsbi-app-framework-view').Form} Form
+ */
 
 class Occurrence extends Model {
 
@@ -5212,7 +5692,7 @@ class Occurrence extends Model {
 
     /**
      *
-     * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
+     * @param {{id : string, saveState: string, userId : string?, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
@@ -5280,8 +5760,8 @@ class Occurrence extends Model {
     };
 }
 
-const CONTEXT_SURVEY = 'survey';
-const CONTEXT_OCCURRENCE = 'occurrence';
+const IMAGE_CONTEXT_SURVEY = 'survey';
+const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
 
 class OccurrenceImage extends Model {
 
@@ -5311,10 +5791,10 @@ class OccurrenceImage extends Model {
 
     //projectId = '';
 
-    static CONTEXT_SURVEY = CONTEXT_SURVEY;
-    static CONTEXT_OCCURRENCE = CONTEXT_OCCURRENCE;
+    //static CONTEXT_SURVEY = IMAGE_CONTEXT_SURVEY;
+    //static CONTEXT_OCCURRENCE = IMAGE_CONTEXT_OCCURRENCE;
 
-    context = OccurrenceImage.CONTEXT_OCCURRENCE;
+    context = IMAGE_CONTEXT_OCCURRENCE;
 
     /**
      * fetches a URL of the image
@@ -5382,7 +5862,7 @@ class OccurrenceImage extends Model {
             formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
-            if (this.context === OccurrenceImage.CONTEXT_SURVEY) {
+            if (this.context === IMAGE_CONTEXT_SURVEY) {
                 formData.append('context', this.context);
             } else {
                 formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
@@ -5479,98 +5959,24 @@ class OccurrenceImage extends Model {
             :
             `height="${height}"`;
 
-        return `<picture><source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=webp" type="image/webp"><img${attributesString} src="/image.php?imageid=${id}&amp;width=${width}&amp;height=${height}&amp;format=jpeg" ${renderingConstraint} alt="photo"></picture>`;
+        // try sized images first, before falling back to un-sized jpeg, that may match an offline cache
+        return `<picture>` +
+    //<source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=avif" type="image/avif">
+    `<source srcset="/image.php?imageid=${id}&amp;height=${width}&amp;format=webp" type="image/webp">
+    <source srcset="/image.php?imageid=${id}&amp;width=${width}&amp;format=jpeg" type="image/jpeg">
+    <img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">
+    </picture>`;
     }
-}
-
-class Logger {
-
-    /**
-     * @type {App}
-     */
-    static app;
-
-    /**
-     * reports a javascript error
-     *
-     * @param {string} message
-     * @param {string|null} [url]
-     * @param {string|number|null} [line]
-     * @param {number|null} [column]
-     * @param {Error|null} [errorObj]
-     */
-    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
-
-        window.onerror = null;
-
-        console.error(message, url, line, errorObj);
-
-        if (console.trace) {
-            console.trace('Trace');
-        }
-
-        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
-        const error = doc.createElement('error');
-
-        if (line !== null && line !== undefined) {
-            error.setAttribute('line', line);
-        }
-
-        if (errorObj && ('stack' in errorObj)) {
-            error.setAttribute('stack', errorObj.stack);
-        }
-
-        if (url !== null && url !== undefined && url !== '') {
-            error.setAttribute('url', url);
-        }
-
-        if (window.location.href) {
-            error.setAttribute('referrer', window.location.href);
-        }
-
-        if (window.location.search) {
-            error.setAttribute('urlquery', window.location.search);
-        }
-
-        if (window.location.hash) {
-            error.setAttribute('urlhash', window.location.hash);
-        }
-
-        if (Logger.app?.session?.userId) {
-            error.setAttribute('userid', Logger.app.session.userId);
-        }
-
-        // noinspection PlatformDetectionJS
-        error.setAttribute('browser', navigator.appName);
-        error.setAttribute('browserv', navigator.appVersion);
-        error.setAttribute('userAgent', navigator.userAgent);
-        error.setAttribute('versions', Model.bsbiAppVersion);
-
-        error.appendChild(doc.createTextNode(message));
-
-        doc.documentElement.appendChild(error);
-
-        fetch('/javascriptErrorLog.php', {
-            method: "POST", // *GET, POST, PUT, DELETE, etc.
-            mode: "cors", // no-cors, *cors, same-origin
-            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-            credentials: "include", // include, *same-origin, omit
-            headers: {
-                "Content-Type": "text/xml",
-            },
-            redirect: "follow", // manual, *follow, error
-            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-            body: (new XMLSerializer()).serializeToString(doc),
-        });
-
-        window.onerror = Logger.logError; // turn on error handling again
-        return true; // suppress normal error reporting
-    };
 }
 
 // App.js
 // base class for single page application
 // allows binding of controllers and routes
+
+/**
+ * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
+ * @typedef {import('bsbi-app-framework-view').Layout} Layout
+ */
 
 class App extends EventHarness {
     /**
@@ -5629,17 +6035,23 @@ class App extends EventHarness {
     projectId;
 
     /**
+     *
+     * @type {{[superAdmin] : boolean, [userId] : string} | null}
+     */
+    session = null;
+
+    /**
      * Event fired when user requests a new blank survey
      *
      * @type {string}
      */
-    static EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';
+    static EVENT_ADD_SURVEY_USER_REQUEST = APP_EVENT_ADD_SURVEY_USER_REQUEST;
 
     /**
      * Event fired when user requests a reset (local clearance) of all surveys
      * @type {string}
      */
-    static EVENT_RESET_SURVEYS = 'userresetsurveys';
+    static EVENT_RESET_SURVEYS = APP_EVENT_RESET_SURVEYS;
 
     /**
      * Fired after App.currentSurvey has been set to a new blank survey
@@ -5647,7 +6059,7 @@ class App extends EventHarness {
      *
      * @type {string}
      */
-    static EVENT_NEW_SURVEY = 'newsurvey';
+    static EVENT_NEW_SURVEY = APP_EVENT_NEW_SURVEY;
 
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
@@ -5656,7 +6068,7 @@ class App extends EventHarness {
      *
      * @type {string}
      */
-    static EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+    static EVENT_OCCURRENCE_ADDED = APP_EVENT_OCCURRENCE_ADDED;
 
     /**
      * Fired when a survey is retrieved from local storage
@@ -5664,7 +6076,7 @@ class App extends EventHarness {
      *
      * @type {string}
      */
-    static EVENT_SURVEY_LOADED = 'surveyloaded';
+    static EVENT_SURVEY_LOADED = APP_EVENT_SURVEY_LOADED;
 
     /**
      * Fired when an occurrence is retrieved from local storage or newly initialised
@@ -5672,9 +6084,9 @@ class App extends EventHarness {
      *
      * @type {string}
      */
-    static EVENT_OCCURRENCE_LOADED = 'occurrenceloaded';
+    static EVENT_OCCURRENCE_LOADED = APP_EVENT_OCCURRENCE_LOADED;
 
-    static EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
+    static EVENT_CURRENT_OCCURRENCE_CHANGED = APP_EVENT_CURRENT_OCCURRENCE_CHANGED;
 
     /**
      * Fired when the selected current survey id is changed
@@ -5684,14 +6096,14 @@ class App extends EventHarness {
      *
      * @type {string}
      */
-    static EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
+    static EVENT_CURRENT_SURVEY_CHANGED = APP_EVENT_CURRENT_SURVEY_CHANGED;
 
     /**
      * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
      *
      * @type {string}
      */
-    static EVENT_SURVEYS_CHANGED = 'surveyschanged';
+    static EVENT_SURVEYS_CHANGED = APP_EVENT_SURVEYS_CHANGED;
 
     /**
      * Fired after fully-successful sync-all
@@ -5701,27 +6113,27 @@ class App extends EventHarness {
      *
      * @type {string}
      */
-    static EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
+    static EVENT_ALL_SYNCED_TO_SERVER = APP_EVENT_ALL_SYNCED_TO_SERVER;
 
     /**
      * fired if sync-all called, but one or more objects failed to be stored
      *
      * @type {string}
      */
-    static EVENT_SYNC_ALL_FAILED = 'syncallfailed';
+    static EVENT_SYNC_ALL_FAILED = APP_EVENT_SYNC_ALL_FAILED;
 
-    static EVENT_USER_LOGIN = 'login';
+    static EVENT_USER_LOGIN = APP_EVENT_USER_LOGIN;
 
-    static EVENT_USER_LOGOUT = 'logout';
+    static EVENT_USER_LOGOUT = APP_EVENT_USER_LOGOUT;
 
     /**
      * Fired when watching of GPS has been granted following user request.
      *
      * @type {string}
      */
-    static EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
+    static EVENT_WATCH_GPS_USER_REQUEST = APP_EVENT_WATCH_GPS_USER_REQUEST;
 
-    static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
+    static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST;
 
     /**
      * IndexedDb key used for storing id of current (last accessed) survey (or null)
@@ -5731,11 +6143,13 @@ class App extends EventHarness {
     static CURRENT_SURVEY_KEY_NAME = 'currentsurvey';
     static SESSION_KEY_NAME = 'session';
     static DEVICE_ID_KEY_NAME = 'deviceid';
+    static LOCAL_OPTIONS_KEY_NAME = 'localoptions';
 
     static RESERVED_KEY_NAMES = [
         App.CURRENT_SURVEY_KEY_NAME,
         App.SESSION_KEY_NAME,
-        App.DEVICE_ID_KEY_NAME
+        App.DEVICE_ID_KEY_NAME,
+        App.LOCAL_OPTIONS_KEY_NAME,
     ];
 
     /**
@@ -5759,7 +6173,7 @@ class App extends EventHarness {
             let surveyId = survey?.id;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId)
                 .then(() => {
-                    this.fireEvent(App.EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
+                    this.fireEvent(APP_EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
                 });
         }
     }
@@ -6036,14 +6450,14 @@ class App extends EventHarness {
                 Survey.EVENT_MODIFIED,
                 () => {
                     survey.save().finally(() => {
-                        this.fireEvent(App.EVENT_SURVEYS_CHANGED);
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
                     });
                 }
             );
         }
 
         this.surveys.set(survey.id, survey);
-        this.fireEvent(App.EVENT_SURVEYS_CHANGED);
+        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
     }
 
     /**
@@ -6106,6 +6520,7 @@ class App extends EventHarness {
 
                     // against a backdrop where surveys are somehow going unsaved, always force a survey re-save
                     // @todo need to watch if this is creating a mess of identical survey revisions
+                    // noinspection JSIgnoredPromiseFromCall
                     survey.save(true);
 
                     occurrence.save().finally(() => {
@@ -6114,7 +6529,7 @@ class App extends EventHarness {
                 }
             });
 
-        this.fireEvent(App.EVENT_OCCURRENCE_LOADED, {occurrence: occurrence});
+        this.fireEvent(APP_EVENT_OCCURRENCE_LOADED, {occurrence: occurrence});
     }
 
     /**
@@ -6211,7 +6626,12 @@ class App extends EventHarness {
      * retrieve the full set of keys from local storage (IndexedDb)
      *
      * @param {{survey: Array<string>, occurrence : Array<string>, image: Array<string>, [track]: Array<string>}} storedObjectKeys
-     * @returns {Promise<{survey: Array<string>, occurrence: Array<string>, image: Array<string>, [track]: Array<string>}>}
+     * @returns {Promise<{
+     *      survey: Array<string>,
+     *      occurrence: Array<string>,
+     *      image: Array<string>,
+     *      [track]: Array<string>
+     *      }>}
      */
     seekKeys(storedObjectKeys) {
         //console.log('starting seekKeys');
@@ -6220,7 +6640,7 @@ class App extends EventHarness {
             //console.log({"in seekKeys: local forage keys" : keys});
 
             for (let key of keys) {
-                //if (key !== App.CURRENT_SURVEY_KEY_NAME && key !== App.SESSION_KEY_NAME) {
+
                 if (!App.RESERVED_KEY_NAMES.includes(key)) {
                     let type, id;
 
@@ -6231,8 +6651,8 @@ class App extends EventHarness {
                             storedObjectKeys[type].push(id);
                         }
                     } else {
-                        // 'track' records not always wanted here, but not an error
-                        if (type !== 'track') {
+                        // 'track' and 'log' records not always wanted here, but not an error
+                        if (type !== 'track' && type !== 'log') {
                             console.error(`Unrecognised stored key type '${type}.`);
                         }
                     }
@@ -6263,7 +6683,7 @@ class App extends EventHarness {
                         if (!fastReturn) {
                             // Can only trigger the event once the whole process is complete, rather than after
                             // a short-cut fast return.
-                            this.fireEvent(App.EVENT_ALL_SYNCED_TO_SERVER);
+                            this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER);
                         }
 
                         return result;
@@ -6271,7 +6691,7 @@ class App extends EventHarness {
             }, (failedResult) => {
                 console.error(`Failed to sync all: ${failedResult}`);
                 Logger.logError(`Failed to sync all: ${failedResult}`);
-                this.fireEvent(App.EVENT_SYNC_ALL_FAILED);
+                this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
                 return false;
             });
     }
@@ -6386,6 +6806,16 @@ class App extends EventHarness {
             );
         }
 
+        for(let trackKey of storedObjectKeys.track) {
+            promises.push(Track.retrieveFromLocal(trackKey, new Track)
+                .then((/** Track */ track) => {
+                    if (track.unsaved()) {
+                        return track.save();
+                    }
+                })
+            );
+        }
+
         if (fastReturn) {
             // this will return near instantaneously as there is an already resolved promise at the head of the array
             // the other promises will continue to resolve
@@ -6452,7 +6882,7 @@ class App extends EventHarness {
                 // clear occurrences from the previous survey
                 return this.clearCurrentSurvey().then(() => {
                     this.currentSurvey = localSurvey;
-                    this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                     return Promise.resolve();
                 });
             }
@@ -6525,7 +6955,7 @@ class App extends EventHarness {
                             }
                         }
 
-                        this.fireEvent(App.EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                         this.currentSurvey?.fireEvent?.(Survey.EVENT_OCCURRENCES_CHANGED);
                         this.currentSurvey?.fireEvent?.(Survey.EVENT_LIST_LENGTH_CHANGED);
 
@@ -6536,7 +6966,7 @@ class App extends EventHarness {
 
                 if (neverAddBlank) {
                     console.log('no pre-existing survey');
-                    this.fireEvent(App.EVENT_SURVEYS_CHANGED); // survey menu needs refresh
+                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // survey menu needs refresh
                     return Promise.reject(new Error(`Failed to match survey.`));
                 } else {
                     console.log('no pre-existing surveys, so creating a new one');
@@ -6572,7 +7002,7 @@ class App extends EventHarness {
         // as currentSurvey setter fires an event that may depend on these attributes
         this.currentSurvey = newSurvey;
         this.addSurvey(newSurvey);
-        this.fireEvent(App.EVENT_NEW_SURVEY);
+        this.fireEvent(APP_EVENT_NEW_SURVEY);
     }
 
     /**
@@ -6583,7 +7013,7 @@ class App extends EventHarness {
     addAndSetSurvey(survey) {
         this.currentSurvey = survey;
         this.addSurvey(survey);
-        this.fireEvent(App.EVENT_NEW_SURVEY);
+        this.fireEvent(APP_EVENT_NEW_SURVEY);
     }
 
     /**
@@ -6627,7 +7057,7 @@ class App extends EventHarness {
 
         currentSurvey.extantOccurrenceKeys.add(occurrence.id);
 
-        this.fireEvent(App.EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
+        this.fireEvent(APP_EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
         currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
         currentSurvey.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
@@ -6654,7 +7084,7 @@ class App extends EventHarness {
         let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
             console.log(`retrieving local survey ${surveyId}`);
 
-            this.fireEvent(App.EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
+            this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 
             if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter || this.session?.superAdmin) {
                 if (setAsCurrent) {
@@ -6738,275 +7168,18 @@ class App extends EventHarness {
     }
 }
 
-// SurveyPickerController
-//
-
-
-class SurveyPickerController extends AppController {
-    route = '/survey/:action/:id';
-
-    static EVENT_BACK = 'back';
-
-    title = 'Survey picker';
-
-    /**
-     *
-     * @type {SurveyPickerView}
-     */
-    view;
-
-    /**
-     *
-     * @returns {Survey}
-     */
-    get survey() {
-        return this.app.currentSurvey;
-    }
-
-    /**
-     *
-     * @param {SurveyPickerView} view
-     */
-    constructor (view) {
-        super();
-
-        this.view = view;
-        view.controller = this;
-
-        this.handle = AppController.nextHandle;
-    }
-
-    /**
-     * registers the default route from this.route
-     * or alternatively is overridden in a child class
-     *
-     * @param {PatchedNavigo} router
-     */
-    registerRoute(router) {
-        // router.on(
-        //     '/survey',
-        //     this.mainRouteHandler.bind(this, 'survey', '', ''),
-        //     {
-        //         // before : this.beforeRouteHandler ? this.beforeRouteHandler.bind(this) : null,
-        //         // after : this.afterRouteHandler ? this.afterRouteHandler.bind(this) : null,
-        //         // leave : this.leaveRouteHandler ? this.leaveRouteHandler.bind(this) : null,
-        //         // already : this.alreadyRouteHandler ? this.alreadyRouteHandler.bind(this) : null
-        //     }
-        // );
-
-        router.on(
-            '/survey/new',
-            this.newSurveyHandler.bind(this, 'survey', 'new', ''),
-            {
-                before : this.beforeNewHandler.bind(this)
-            }
-        );
-
-        router.on(
-            '/survey/reset',
-            this.mainRouteHandler.bind(this, 'survey', 'reset', ''),
-            {
-                before : this.beforeResetHandler.bind(this)
-            }
-        );
-
-        router.on(
-            '/survey/save',
-            this.mainRouteHandler.bind(this, 'survey', 'save', ''),
-            {
-                before : this.beforeSaveAllHandler.bind(this)
-            }
-        );
-
-        router.on(
-            '/survey/add/:surveyId/:occurrenceId',
-            this.addSurveyHandler.bind(this, 'survey', 'add', '')
-        );
-
-        router.on(
-            '/survey/add/:surveyId',
-            this.addSurveyHandler.bind(this, 'survey', 'add', '')
-        );
-
-
-
-        this.app.addListener(App.EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
-        this.app.addListener(App.EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
-    }
-
-    beforeNewHandler(done) {
-        this.view.newSurveyDialog();
-
-        this.app.router.pause();
-
-        console.log({'route history' : this.app.routeHistory});
-
-        if (window.history.state) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-        }
-        this.app.router.resume();
-
-        done(false); // block navigation
-    }
-
-    beforeResetHandler(done) {
-        this.view.showResetDialog();
-
-        this.app.router.pause();
-        if (window.history.state) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-        }
-        this.app.router.resume();
-
-        done(false); // block navigation
-    }
-
-    beforeSaveAllHandler(done) {
-        // invoke sync of any/all unsaved data
-        // show pop-ups on success and failure
-        this.app.syncAll(false).then((result) => {
-            console.log({'In save all handler, success result' : result});
-
-            if (Array.isArray(result)) {
-                this.view.showSaveAllSuccess();
-            } else {
-                Logger.logError(`Failed to sync all (line 138): ${result}`);
-                this.view.showSaveAllFailure();
-            }
-        }, (result) => {
-            console.log({'In save all handler, failure result' : result});
-            Logger.logError(`Failed to sync all (line 143): ${result}`);
-            this.view.showSaveAllFailure();
-        }).finally(() => {
-            // stop the spinner
-
-        });
-
-        this.app.router.pause();
-        if (window.history.state) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-        }
-        this.app.router.resume();
-
-        done(false); // block navigation
-    }
-
-    /**
-     *
-     * @param {string} context typically 'survey'
-     * @param {('new'|'')} subcontext
-     * @param {(''|'help')} rhs currently not used
-     * @param {Object.<string, string>} queryParameters surveyId
-     */
-    newSurveyHandler(context, subcontext, rhs, queryParameters) {
-        // should not get here, as beforeNewHandler ought to have been invoked first
-    }
-
-    /**
-     * called after user has confirmed add new survey dialog box
-     *
-     */
-    addNewSurveyHandler() {
-        console.log("reached addNewSurveyHandler");
-        this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
-
-        // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.app.syncAll(true).finally(() => {
-
-            // the apps occurrences should only relate to the current survey
-            // (the reset are remote or in IndexedDb)
-            this.app.clearCurrentSurvey().then(() => {
-
-                this.app.setNewSurvey();
-
-                this.app.router.pause();
-                this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
-                this.app.router.resolve();
-            });
-        });
-    }
-
-    /**
-     * called after user has confirmed reset surveys dialog box
-     */
-    resetSurveysHandler() {
-        this.app.clearLocalForage().then(() => {
-            return this.app.reset();
-        }).finally(() => {
-            this.addNewSurveyHandler();
-        });
-    }
-
-    /**
-     * url fragment to redirect to, following addition of an existing survey, e.g. a pick from the selection list
-     *
-     * should be '/list' or '/list/record'
-     *
-     * @type {string}
-     */
-    restoredSurveyNavigationTarget = '/list';
-
-    /**
-     *
-     * @param {string} context typically 'survey'
-     * @param {('add'|'')} subcontext
-     * @param {(''|'help')} rhs currently not used
-     * @param {Object.<string, string>} queryParameters surveyId
-     */
-    addSurveyHandler(context, subcontext, rhs, queryParameters) {
-        console.log("reached addSurveyHandler");
-        console.log({context: context, params: subcontext, query: queryParameters});
-
-        this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
-
-        let surveyId = queryParameters.surveyId;
-
-        if (!surveyId || !surveyId.match(UUID_REGEX)) {
-            throw new NotFoundError(`Failed to match survey id '${surveyId}', the id format appears to be incorrect`);
-        }
-
-        surveyId = surveyId.toLowerCase();
-
-        // hide the left panel before loading, otherwise there can be a confusing delay
-        this.view.hideLeftPanel();
-
-        this.app.restoreOccurrences(surveyId)
-            .then(() => {
-                this.app.markAllNotPristine();
-
-                this.app.router.pause();
-                this.app.router.navigate(this.restoredSurveyNavigationTarget).resume();
-                this.app.router.resolve();
-            }, (error) => {
-                console.log({'failed survey restoration' : error});
-
-                // should display a modal error message
-                // either the survey was not found or there was no network connection
-
-                // should switch to displaying a list of available surveys and an option to start a new survey
-            })
-            .finally(() => {
-                this.view.restoreLeftPanel();
-            })
-        ;
-    }
-
-    /**
-     *
-     * @param {string} context typically 'survey'
-     * @param {('add'|'')} subcontext
-     * @param {(''|'help')} rhs currently not used
-     * @param {Object.<string, string>} queryParameters surveyId
-     */
-    mainRouteHandler(context, subcontext, rhs, queryParameters) {
-        console.log("reached special route handler for SurveyPickerController.js");
-        console.log({context: context, params: subcontext, query: queryParameters});
-    }
-}
-
 class PartyError extends Error {
 
 }
+
+const PARTY_NAME_INDEX = 0;
+const PARTY_SURNAME_INDEX = 2;
+const PARTY_FORENAMES_INDEX = 3;
+const PARTY_ORGNAME_INDEX = 4;
+const PARTY_INITIALS_INDEX = 5;
+const PARTY_ID_INDEX = 6;
+const PARTY_USERID_INDEX = 7;
+const PARTY_ROLES_INDEX = 8;
 
 class Party {
     /**
@@ -7030,14 +7203,14 @@ class Party {
      * @property {string} [12] - disambiguation
      */
 
-    static NAME_INDEX = 0;
-    static SURNAME_INDEX = 2;
-    static FORENAMES_INDEX = 3;
-    static ORGNAME_INDEX = 4;
-    static INITIALS_INDEX = 5;
-    static ID_INDEX = 6;
-    static USERID_INDEX = 7;
-    static ROLES_INDEX = 8;
+    // static NAME_INDEX = PARTY_NAME_INDEX;
+    // static SURNAME_INDEX = PARTY_SURNAME_INDEX;
+    // static FORENAMES_INDEX = PARTY_FORENAMES_INDEX;
+    // static ORGNAME_INDEX = PARTY_ORGNAME_INDEX;
+    // static INITIALS_INDEX = PARTY_INITIALS_INDEX;
+    // static ID_INDEX = PARTY_ID_INDEX;
+    // static USERID_INDEX = PARTY_USERID_INDEX;
+    // static ROLES_INDEX = PARTY_ROLES_INDEX;
 
     /**
      * Generic party list, not tied to a particular user id
@@ -7125,6 +7298,7 @@ class Party {
     /**
      *
      * @param {Array.<RawParty>} parties
+     * @param {number} parties.stamp
      * @param {string} sourceUrl
      */
     static initialiseParties(parties, sourceUrl) {
@@ -7384,7 +7558,7 @@ class ImageResponse extends LocalResponse {
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
-        this.returnedToClient.context = this.toSaveLocally.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
+        this.returnedToClient.context = this.toSaveLocally.context || IMAGE_CONTEXT_OCCURRENCE;
 
         if (this.toSaveLocally.context !== 'survey') {
             this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
@@ -7668,7 +7842,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1722371637-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1722789997-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -8071,7 +8245,7 @@ class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
 
-            return cache.match(request, {ignoreVary : true}).then((cachedResponse) => {
+            return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)}).then((cachedResponse) => {
                 console.log(cachedResponse ?
                     `cache matched ${request.url}`
                     :
@@ -8102,7 +8276,7 @@ class BSBIServiceWorker {
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        // tryRemoteFallback set to false to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
+        // tryRemoteFallback is set to false, to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
 
         evt.respondWith(this.fromCache(evt.request, true, 5000).then((response) => {
                 //console.log('In handleImageFetch promise');
@@ -8240,7 +8414,7 @@ class BSBIServiceWorker {
                 if (response.ok) {
                     console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response).then(() => {
-                        return cache.match(request, {ignoreVary : true});
+                        return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)});
                     });
                 } else {
                     console.error(`Request during cache update failed for ${request.url}`);
@@ -8276,5 +8450,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { App, AppController, BSBIServiceWorker, DeviceType, EventHarness, InternalAppError, Logger, Model, NotFoundError, Occurrence, OccurrenceImage, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

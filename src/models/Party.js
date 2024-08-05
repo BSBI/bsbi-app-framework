@@ -1,6 +1,15 @@
 import {PartyError} from "../utils/exceptions/PartyError";
 import {escapeHTML} from "../utils/escapeHTML";
 
+export const PARTY_NAME_INDEX = 0;
+export const PARTY_SURNAME_INDEX = 2;
+export const PARTY_FORENAMES_INDEX = 3;
+export const PARTY_ORGNAME_INDEX = 4;
+export const PARTY_INITIALS_INDEX = 5;
+export const PARTY_ID_INDEX = 6;
+export const PARTY_USERID_INDEX = 7;
+export const PARTY_ROLES_INDEX = 8;
+
 export class Party {
     /**
      * @typedef RawParty
@@ -23,14 +32,14 @@ export class Party {
      * @property {string} [12] - disambiguation
      */
 
-    static NAME_INDEX = 0;
-    static SURNAME_INDEX = 2;
-    static FORENAMES_INDEX = 3;
-    static ORGNAME_INDEX = 4;
-    static INITIALS_INDEX = 5;
-    static ID_INDEX = 6;
-    static USERID_INDEX = 7;
-    static ROLES_INDEX = 8;
+    // static NAME_INDEX = PARTY_NAME_INDEX;
+    // static SURNAME_INDEX = PARTY_SURNAME_INDEX;
+    // static FORENAMES_INDEX = PARTY_FORENAMES_INDEX;
+    // static ORGNAME_INDEX = PARTY_ORGNAME_INDEX;
+    // static INITIALS_INDEX = PARTY_INITIALS_INDEX;
+    // static ID_INDEX = PARTY_ID_INDEX;
+    // static USERID_INDEX = PARTY_USERID_INDEX;
+    // static ROLES_INDEX = PARTY_ROLES_INDEX;
 
     /**
      * Generic party list, not tied to a particular user id
@@ -118,6 +127,7 @@ export class Party {
     /**
      *
      * @param {Array.<RawParty>} parties
+     * @param {number} parties.stamp
      * @param {string} sourceUrl
      */
     static initialiseParties(parties, sourceUrl) {

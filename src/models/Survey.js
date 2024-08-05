@@ -10,6 +10,10 @@ import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 
+/**
+ * @typedef {import('bsbi-app-framework-view').SurveyForm} SurveyForm
+ */
+
 export class Survey extends Model {
 
     /**

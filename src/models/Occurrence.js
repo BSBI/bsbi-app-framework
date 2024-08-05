@@ -1,7 +1,10 @@
 import {Model} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
-//import {Survey} from "./Survey";
+
+/**
+ * @typedef {import('bsbi-app-framework-view').Form} Form
+ */
 
 export class Occurrence extends Model {
 
@@ -177,7 +180,7 @@ export class Occurrence extends Model {
 
     /**
      *
-     * @param {{id : string, saveState: string, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
+     * @param {{id : string, saveState: string, userId : string?, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);

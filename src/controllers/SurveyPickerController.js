@@ -4,8 +4,14 @@
 import {AppController} from './AppController';
 import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {UUID_REGEX} from "../models/Model";
-import {App} from "../framework/App";
+//import {App} from "../framework/App";
 import {Logger} from "../utils/Logger";
+import {APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_RESET_SURVEYS} from "../framework/AppEvents";
+
+/**
+ * @typedef {import('bsbi-app-framework-view').SurveyPickerView} SurveyPickerView
+ * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
+ */
 
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
@@ -95,8 +101,8 @@ export class SurveyPickerController extends AppController {
 
 
 
-        this.app.addListener(App.EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
-        this.app.addListener(App.EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
+        this.app.addListener(APP_EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
+        this.app.addListener(APP_EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
     }
 
     beforeNewHandler(done) {

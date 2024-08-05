@@ -1,6 +1,10 @@
 import {EventHarness} from "../framework/EventHarness";
 import localforage from 'localforage';
 
+/**
+ * @typedef {import('bsbi-app-framework-view').FormField} FormField
+ */
+
 export function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uuid)}
 
 /**
@@ -11,6 +15,8 @@ export const UUID_REGEX = /^[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}
 
 export const SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
 export const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
+
+export const MODEL_EVENT_SAVED_REMOTELY = 'savedremotely';
 
 export class Model extends EventHarness {
     /**
@@ -25,7 +31,7 @@ export class Model extends EventHarness {
      */
     _savedRemotely = false;
 
-    static EVENT_SAVED_REMOTELY = 'savedremotely';
+    static EVENT_SAVED_REMOTELY = MODEL_EVENT_SAVED_REMOTELY;
 
     static bsbiAppVersion = '';
 
@@ -38,7 +44,7 @@ export class Model extends EventHarness {
             this._savedRemotely = !!savedFlag;
 
             if (this._savedRemotely) {
-                this.fireEvent(Model.EVENT_SAVED_REMOTELY, {id : this.id});
+                this.fireEvent(MODEL_EVENT_SAVED_REMOTELY, {id : this.id});
             }
         }
     }
