@@ -26,6 +26,7 @@ import {
     APP_EVENT_USER_LOGIN,
     APP_EVENT_WATCH_GPS_USER_REQUEST,
     APP_EVENT_USER_LOGOUT,
+    APP_EVENT_OPTIONS_RESTORED,
 } from './AppEvents';
 
 /**
@@ -94,6 +95,21 @@ export class App extends EventHarness {
      * @type {{[superAdmin] : boolean, [userId] : string} | null}
      */
     session = null;
+
+    /**
+     *
+     * @type {Object<string, number|string|{}>}
+     */
+    _options = {};
+
+    static DEFAULT_OPTIONS = {};
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _deviceId = '';
 
     /**
      * Event fired when user requests a new blank survey
@@ -233,7 +249,58 @@ export class App extends EventHarness {
         }
     }
 
-    _deviceId = '';
+    get userId() {
+        return this.session?.userId;
+    }
+
+    /**
+     *
+     * @returns {Promise<{}>}
+     */
+    restoreOptions() {
+        const userId = this.userId;
+
+        if (userId) {
+            return localforage.getItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`)
+                .then((options) => {
+                    if (options) {
+                        this._options = options;
+                    } else {
+                        this._options = JSON.parse(JSON.stringify(this.constructor.DEFAULT_OPTIONS));
+                    }
+
+                    // return a clone of the options (to prevent improper direct modification
+                    const clonedOptions = JSON.parse(JSON.stringify(this._options));
+
+                    this.fireEvent(APP_EVENT_OPTIONS_RESTORED, clonedOptions);
+
+
+                    return clonedOptions;
+                });
+        } else {
+            throw new Error('User ID unset when restoring options.');
+        }
+    }
+
+    clearOptions() {
+        this._options = null;
+    }
+
+    setOption(key, value) {
+        const userId = this.userId;
+
+        if (userId) {
+            this._options[key] = JSON.parse(JSON.stringify(value));
+
+            return localforage.setItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`, this._options);
+        } else {
+            throw new Error(`User ID unset when setting option '${key}'.`);
+        }
+    }
+
+    getOption(key) {
+        return this._options?.hasOwnProperty?.(key) ? JSON.parse(JSON.stringify(this._options[key])) : undefined;
+    }
 
     /**
      * @return Promise<string>
@@ -414,7 +481,6 @@ export class App extends EventHarness {
     }
 
     initialise() {
-        //Page.initialise_layout(this._containerEl);
         this.layout.initialise();
 
         this._router.notFound((query) => {
@@ -694,9 +760,12 @@ export class App extends EventHarness {
         return localforage.keys().then((keys) => {
             //console.log({"in seekKeys: local forage keys" : keys});
 
+            const reservedNamesRegex = new RegExp(`^(?:${App.RESERVED_KEY_NAMES.join('|')})\\b`);
+
             for (let key of keys) {
 
-                if (!App.RESERVED_KEY_NAMES.includes(key)) {
+                //if (!App.RESERVED_KEY_NAMES.includes(key)) {
+                if (!key.match(reservedNamesRegex)) {
                     let type, id;
 
                     [type, id] = key.split('.', 2);
@@ -708,7 +777,7 @@ export class App extends EventHarness {
                     } else {
                         // 'track' and 'log' records not always wanted here, but not an error
                         if (type !== 'track' && type !== 'log') {
-                            console.error(`Unrecognised stored key type '${type}.`);
+                            console.error(`Unrecognised stored key type '${type}'.`);
                         }
                     }
                 }
@@ -754,6 +823,7 @@ export class App extends EventHarness {
     /**
      *
      * @param {boolean} [queryFilters.structuredSurvey]
+     * @param {boolean} [queryFilters.createdInCurrentYear]
      * @param {boolean} [queryFilters.isToday]
      * @param {string} [queryFilters.monad]
      * @param {string} [queryFilters.tetrad]
@@ -775,6 +845,10 @@ export class App extends EventHarness {
             }
 
             if (queryFilters.defaultCasual && !survey.attributes.defaultCasual) {
+                continue;
+            }
+
+            if (queryFilters.createdInCurrentYear && !survey.createdInCurrentYear()) {
                 continue;
             }
 
@@ -950,7 +1024,8 @@ export class App extends EventHarness {
         const storedObjectKeys = {
             survey: [],
             occurrence: [],
-            image: []
+            image: [],
+            track: [],
         };
 
         if (targetSurveyId) {
@@ -1058,6 +1133,8 @@ export class App extends EventHarness {
         this.currentSurvey = newSurvey;
         this.addSurvey(newSurvey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
+
+        Track.applyChangedSurveyTrackingResumption(newSurvey);
     }
 
     /**

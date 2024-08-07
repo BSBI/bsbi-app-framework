@@ -281,46 +281,46 @@ export class BSBIServiceWorker {
                 }
             })
             .catch( (reason) => {
-                    console.log({'post fetch failed (probably no network)': reason});
+                console.log({'post fetch failed (probably no network)': reason});
 
-                    // would get here if the network is down
-                    // or if got invalid response from the server
+                // would get here if the network is down
+                // or if got invalid response from the server
 
-                    console.log(`post fetch failed (probably no network), (reason: ${reason})`);
-                    //console.log({'post failure reason' : reason});
+                console.log(`post fetch failed (probably no network), (reason: ${reason})`);
+                //console.log({'post failure reason' : reason});
 
-                    // /**
-                    //  * simulated result of post, returned as JSON body
-                    //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-                    //  */
-                    // let returnedToClient = {};
+                // /**
+                //  * simulated result of post, returned as JSON body
+                //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+                //  */
+                // let returnedToClient = {};
 
-                    return clonedRequest.formData()
-                        .then((formData) => {
-                                console.log('got to form data handler');
-                                //console.log({formData});
+                return clonedRequest.formData()
+                    .then((formData) => {
+                            console.log('got to form data handler');
+                            //console.log({formData});
 
-                                return ResponseFactory
-                                    .fromPostedData(formData)
-                                    .populateClientResponse()
-                                    .storeLocally();
-                            }, (reason) => {
-                                console.log({'failed to read form data locally' : reason});
+                            return ResponseFactory
+                                .fromPostedData(formData)
+                                .populateClientResponse()
+                                .storeLocally();
+                        }, (reason) => {
+                            console.log({'failed to read form data locally' : reason});
 
-                                /**
-                                 * simulated result of post, returned as JSON body
-                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                                 */
-                                let returnedToClient = {
-                                    error: 'Failed to process posted response data. (internal error)',
-                                    errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                        'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                        'Please try to re-establish a network connection and try again.'
-                                };
+                            /**
+                             * simulated result of post, returned as JSON body
+                             * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                             */
+                            let returnedToClient = {
+                                error: 'Failed to process posted response data. (internal error)',
+                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                    'Please try to re-establish a network connection and try again.'
+                            };
 
-                                return packageClientResponse(returnedToClient);
-                            }
-                        );
+                            return packageClientResponse(returnedToClient);
+                        }
+                    );
                 }
             ));
     }

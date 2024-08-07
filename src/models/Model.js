@@ -253,7 +253,7 @@ export class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject('IndexedDb storage not yet implemented (probably no service worker).');
+                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status})`);
             }
         });
     }
@@ -261,7 +261,7 @@ export class Model extends EventHarness {
     /**
      *
      * @param {string} id
-     * @param {(Survey|Occurrence|OccurrenceImage)} modelObject
+     * @param {(Survey|Occurrence|OccurrenceImage|Track)} modelObject
      * @returns {Promise}
      */
     static retrieveFromLocal(id, modelObject) {

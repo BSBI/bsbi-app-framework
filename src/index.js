@@ -45,5 +45,6 @@ export {
     APP_EVENT_USER_LOGIN,
     APP_EVENT_WATCH_GPS_USER_REQUEST,
     APP_EVENT_USER_LOGOUT,
+    APP_EVENT_OPTIONS_RESTORED,
 } from './framework/AppEvents';
 

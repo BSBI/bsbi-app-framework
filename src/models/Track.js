@@ -1,6 +1,5 @@
 import {Model} from "./Model";
 import {DeviceType} from "../utils/DeviceType";
-//import {App} from "../framework/App";
 import {Survey} from "./Survey";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
@@ -18,17 +17,20 @@ const TRACK_END_REASON_WATCHING_ENDED = 1;
 const TRACK_END_REASON_SURVEY_DATE = 2;
 const TRACK_END_REASON_SURVEY_CHANGED = 3;
 
+/**
+ * @typedef {import('british-isles-gridrefs').GridCoords} GridCoords
+ */
+
 export class Track extends Model {
 
     /**
      * @todo consider whether PointTriplet should also include accuracy
-     * @todo consider whether to change from milliseconds to seconds
      *
      * @typedef PointTriplet
      * @type {array}
      * @property {number} 0 lng
      * @property {number} 1 lat
-     * @property {number} 2 stamp (milliseconds since epoch)
+     * @property {number} 2 stamp (seconds since epoch)
      */
 
     /**
@@ -169,7 +171,7 @@ export class Track extends Model {
             app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;
 
-                if (Track._currentlyTrackedSurveyId !== survey.id) {
+                if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
                     /**
                      *
                      * @type {null|Survey}
@@ -201,17 +203,7 @@ export class Track extends Model {
                         Track._currentlyTrackedDeviceId = null;
                     }
 
-                    // Tracking should only resume automatically if the survey change was an automatic switch
-                    // to a new square.
-
-                    // otherwise, there is a risk that a survey switch will lead to spurious new points
-                    if (!survey.attributes?.casual && survey.isToday() && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
-                        // Resume existing tracking, or start a new track.
-                        Track._trackSurvey(survey);
-                        Track.trackingIsActive = true;
-                    } else {
-                        Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
-                    }
+                    Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
                 }
             });
         }
@@ -252,9 +244,44 @@ export class Track extends Model {
     }
 
     /**
+     *
+     * @param {Survey} survey
+     * @param {?Survey} previouslyTrackedSurvey
+     */
+    static applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey = null) {
+        // Tracking should only resume automatically if the survey change was an automatic switch
+        // to a new square and tracking was previously active.
+
+        // otherwise, there is a risk that a survey switch will lead to spurious new points
+        if (survey && !survey.attributes?.casual && survey.isToday() !== false && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
+            // Resume existing tracking, or start a new track.
+
+            console.log('continuing tracking for survey with common baseSurvey')
+            Track._trackSurvey(survey);
+            Track.trackingIsActive = true;
+        } else if (survey && !survey.attributes?.casual && survey.isToday() !== false) {
+            // Dependent on user preferences may restart tracking
+            const trackingLocation = Track._app.getOption('trackLocation');
+
+            if (trackingLocation) {
+                // start tracking
+
+                console.log('start tracking for survey based on user preference')
+                Track._trackSurvey(survey);
+                Track.trackingIsActive = true;
+                Track._app.fireEvent(APP_EVENT_WATCH_GPS_USER_REQUEST, {auto: true});
+            } else {
+                Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+            }
+        } else {
+            Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+        }
+    }
+
+    /**
      * Resume existing tracking, or start a new track.
      *
-     * @param survey
+     * @param {Survey} survey
      * @private
      */
     static _trackSurvey(survey) {
@@ -286,16 +313,31 @@ export class Track extends Model {
     static ping(position, gridCoords) {
         const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
-        track?.addPoint?.(position, gridCoords);
-        Track.lastPingStamp = position.timestamp;
+        if (track) {
+            const changed = track.addPoint(position, gridCoords);
+            Track.lastPingStamp = position.timestamp;
 
-        track?.save?.();
+            if (changed) {
+                // survey must be saved first
+                if (track._app?.currentSurvey?.unsaved?.()) {
+                    if (!track._app.currentSurvey.isPristine) {
+                        track._app.currentSurvey.save().then(() => {
+                                return track.save();
+                            }
+                        );
+                    }
+                } else {
+                    track.save();
+                }
+            }
+        }
     }
 
     /**
      *
      * @param {GeolocationPosition} position
      * @param {GridCoords} gridCoords
+     * @returns {boolean} changed
      */
     addPoint(position, gridCoords) {
         let series = this.points[this.points.length - 1];
@@ -304,13 +346,24 @@ export class Track extends Model {
             series = this.startPointSeries();
         }
 
-        series[0][series[0].length] = [
-            position.coords.longitude,
-            position.coords.latitude,
-            position.timestamp, // @todo consider changing to seconds instead of milliseconds
-        ];
+        const l = series[0].length;
 
-        this.touch();
+        // test if have moved since last point
+        if (l > 0 && series[0][l - 1][0] === position.coords.longitude && series[0][l - 1][1] === position.coords.latitude) {
+            // no change since last point
+            return false;
+        } else {
+
+            series[0][l] = [
+                position.coords.longitude,
+                position.coords.latitude,
+                Math.floor(position.timestamp / 1000),
+            ];
+
+            this.touch();
+
+            return true;
+        }
     }
 
     /**

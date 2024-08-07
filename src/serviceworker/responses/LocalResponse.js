@@ -2,7 +2,14 @@ import localforage from "localforage";
 import {packageClientResponse} from "../packageClientResponse";
 
 export class LocalResponse {
+    /**
+     * @type {Object}
+     */
     toSaveLocally;
+
+    /**
+     * @type {Object}
+     */
     returnedToClient;
 
     /**
@@ -15,6 +22,11 @@ export class LocalResponse {
         'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
         'Please try to re-establish a network connection and try again.';
 
+    /**
+     *
+     * @param {{}} toSaveLocally
+     * @param {{}} returnedToClient
+     */
     constructor(toSaveLocally, returnedToClient) {
         this.toSaveLocally = toSaveLocally;
         this.returnedToClient = returnedToClient;

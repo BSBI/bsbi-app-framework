@@ -27,6 +27,13 @@ export const APP_EVENT_NEW_SURVEY = 'newsurvey';
 export const APP_EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
 
 /**
+ * Fired when new user preferences are first restored from local storage
+ *
+ * @type {string}
+ */
+export const APP_EVENT_OPTIONS_RESTORED = 'optionsrestored';
+
+/**
  * Fired when a survey is retrieved from local storage
  * parameter is {survey : Survey}
  *
@@ -89,4 +96,10 @@ export const APP_EVENT_USER_LOGOUT = 'logout';
  */
 export const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
 
+/**
+ * fired when GPS tracking should cease
+ * parameter 'auto' set if this was triggered by a non-explicit user action
+ *
+ * @type {string}
+ */
 export const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';

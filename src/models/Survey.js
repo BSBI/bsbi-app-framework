@@ -330,6 +330,17 @@ export class Survey extends Model {
         return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
     }
 
+    /**
+     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
+     *
+     * @returns {boolean}
+     */
+    createdInCurrentYear() {
+        const yearString = new Date(this.createdStamp * 1000).toISOString().slice(0,4);
+
+        return yearString === (new Date).toISOString().slice(0,4);
+    }
+
     get place() {
         return this.attributes.place || '';
     }

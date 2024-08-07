@@ -3341,7 +3341,7 @@ class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject('IndexedDb storage not yet implemented (probably no service worker).');
+                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status})`);
             }
         });
     }
@@ -3349,7 +3349,7 @@ class Model extends EventHarness {
     /**
      *
      * @param {string} id
-     * @param {(Survey|Occurrence|OccurrenceImage)} modelObject
+     * @param {(Survey|Occurrence|OccurrenceImage|Track)} modelObject
      * @returns {Promise}
      */
     static retrieveFromLocal(id, modelObject) {
@@ -3594,6 +3594,13 @@ const APP_EVENT_NEW_SURVEY = 'newsurvey';
 const APP_EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
 
 /**
+ * Fired when new user preferences are first restored from local storage
+ *
+ * @type {string}
+ */
+const APP_EVENT_OPTIONS_RESTORED = 'optionsrestored';
+
+/**
  * Fired when a survey is retrieved from local storage
  * parameter is {survey : Survey}
  *
@@ -3656,6 +3663,12 @@ const APP_EVENT_USER_LOGOUT = 'logout';
  */
 const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
 
+/**
+ * fired when GPS tracking should cease
+ * parameter 'auto' set if this was triggered by a non-explicit user action
+ *
+ * @type {string}
+ */
 const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
 
 // SurveyPickerController
@@ -3996,6 +4009,10 @@ const TRACK_END_REASON_WATCHING_ENDED = 1;
 const TRACK_END_REASON_SURVEY_DATE = 2;
 const TRACK_END_REASON_SURVEY_CHANGED = 3;
 
+/**
+ * @typedef {import('british-isles-gridrefs').GridCoords} GridCoords
+ */
+
 class Track extends Model {
 
     /**
@@ -4147,7 +4164,7 @@ class Track extends Model {
             app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;
 
-                if (Track._currentlyTrackedSurveyId !== survey.id) {
+                if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
                     /**
                      *
                      * @type {null|Survey}
@@ -4179,17 +4196,7 @@ class Track extends Model {
                         Track._currentlyTrackedDeviceId = null;
                     }
 
-                    // Tracking should only resume automatically if the survey change was an automatic switch
-                    // to a new square.
-
-                    // otherwise, there is a risk that a survey switch will lead to spurious new points
-                    if (!survey.attributes?.casual && survey.isToday() && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
-                        // Resume existing tracking, or start a new track.
-                        Track._trackSurvey(survey);
-                        Track.trackingIsActive = true;
-                    } else {
-                        Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
-                    }
+                    Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
                 }
             });
         }
@@ -4230,9 +4237,44 @@ class Track extends Model {
     }
 
     /**
+     *
+     * @param {Survey} survey
+     * @param {?Survey} previouslyTrackedSurvey
+     */
+    static applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey = null) {
+        // Tracking should only resume automatically if the survey change was an automatic switch
+        // to a new square and tracking was previously active.
+
+        // otherwise, there is a risk that a survey switch will lead to spurious new points
+        if (survey && !survey.attributes?.casual && survey.isToday() !== false && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
+            // Resume existing tracking, or start a new track.
+
+            console.log('continuing tracking for survey with common baseSurvey');
+            Track._trackSurvey(survey);
+            Track.trackingIsActive = true;
+        } else if (survey && !survey.attributes?.casual && survey.isToday() !== false) {
+            // Dependent on user preferences may restart tracking
+            const trackingLocation = Track._app.getOption('trackLocation');
+
+            if (trackingLocation) {
+                // start tracking
+
+                console.log('start tracking for survey based on user preference');
+                Track._trackSurvey(survey);
+                Track.trackingIsActive = true;
+                Track._app.fireEvent(APP_EVENT_WATCH_GPS_USER_REQUEST, {auto: true});
+            } else {
+                Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+            }
+        } else {
+            Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+        }
+    }
+
+    /**
      * Resume existing tracking, or start a new track.
      *
-     * @param survey
+     * @param {Survey} survey
      * @private
      */
     static _trackSurvey(survey) {
@@ -4264,16 +4306,31 @@ class Track extends Model {
     static ping(position, gridCoords) {
         const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
-        track?.addPoint?.(position, gridCoords);
-        Track.lastPingStamp = position.timestamp;
+        if (track) {
+            const changed = track.addPoint(position, gridCoords);
+            Track.lastPingStamp = position.timestamp;
 
-        track?.save?.();
+            if (changed) {
+                // survey must be saved first
+                if (track._app?.currentSurvey?.unsaved?.()) {
+                    if (!track._app.currentSurvey.isPristine) {
+                        track._app.currentSurvey.save().then(() => {
+                                return track.save();
+                            }
+                        );
+                    }
+                } else {
+                    track.save();
+                }
+            }
+        }
     }
 
     /**
      *
      * @param {GeolocationPosition} position
      * @param {GridCoords} gridCoords
+     * @returns {boolean} changed
      */
     addPoint(position, gridCoords) {
         let series = this.points[this.points.length - 1];
@@ -4282,13 +4339,24 @@ class Track extends Model {
             series = this.startPointSeries();
         }
 
-        series[0][series[0].length] = [
-            position.coords.longitude,
-            position.coords.latitude,
-            position.timestamp, // @todo consider changing to seconds instead of milliseconds
-        ];
+        const l = series[0].length;
 
-        this.touch();
+        // test if have moved since last point
+        if (l > 0 && series[0][l - 1][0] === position.coords.longitude && series[0][l - 1][1] === position.coords.latitude) {
+            // no change since last point
+            return false;
+        } else {
+
+            series[0][l] = [
+                position.coords.longitude,
+                position.coords.latitude,
+                position.timestamp, // @todo consider changing to seconds instead of milliseconds
+            ];
+
+            this.touch();
+
+            return true;
+        }
     }
 
     /**
@@ -4813,6 +4881,17 @@ class Survey extends Model {
         const date = this.date;
 
         return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
+    }
+
+    /**
+     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
+     *
+     * @returns {boolean}
+     */
+    createdInCurrentYear() {
+        const yearString = new Date(this.createdStamp * 1000).toISOString().slice(0,4);
+
+        return yearString === (new Date).toISOString().slice(0,4);
     }
 
     get place() {
@@ -6041,6 +6120,21 @@ class App extends EventHarness {
     session = null;
 
     /**
+     *
+     * @type {Object<string, number|string|{}>}
+     */
+    _options = {};
+
+    static DEFAULT_OPTIONS = {};
+
+    /**
+     *
+     * @type {string}
+     * @private
+     */
+    _deviceId = '';
+
+    /**
      * Event fired when user requests a new blank survey
      *
      * @type {string}
@@ -6178,7 +6272,58 @@ class App extends EventHarness {
         }
     }
 
-    _deviceId = '';
+    get userId() {
+        return this.session?.userId;
+    }
+
+    /**
+     *
+     * @returns {Promise<{}>}
+     */
+    restoreOptions() {
+        const userId = this.userId;
+
+        if (userId) {
+            return localforage.getItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`)
+                .then((options) => {
+                    if (options) {
+                        this._options = options;
+                    } else {
+                        this._options = JSON.parse(JSON.stringify(this.constructor.DEFAULT_OPTIONS));
+                    }
+
+                    // return a clone of the options (to prevent improper direct modification
+                    const clonedOptions = JSON.parse(JSON.stringify(this._options));
+
+                    this.fireEvent(APP_EVENT_OPTIONS_RESTORED, clonedOptions);
+
+
+                    return clonedOptions;
+                });
+        } else {
+            throw new Error('User ID unset when restoring options.');
+        }
+    }
+
+    clearOptions() {
+        this._options = null;
+    }
+
+    setOption(key, value) {
+        const userId = this.userId;
+
+        if (userId) {
+            this._options[key] = JSON.parse(JSON.stringify(value));
+
+            return localforage.setItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`, this._options);
+        } else {
+            throw new Error(`User ID unset when setting option '${key}'.`);
+        }
+    }
+
+    getOption(key) {
+        return this._options?.hasOwnProperty?.(key) ? JSON.parse(JSON.stringify(this._options[key])) : undefined;
+    }
 
     /**
      * @return Promise<string>
@@ -6359,7 +6504,6 @@ class App extends EventHarness {
     }
 
     initialise() {
-        //Page.initialise_layout(this._containerEl);
         this.layout.initialise();
 
         this._router.notFound((query) => {
@@ -6639,9 +6783,12 @@ class App extends EventHarness {
         return localforage.keys().then((keys) => {
             //console.log({"in seekKeys: local forage keys" : keys});
 
+            const reservedNamesRegex = new RegExp(`^(?:${App.RESERVED_KEY_NAMES.join('|')})\\b`);
+
             for (let key of keys) {
 
-                if (!App.RESERVED_KEY_NAMES.includes(key)) {
+                //if (!App.RESERVED_KEY_NAMES.includes(key)) {
+                if (!key.match(reservedNamesRegex)) {
                     let type, id;
 
                     [type, id] = key.split('.', 2);
@@ -6653,7 +6800,7 @@ class App extends EventHarness {
                     } else {
                         // 'track' and 'log' records not always wanted here, but not an error
                         if (type !== 'track' && type !== 'log') {
-                            console.error(`Unrecognised stored key type '${type}.`);
+                            console.error(`Unrecognised stored key type '${type}'.`);
                         }
                     }
                 }
@@ -6699,6 +6846,7 @@ class App extends EventHarness {
     /**
      *
      * @param {boolean} [queryFilters.structuredSurvey]
+     * @param {boolean} [queryFilters.createdInCurrentYear]
      * @param {boolean} [queryFilters.isToday]
      * @param {string} [queryFilters.monad]
      * @param {string} [queryFilters.tetrad]
@@ -6720,6 +6868,10 @@ class App extends EventHarness {
             }
 
             if (queryFilters.defaultCasual && !survey.attributes.defaultCasual) {
+                continue;
+            }
+
+            if (queryFilters.createdInCurrentYear && !survey.createdInCurrentYear()) {
                 continue;
             }
 
@@ -6895,7 +7047,8 @@ class App extends EventHarness {
         const storedObjectKeys = {
             survey: [],
             occurrence: [],
-            image: []
+            image: [],
+            track: [],
         };
 
         if (targetSurveyId) {
@@ -7003,6 +7156,8 @@ class App extends EventHarness {
         this.currentSurvey = newSurvey;
         this.addSurvey(newSurvey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
+
+        Track.applyChangedSurveyTrackingResumption(newSurvey);
     }
 
     /**
@@ -7470,7 +7625,14 @@ function packageClientResponse (returnedToClient) {
 }
 
 class LocalResponse {
+    /**
+     * @type {Object}
+     */
     toSaveLocally;
+
+    /**
+     * @type {Object}
+     */
     returnedToClient;
 
     /**
@@ -7483,6 +7645,11 @@ class LocalResponse {
         'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
         'Please try to re-establish a network connection and try again.';
 
+    /**
+     *
+     * @param {{}} toSaveLocally
+     * @param {{}} returnedToClient
+     */
     constructor(toSaveLocally, returnedToClient) {
         this.toSaveLocally = toSaveLocally;
         this.returnedToClient = returnedToClient;
@@ -7842,7 +8009,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1722789997-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1723021466-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -8057,46 +8224,46 @@ class BSBIServiceWorker {
                 }
             })
             .catch( (reason) => {
-                    console.log({'post fetch failed (probably no network)': reason});
+                console.log({'post fetch failed (probably no network)': reason});
 
-                    // would get here if the network is down
-                    // or if got invalid response from the server
+                // would get here if the network is down
+                // or if got invalid response from the server
 
-                    console.log(`post fetch failed (probably no network), (reason: ${reason})`);
-                    //console.log({'post failure reason' : reason});
+                console.log(`post fetch failed (probably no network), (reason: ${reason})`);
+                //console.log({'post failure reason' : reason});
 
-                    // /**
-                    //  * simulated result of post, returned as JSON body
-                    //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-                    //  */
-                    // let returnedToClient = {};
+                // /**
+                //  * simulated result of post, returned as JSON body
+                //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+                //  */
+                // let returnedToClient = {};
 
-                    return clonedRequest.formData()
-                        .then((formData) => {
-                                console.log('got to form data handler');
-                                //console.log({formData});
+                return clonedRequest.formData()
+                    .then((formData) => {
+                            console.log('got to form data handler');
+                            //console.log({formData});
 
-                                return ResponseFactory
-                                    .fromPostedData(formData)
-                                    .populateClientResponse()
-                                    .storeLocally();
-                            }, (reason) => {
-                                console.log({'failed to read form data locally' : reason});
+                            return ResponseFactory
+                                .fromPostedData(formData)
+                                .populateClientResponse()
+                                .storeLocally();
+                        }, (reason) => {
+                            console.log({'failed to read form data locally' : reason});
 
-                                /**
-                                 * simulated result of post, returned as JSON body
-                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                                 */
-                                let returnedToClient = {
-                                    error: 'Failed to process posted response data. (internal error)',
-                                    errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                        'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                        'Please try to re-establish a network connection and try again.'
-                                };
+                            /**
+                             * simulated result of post, returned as JSON body
+                             * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                             */
+                            let returnedToClient = {
+                                error: 'Failed to process posted response data. (internal error)',
+                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                    'Please try to re-establish a network connection and try again.'
+                            };
 
-                                return packageClientResponse(returnedToClient);
-                            }
-                        );
+                            return packageClientResponse(returnedToClient);
+                        }
+                    );
                 }
             ));
     }
@@ -8450,5 +8617,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map
