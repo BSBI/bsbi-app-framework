@@ -112,6 +112,13 @@ export class App extends EventHarness {
     _deviceId = '';
 
     /**
+     * Flags the occurrence of a pervasive Safari bug
+     * see https://bugs.webkit.org/show_bug.cgi?id=197050
+     * @type {boolean}
+     */
+    static indexedDbConnectionLost = false;
+
+    /**
      * Event fired when user requests a new blank survey
      *
      * @type {string}
@@ -814,7 +821,16 @@ export class App extends EventHarness {
                     });
             }, (failedResult) => {
                 console.error(`Failed to sync all: ${failedResult}`);
-                Logger.logError(`Failed to sync all: ${failedResult}`);
+                Logger.logError(`Failed to sync all: ${failedResult}`)
+                    .finally(() => {
+                        // cope with pervasive Safari crash
+                        // see https://bugs.webkit.org/show_bug.cgi?id=197050
+                        if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                            App.indexedDbConnectionLost = true;
+                            location.reload();
+                        }
+                    });
+
                 this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
                 return false;
             });

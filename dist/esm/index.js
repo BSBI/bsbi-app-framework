@@ -3494,6 +3494,7 @@ class Logger {
      * @param {string|number|null} [line]
      * @param {number|null} [column]
      * @param {Error|null} [errorObj]
+     * @returns {Promise<void>}
      */
     static logError = function(message, url = '', line= '', column = null, errorObj = null) {
 
@@ -3546,8 +3547,7 @@ class Logger {
 
         doc.documentElement.appendChild(error);
 
-        // noinspection JSIgnoredPromiseFromCall
-        fetch('/javascriptErrorLog.php', {
+        return fetch('/javascriptErrorLog.php', {
             method: "POST", // *GET, POST, PUT, DELETE, etc.
             mode: "cors", // no-cors, *cors, same-origin
             cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -3558,10 +3558,9 @@ class Logger {
             redirect: "follow", // manual, *follow, error
             referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
             body: (new XMLSerializer()).serializeToString(doc),
+        }).finally(() => {
+            window.onerror = Logger.logError; // turn on error handling again
         });
-
-        window.onerror = Logger.logError; // turn on error handling again
-        return true; // suppress normal error reporting
     };
 }
 
@@ -4017,13 +4016,12 @@ class Track extends Model {
 
     /**
      * @todo consider whether PointTriplet should also include accuracy
-     * @todo consider whether to change from milliseconds to seconds
      *
      * @typedef PointTriplet
      * @type {array}
      * @property {number} 0 lng
      * @property {number} 1 lat
-     * @property {number} 2 stamp (milliseconds since epoch)
+     * @property {number} 2 stamp (seconds since epoch)
      */
 
     /**
@@ -4350,7 +4348,7 @@ class Track extends Model {
             series[0][l] = [
                 position.coords.longitude,
                 position.coords.latitude,
-                position.timestamp, // @todo consider changing to seconds instead of milliseconds
+                Math.floor(position.timestamp / 1000),
             ];
 
             this.touch();
@@ -6135,6 +6133,13 @@ class App extends EventHarness {
     _deviceId = '';
 
     /**
+     * Flags the occurrence of a pervasive Safari bug
+     * see https://bugs.webkit.org/show_bug.cgi?id=197050
+     * @type {boolean}
+     */
+    static indexedDbConnectionLost = false;
+
+    /**
      * Event fired when user requests a new blank survey
      *
      * @type {string}
@@ -6837,7 +6842,16 @@ class App extends EventHarness {
                     });
             }, (failedResult) => {
                 console.error(`Failed to sync all: ${failedResult}`);
-                Logger.logError(`Failed to sync all: ${failedResult}`);
+                Logger.logError(`Failed to sync all: ${failedResult}`)
+                    .finally(() => {
+                        // cope with pervasive Safari crash
+                        // see https://bugs.webkit.org/show_bug.cgi?id=197050
+                        if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                            App.indexedDbConnectionLost = true;
+                            location.reload();
+                        }
+                    });
+
                 this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
                 return false;
             });
@@ -8009,7 +8023,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1723021466-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1723041249-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

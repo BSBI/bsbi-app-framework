@@ -15,6 +15,7 @@ export class Logger {
      * @param {string|number|null} [line]
      * @param {number|null} [column]
      * @param {Error|null} [errorObj]
+     * @returns {Promise<void>}
      */
     static logError = function(message, url = '', line= '', column = null, errorObj = null) {
 
@@ -67,8 +68,7 @@ export class Logger {
 
         doc.documentElement.appendChild(error);
 
-        // noinspection JSIgnoredPromiseFromCall
-        fetch('/javascriptErrorLog.php', {
+        return fetch('/javascriptErrorLog.php', {
             method: "POST", // *GET, POST, PUT, DELETE, etc.
             mode: "cors", // no-cors, *cors, same-origin
             cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -79,9 +79,8 @@ export class Logger {
             redirect: "follow", // manual, *follow, error
             referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
             body: (new XMLSerializer()).serializeToString(doc),
+        }).finally(() => {
+            window.onerror = Logger.logError; // turn on error handling again
         });
-
-        window.onerror = Logger.logError; // turn on error handling again
-        return true; // suppress normal error reporting
     };
 }
