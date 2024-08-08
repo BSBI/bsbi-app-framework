@@ -884,8 +884,15 @@ export class App extends EventHarness {
                 continue;
             }
 
-            if (queryFilters.hasOwnProperty('userId') && queryFilters.userId !== survey.userId) {
-                continue;
+            if (queryFilters.hasOwnProperty('userId')) {
+                if (queryFilters.userId !== survey.userId) {
+                    continue;
+                }
+            } else {
+                // test if survey belongs to session user by default (only relevant if an explicit userId selector wasn't applied)
+                if (this.session?.userId && survey.userId !== this.session.userId) {
+                    continue;
+                }
             }
 
             if (queryFilters.excludeSurveyId === survey.id) {

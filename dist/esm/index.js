@@ -6905,8 +6905,15 @@ class App extends EventHarness {
                 continue;
             }
 
-            if (queryFilters.hasOwnProperty('userId') && queryFilters.userId !== survey.userId) {
-                continue;
+            if (queryFilters.hasOwnProperty('userId')) {
+                if (queryFilters.userId !== survey.userId) {
+                    continue;
+                }
+            } else {
+                // test if survey belongs to session user by default (only relevant if an explicit userId selector wasn't applied)
+                if (this.session?.userId && survey.userId !== this.session.userId) {
+                    continue;
+                }
             }
 
             if (queryFilters.excludeSurveyId === survey.id) {
@@ -8023,7 +8030,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1723041249-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1723107530-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
