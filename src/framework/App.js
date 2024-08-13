@@ -112,6 +112,13 @@ export class App extends EventHarness {
     _deviceId = '';
 
     /**
+     * time in seconds to retain stale surveys
+     *
+     * @type {number}
+     */
+    staleThreshold = 3600 * 24 * 14; // keep surveys for 14 days
+
+    /**
      * Flags the occurrence of a pervasive Safari bug
      * see https://bugs.webkit.org/show_bug.cgi?id=197050
      * @type {boolean}
@@ -701,17 +708,34 @@ export class App extends EventHarness {
             console.log({'refresh from server json response' : jsonResponse});
 
             // if external objects newer than local version then place in local storage
-            const promises = [];
+            const promise = promise.resolve();
 
             for (let type in jsonResponse) {
                 if (jsonResponse.hasOwnProperty(type)) {
                     for (let object of jsonResponse[type]) {
-                        promises.push(this._conditionallyReplaceObject(object));
+                        promise.then(() => this._conditionallyReplaceObject(object))
+                            .catch((reason) => {
+                                console.error({'Failed to replace' : {type, id : object.id, reason}});
+                                return Promise.resolve();
+                            })
+                        ;
                     }
                 }
             }
 
-            return Promise.all(promises);
+            // const promises = [];
+            //
+            // for (let type in jsonResponse) {
+            //     if (jsonResponse.hasOwnProperty(type)) {
+            //         for (let object of jsonResponse[type]) {
+            //             promises.push(this._conditionallyReplaceObject(object));
+            //         }
+            //     }
+            // }
+            //
+            // return Promise.all(promises);
+
+            return promise;
         });
     }
 
@@ -773,12 +797,18 @@ export class App extends EventHarness {
 
                 //if (!App.RESERVED_KEY_NAMES.includes(key)) {
                 if (!key.match(reservedNamesRegex)) {
-                    let type, id;
+                    let type, id, deviceId;
 
-                    [type, id] = key.split('.', 2);
+                    [type, id, deviceId] = key.split('.', 3);
 
                     if (storedObjectKeys.hasOwnProperty(type)) {
-                        if (!storedObjectKeys[type].includes(id)) {
+                        if (type === 'track') {
+                            // tracks keys consist of id.deviceId rather than just id
+
+                            if (!storedObjectKeys[type].includes(`${id}.${deviceId}`)) {
+                                storedObjectKeys[type].push(`${id}.${deviceId}`);
+                            }
+                        } else if (!storedObjectKeys[type].includes(id)) {
                             storedObjectKeys[type].push(id);
                         }
                     } else {
@@ -795,9 +825,51 @@ export class App extends EventHarness {
     }
 
     /**
+     * Purge local entries that are older than threshold or orphaned and which have been saved externally
+     *
+     * @returns {Promise}
+     */
+    purgeStale() {
+        const storedObjectKeys = {
+            survey : [],
+            occurrence : [],
+            image : [],
+            track : [],
+        };
+
+        return this.seekKeys(storedObjectKeys)
+            .then((storedObjectKeys) => {
+                return this._purgeLocal(storedObjectKeys)
+                    .then((result) => {
+                        // if (!fastReturn) {
+                        //     // Can only trigger the event once the whole process is complete, rather than after
+                        //     // a short-cut fast return.
+                        //     this.fireEvent(APP_EVENT_PURGE);
+                        // }
+
+                        return result;
+                    });
+            }, (failedResult) => {
+                console.error(`Failed to purge: ${failedResult}`);
+                Logger.logError(`Failed to purge: ${failedResult}`)
+                    .finally(() => {
+                        // cope with pervasive Safari crash
+                        // see https://bugs.webkit.org/show_bug.cgi?id=197050
+                        if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                            App.indexedDbConnectionLost = true;
+                            location.reload();
+                        }
+                    });
+
+                //this.fireEvent(APP_EVENT_PURGE_FAILED);
+                return false;
+            });
+    }
+
+    /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
      * This should allow surveys to be switched etc. without disrupting the ongoing save process.
-     * @returns {Promise}
+     * @returns {Promise<{savedCount : {}}>}
      */
     syncAll(fastReturn = true) {
         const storedObjectKeys = {
@@ -814,25 +886,32 @@ export class App extends EventHarness {
                         if (!fastReturn) {
                             // Can only trigger the event once the whole process is complete, rather than after
                             // a short-cut fast return.
-                            this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER);
+                            this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER, result);
                         }
 
                         return result;
+                    }, (failedResult) => {
+                        this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
+                        return Promise.reject(failedResult);
                     });
             }, (failedResult) => {
-                console.error(`Failed to sync all: ${failedResult}`);
-                Logger.logError(`Failed to sync all: ${failedResult}`)
+                console.error(`Failed to seek keys: ${failedResult}`);
+                Logger.logError(`Failed to seek keys for sync all: ${failedResult}`)
                     .finally(() => {
+                        // @todo need to check that failedResult can be parsed in this way
+                        // (possibly should happen earlier rather than here)
+
                         // cope with pervasive Safari crash
                         // see https://bugs.webkit.org/show_bug.cgi?id=197050
                         if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
                             App.indexedDbConnectionLost = true;
                             location.reload();
                         }
-                    });
+                    })
+                ;
 
                 this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
-                return false;
+                return Promise.reject(failedResult);
             });
     }
 
@@ -915,24 +994,338 @@ export class App extends EventHarness {
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
      * @param {boolean} fastReturn default false
-     * @returns {Promise}
+     * @returns {Promise<{savedCount : Object<string, number>, errors : null|Object<string,Array<{key: string, reason: string}>>, savedFlag : boolean}|void>}
      * @private
      */
     _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
         // synchronises surveys first, then occurrences, then images from indexedDb
 
-        const promises = [];
+        const tasks = [];
+
+        /**
+         *
+         * @type {Object<string,Array<{key: string, reason: string}>>}
+         */
+        const errors = {
+            survey : [],
+            occurrence : [],
+            occurrenceimage : [],
+            track : [],
+        };
+
+        /**
+         *
+         * @type {{image: number, survey: number, occurrenceimage: number, track: number}}
+         */
+        const savedCount = {
+            survey : 0,
+            occurrence : 0,
+            occurrenceimage : 0,
+            track : 0,
+        };
+        let errorFlag = false;
+
+        // set if at least one save happened
+        let savedFlag = false;
+
+        /**
+         * @param {string} objectKey
+         * @param {typeof Model} objectClass
+         * @private
+         *
+         */
+        const queueSync = (objectKey, objectClass) => {
+            const classLowerName = objectClass.name.toLowerCase();
+
+            // return new Promise((resolve, reject) => {
+                /**
+                 * @returns {Promise}
+                 */
+                return () => {
+                    console.log({'queueing sync': {key: objectKey, type: classLowerName}});
+                    return objectClass.retrieveFromLocal(objectKey, new objectClass)
+                        .then((/** Model */ model) => {
+                            if (model.unsaved()) {
+                                return model.save(true)
+                                    .then(() => {
+                                        // for sync, only a remote save should count as successful
+                                        if (!model.savedRemotely) {
+                                            return Promise.reject(`Failed to save ${classLowerName} to server.`);
+                                        }
+                                    })
+                                    .then(() => {
+                                        savedCount[classLowerName]++;
+                                        savedFlag = true;
+                                    });
+                            }
+                        })
+                        .catch((/** string */ failedResult) => {
+                            errors[classLowerName].push({
+                                key: objectKey,
+                                reason: failedResult,
+                            });
+                            errorFlag = true;
+                            return Promise.resolve('Continuing after sync failure.');
+                        })
+                        .finally(() => {
+                            console.log({'processed sync': {key: objectKey, type: classLowerName}});
+                        });
+                        //.then(resolve, reject);
+                };
+
+                //tasks.push(task);
+
+                //return task;
+
+                // if (tasks.length > 1) {
+                //     console.log(`Added sync request to the queue.`);
+                // } else {
+                //     console.log(`No pending tasks, starting post request immediately.`);
+                //     task().finally(next);
+                // }
+            // });
+        };
+
+        // /**
+        //  *
+        //  * @returns {Promise}
+        //  * @private
+        //  */
+        // const next = () => {
+        //     tasks.shift(); // save is done
+        //
+        //     if (tasks.length) {
+        //         // run the next task
+        //         console.log('Running the next sync task.');
+        //         return tasks[0]().finally(next);
+        //     }
+        // };
+
+        let syncPromise = Promise.resolve();
+        //const syncPromise = new Promise();
+
+            // this complex queuing system enforces the order of save requests:
+        // survey > occurrences > images > tracks
+        // and minimises flooding of indexedDb look-ups that sometimes appear to crash Safari
+        // and should minimise memory usage
+
+        //console.log('got to 1079');
+
+        for(let surveyKey of storedObjectKeys.survey) {
+            syncPromise = syncPromise.then(() => queueSync(surveyKey, Survey)());
+
+            // queueSync(surveyKey, Survey);
+        }
+
+        for(let occurrenceKey of storedObjectKeys.occurrence) {
+            syncPromise =syncPromise.then(() => queueSync(occurrenceKey, Occurrence)());
+
+            // queueSync(occurrenceKey, Occurrence);
+        }
+
+        for(let imageKey of storedObjectKeys.image) {
+            syncPromise = syncPromise.then(() => queueSync(imageKey, OccurrenceImage)());
+
+
+            // queueSync(imageKey, OccurrenceImage);
+        }
+
+        for(let trackKey of storedObjectKeys.track) {
+            syncPromise = syncPromise.then(() => queueSync(trackKey, Track)());
+            // queueSync(trackKey, Track);
+        }
+
+        //console.log('got to 1105');
+
+        syncPromise = syncPromise.finally(() => {
+                //console.log('got to 1139');
+                if (errorFlag) {
+                    console.log({'local sync failed with errors': errors});
+                    return Promise.reject({
+                        savedCount,
+                        errors,
+                        savedFlag
+                    });
+                }
+            });
+
 
         if (fastReturn) {
-            // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
-            promises[0] = Promise.resolve(true);
+            return Promise.resolve('Fast return before syncLocalUnsaved completed.');
+            // // this will return near instantaneously as there is an already resolved promise at the head of the array
+            // // the other promises will continue to resolve
+            // //return Promise.race(promises);
+            // return Promise.race([
+            //     Promise.resolve(true), // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
+            //     syncPromise
+            // ]);
+        } else {
+            return syncPromise.then(() => {
+                //console.log('got to 1148');
+                return {
+                    savedCount,
+                    errors: null,
+                    savedFlag
+                }
+            });
         }
+    }
+
+    // /**
+    //  *
+    //  * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
+    //  * @param {boolean} fastReturn default false
+    //  * @returns {Promise}
+    //  * @private
+    //  */
+    // _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
+    //     // synchronises surveys first, then occurrences, then images from indexedDb
+    //
+    //     const surveyPromises = [];
+    //
+    //     for(let surveyKey of storedObjectKeys.survey) {
+    //         surveyPromises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
+    //             .then((/** Survey */ survey) => {
+    //                 if (survey.unsaved()) { //} || this.session?.userId === '2cd4p9h.31ecsw') {
+    //                     return survey.save(true);
+    //                 }
+    //             })
+    //         );
+    //     }
+    //
+    //     let errors = false;
+    //
+    //     // this ensures that saves happen in order (surveys > occurrences > images > tracks)
+    //     const savePromise = Promise.allSettled(surveyPromises)
+    //         .catch((reason) => {
+    //             console.log({'save survey errors' : reason});
+    //             errors = true;
+    //             return Promise.resolve()
+    //         })
+    //         .finally(() => {
+    //             const occurrencePromises = [];
+    //
+    //             for(let occurrenceKey of storedObjectKeys.occurrence) {
+    //                 occurrencePromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+    //                     .then((/** Occurrence */ occurrence) => {
+    //                         if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
+    //                             return occurrence.save('', true);
+    //                         }
+    //                     })
+    //                 );
+    //             }
+    //
+    //             return Promise.allSettled(occurrencePromises);
+    //         })
+    //         .catch((reason) => {
+    //             console.log({'save occurrence errors' : reason});
+    //             errors = true;
+    //             return Promise.resolve()
+    //         })
+    //         .finally(() => {
+    //             const imagePromises = [];
+    //
+    //             for(let imageKey of storedObjectKeys.image) {
+    //                 imagePromises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
+    //                     .then((/** OccurrenceImage */ image) => {
+    //                         if (image.unsaved()) {
+    //                             return image.save();
+    //                         }
+    //                     })
+    //                 );
+    //             }
+    //
+    //             return Promise.allSettled(imagePromises);
+    //         })
+    //         .catch((reason) => {
+    //             console.log({'save image errors' : reason});
+    //             errors = true;
+    //             return Promise.resolve()
+    //         })
+    //         .finally(() => {
+    //             const trackPromises = []
+    //
+    //             for(let trackKey of storedObjectKeys.track) {
+    //                 trackPromises.push(Track.retrieveFromLocal(trackKey, new Track)
+    //                     .then((/** Track */ track) => {
+    //                         if (track.unsaved()) {
+    //                             return track.save();
+    //                         }
+    //                     })
+    //                 );
+    //             }
+    //
+    //             return Promise.allSettled(trackPromises);
+    //         })
+    //         .catch((reason) => {
+    //             console.log({'save track errors' : reason});
+    //             errors = true;
+    //             return Promise.resolve()
+    //         })
+    //         .finally(() => {
+    //             if (errors) {
+    //                 return Promise.reject();
+    //             } else {
+    //                 return Promise.resolve();
+    //             }
+    //         })
+    //     ;
+    //
+    //     if (fastReturn) {
+    //         // this will return near instantaneously as there is an already resolved promise at the head of the array
+    //         // the other promises will continue to resolve
+    //         //return Promise.race(promises);
+    //         return Promise.race([
+    //             Promise.resolve(true), // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
+    //             savePromise
+    //         ]);
+    //     } else {
+    //         //return Promise.all(promises).catch((result) => {
+    //         return savePromise.catch((result) => {
+    //             console.log(`Save failure: ${result}`);
+    //             return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
+    //         });
+    //     }
+    // }
+
+    /**
+     *
+     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
+     *
+     * @returns {Promise}
+     *
+     * @todo implement this
+     * @private
+     */
+    _purgeLocalFOO(storedObjectKeys) {
+        // synchronises surveys first, then occurrences, then images from indexedDb
+
+        const promises = [];
+
+        const deletionCandidateKeys = {
+            survey : [],
+            occurrence : [],
+            image : [],
+            track : [],
+        };
+
+        // if (fastReturn) {
+        //     // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
+        //     promises[0] = Promise.resolve(true);
+        // }
+
+        const thresholdStamp = Math.floor(Date.now() / 1000) - this.staleThreshold;
 
         for(let surveyKey of storedObjectKeys.survey) {
             promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
                 .then((/** Survey */ survey) => {
-                    if (survey.unsaved()) { //} || this.session?.userId === '2cd4p9h.31ecsw') {
-                        return survey.save(true);
+                    if (survey.savedRemotely && survey.modifiedStamp <= thresholdStamp) {
+                        // survey hasn't been modified recently
+
+                        if (!(survey.attributes?.defaultCasual && survey.createdInCurrentYear() && survey.userId === this.userId)) {
+                            // survey isn't the set of casual records for the current year for the current user
+
+                        }
                     }
                 })
             );
@@ -968,16 +1361,12 @@ export class App extends EventHarness {
             );
         }
 
-        if (fastReturn) {
-            // this will return near instantaneously as there is an already resolved promise at the head of the array
-            // the other promises will continue to resolve
-            return Promise.race(promises);
-        } else {
-            return Promise.all(promises).catch((result) => {
-                console.log(`Save failure: ${result}`);
-                return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-            });
-        }
+
+        return Promise.all(promises).catch((result) => {
+            console.log(`Save failure: ${result}`);
+            return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
+        });
+
     }
 
     /**
@@ -1055,79 +1444,106 @@ export class App extends EventHarness {
             storedObjectKeys.survey[0] = targetSurveyId;
         }
 
-        return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys)).then((storedObjectKeys) => {
-            if (storedObjectKeys.survey.length || this.session?.userId) {
-                return this.refreshFromServer(storedObjectKeys.survey).finally(() => {
-                    // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                    return this.seekKeys(storedObjectKeys);
-                });
-            } else {
-                return null;
-            }
-        }).finally(() => {
-            // called regardless of whether a server refresh was successful
-            // storedObjectKeys and indexed db should be as up-to-date as possible
-
-            console.log({storedObjectKeys});
-
-            if (storedObjectKeys?.survey?.length) {
-
-                const surveyFetchingPromises = [];
-                let n = 0;
-
-                for (let surveyKey of storedObjectKeys.survey) {
-                    // arbitrarily set first survey key as current if a target id hasn't been specified
-
-                    surveyFetchingPromises.push(
-                        this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0))
-                    );
-                }
-
-                return Promise.all(surveyFetchingPromises)
-                    .finally(() => {
-                        //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
-
-                        if (!this.currentSurvey && neverAddBlank) {
-                            // survey doesn't actually exist
-                            // this could have happened in an invalid survey id was provided as a targetSurveyId
-                            console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
-                            return Promise.reject(new Error(`Failed to retrieve survey id '${targetSurveyId}'`));
-                        }
-
-                        if (this.currentSurvey?.deleted) {
-                            // unusual case where survey is deleted or was not found
-                            // substitute a new one
-
-                            // this should probably never happen, as items deleted on the server ought to have been
-                            // removed locally
-                            this.currentSurvey = null;
-                            if (neverAddBlank) {
-                                return Promise.reject(new Error(`Survey id '${targetSurveyId}' ${this.currentSurvey?.deleted ? 'is deleted' : 'not found'}.`));
-                            } else {
-                                this.setNewSurvey();
-                            }
-                        }
-
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                        this.currentSurvey?.fireEvent?.(Survey.EVENT_OCCURRENCES_CHANGED);
-                        this.currentSurvey?.fireEvent?.(Survey.EVENT_LIST_LENGTH_CHANGED);
-
-                        return Promise.resolve();
-                    });
-            } else {
-                // no pre-existing surveys
-
-                if (neverAddBlank) {
-                    console.log('no pre-existing survey');
-                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // survey menu needs refresh
-                    return Promise.reject(new Error(`Failed to match survey.`));
+        return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys))
+            .then((storedObjectKeys) => {
+                if (storedObjectKeys.survey.length || this.session?.userId) {
+                    return this.refreshFromServer(storedObjectKeys.survey)
+                        // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                        // do this for both promise states (can't use finally has it doesn't chain returned promises
+                        .then(
+                            () => this.seekKeys(storedObjectKeys),
+                            () => this.seekKeys(storedObjectKeys),
+                        );
                 } else {
-                    console.log('no pre-existing surveys, so creating a new one');
-                    this.setNewSurvey(); // this also fires EVENT_SURVEYS_CHANGED
-                    return Promise.resolve();
+                    return null;
                 }
-            }
-        });
+            })
+            .catch(() => {
+                // need this catch to get back to a resolving promise chain
+                console.error('Failed at clear survey or at seek keys.');
+                return Promise.resolve();
+            })
+            .then(() => {
+                // called regardless of whether a server refresh was successful
+                // (because of previous catch)
+                // storedObjectKeys and indexed db should be as up-to-date as possible
+
+                console.log({storedObjectKeys});
+
+                if (storedObjectKeys?.survey?.length) {
+
+                    const surveyFetchingPromises = [];
+                    let n = 0;
+
+                    let restorePromise = Promise.resolve();
+
+                    for (let surveyKey of storedObjectKeys.survey) {
+                        // arbitrarily set first survey key as current if a target id hasn't been specified
+
+                        // surveyFetchingPromises.push(
+                        //     this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0))
+                        // );
+
+                        restorePromise = restorePromise
+                            .then(() => {
+                                return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0));
+                            })
+                            .catch((reason) => {
+                                console.log({'failed to restore from local' : {surveyKey, reason}});
+                                return Promise.resolve();
+                            })
+                    }
+
+                    // can use Promise.all as don't want these to run concurrently
+                    // which may overwhelm Safari
+                    // instead need a chain of then()s
+                    //return Promise.all(surveyFetchingPromises)
+
+                    return restorePromise
+                        .finally(() => {
+                            //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
+
+                            if (!this.currentSurvey && neverAddBlank) {
+                                // survey doesn't actually exist
+                                // this could have happened in an invalid survey id was provided as a targetSurveyId
+                                console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
+                                return Promise.reject(new Error(`Failed to retrieve survey id '${targetSurveyId}'`));
+                            }
+
+                            if (this.currentSurvey?.deleted) {
+                                // unusual case where survey is deleted or was not found
+                                // substitute a new one
+
+                                // this should probably never happen, as items deleted on the server ought to have been
+                                // removed locally
+                                this.currentSurvey = null;
+                                if (neverAddBlank) {
+                                    return Promise.reject(new Error(`Survey id '${targetSurveyId}' ${this.currentSurvey?.deleted ? 'is deleted' : 'not found'}.`));
+                                } else {
+                                    this.setNewSurvey();
+                                }
+                            }
+
+                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                            this.currentSurvey?.fireEvent?.(Survey.EVENT_OCCURRENCES_CHANGED);
+                            this.currentSurvey?.fireEvent?.(Survey.EVENT_LIST_LENGTH_CHANGED);
+
+                            //return Promise.resolve();
+                        });
+                } else {
+                    // no pre-existing surveys
+
+                    if (neverAddBlank) {
+                        console.log('no pre-existing survey');
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // survey menu needs refresh
+                        return Promise.reject(new Error(`Failed to match survey.`));
+                    } else {
+                        console.log('no pre-existing surveys, so creating a new one');
+                        this.setNewSurvey(); // this also fires EVENT_SURVEYS_CHANGED
+                        return Promise.resolve();
+                    }
+                }
+            });
     }
 
     /**
@@ -1236,70 +1652,123 @@ export class App extends EventHarness {
 
         let userIdFilter = this.session?.userId;
 
-        let promise = Survey.retrieveFromLocal(surveyId, new Survey).then((survey) => {
-            console.log(`retrieving local survey ${surveyId}`);
+        let promise = Survey.retrieveFromLocal(surveyId, new Survey)
+            .then((survey) => {
+                console.log(`retrieving local survey ${surveyId}`);
 
-            this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
+                this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 
-            if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter || this.session?.superAdmin) {
-                if (setAsCurrent) {
-                    // the apps occurrences should only relate to the current survey
-                    // (the reset records are remote or in IndexedDb)
-                    return this.clearCurrentSurvey().then(() => {
+                if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter || this.session?.superAdmin) {
+                    if (setAsCurrent) {
+                        // the apps occurrences should only relate to the current survey
+                        // (the reset records are remote or in IndexedDb)
+                        return this.clearCurrentSurvey().then(() => {
+                            this.addSurvey(survey);
+                            //const occurrenceFetchingPromises = [];
+                            let occurrenceFetchingPromise = Promise.resolve();
+
+                            for (let occurrenceKey of storedObjectKeys.occurrence) {
+                                occurrenceFetchingPromise = occurrenceFetchingPromise
+                                    .then(() => Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                                        .then((occurrence) => {
+                                            if (occurrence.surveyId === surveyId) {
+                                                //console.log(`adding occurrence ${occurrenceKey}`);
+                                                this.addOccurrence(occurrence);
+
+                                                survey.extantOccurrenceKeys.add(occurrence.id);
+                                            } else {
+                                                // not part of current survey but should still add to key list for counting purposes
+
+                                                this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
+                                            }
+
+                                        })
+                                    )
+                                    .catch((reason) => {
+                                        console.error({'Failed to fetch occurrence for current survey' : {occurrenceKey, reason}});
+                                        return Promise.resolve();
+                                    });
+
+                                // occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+                                //     .then((occurrence) => {
+                                //         if (occurrence.surveyId === surveyId) {
+                                //             //console.log(`adding occurrence ${occurrenceKey}`);
+                                //             this.addOccurrence(occurrence);
+                                //
+                                //             survey.extantOccurrenceKeys.add(occurrence.id);
+                                //         } else {
+                                //             // not part of current survey but should still add to key list for counting purposes
+                                //
+                                //             this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
+                                //         }
+                                //
+                                //     }));
+                            }
+
+                            //return Promise.all(occurrenceFetchingPromises);
+                            return occurrenceFetchingPromise;
+                        });
+                    } else {
+                        // not the current survey, so just add it but don't load occurrences
                         this.addSurvey(survey);
-                        const occurrenceFetchingPromises = [];
-
-                        for (let occurrenceKey of storedObjectKeys.occurrence) {
-                            occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                                .then((occurrence) => {
-                                    if (occurrence.surveyId === surveyId) {
-                                        //console.log(`adding occurrence ${occurrenceKey}`);
-                                        this.addOccurrence(occurrence);
-
-                                        survey.extantOccurrenceKeys.add(occurrence.id);
-                                    } else {
-                                        // not part of current survey but should still add to key list for counting purposes
-
-                                        this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
-                                    }
-
-                                }));
-                        }
-
-                        return Promise.all(occurrenceFetchingPromises);
-                    });
+                        return Promise.resolve();
+                    }
                 } else {
-                    // not the current survey, so just add it but don't load occurrences
-                    this.addSurvey(survey);
+                    console.log(`Skipping survey id ${survey.id} that belongs to user ${survey.userId}`);
+                    return Promise.reject(`Skipping survey id ${survey.id} that belongs to user ${survey.userId}`);
                 }
-            } else {
-                console.log(`Skipping survey id ${survey.id} that belongs to user ${survey.userId}`);
-            }
-        });
+            });
 
         if (setAsCurrent) {
-            promise.finally(() => {
-                //console.log('Reached image fetching part');
-                const imageFetchingPromises = [];
+            promise.then( () => {
 
-                for (let occurrenceImageKey of storedObjectKeys.image) {
-                    imageFetchingPromises.push(OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage)
-                        .then((occurrenceImage) => {
-                            console.log(`restoring image id '${occurrenceImageKey}'`);
+                //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]) || null;
+                this.currentSurvey = this.surveys.get(surveyId) || null;
 
-                            if (occurrenceImage.surveyId === surveyId) {
-                                OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
-                            }
-                        }, (reason) => {
-                            console.log(`Failed to retrieve an image: ${reason}`);
-                        }));
+                if (this.currentSurvey) {
+                    //console.log('Reached image fetching part');
+                    //const imageFetchingPromises = [];
+                    let imageFetchingPromise = Promise.resolve();
+
+                    for (let occurrenceImageKey of storedObjectKeys.image) {
+                        imageFetchingPromise = imageFetchingPromise
+                            .then(
+                                () => OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage)
+                                    .then((occurrenceImage) => {
+                                        console.log(`restoring image id '${occurrenceImageKey}'`);
+
+                                        if (occurrenceImage.surveyId === surveyId) {
+                                            OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
+                                        }
+                                    }, (reason) => {
+                                        console.log(`Failed to retrieve an image: ${reason}`);
+                                    })
+                                ,
+                                () => Promise.resolve() // always finish with a resolved promise, even on failure
+                            );
+
+                        // imageFetchingPromises.push(
+                        //     OccurrenceImage.retrieveFromLocal(occurrenceImageKey, new OccurrenceImage)
+                        //         .then((occurrenceImage) => {
+                        //             console.log(`restoring image id '${occurrenceImageKey}'`);
+                        //
+                        //             if (occurrenceImage.surveyId === surveyId) {
+                        //                 OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
+                        //             }
+                        //         }, (reason) => {
+                        //             console.log(`Failed to retrieve an image: ${reason}`);
+                        //         })
+                        // );
+                    }
+
+                    return imageFetchingPromise;
+                } else {
+                    return Promise.reject()
                 }
-
-                this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]) || null;
 
                 // if the target survey belonged to a different user then could be undefined here
                 // failed state should reject rather than resolve the promise
-                return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.reject();
+                // return this.currentSurvey ? Promise.all(imageFetchingPromises) : Promise.reject();
             });
         }
 

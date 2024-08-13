@@ -481,7 +481,7 @@ export class Survey extends Model {
 
             formData.append('appVersion', Model.bsbiAppVersion);
 
-            console.log('queueing survey post');
+            console.log(`queueing survey post ${this.id}`);
             return this.queuePost(formData);
         } else {
             return Promise.reject(`Survey ${this.id} has already been saved.`);

@@ -192,7 +192,7 @@ export class Track extends Model {
 
                             oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
 
-                            oldTrack.save().then(() => {
+                            oldTrack.save(true).then(() => {
                                 console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
                             });
                         } else {
@@ -231,7 +231,7 @@ export class Track extends Model {
                 if (track) {
                     track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
 
-                    track.save().then(() => {
+                    track.save(true).then(() => {
                         console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
                     });
                 }
@@ -318,10 +318,12 @@ export class Track extends Model {
             Track.lastPingStamp = position.timestamp;
 
             if (changed) {
+                const currentSurvey = track._app?.currentSurvey;
+
                 // survey must be saved first
-                if (track._app?.currentSurvey?.unsaved?.()) {
-                    if (!track._app.currentSurvey.isPristine) {
-                        track._app.currentSurvey.save().then(() => {
+                if (currentSurvey?.unsaved?.()) {
+                    if (!currentSurvey.isPristine) {
+                        currentSurvey.save().then(() => {
                                 return track.save();
                             }
                         );
@@ -481,16 +483,22 @@ export class Track extends Model {
      *      surveyId: string,
      *      deviceId: string,
      *      pointIndex: string,
-     *      points: string,
+     *      points: string | Array<PointSeries>,
      *      }} descriptor
-     * @param {string} descriptor.points JSON-serialized Array<PointSeries>
+     * @param {string|Array<PointSeries>} descriptor.points JSON-serialized Array<PointSeries> or native array
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
         this.surveyId = descriptor.surveyId;
         this.deviceId = descriptor.deviceId;
         this.pointIndex = parseInt(descriptor.pointIndex, 10);
-        this.points = JSON.parse(descriptor.points);
+
+        if (typeof descriptor.pointIndex === 'string') {
+            // uncertain if this is ever relevant
+            this.points = JSON.parse(descriptor.points);
+        } else {
+            this.points = descriptor.points;
+        }
     }
 
     /**

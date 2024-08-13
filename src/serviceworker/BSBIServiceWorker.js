@@ -556,7 +556,7 @@ export class BSBIServiceWorker {
 
         console.info('attempting retrieval of image data from local database');
 
-        return Model.retrieveFromLocal(imageId, image).then((image) => {
+        return OccurrenceImage.retrieveFromLocal(imageId, image).then((image) => {
             console.log(`Retrieved image '${imageId}' from indexeddb.`);
             if (image.file) {
                 const headers = new Headers();

@@ -142,7 +142,15 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @type {Array.<function>}
+     * @abstract
+     * @param {boolean} [forceSave]
+     * @returns {Promise}
+     */
+    save(forceSave = false) {}
+
+    /**
+     *
+     * @type {Array<function>}
      * @private
      */
     static _tasks = [];
@@ -260,22 +268,28 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @param {string} id
+     * @param {string} key
      * @param {(Survey|Occurrence|OccurrenceImage|Track)} modelObject
      * @returns {Promise}
      */
-    static retrieveFromLocal(id, modelObject) {
-        return localforage.getItem(`${modelObject.TYPE}.${id}`)
-            .then((descriptor) => {
-                if (descriptor) {
-                    modelObject._id = id; // _id must be set directly rather than through the setter, as a spurious id already set for the empty may need to be overwritten
-                    modelObject._parseDescriptor(descriptor);
+    static retrieveFromLocal(key, modelObject) {
+        return localforage.getItem(`${modelObject.TYPE}.${key}`)
+            .then(
+                (descriptor) => {
+                    if (descriptor) {
+                        modelObject._id = key; // _id must be set directly rather than through the setter, as a spurious id already set for the empty may need to be overwritten
+                        modelObject._parseDescriptor(descriptor);
 
-                    return modelObject;
-                } else {
-                    return Promise.reject(`Failed to retrieve ${modelObject.TYPE}.${id} locally`);
+                        return modelObject;
+                    } else {
+                        return Promise.reject(`Failed to retrieve ${modelObject.TYPE}.${key} locally`);
+                    }
+                },
+                (reason) => {
+                    console.error({'Error retrieving from localforage' : {type : `${modelObject.TYPE}.${key}`}, reason});
+                    return Promise.reject(`Failed to retrieve ${modelObject.TYPE}.${key} locally (forage error)`);
                 }
-            });
+            );
     }
 
     /**

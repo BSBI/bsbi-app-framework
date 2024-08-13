@@ -79,6 +79,8 @@ export class Logger {
             redirect: "follow", // manual, *follow, error
             referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
             body: (new XMLSerializer()).serializeToString(doc),
+        }).catch((reason) => {
+            console.info({'Remote error logging failed' : reason});
         }).finally(() => {
             window.onerror = Logger.logError; // turn on error handling again
         });
