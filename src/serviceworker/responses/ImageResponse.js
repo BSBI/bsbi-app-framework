@@ -1,7 +1,7 @@
 import {ResponseFactory} from "./ResponseFactory";
 import {LocalResponse} from "./LocalResponse";
 import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../models/Model";
-import {IMAGE_CONTEXT_OCCURRENCE} from "../../models/OccurrenceImage";
+import {IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY} from "../../models/OccurrenceImage";
 
 export class ImageResponse extends LocalResponse {
     failureErrorMessage = 'Failed to store image.';
@@ -32,7 +32,7 @@ export class ImageResponse extends LocalResponse {
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
         this.returnedToClient.context = this.toSaveLocally.context || IMAGE_CONTEXT_OCCURRENCE;
 
-        if (this.toSaveLocally.context !== 'survey') {
+        if (this.toSaveLocally.context !== IMAGE_CONTEXT_SURVEY) {
             this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
         }
 
@@ -54,9 +54,9 @@ export class ImageResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-        this.toSaveLocally.context = this.returnedToClient.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
+        this.toSaveLocally.context = this.returnedToClient.context || IMAGE_CONTEXT_OCCURRENCE;
 
-        if (this.returnedToClient.context !== 'survey') {
+        if (this.returnedToClient.context !== IMAGE_CONTEXT_SURVEY) {
             this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
         }
 

@@ -6002,7 +6002,9 @@ class OccurrenceImage extends Model {
             formData.append('projectId', params?.projectId ? params.projectId.toString() : '');
             formData.append('imageId', this.id);
             formData.append('id', this.id);
-            formData.append('image', this.file);
+            if (!this.deleted) {
+                formData.append('image', this.file);
+            }
             formData.append('deleted', this.deleted.toString());
             formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('modified', this.modifiedStamp?.toString?.() || '');
@@ -7518,13 +7520,38 @@ class App extends EventHarness {
         return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys))
             .then((storedObjectKeys) => {
                 if (storedObjectKeys.survey.length || this.session?.userId) {
-                    return this.refreshFromServer(storedObjectKeys.survey)
-                        // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                        // do this for both promise states (can't use finally has it doesn't chain returned promises
-                        .then(
-                            () => this.seekKeys(storedObjectKeys),
-                            () => this.seekKeys(storedObjectKeys),
-                        );
+                    let timer;
+                    const timeoutMs = 15 * 1000;
+
+                    return Promise.race([
+                        new Promise((resolve, reject) => {
+                            // Set up the timeout
+                            timer = setTimeout(() => {
+                                timer = null;
+                                reject(new Error(`Survey load timed out after ${timeoutMs} ms`));
+                            }, timeoutMs);
+                        }),
+                        this.refreshFromServer(storedObjectKeys.survey)
+                            // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                            // do this for both promise states (can't use finally has it doesn't chain returned promises
+                            .then(
+                                () => this.seekKeys(storedObjectKeys),
+                                () => this.seekKeys(storedObjectKeys),
+                            )
+                            .finally(() => {
+                                if (timer) {
+                                    clearTimeout(timer);
+                                }
+                            })
+                    ]);
+
+                    // return this.refreshFromServer(storedObjectKeys.survey)
+                    //     // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                    //     // do this for both promise states (can't use finally has it doesn't chain returned promises
+                    //     .then(
+                    //         () => this.seekKeys(storedObjectKeys),
+                    //         () => this.seekKeys(storedObjectKeys),
+                    //     );
                 } else {
                     return null;
                 }
@@ -8275,7 +8302,7 @@ class ImageResponse extends LocalResponse {
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
         this.returnedToClient.context = this.toSaveLocally.context || IMAGE_CONTEXT_OCCURRENCE;
 
-        if (this.toSaveLocally.context !== 'survey') {
+        if (this.toSaveLocally.context !== IMAGE_CONTEXT_SURVEY) {
             this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
         }
 
@@ -8297,9 +8324,9 @@ class ImageResponse extends LocalResponse {
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
-        this.toSaveLocally.context = this.returnedToClient.context || 'occurrence'; // don't use OccurrenceImage.CONTEXT_OCCURRENCE as don't otherwise need the import
+        this.toSaveLocally.context = this.returnedToClient.context || IMAGE_CONTEXT_OCCURRENCE;
 
-        if (this.returnedToClient.context !== 'survey') {
+        if (this.returnedToClient.context !== IMAGE_CONTEXT_SURVEY) {
             this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
         }
 
@@ -8557,7 +8584,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1723718846-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1723736081-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

@@ -1436,13 +1436,38 @@ export class App extends EventHarness {
         return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys))
             .then((storedObjectKeys) => {
                 if (storedObjectKeys.survey.length || this.session?.userId) {
-                    return this.refreshFromServer(storedObjectKeys.survey)
-                        // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                        // do this for both promise states (can't use finally has it doesn't chain returned promises
-                        .then(
-                            () => this.seekKeys(storedObjectKeys),
-                            () => this.seekKeys(storedObjectKeys),
-                        );
+                    let timer;
+                    const timeoutMs = 15 * 1000;
+
+                    return Promise.race([
+                        new Promise((resolve, reject) => {
+                            // Set up the timeout
+                            timer = setTimeout(() => {
+                                timer = null;
+                                reject(new Error(`Survey load timed out after ${timeoutMs} ms`));
+                            }, timeoutMs);
+                        }),
+                        this.refreshFromServer(storedObjectKeys.survey)
+                            // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                            // do this for both promise states (can't use finally has it doesn't chain returned promises
+                            .then(
+                                () => this.seekKeys(storedObjectKeys),
+                                () => this.seekKeys(storedObjectKeys),
+                            )
+                            .finally(() => {
+                                if (timer) {
+                                    clearTimeout(timer);
+                                }
+                            })
+                    ]);
+
+                    // return this.refreshFromServer(storedObjectKeys.survey)
+                    //     // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                    //     // do this for both promise states (can't use finally has it doesn't chain returned promises
+                    //     .then(
+                    //         () => this.seekKeys(storedObjectKeys),
+                    //         () => this.seekKeys(storedObjectKeys),
+                    //     );
                 } else {
                     return null;
                 }

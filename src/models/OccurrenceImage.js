@@ -104,7 +104,9 @@ export class OccurrenceImage extends Model {
             formData.append('projectId', params?.projectId ? params.projectId.toString() : '');
             formData.append('imageId', this.id);
             formData.append('id', this.id);
-            formData.append('image', this.file);
+            if (!this.deleted) {
+                formData.append('image', this.file);
+            }
             formData.append('deleted', this.deleted.toString());
             formData.append('created', this.createdStamp?.toString?.() || '');
             formData.append('modified', this.modifiedStamp?.toString?.() || '');
