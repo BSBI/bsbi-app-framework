@@ -708,12 +708,12 @@ export class App extends EventHarness {
             console.log({'refresh from server json response' : jsonResponse});
 
             // if external objects newer than local version then place in local storage
-            const promise = promise.resolve();
+            let promise = Promise.resolve();
 
             for (let type in jsonResponse) {
                 if (jsonResponse.hasOwnProperty(type)) {
                     for (let object of jsonResponse[type]) {
-                        promise.then(() => this._conditionallyReplaceObject(object))
+                        promise = promise.then(() => this._conditionallyReplaceObject(object))
                             .catch((reason) => {
                                 console.error({'Failed to replace' : {type, id : object.id, reason}});
                                 return Promise.resolve();
@@ -1037,7 +1037,7 @@ export class App extends EventHarness {
         const queueSync = (objectKey, objectClass) => {
             const classLowerName = objectClass.name.toLowerCase();
 
-            // return new Promise((resolve, reject) => {
+
                 /**
                  * @returns {Promise}
                  */
@@ -1046,7 +1046,7 @@ export class App extends EventHarness {
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
                         .then((/** Model */ model) => {
                             if (model.unsaved()) {
-                                return model.save(true)
+                                return model.save(true, true)
                                     .then(() => {
                                         // for sync, only a remote save should count as successful
                                         if (!model.savedRemotely) {
@@ -1070,20 +1070,9 @@ export class App extends EventHarness {
                         .finally(() => {
                             console.log({'processed sync': {key: objectKey, type: classLowerName}});
                         });
-                        //.then(resolve, reject);
                 };
 
-                //tasks.push(task);
 
-                //return task;
-
-                // if (tasks.length > 1) {
-                //     console.log(`Added sync request to the queue.`);
-                // } else {
-                //     console.log(`No pending tasks, starting post request immediately.`);
-                //     task().finally(next);
-                // }
-            // });
         };
 
         // /**

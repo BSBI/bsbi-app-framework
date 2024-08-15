@@ -1,5 +1,6 @@
 import {EventHarness} from "../framework/EventHarness";
 import localforage from 'localforage';
+import {Logger} from "../utils/Logger";
 
 /**
  * @typedef {import('bsbi-app-framework-view').FormField} FormField
@@ -143,10 +144,13 @@ export class Model extends EventHarness {
     /**
      *
      * @abstract
-     * @param {boolean} [forceSave]
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
+     *
      * @returns {Promise}
      */
-    save(forceSave = false) {}
+    save(forceSave = false, isSync = false, params) {}
 
     /**
      *
@@ -162,17 +166,24 @@ export class Model extends EventHarness {
      *
      * The queue reduces the chance of requests being sent to the server out-of-order (which can lead to race conditions)
      *
-     * @param formData
+     * @param {FormData} formData
+     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
-    queuePost(formData) {
+    queuePost(formData, isSync = false) {
         return new Promise((resolve, reject) => {
             /**
              * @returns {Promise}
              */
             const task = () => {
-                console.log({'posting form data': formData});
-                return this.post(formData).then(resolve, reject);
+                //console.log({'posting form data': formData});
+                return this.post(formData, isSync)
+                    .catch((reason) => {
+                        // noinspection JSIgnoredPromiseFromCall
+                        Logger.logError(`Failed to post ${JSON.stringify(reason)}`);
+                        return Promise.reject(reason);
+                    })
+                    .then(resolve, reject);
             };
 
             Model._tasks.push(task);
@@ -214,10 +225,11 @@ export class Model extends EventHarness {
      * must test indexeddb for this eventuality after the save has returned
      *
      * @param {FormData} formData
+     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
-    post(formData) {
-        return fetch(this.SAVE_ENDPOINT, {
+    post(formData, isSync = false) {
+        return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
             method: 'POST',
             body: formData
         }).then(response => {

@@ -138,18 +138,16 @@ export class Occurrence extends Model {
      *
      * Must test indexeddb for this eventuality after the save has returned.
      *
-     * @param {string} [surveyId] only set if want to override, otherwise '' (*currently ignored and should be deprecated*)
-     * @param {boolean} [forceSave]
+     *
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{}} [params]
+     *
      * @returns {Promise}
      */
-    save(surveyId = '', forceSave = false) {
+    save(forceSave = false, isSync = false, params) {
         if (this.unsaved() || forceSave) {
             const formData = new FormData;
-
-            // @todo potentially setting surveyId here seems like a serious design fault!
-            // if (!surveyId && this.surveyId) {
-            //     surveyId = this.surveyId;
-            // }
 
             if (!this.surveyId) {
                 throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
@@ -172,7 +170,7 @@ export class Occurrence extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log('queueing occurrence post');
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Occurrence ${this.id} has already been saved.`);
         }

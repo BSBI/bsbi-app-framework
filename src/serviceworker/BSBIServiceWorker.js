@@ -184,13 +184,14 @@ export class BSBIServiceWorker {
                     //console.log(`Passing through nocache list post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else {
-                    //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
-                    if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
+                    const isSync = /issync/.test(evt.request.url);
+
+                    if (POST_IMAGE_URL_MATCH.test(evt.request.url) && !isSync) {
                         //console.log(`Got an image post request: '${evt.request.url}'`);
                         this.handle_image_post(evt);
                     } else {
                         //console.log(`Got post request: '${evt.request.url}'`);
-                        this.handle_post(evt);
+                        this.handle_post(evt, isSync);
                     }
                 }
             } else {
@@ -233,12 +234,14 @@ export class BSBIServiceWorker {
 
 
     /**
-     * used to handle small posts (not images)
+     * used to handle small posts (not images that require rapid return)
+     * also used for images, as part of general re-sync
      * attempts remote save first then caches locally
      *
      * @param {FetchEvent} evt
+     * @param {boolean} isSync set if this is called as part of a re-sync rather than as a first-time save
      */
-    handle_post(evt) {
+    handle_post(evt, isSync = false) {
         let clonedRequest;
         try {
             clonedRequest = evt.request.clone();
@@ -267,7 +270,7 @@ export class BSBIServiceWorker {
                                 .fromPostResponse(jsonResponseData)
                                 .setPrebuiltResponse(response)
                                 .populateLocalSave()
-                                .storeLocally();
+                                .storeLocally(true);
                         })
                         .catch((error) => {
                             // for some reason local storage failed, after a successful server save
@@ -281,46 +284,51 @@ export class BSBIServiceWorker {
                 }
             })
             .catch( (reason) => {
-                console.log({'post fetch failed (probably no network)': reason});
+                    console.log({'post fetch failed (probably no network)': reason});
 
-                // would get here if the network is down
-                // or if got invalid response from the server
+                    // would get here if the network is down
+                    // or if got invalid response from the server
 
-                console.log(`post fetch failed (probably no network), (reason: ${reason})`);
-                //console.log({'post failure reason' : reason});
+                    if (isSync) {
+                        // don't need to store locally (as will already be present) and response is not needed
+                        // so just reject
 
-                // /**
-                //  * simulated result of post, returned as JSON body
-                //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-                //  */
-                // let returnedToClient = {};
+                        return Promise.reject(reason);
+                    } else {
 
-                return clonedRequest.formData()
-                    .then((formData) => {
-                            console.log('got to form data handler');
-                            //console.log({formData});
+                        // /**
+                        //  * simulated result of post, returned as JSON body
+                        //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+                        //  */
+                        // let returnedToClient = {};
 
-                            return ResponseFactory
-                                .fromPostedData(formData)
-                                .populateClientResponse()
-                                .storeLocally();
-                        }, (reason) => {
-                            console.log({'failed to read form data locally' : reason});
+                        return clonedRequest.formData()
+                            .then((formData) => {
+                                    console.log('got to form data handler');
+                                    //console.log({formData});
 
-                            /**
-                             * simulated result of post, returned as JSON body
-                             * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                             */
-                            let returnedToClient = {
-                                error: 'Failed to process posted response data. (internal error)',
-                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                    'Please try to re-establish a network connection and try again.'
-                            };
+                                    return ResponseFactory
+                                        .fromPostedData(formData)
+                                        .populateClientResponse()
+                                        .storeLocally(false);
+                                }, (reason) => {
+                                    console.log({'failed to read form data locally': reason});
 
-                            return packageClientResponse(returnedToClient);
-                        }
-                    );
+                                    /**
+                                     * simulated result of post, returned as JSON body
+                                     * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                                     */
+                                    let returnedToClient = {
+                                        error: 'Failed to process posted response data. (internal error)',
+                                        errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                            'Please try to re-establish a network connection and try again.'
+                                    };
+
+                                    return packageClientResponse(returnedToClient);
+                                }
+                            );
+                    }
                 }
             ));
     }
@@ -334,7 +342,7 @@ export class BSBIServiceWorker {
     handle_image_post(event) {
         let clonedRequest;
 
-        console.log('posting image');
+        console.log('posting image for quick response');
 
         try {
             clonedRequest = event.request.clone();
@@ -347,8 +355,7 @@ export class BSBIServiceWorker {
         event.respondWith(
             clonedRequest.formData()
                 .then((formData) => {
-                        console.log({'got to image form data handler' : formData});
-                        //console.log({formData});
+                        //console.log({'got to image form data handler' : formData});
 
                         return ResponseFactory
                             .fromPostedData(formData)
@@ -382,7 +389,7 @@ export class BSBIServiceWorker {
                                                     })
                                                     .catch((error) => {
                                                         // for some reason local storage failed, after a successful server save
-                                                        console.log({error});
+                                                        console.error({'local storage store failed' : error});
 
                                                         return Promise.resolve(response); // pass through the server response
                                                     });
@@ -402,16 +409,15 @@ export class BSBIServiceWorker {
 
                                                 return packageClientResponse(returnedToClient);
                                             }
-                                        }, () => {
-                                            console.log('Rejected image post fetch from server - implies network is down')
+                                        }, (reason) => {
+                                            console.log({'Rejected image post fetch from server - implies network is down' : reason});
                                         }
                                     ));
 
                                 return response;
                             });
                     }, (reason) => {
-                        console.log('failed to read form data locally');
-                        console.log({reason});
+                        console.log({'failed to read form data locally' : reason});
 
                         /**
                          * simulated result of post, returned as JSON body

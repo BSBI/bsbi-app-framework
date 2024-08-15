@@ -430,19 +430,22 @@ export class Track extends Model {
      *
      * Must test indexeddb for this eventuality after the save has returned.
      *
-     * @param {boolean} [forceSave]
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{}} [params]
+     *
      * @returns {Promise}
      */
-    save(forceSave = false) {
-        if (this.unsaved() || forceSave) {
+    save(forceSave = false, isSync = false, params) {
+        if (forceSave || this.unsaved()) {
             const formData = new FormData;
 
             if (!this.surveyId) {
-                throw new Error(`Survey id must be set before saving an occurrence.`);
+                throw new Error(`Survey id must be set before saving a track.`);
             }
 
             if (!this.deviceId) {
-                throw new Error(`Device id must be set before saving an occurrence.`);
+                throw new Error(`Device id must be set before saving a track.`);
             }
 
             formData.append('type', this.TYPE);
@@ -463,7 +466,7 @@ export class Track extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log('queueing Track post');
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.resolve();
             //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);

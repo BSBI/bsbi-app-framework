@@ -148,7 +148,8 @@ export class SurveyPickerController extends AppController {
             // }
         }, (result) => {
             console.log({'In save all handler, failure result' : result});
-            Logger.logError(`Failed to sync all (line 143): ${result}`);
+            // noinspection JSIgnoredPromiseFromCall
+            Logger.logError(`Failed to sync all (line 143): ${JSON.stringify(result)}`);
             this.view.showSaveAllFailure(result);
         }).finally(() => {
             // stop the spinner

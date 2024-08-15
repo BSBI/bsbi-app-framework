@@ -458,11 +458,13 @@ export class Survey extends Model {
      *
      * must test indexeddb for this eventuality after the save has returned
      *
-     * @param {boolean} [forceSave]
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{}} [params]
      *
      * @returns {Promise}
      */
-    save(forceSave = false) {
+    save(forceSave = false, isSync = false, params) {
         if (forceSave || this.unsaved()) {
             const formData = new FormData;
 
@@ -482,7 +484,7 @@ export class Survey extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log(`queueing survey post ${this.id}`);
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Survey ${this.id} has already been saved.`);
         }

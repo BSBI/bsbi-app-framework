@@ -72,29 +72,36 @@ export class OccurrenceImage extends Model {
      *
      * must test indexeddb for this eventuality after the save has returned
      *
-     * @param {string} surveyId
-     * @param {string} occurrenceId
-     * @param {number|null} projectId
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
+     *
      * @returns {Promise}
      */
-    save(surveyId = '', occurrenceId = '', projectId = null) {
-        if (surveyId) {
-            this.surveyId = surveyId;
+    save(forceSave = false, isSync = false, params) {
+        if (params?.surveyId) {
+            this.surveyId = params.surveyId;
         }
 
-        if (projectId) {
-            this.projectId = projectId;
+        if (params?.projectId) {
+            this.projectId = params.projectId;
         }
 
-        if (occurrenceId) {
-            this.occurrenceId = occurrenceId;
+        if (params?.occurrenceId) {
+            this.occurrenceId = params.occurrenceId;
         }
 
-        if (this.unsaved()) {
+        // kludge to avoid historical instances of corrupted surveyId
+        if (this.surveyId === true || this.surveyId === false) {
+            console.log(`Fixing damaged survey id for image '${this.id}'`);
+            this.surveyId = '';
+        }
+
+        if (forceSave || this.unsaved()) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
-            formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
-            formData.append('projectId', projectId ? projectId.toString() : '');
+            formData.append('surveyId', params?.surveyId ? params.surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
+            formData.append('projectId', params?.projectId ? params.projectId.toString() : '');
             formData.append('imageId', this.id);
             formData.append('id', this.id);
             formData.append('image', this.file);
@@ -105,7 +112,7 @@ export class OccurrenceImage extends Model {
             if (this.context === IMAGE_CONTEXT_SURVEY) {
                 formData.append('context', this.context);
             } else {
-                formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+                formData.append('occurrenceId', params?.occurrenceId ? params.occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
 
             if (this.userId) {
@@ -115,7 +122,7 @@ export class OccurrenceImage extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log(`queueing image post, image id ${this.id}`);
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }
@@ -165,6 +172,12 @@ export class OccurrenceImage extends Model {
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
         this.surveyId = descriptor.surveyId;
+
+        // kludge to deal with corrupted survey ids
+        if (this.surveyId === true || this.surveyId === false) {
+            this.surveyId = '';
+            descriptor.surveyId = '';
+        }
 
         if (descriptor.occurrenceId) {
             this.occurrenceId = descriptor.occurrenceId;

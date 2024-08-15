@@ -43,11 +43,12 @@ export class LocalResponse {
     }
 
     /**
-     *
+     * @param {boolean} remoteSuccess set if object has been saved remotely
      * @returns {Promise<Response>}
      */
-    storeLocally() {
-        return localforage.setItem(this.localKey(), this.toSaveLocally).then(() => {
+    storeLocally(remoteSuccess = true) {
+        return localforage.setItem(this.localKey(), this.toSaveLocally)
+            .then(() => {
                 console.log(`Stored object ${this.localKey()} locally`);
                 return this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient);
             },
@@ -59,7 +60,7 @@ export class LocalResponse {
 
                 return packageClientResponse(this.returnedToClient);
             }
-        )
+        );
     }
 
     /**

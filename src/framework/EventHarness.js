@@ -1,6 +1,7 @@
 /**
  * @typedef {number} EventHarness~Handle
  */
+import {Logger} from "../utils/Logger";
 
 export class EventHarness {
     /**
@@ -87,11 +88,21 @@ export class EventHarness {
     fireEvent (eventName, param) {
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
-                //if (this._eventListeners[eventName].hasOwnProperty(f)) {
+                try {
                     if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
                         break;
                     }
-                //}
+                } catch (exception) {
+                    console.error({'Exception thrown in event handler' : {eventName, exception}});
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(
+                        `Exception thrown in event handler '${eventName}'`,
+                        '',
+                        null,
+                        null,
+                        exception
+                    );
+                }
             }
         }
     }

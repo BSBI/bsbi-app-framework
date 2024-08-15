@@ -156,7 +156,96 @@ class StaticContentController extends AppController {
 class NotFoundError extends Error {
     constructor (message) {
         super(message);
+
+        Error.captureStackTrace?.(this, NotFoundError); // see https://v8.dev/docs/stack-trace-api
     }
+}
+
+class Logger {
+
+    /**
+     * @type {App}
+     */
+    static app;
+
+    /**
+     * reports a javascript error
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @param {string|number|null} [line]
+     * @param {number|null} [column]
+     * @param {Error|null} [errorObj]
+     * @returns {Promise<void>}
+     */
+    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
+
+        window.onerror = null;
+
+        console.error(message, url, line, errorObj);
+
+        if (console.trace) {
+            console.trace('Trace');
+        }
+
+        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
+        const error = doc.createElement('error');
+
+        if (line !== null && line !== undefined) {
+            error.setAttribute('line', line);
+        }
+
+        if (errorObj && ('stack' in errorObj)) {
+            error.setAttribute('stack', errorObj.stack);
+        }
+
+        if (url !== null && url !== undefined && url !== '') {
+            error.setAttribute('url', url);
+        }
+
+        if (window.location.href) {
+            error.setAttribute('referrer', window.location.href);
+        }
+
+        if (window.location.search) {
+            error.setAttribute('urlquery', window.location.search);
+        }
+
+        if (window.location.hash) {
+            error.setAttribute('urlhash', window.location.hash);
+        }
+
+        if (Logger.app?.session?.userId) {
+            error.setAttribute('userid', Logger.app.session.userId);
+        }
+
+        // noinspection PlatformDetectionJS
+        error.setAttribute('browser', navigator.appName);
+        error.setAttribute('browserv', navigator.appVersion);
+        error.setAttribute('userAgent', navigator.userAgent);
+        error.setAttribute('versions', Model.bsbiAppVersion);
+
+        error.appendChild(doc.createTextNode(message));
+
+        doc.documentElement.appendChild(error);
+
+        return fetch('/javascriptErrorLog.php', {
+            method: "POST", // *GET, POST, PUT, DELETE, etc.
+            mode: "cors", // no-cors, *cors, same-origin
+            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: "include", // include, *same-origin, omit
+            headers: {
+                "Content-Type": "text/xml",
+            },
+            redirect: "follow", // manual, *follow, error
+            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: (new XMLSerializer()).serializeToString(doc),
+        }).catch((reason) => {
+            console.info({'Remote error logging failed' : reason});
+        }).finally(() => {
+            window.onerror = Logger.logError; // turn on error handling again
+        });
+    };
 }
 
 /**
@@ -248,11 +337,21 @@ class EventHarness {
     fireEvent (eventName, param) {
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
-                //if (this._eventListeners[eventName].hasOwnProperty(f)) {
+                try {
                     if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
                         break;
                     }
-                //}
+                } catch (exception) {
+                    console.error({'Exception thrown in event handler' : {eventName, exception}});
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(
+                        `Exception thrown in event handler '${eventName}'`,
+                        '',
+                        null,
+                        null,
+                        exception
+                    );
+                }
             }
         }
     }
@@ -3231,10 +3330,13 @@ class Model extends EventHarness {
     /**
      *
      * @abstract
-     * @param {boolean} [forceSave]
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
+     *
      * @returns {Promise}
      */
-    save(forceSave = false) {}
+    save(forceSave = false, isSync = false, params) {}
 
     /**
      *
@@ -3250,17 +3352,24 @@ class Model extends EventHarness {
      *
      * The queue reduces the chance of requests being sent to the server out-of-order (which can lead to race conditions)
      *
-     * @param formData
+     * @param {FormData} formData
+     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
-    queuePost(formData) {
+    queuePost(formData, isSync = false) {
         return new Promise((resolve, reject) => {
             /**
              * @returns {Promise}
              */
             const task = () => {
-                console.log({'posting form data': formData});
-                return this.post(formData).then(resolve, reject);
+                //console.log({'posting form data': formData});
+                return this.post(formData, isSync)
+                    .catch((reason) => {
+                        // noinspection JSIgnoredPromiseFromCall
+                        Logger.logError(`Failed to post ${JSON.stringify(reason)}`);
+                        return Promise.reject(reason);
+                    })
+                    .then(resolve, reject);
             };
 
             Model._tasks.push(task);
@@ -3302,10 +3411,11 @@ class Model extends EventHarness {
      * must test indexeddb for this eventuality after the save has returned
      *
      * @param {FormData} formData
+     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
-    post(formData) {
-        return fetch(this.SAVE_ENDPOINT, {
+    post(formData, isSync = false) {
+        return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
             method: 'POST',
             body: formData
         }).then(response => {
@@ -3491,93 +3601,6 @@ class Model extends EventHarness {
             validity
         };
     }
-}
-
-class Logger {
-
-    /**
-     * @type {App}
-     */
-    static app;
-
-    /**
-     * reports a javascript error
-     *
-     * @param {string} message
-     * @param {string|null} [url]
-     * @param {string|number|null} [line]
-     * @param {number|null} [column]
-     * @param {Error|null} [errorObj]
-     * @returns {Promise<void>}
-     */
-    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
-
-        window.onerror = null;
-
-        console.error(message, url, line, errorObj);
-
-        if (console.trace) {
-            console.trace('Trace');
-        }
-
-        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
-        const error = doc.createElement('error');
-
-        if (line !== null && line !== undefined) {
-            error.setAttribute('line', line);
-        }
-
-        if (errorObj && ('stack' in errorObj)) {
-            error.setAttribute('stack', errorObj.stack);
-        }
-
-        if (url !== null && url !== undefined && url !== '') {
-            error.setAttribute('url', url);
-        }
-
-        if (window.location.href) {
-            error.setAttribute('referrer', window.location.href);
-        }
-
-        if (window.location.search) {
-            error.setAttribute('urlquery', window.location.search);
-        }
-
-        if (window.location.hash) {
-            error.setAttribute('urlhash', window.location.hash);
-        }
-
-        if (Logger.app?.session?.userId) {
-            error.setAttribute('userid', Logger.app.session.userId);
-        }
-
-        // noinspection PlatformDetectionJS
-        error.setAttribute('browser', navigator.appName);
-        error.setAttribute('browserv', navigator.appVersion);
-        error.setAttribute('userAgent', navigator.userAgent);
-        error.setAttribute('versions', Model.bsbiAppVersion);
-
-        error.appendChild(doc.createTextNode(message));
-
-        doc.documentElement.appendChild(error);
-
-        return fetch('/javascriptErrorLog.php', {
-            method: "POST", // *GET, POST, PUT, DELETE, etc.
-            mode: "cors", // no-cors, *cors, same-origin
-            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-            credentials: "include", // include, *same-origin, omit
-            headers: {
-                "Content-Type": "text/xml",
-            },
-            redirect: "follow", // manual, *follow, error
-            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-            body: (new XMLSerializer()).serializeToString(doc),
-        }).catch((reason) => {
-            console.info({'Remote error logging failed' : reason});
-        }).finally(() => {
-            window.onerror = Logger.logError; // turn on error handling again
-        });
-    };
 }
 
 /**
@@ -3830,7 +3853,8 @@ class SurveyPickerController extends AppController {
             // }
         }, (result) => {
             console.log({'In save all handler, failure result' : result});
-            Logger.logError(`Failed to sync all (line 143): ${result}`);
+            // noinspection JSIgnoredPromiseFromCall
+            Logger.logError(`Failed to sync all (line 143): ${JSON.stringify(result)}`);
             this.view.showSaveAllFailure(result);
         }).finally(() => {
             // stop the spinner
@@ -4439,19 +4463,22 @@ class Track extends Model {
      *
      * Must test indexeddb for this eventuality after the save has returned.
      *
-     * @param {boolean} [forceSave]
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{}} [params]
+     *
      * @returns {Promise}
      */
-    save(forceSave = false) {
-        if (this.unsaved() || forceSave) {
+    save(forceSave = false, isSync = false, params) {
+        if (forceSave || this.unsaved()) {
             const formData = new FormData;
 
             if (!this.surveyId) {
-                throw new Error(`Survey id must be set before saving an occurrence.`);
+                throw new Error(`Survey id must be set before saving a track.`);
             }
 
             if (!this.deviceId) {
-                throw new Error(`Device id must be set before saving an occurrence.`);
+                throw new Error(`Device id must be set before saving a track.`);
             }
 
             formData.append('type', this.TYPE);
@@ -4472,7 +4499,7 @@ class Track extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log('queueing Track post');
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.resolve();
             //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
@@ -5035,11 +5062,13 @@ class Survey extends Model {
      *
      * must test indexeddb for this eventuality after the save has returned
      *
-     * @param {boolean} [forceSave]
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{}} [params]
      *
      * @returns {Promise}
      */
-    save(forceSave = false) {
+    save(forceSave = false, isSync = false, params) {
         if (forceSave || this.unsaved()) {
             const formData = new FormData;
 
@@ -5059,7 +5088,7 @@ class Survey extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log(`queueing survey post ${this.id}`);
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Survey ${this.id} has already been saved.`);
         }
@@ -5244,11 +5273,19 @@ class Survey extends Model {
  *
  */
 class InternalAppError extends Error {
+    constructor(...args) {
+        super(...args);
 
+        Error.captureStackTrace?.(this, InternalAppError); // see https://v8.dev/docs/stack-trace-api
+    }
 }
 
 class TaxonError extends Error {
+    constructor(...args) {
+        super(...args);
 
+        Error.captureStackTrace?.(this, TaxonError); // see https://v8.dev/docs/stack-trace-api
+    }
 }
 
 const SORT_ORDER_GENUS = 28;
@@ -5753,18 +5790,16 @@ class Occurrence extends Model {
      *
      * Must test indexeddb for this eventuality after the save has returned.
      *
-     * @param {string} [surveyId] only set if want to override, otherwise '' (*currently ignored and should be deprecated*)
-     * @param {boolean} [forceSave]
+     *
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{}} [params]
+     *
      * @returns {Promise}
      */
-    save(surveyId = '', forceSave = false) {
+    save(forceSave = false, isSync = false, params) {
         if (this.unsaved() || forceSave) {
             const formData = new FormData;
-
-            // @todo potentially setting surveyId here seems like a serious design fault!
-            // if (!surveyId && this.surveyId) {
-            //     surveyId = this.surveyId;
-            // }
 
             if (!this.surveyId) {
                 throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
@@ -5787,7 +5822,7 @@ class Occurrence extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log('queueing occurrence post');
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Occurrence ${this.id} has already been saved.`);
         }
@@ -5935,29 +5970,36 @@ class OccurrenceImage extends Model {
      *
      * must test indexeddb for this eventuality after the save has returned
      *
-     * @param {string} surveyId
-     * @param {string} occurrenceId
-     * @param {number|null} projectId
+     * @param {boolean} forceSave
+     * @param {boolean} [isSync]
+     * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
+     *
      * @returns {Promise}
      */
-    save(surveyId = '', occurrenceId = '', projectId = null) {
-        if (surveyId) {
-            this.surveyId = surveyId;
+    save(forceSave = false, isSync = false, params) {
+        if (params?.surveyId) {
+            this.surveyId = params.surveyId;
         }
 
-        if (projectId) {
-            this.projectId = projectId;
+        if (params?.projectId) {
+            this.projectId = params.projectId;
         }
 
-        if (occurrenceId) {
-            this.occurrenceId = occurrenceId;
+        if (params?.occurrenceId) {
+            this.occurrenceId = params.occurrenceId;
         }
 
-        if (this.unsaved()) {
+        // kludge to avoid historical instances of corrupted surveyId
+        if (this.surveyId === true || this.surveyId === false) {
+            console.log(`Fixing damaged survey id for image '${this.id}'`);
+            this.surveyId = '';
+        }
+
+        if (forceSave || this.unsaved()) {
             const formData = new FormData;
             formData.append('type', this.TYPE);
-            formData.append('surveyId', surveyId ? surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
-            formData.append('projectId', projectId ? projectId.toString() : '');
+            formData.append('surveyId', params?.surveyId ? params.surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
+            formData.append('projectId', params?.projectId ? params.projectId.toString() : '');
             formData.append('imageId', this.id);
             formData.append('id', this.id);
             formData.append('image', this.file);
@@ -5968,7 +6010,7 @@ class OccurrenceImage extends Model {
             if (this.context === IMAGE_CONTEXT_SURVEY) {
                 formData.append('context', this.context);
             } else {
-                formData.append('occurrenceId', occurrenceId ? occurrenceId : this.occurrenceId); // avoid 'undefined'
+                formData.append('occurrenceId', params?.occurrenceId ? params.occurrenceId : this.occurrenceId); // avoid 'undefined'
             }
 
             if (this.userId) {
@@ -5978,7 +6020,7 @@ class OccurrenceImage extends Model {
             formData.append('appVersion', Model.bsbiAppVersion);
 
             console.log(`queueing image post, image id ${this.id}`);
-            return this.queuePost(formData);
+            return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }
@@ -6028,6 +6070,12 @@ class OccurrenceImage extends Model {
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
         this.surveyId = descriptor.surveyId;
+
+        // kludge to deal with corrupted survey ids
+        if (this.surveyId === true || this.surveyId === false) {
+            this.surveyId = '';
+            descriptor.surveyId = '';
+        }
 
         if (descriptor.occurrenceId) {
             this.occurrenceId = descriptor.occurrenceId;
@@ -6755,12 +6803,12 @@ class App extends EventHarness {
             console.log({'refresh from server json response' : jsonResponse});
 
             // if external objects newer than local version then place in local storage
-            const promise = promise.resolve();
+            let promise = Promise.resolve();
 
             for (let type in jsonResponse) {
                 if (jsonResponse.hasOwnProperty(type)) {
                     for (let object of jsonResponse[type]) {
-                        promise.then(() => this._conditionallyReplaceObject(object))
+                        promise = promise.then(() => this._conditionallyReplaceObject(object))
                             .catch((reason) => {
                                 console.error({'Failed to replace' : {type, id : object.id, reason}});
                                 return Promise.resolve();
@@ -7081,7 +7129,7 @@ class App extends EventHarness {
         const queueSync = (objectKey, objectClass) => {
             const classLowerName = objectClass.name.toLowerCase();
 
-            // return new Promise((resolve, reject) => {
+
                 /**
                  * @returns {Promise}
                  */
@@ -7090,7 +7138,7 @@ class App extends EventHarness {
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
                         .then((/** Model */ model) => {
                             if (model.unsaved()) {
-                                return model.save(true)
+                                return model.save(true, true)
                                     .then(() => {
                                         // for sync, only a remote save should count as successful
                                         if (!model.savedRemotely) {
@@ -7114,20 +7162,9 @@ class App extends EventHarness {
                         .finally(() => {
                             console.log({'processed sync': {key: objectKey, type: classLowerName}});
                         });
-                        //.then(resolve, reject);
                 };
 
-                //tasks.push(task);
 
-                //return task;
-
-                // if (tasks.length > 1) {
-                //     console.log(`Added sync request to the queue.`);
-                // } else {
-                //     console.log(`No pending tasks, starting post request immediately.`);
-                //     task().finally(next);
-                // }
-            // });
         };
 
         // /**
@@ -7825,7 +7862,11 @@ class App extends EventHarness {
 }
 
 class PartyError extends Error {
+    constructor(...args) {
+        super(...args);
 
+        Error.captureStackTrace?.(this, PartyError); // see https://v8.dev/docs/stack-trace-api
+    }
 }
 
 const PARTY_NAME_INDEX = 0;
@@ -8167,11 +8208,12 @@ class LocalResponse {
     }
 
     /**
-     *
+     * @param {boolean} remoteSuccess set if object has been saved remotely
      * @returns {Promise<Response>}
      */
-    storeLocally() {
-        return localforage.setItem(this.localKey(), this.toSaveLocally).then(() => {
+    storeLocally(remoteSuccess = true) {
+        return localforage.setItem(this.localKey(), this.toSaveLocally)
+            .then(() => {
                 console.log(`Stored object ${this.localKey()} locally`);
                 return this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient);
             },
@@ -8183,7 +8225,7 @@ class LocalResponse {
 
                 return packageClientResponse(this.returnedToClient);
             }
-        )
+        );
     }
 
     /**
@@ -8217,6 +8259,11 @@ class ImageResponse extends LocalResponse {
      * @returns {this}
      */
     populateClientResponse() {
+        // kludge to deal with corrupted survey ids
+        if (this.toSaveLocally.surveyId === true || this.toSaveLocally.surveyId === false) {
+            this.toSaveLocally.surveyId = '';
+        }
+
         this.returnedToClient.id = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
         this.returnedToClient.imageId = this.toSaveLocally.imageId ? this.toSaveLocally.imageId : this.toSaveLocally.id;
         this.returnedToClient.type = 'image';
@@ -8510,7 +8557,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1723541138-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1723718846-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -8628,13 +8675,14 @@ class BSBIServiceWorker {
                     //console.log(`Passing through nocache list post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else {
-                    //if (evt.request.url.match(POST_IMAGE_URL_MATCH)) {
-                    if (POST_IMAGE_URL_MATCH.test(evt.request.url)) {
+                    const isSync = /issync/.test(evt.request.url);
+
+                    if (POST_IMAGE_URL_MATCH.test(evt.request.url) && !isSync) {
                         //console.log(`Got an image post request: '${evt.request.url}'`);
                         this.handle_image_post(evt);
                     } else {
                         //console.log(`Got post request: '${evt.request.url}'`);
-                        this.handle_post(evt);
+                        this.handle_post(evt, isSync);
                     }
                 }
             } else {
@@ -8677,12 +8725,14 @@ class BSBIServiceWorker {
 
 
     /**
-     * used to handle small posts (not images)
+     * used to handle small posts (not images that require rapid return)
+     * also used for images, as part of general re-sync
      * attempts remote save first then caches locally
      *
      * @param {FetchEvent} evt
+     * @param {boolean} isSync set if this is called as part of a re-sync rather than as a first-time save
      */
-    handle_post(evt) {
+    handle_post(evt, isSync = false) {
         let clonedRequest;
         try {
             clonedRequest = evt.request.clone();
@@ -8711,7 +8761,7 @@ class BSBIServiceWorker {
                                 .fromPostResponse(jsonResponseData)
                                 .setPrebuiltResponse(response)
                                 .populateLocalSave()
-                                .storeLocally();
+                                .storeLocally(true);
                         })
                         .catch((error) => {
                             // for some reason local storage failed, after a successful server save
@@ -8725,46 +8775,51 @@ class BSBIServiceWorker {
                 }
             })
             .catch( (reason) => {
-                console.log({'post fetch failed (probably no network)': reason});
+                    console.log({'post fetch failed (probably no network)': reason});
 
-                // would get here if the network is down
-                // or if got invalid response from the server
+                    // would get here if the network is down
+                    // or if got invalid response from the server
 
-                console.log(`post fetch failed (probably no network), (reason: ${reason})`);
-                //console.log({'post failure reason' : reason});
+                    if (isSync) {
+                        // don't need to store locally (as will already be present) and response is not needed
+                        // so just reject
 
-                // /**
-                //  * simulated result of post, returned as JSON body
-                //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-                //  */
-                // let returnedToClient = {};
+                        return Promise.reject(reason);
+                    } else {
 
-                return clonedRequest.formData()
-                    .then((formData) => {
-                            console.log('got to form data handler');
-                            //console.log({formData});
+                        // /**
+                        //  * simulated result of post, returned as JSON body
+                        //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+                        //  */
+                        // let returnedToClient = {};
 
-                            return ResponseFactory
-                                .fromPostedData(formData)
-                                .populateClientResponse()
-                                .storeLocally();
-                        }, (reason) => {
-                            console.log({'failed to read form data locally' : reason});
+                        return clonedRequest.formData()
+                            .then((formData) => {
+                                    console.log('got to form data handler');
+                                    //console.log({formData});
 
-                            /**
-                             * simulated result of post, returned as JSON body
-                             * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                             */
-                            let returnedToClient = {
-                                error: 'Failed to process posted response data. (internal error)',
-                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                    'Please try to re-establish a network connection and try again.'
-                            };
+                                    return ResponseFactory
+                                        .fromPostedData(formData)
+                                        .populateClientResponse()
+                                        .storeLocally(false);
+                                }, (reason) => {
+                                    console.log({'failed to read form data locally': reason});
 
-                            return packageClientResponse(returnedToClient);
-                        }
-                    );
+                                    /**
+                                     * simulated result of post, returned as JSON body
+                                     * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                                     */
+                                    let returnedToClient = {
+                                        error: 'Failed to process posted response data. (internal error)',
+                                        errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                            'Please try to re-establish a network connection and try again.'
+                                    };
+
+                                    return packageClientResponse(returnedToClient);
+                                }
+                            );
+                    }
                 }
             ));
     }
@@ -8778,7 +8833,7 @@ class BSBIServiceWorker {
     handle_image_post(event) {
         let clonedRequest;
 
-        console.log('posting image');
+        console.log('posting image for quick response');
 
         try {
             clonedRequest = event.request.clone();
@@ -8791,8 +8846,7 @@ class BSBIServiceWorker {
         event.respondWith(
             clonedRequest.formData()
                 .then((formData) => {
-                        console.log({'got to image form data handler' : formData});
-                        //console.log({formData});
+                        //console.log({'got to image form data handler' : formData});
 
                         return ResponseFactory
                             .fromPostedData(formData)
@@ -8826,7 +8880,7 @@ class BSBIServiceWorker {
                                                     })
                                                     .catch((error) => {
                                                         // for some reason local storage failed, after a successful server save
-                                                        console.log({error});
+                                                        console.error({'local storage store failed' : error});
 
                                                         return Promise.resolve(response); // pass through the server response
                                                     });
@@ -8846,16 +8900,15 @@ class BSBIServiceWorker {
 
                                                 return packageClientResponse(returnedToClient);
                                             }
-                                        }, () => {
-                                            console.log('Rejected image post fetch from server - implies network is down');
+                                        }, (reason) => {
+                                            console.log({'Rejected image post fetch from server - implies network is down' : reason});
                                         }
                                     ));
 
                                 return response;
                             });
                     }, (reason) => {
-                        console.log('failed to read form data locally');
-                        console.log({reason});
+                        console.log({'failed to read form data locally' : reason});
 
                         /**
                          * simulated result of post, returned as JSON body
