@@ -56,6 +56,10 @@ export class TrackResponse extends LocalResponse {
      * @returns {string}
      */
     localKey() {
+        if (!this.toSaveLocally.deviceId || this.toSaveLocally.deviceId === 'undefined') {
+            throw new Error(`Cannot generate a localKey for track, as the device id is undefined.`);
+        }
+
         return `track.${this.toSaveLocally.surveyId}.${this.toSaveLocally.deviceId}`;
     }
 

@@ -96,7 +96,7 @@ export class EventHarness {
                     console.error({'Exception thrown in event handler' : {eventName, exception}});
                     // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(
-                        `Exception thrown in event handler '${eventName}'`,
+                        `Exception thrown in event handler '${eventName}': ${exception.message}`,
                         '',
                         null,
                         null,

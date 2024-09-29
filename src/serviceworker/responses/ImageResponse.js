@@ -17,7 +17,11 @@ export class ImageResponse extends LocalResponse {
      */
     populateClientResponse() {
         // kludge to deal with corrupted survey ids
-        if (this.toSaveLocally.surveyId === true || this.toSaveLocally.surveyId === false) {
+        if (this.toSaveLocally.surveyId === true
+            || this.toSaveLocally.surveyId === false
+            || this.toSaveLocally.surveyId === 'true'
+            || this.toSaveLocally.surveyId === 'false'
+        ) {
             this.toSaveLocally.surveyId = '';
         }
 

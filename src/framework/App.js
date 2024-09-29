@@ -602,7 +602,10 @@ export class App extends EventHarness {
      */
     haveExtantOccurrences() {
         for (let occurrence of this.occurrences) {
-            if (!occurrence.deleted) {
+
+            // occurrence should at least exist (null entries shouldn't be possible, but want to allow for something
+            // having gone awry)
+            if (!occurrence?.deleted) {
                 return true;
             }
         }
@@ -637,7 +640,6 @@ export class App extends EventHarness {
         this.occurrences.set(occurrence.id, occurrence);
 
         occurrence.addListener(Occurrence.EVENT_MODIFIED,
-            // possibly this should be async, with await on the survey and occurrence save
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
                 if (!survey) {
@@ -648,15 +650,15 @@ export class App extends EventHarness {
                     // need to ensure that currentSurvey is saved before occurrence
                     // rather than using a promise chain here, instead rely on enforced queuing of post requests in Model
                     // otherwise there are problems with queue-jumping (e.g. when an image needs to be saved after both previous requests)
-                    // if (survey.unsaved()) {
-                    //     // noinspection JSIgnoredPromiseFromCall
-                    //     survey.save();
-                    // }
+                    if (survey.unsaved()) {
+                        // noinspection JSIgnoredPromiseFromCall
+                        survey.save(true);
+                    }
 
-                    // against a backdrop where surveys are somehow going unsaved, always force a survey re-save
-                    // @todo need to watch if this is creating a mess of identical survey revisions
-                    // noinspection JSIgnoredPromiseFromCall
-                    survey.save(true);
+                    // // against a backdrop where surveys are somehow going unsaved, always force a survey re-save
+                    // // @todo need to watch if this is creating a mess of identical survey revisions
+                    // // noinspection JSIgnoredPromiseFromCall
+                    // survey.save(true);
 
                     occurrence.save().finally(() => {
                         survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});

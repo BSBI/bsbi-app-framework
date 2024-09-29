@@ -280,11 +280,11 @@ export class BSBIServiceWorker {
                         });
                 } else {
                     console.log(`Failed to save, moving on to attempt IndexedDb`);
-                    return Promise.reject('Failed to save to server.');
+                    return Promise.reject(`Failed to save to server. (${response.status})`);
                 }
             })
-            .catch( (reason) => {
-                    console.log({'post fetch failed (probably no network)': reason});
+            .catch( (remoteReason) => {
+                    console.log({'post fetch failed (probably no network)': remoteReason});
 
                     // would get here if the network is down
                     // or if got invalid response from the server
@@ -293,7 +293,7 @@ export class BSBIServiceWorker {
                         // don't need to store locally (as will already be present) and response is not needed
                         // so just reject
 
-                        return Promise.reject(reason);
+                        return Promise.reject(remoteReason);
                     } else {
 
                         // /**
@@ -322,7 +322,8 @@ export class BSBIServiceWorker {
                                         error: 'Failed to process posted response data. (internal error)',
                                         errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
                                             'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                            'Please try to re-establish a network connection and try again.'
+                                            'Please try to re-establish a network connection and try again.' +
+                                            `Error was: ${JSON.stringify(remoteReason)}`
                                     };
 
                                     return packageClientResponse(returnedToClient);

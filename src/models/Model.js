@@ -180,7 +180,7 @@ export class Model extends EventHarness {
                 return this.post(formData, isSync)
                     .catch((reason) => {
                         // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError(`Failed to post ${JSON.stringify(reason)}`);
+                        Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.name} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
                         return Promise.reject(reason);
                     })
                     .then(resolve, reject);
@@ -273,7 +273,7 @@ export class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status})`);
+                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.name}`);
             }
         });
     }

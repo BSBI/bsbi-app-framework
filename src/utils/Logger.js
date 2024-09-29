@@ -28,45 +28,45 @@ export class Logger {
         }
 
         const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
-        const error = doc.createElement('error');
+        const errorEl = doc.createElement('error');
 
         if (line !== null && line !== undefined) {
-            error.setAttribute('line', line);
+            errorEl.setAttribute('line', line);
         }
 
         if (errorObj && ('stack' in errorObj)) {
-            error.setAttribute('stack', errorObj.stack);
+            errorEl.setAttribute('stack', errorObj.stack);
         }
 
         if (url !== null && url !== undefined && url !== '') {
-            error.setAttribute('url', url);
+            errorEl.setAttribute('url', url);
         }
 
         if (window.location.href) {
-            error.setAttribute('referrer', window.location.href);
+            errorEl.setAttribute('referrer', window.location.href);
         }
 
         if (window.location.search) {
-            error.setAttribute('urlquery', window.location.search);
+            errorEl.setAttribute('urlquery', window.location.search);
         }
 
         if (window.location.hash) {
-            error.setAttribute('urlhash', window.location.hash);
+            errorEl.setAttribute('urlhash', window.location.hash);
         }
 
         if (Logger.app?.session?.userId) {
-            error.setAttribute('userid', Logger.app.session.userId);
+            errorEl.setAttribute('userid', Logger.app.session.userId);
         }
 
         // noinspection PlatformDetectionJS
-        error.setAttribute('browser', navigator.appName);
-        error.setAttribute('browserv', navigator.appVersion);
-        error.setAttribute('userAgent', navigator.userAgent);
-        error.setAttribute('versions', Model.bsbiAppVersion);
+        errorEl.setAttribute('browser', navigator.appName);
+        errorEl.setAttribute('browserv', navigator.appVersion);
+        errorEl.setAttribute('userAgent', navigator.userAgent);
+        errorEl.setAttribute('versions', Model.bsbiAppVersion);
 
-        error.appendChild(doc.createTextNode(message));
+        errorEl.appendChild(doc.createTextNode(message));
 
-        doc.documentElement.appendChild(error);
+        doc.documentElement.appendChild(errorEl);
 
         return fetch('/javascriptErrorLog.php', {
             method: "POST", // *GET, POST, PUT, DELETE, etc.
