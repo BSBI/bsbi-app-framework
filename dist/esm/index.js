@@ -4206,7 +4206,10 @@ class Track extends Model {
      */
     static registerApp(app) {
         Track._app = app;
+    }
 
+    static registerStaticListeners() {
+        const app = Track._app;
         if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
             app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;
@@ -7542,7 +7545,7 @@ class App extends EventHarness {
                         }),
                         this.refreshFromServer(storedObjectKeys.survey)
                             // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                            // do this for both promise states (can't use finally has it doesn't chain returned promises
+                            // do this for both promise states (can't use finally as it doesn't chain returned promises
                             .then(
                                 () => this.seekKeys(storedObjectKeys),
                                 () => this.seekKeys(storedObjectKeys),
@@ -8601,7 +8604,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1727599695-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1728572804-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -8651,6 +8654,8 @@ class BSBIServiceWorker {
             // resolves.
             evt.waitUntil(
                 this.precache()
+                    .catch(() => true) // allow installation even if not everything got cached
+
                     // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
                     // .finally(() => {
                     //     console.log("Service worker skip waiting after precache.");

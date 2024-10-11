@@ -1451,7 +1451,7 @@ export class App extends EventHarness {
                         }),
                         this.refreshFromServer(storedObjectKeys.survey)
                             // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                            // do this for both promise states (can't use finally has it doesn't chain returned promises
+                            // do this for both promise states (can't use finally as it doesn't chain returned promises
                             .then(
                                 () => this.seekKeys(storedObjectKeys),
                                 () => this.seekKeys(storedObjectKeys),

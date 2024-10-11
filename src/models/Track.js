@@ -166,7 +166,10 @@ export class Track extends Model {
      */
     static registerApp(app) {
         Track._app = app;
+    }
 
+    static registerStaticListeners() {
+        const app = Track._app;
         if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
             app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
                 const survey = Track._app.currentSurvey;

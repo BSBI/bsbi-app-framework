@@ -116,6 +116,8 @@ export class BSBIServiceWorker {
             // resolves.
             evt.waitUntil(
                 this.precache()
+                    .catch(() => true) // allow installation even if not everything got cached, can avoid problems if a once-cached file has now been deleted
+
                     // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
                     // .finally(() => {
                     //     console.log("Service worker skip waiting after precache.");
