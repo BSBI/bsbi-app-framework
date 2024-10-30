@@ -66,9 +66,13 @@ export class EventHarness {
     removeListener(eventName, handle) {
         if (this._eventListeners[eventName]?.[handle]) {
             delete this._eventListeners[eventName][handle];
-        } else {
-            console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
         }
+        // no need for console warning if event listener already gone
+        // as a model may have been destroyed legitimately without the awareness of everyone who holds listeners
+
+        // else {
+        //     console.info('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
+        // }
         return undefined;
     }
 

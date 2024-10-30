@@ -206,7 +206,7 @@ export class Taxon {
     static initialiseTaxa(taxa, sourceUrl) {
         Taxon.rawTaxa = taxa;
 
-        if ((taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
+        if (navigator.onLine && (taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Taxon list may be stale (stamp is ${taxa.stamp}), prompting re-cache.`);
             navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(

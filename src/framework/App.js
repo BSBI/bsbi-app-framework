@@ -28,6 +28,7 @@ import {
     APP_EVENT_USER_LOGOUT,
     APP_EVENT_OPTIONS_RESTORED,
 } from './AppEvents';
+import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
 
 /**
  * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
@@ -64,6 +65,15 @@ export class App extends EventHarness {
      * @type {Array.<{url : string}>}
      */
     routeHistory = [];
+
+    /**
+     * Used when re-opening with no specified survey
+     *
+     * @type {string}
+     */
+    homeRoute = '/list/survey/welcome';
+
+    defaultListRoute = '/list';
 
     /**
      * keyed by occurrence id (a UUID string)
@@ -243,6 +253,23 @@ export class App extends EventHarness {
      */
     static devMode = false;
 
+    /**
+     *
+     * @private
+     */
+    static _DATA_CACHE_VERSION;
+
+    static set DATA_CACHE_VERSION(version) {
+        App._DATA_CACHE_VERSION = `bsbi-data-${version}`;
+    }
+
+    static get DATA_CACHE_VERSION() {
+        if (!App._DATA_CACHE_VERSION) {
+            throw new Error('DATA_CACHE_VERSION has not been initialized');
+        }
+        return App._DATA_CACHE_VERSION;
+    }
+
     constructor() {
         super();
     }
@@ -323,7 +350,7 @@ export class App extends EventHarness {
         if (!this._deviceId) {
             return localforage.getItem(App.DEVICE_ID_KEY_NAME)
                 .then((deviceId) => {
-                    if (deviceId) {
+                    if (deviceId && deviceId !== 'undefined') {
                         this._deviceId = deviceId;
                         return deviceId;
                     } else {
@@ -375,6 +402,14 @@ export class App extends EventHarness {
      */
     forageRemoveItem(key) {
         return localforage.removeItem(key);
+    }
+
+    /**
+     * @abstract
+     * @protected
+     */
+    _updateUnsavedMarkerCss() {
+
     }
 
     /**
@@ -448,8 +483,24 @@ export class App extends EventHarness {
      * @returns {Promise<void | null>}
      */
     clearCurrentSurvey() {
+        try {
+            for (let occurrenceTuple of this.occurrences) {
+                occurrenceTuple[1].destructor();
+            }
+        } catch (e) {
+            console.error({"in clearCurrentSurvey, failed occurrence destruction" : e});
+        }
+
         this.occurrences = new Map();
-        this._currentSurvey = null; // must not use setter here otherwise local storage saved previous id will be lost
+
+        try {
+            if (this._currentSurvey) {
+                this._currentSurvey.destructor();
+                this._currentSurvey = null; // must not use setter here otherwise local storage saved previous id will be lost
+            }
+        } catch (e) {
+            console.error({"in clearCurrentSurvey, failed survey destruction" : e});
+        }
         return this.clearLastSurveyId();
     }
 
@@ -513,14 +564,19 @@ export class App extends EventHarness {
         this._router.on(() => {
             // special-case redirect (replacing in history) from '/' to '/list' without updating browser history
 
-            console.log("redirecting from '/' to '/list'");
+            console.log("redirecting from '/'");
 
             this._router.pause();
 
-            if (this.currentSurvey && this.currentSurvey.isPristine) {
-                this._router.navigate('/list/survey/welcome').resume();
+            if (!this.currentSurvey) {
+                console.log(`redirecting without survey from '/' to '${this.homeRoute}'`);
+                this._router.navigate(this.homeRoute).resume();
+            } else if (this.currentSurvey && this.currentSurvey.isPristine) {
+                console.log(`redirecting from '/' to '${this.homeRoute}'`);
+                this._router.navigate(this.homeRoute).resume();
             } else {
-                this._router.navigate('/list').resume();
+                console.log(`redirecting from '/' to '${this.defaultListRoute}'`);
+                this._router.navigate(this.defaultListRoute).resume();
             }
             this._router.resolve();
         });
@@ -532,11 +588,12 @@ export class App extends EventHarness {
 
     display() {
         //console.log('App display');
+        this._router.resolve();
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.syncAll(true).then(() => {
-            this._router.resolve();
-        });
+        // this.syncAll(true).then(() => {
+        //     this._router.resolve();
+        // });
     }
 
     saveRoute() {
@@ -678,9 +735,10 @@ export class App extends EventHarness {
      * no service worker interception of this call - passed through and not cached
      *
      * @param {Array.<string>} surveyIds
+     * @param {boolean} specifiedSurveysOnly if set then don't return a full extended refresh, only the specified surveys
      * @return {Promise}
      */
-    refreshFromServer(surveyIds) {
+    refreshFromServer(surveyIds, specifiedSurveysOnly = false) {
         console.log({'Refresh from server, ids' : surveyIds});
         const formData = new FormData;
 
@@ -693,6 +751,10 @@ export class App extends EventHarness {
 
         if (this.session?.userId) {
             formData.append('userId', this.session.userId);
+        }
+
+        if (specifiedSurveysOnly) {
+            formData.append('specifiedOnly', '1');
         }
 
         return fetch(App.LOAD_SURVEYS_ENDPOINT, {
@@ -831,7 +893,7 @@ export class App extends EventHarness {
      *
      * @returns {Promise}
      */
-    purgeStale() {
+    purgeStale(fastReturn = true) {
         const storedObjectKeys = {
             survey : [],
             occurrence : [],
@@ -839,7 +901,10 @@ export class App extends EventHarness {
             track : [],
         };
 
-        return this.seekKeys(storedObjectKeys)
+        return fastReturn ?
+            Promise.resolve()
+            :
+            this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
                     .then((result) => {
@@ -894,7 +959,7 @@ export class App extends EventHarness {
                         return result;
                     }, (failedResult) => {
                         this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
-                        return Promise.reject(failedResult);
+                        return Promise.reject({'_syncLocalUnsaved failedResult' : failedResult});
                     });
             }, (failedResult) => {
                 console.error(`Failed to seek keys: ${failedResult}`);
@@ -1037,14 +1102,13 @@ export class App extends EventHarness {
          *
          */
         const queueSync = (objectKey, objectClass) => {
-            const classLowerName = objectClass.name.toLowerCase();
-
+            const classLowerName = objectClass.className.toLowerCase();
 
                 /**
                  * @returns {Promise}
                  */
                 return () => {
-                    console.log({'queueing sync': {key: objectKey, type: classLowerName}});
+                    //console.log({'queueing sync': {key: objectKey, type: classLowerName}});
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
                         .then((/** Model */ model) => {
                             if (model.unsaved()) {
@@ -1053,6 +1117,16 @@ export class App extends EventHarness {
                                         // for sync, only a remote save should count as successful
                                         if (!model.savedRemotely) {
                                             return Promise.reject(`Failed to save ${classLowerName} to server.`);
+                                        }
+
+                                        // make sure that the local copy of the object matches the saved
+                                        // in terms of save flags
+                                        // (as retrieveFromLocal has substituted a new object with the same values)
+                                        if (classLowerName === 'occurrence' &&
+                                            this.occurrences.has(model.id) &&
+                                            this.occurrences.get(model.id).modifiedStamp === model.modifiedStamp
+                                        ) {
+                                            this.occurrences.get(model.id).savedRemotely = true;
                                         }
                                     })
                                     .then(() => {
@@ -1070,7 +1144,7 @@ export class App extends EventHarness {
                             return Promise.resolve('Continuing after sync failure.');
                         })
                         .finally(() => {
-                            console.log({'processed sync': {key: objectKey, type: classLowerName}});
+                            //console.log({'processed sync': {key: objectKey, type: classLowerName}});
                         });
                 };
 
@@ -1138,6 +1212,8 @@ export class App extends EventHarness {
                         savedFlag
                     });
                 }
+
+                this._updateUnsavedMarkerCss();
             });
 
 
@@ -1162,136 +1238,18 @@ export class App extends EventHarness {
         }
     }
 
-    // /**
-    //  *
-    //  * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
-    //  * @param {boolean} fastReturn default false
-    //  * @returns {Promise}
-    //  * @private
-    //  */
-    // _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
-    //     // synchronises surveys first, then occurrences, then images from indexedDb
-    //
-    //     const surveyPromises = [];
-    //
-    //     for(let surveyKey of storedObjectKeys.survey) {
-    //         surveyPromises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
-    //             .then((/** Survey */ survey) => {
-    //                 if (survey.unsaved()) { //} || this.session?.userId === '2cd4p9h.31ecsw') {
-    //                     return survey.save(true);
-    //                 }
-    //             })
-    //         );
-    //     }
-    //
-    //     let errors = false;
-    //
-    //     // this ensures that saves happen in order (surveys > occurrences > images > tracks)
-    //     const savePromise = Promise.allSettled(surveyPromises)
-    //         .catch((reason) => {
-    //             console.log({'save survey errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             const occurrencePromises = [];
-    //
-    //             for(let occurrenceKey of storedObjectKeys.occurrence) {
-    //                 occurrencePromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-    //                     .then((/** Occurrence */ occurrence) => {
-    //                         if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
-    //                             return occurrence.save('', true);
-    //                         }
-    //                     })
-    //                 );
-    //             }
-    //
-    //             return Promise.allSettled(occurrencePromises);
-    //         })
-    //         .catch((reason) => {
-    //             console.log({'save occurrence errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             const imagePromises = [];
-    //
-    //             for(let imageKey of storedObjectKeys.image) {
-    //                 imagePromises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
-    //                     .then((/** OccurrenceImage */ image) => {
-    //                         if (image.unsaved()) {
-    //                             return image.save();
-    //                         }
-    //                     })
-    //                 );
-    //             }
-    //
-    //             return Promise.allSettled(imagePromises);
-    //         })
-    //         .catch((reason) => {
-    //             console.log({'save image errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             const trackPromises = []
-    //
-    //             for(let trackKey of storedObjectKeys.track) {
-    //                 trackPromises.push(Track.retrieveFromLocal(trackKey, new Track)
-    //                     .then((/** Track */ track) => {
-    //                         if (track.unsaved()) {
-    //                             return track.save();
-    //                         }
-    //                     })
-    //                 );
-    //             }
-    //
-    //             return Promise.allSettled(trackPromises);
-    //         })
-    //         .catch((reason) => {
-    //             console.log({'save track errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             if (errors) {
-    //                 return Promise.reject();
-    //             } else {
-    //                 return Promise.resolve();
-    //             }
-    //         })
-    //     ;
-    //
-    //     if (fastReturn) {
-    //         // this will return near instantaneously as there is an already resolved promise at the head of the array
-    //         // the other promises will continue to resolve
-    //         //return Promise.race(promises);
-    //         return Promise.race([
-    //             Promise.resolve(true), // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
-    //             savePromise
-    //         ]);
-    //     } else {
-    //         //return Promise.all(promises).catch((result) => {
-    //         return savePromise.catch((result) => {
-    //             console.log(`Save failure: ${result}`);
-    //             return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-    //         });
-    //     }
-    // }
-
     /**
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
      *
      * @returns {Promise}
      *
-     * @todo implement this
      * @private
      */
-    _purgeLocalFOO(storedObjectKeys) {
+    _purgeLocal(storedObjectKeys) {
         // synchronises surveys first, then occurrences, then images from indexedDb
 
-        const promises = [];
+        let purgePromise = Promise.resolve();
 
         const deletionCandidateKeys = {
             survey : [],
@@ -1300,63 +1258,220 @@ export class App extends EventHarness {
             track : [],
         };
 
-        // if (fastReturn) {
-        //     // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
-        //     promises[0] = Promise.resolve(true);
-        // }
+        const preservedKeys = {
+            survey : [],
+            occurrence : [],
+            image : [],
+            track : [],
+        };
+
+        const recentSurveyKeys = [];
 
         const thresholdStamp = Math.floor(Date.now() / 1000) - this.staleThreshold;
 
+        const recentThresholdStamp = Math.floor(Date.now() / 1000) - (3600 * 24);
+
+        const currentSurveyId = this.currentSurvey?.id;
+
         for(let surveyKey of storedObjectKeys.survey) {
-            promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
+            purgePromise = purgePromise.then(() => Survey.retrieveFromLocal(surveyKey, new Survey)
                 .then((/** Survey */ survey) => {
-                    if (survey.savedRemotely && survey.modifiedStamp <= thresholdStamp) {
-                        // survey hasn't been modified recently
+                    if (survey.id !== currentSurveyId && survey.savedRemotely && (
+                        (survey.modifiedStamp <= thresholdStamp) || (this.session?.userId && survey.userId && this.session.userId !== survey.userId)
+                    )) {
+                        // survey hasn't been modified recently or belongs to a different user
 
                         if (!(survey.attributes?.defaultCasual && survey.createdInCurrentYear() && survey.userId === this.userId)) {
                             // survey isn't the set of casual records for the current year for the current user
 
+                            deletionCandidateKeys.survey.push(survey.id);
+                        } else {
+                            preservedKeys.survey.push(survey.id);
+
+                            if (survey.modifiedStamp <= recentThresholdStamp &&
+                                !survey.attributes?.defaultCasual &&
+                                !survey.attributes?.nulllist // NYPH-specific
+                            ) {
+                                recentSurveyKeys.push(survey.id);
+                            }
+                        }
+                    } else {
+                        preservedKeys.survey.push(survey.id);
+                    }
+                })
+            );
+        }
+
+        // at this point all surveys will have been checked by the time the next thenables are processed
+        for (let occurrenceKey of storedObjectKeys.occurrence) {
+            purgePromise = purgePromise.then(() => Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence))
+                .then((/** Occurrence */ occurrence) => {
+
+                    if (!occurrence.deleted) {
+                        // see if occurrence belongs to one of the threshold recent surveys
+                        // if so then the survey should be kept (so removed from the imperiled recent list)
+                        const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
+                        if (recentIndex !== -1) {
+                            delete recentSurveyKeys[recentIndex];
+                        }
+                    }
+
+                    if (occurrence.unsaved()) {
+                        if (deletionCandidateKeys.survey.includes(occurrence.surveyId)) {
+                            throw new PurgeInconsistencyError(`Occurrence ${occurrence.id} from deletable survey ${occurrence.surveyId} is unsaved.`);
+                        } else {
+                            preservedKeys.occurrence.push(occurrence.id);
+                        }
+                    } else if (deletionCandidateKeys.survey.includes(occurrence.surveyId) || occurrence.deleted) {
+                        deletionCandidateKeys.occurrence.push(occurrence.id);
+                    } else if (!preservedKeys.survey.includes(occurrence.surveyId)) {
+                        // have an orphaned occurrence
+                        console.log(`Queueing purge of orphaned occurrence id ${occurrence.id}`);
+                        deletionCandidateKeys.occurrence.push(occurrence.id);
+                    } else {
+                        preservedKeys.occurrence.push(occurrence.id);
+                    }
+                });
+        }
+
+        for(let imageKey of storedObjectKeys.image) {
+            purgePromise = purgePromise.then(() => OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
+                .then((/** OccurrenceImage */ image) => {
+                    if (image.unsaved()) {
+                        if (deletionCandidateKeys.survey.includes(image.surveyId)) {
+                            throw new PurgeInconsistencyError(`Image ${image.id} from deletable survey ${image.surveyId} is unsaved.`);
+                        } else if (deletionCandidateKeys.occurrence.includes(image.occurrenceId)) {
+                            throw new PurgeInconsistencyError(`Image ${image.id} from deletable occurrence ${image.occurrenceId} is unsaved.`);
+                        } else {
+                            preservedKeys.image.push(image.id);
+                        }
+                    } else {
+                        if (deletionCandidateKeys.survey.includes(image.surveyId) ||
+                            deletionCandidateKeys.occurrence.includes(image.occurrenceId) ||
+                            image.deleted
+                        ) {
+                            deletionCandidateKeys.image.push(image.id);
+                        } else if (!(
+                            preservedKeys.survey.includes(image.surveyId) ||
+                            preservedKeys.occurrence.includes(image.occurrenceId)
+                        )) {
+                            // have an orphaned image
+                            console.log(`Queueing purge of orphaned image id ${image.id}`);
+                            deletionCandidateKeys.image.push(image.id);
+                        } else {
+                            preservedKeys.image.push(image.id);
                         }
                     }
                 })
             );
         }
 
-        for(let occurrenceKey of storedObjectKeys.occurrence) {
-            promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                .then((/** Occurrence */ occurrence) => {
-                    if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
-                        return occurrence.save('', true);
-                    }
-                })
-            );
-        }
-
-        for(let imageKey of storedObjectKeys.image) {
-            promises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
-                .then((/** OccurrenceImage */ image) => {
-                    if (image.unsaved()) {
-                        return image.save();
-                    }
-                })
-            );
-        }
-
         for(let trackKey of storedObjectKeys.track) {
-            promises.push(Track.retrieveFromLocal(trackKey, new Track)
+            purgePromise = purgePromise.then(() => Track.retrieveFromLocal(trackKey, new Track)
                 .then((/** Track */ track) => {
-                    if (track.unsaved()) {
-                        return track.save();
+                    // use trackKey rather track.id as keys for tracks are expressed as id.deviceId
+
+                    if (!track.deviceId || track.deviceId === 'undefined') {
+                        console.log(`Queueing purge of corrupt track id ${track.id} with no device.`);
+                        deletionCandidateKeys.track.push(trackKey);
+                    } else if (track.unsaved()) {
+                        if (deletionCandidateKeys.survey.includes(track.surveyId)) {
+                            throw new PurgeInconsistencyError(`Track ${trackKey} from deletable survey ${track.surveyId} is unsaved.`);
+                        } else {
+                            preservedKeys.track.push(trackKey);
+                        }
+                    } else {
+                        if (deletionCandidateKeys.survey.includes(track.surveyId) || track.deleted) {
+                            deletionCandidateKeys.track.push(trackKey);
+                        } else if (!preservedKeys.survey.includes(track.surveyId)) {
+                            // have an orphaned image
+                            console.log(`Queueing purge of orphaned track id ${track.id} for survey ${track.surveyId}.`);
+                            deletionCandidateKeys.track.push(trackKey);
+                        } else {
+                            preservedKeys.track.push(trackKey);
+                        }
                     }
                 })
             );
         }
 
+        // add remaining recent surveys that have no records to the purge list
+        deletionCandidateKeys.survey.push(recentSurveyKeys);
 
-        return Promise.all(promises).catch((result) => {
-            console.log(`Save failure: ${result}`);
-            return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-        });
+        purgePromise = purgePromise.then(
+            () => {
+                console.log({'Purging' : deletionCandidateKeys});
+
+                return this._applyPurge(deletionCandidateKeys);
+            },
+            (reason) => {
+                console.error({'purge failed reason' : reason});
+                console.log({'would have purged' : deletionCandidateKeys});
+
+                Logger.logError(`Purge failed: ${reason}`);
+            });
+
+        return purgePromise;
+    }
+
+    /**
+     *
+     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, track : Array<string>}} deletionIds
+     * @private
+     */
+    _applyPurge(deletionIds) {
+        let purgePromise = Promise.resolve();
+
+        for (let type in deletionIds) {
+            for (let key of deletionIds[type]) {
+                purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`));
+            }
+        }
+
+        if (deletionIds.image.length > 0) {
+            purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image));
+        }
+
+        if (deletionIds.survey.length > 0) {
+            purgePromise = purgePromise.then(() => {
+                for (let key of deletionIds.survey) {
+                    this.surveys.delete(key);
+                }
+
+                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+            });
+        }
+
+        return purgePromise;
+    }
+
+    /**
+     *
+     * @param {Array<string>} imageIds
+     * @returns {Promise<void>}
+     * @private
+     */
+    _purgeCachedImages(imageIds) {
+        const cacheName = App.DATA_CACHE_VERSION;
+
+        return caches.open(cacheName)
+            .then((cache) => {
+                return cache.keys()
+                    .then((/** Array<Request> */ requests) => {
+                        for (let request of requests) {
+                            const url = request.url;
+
+                            const match = url.match(/image\.php.*imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
+
+                            //if (url.match(new RegExp(`image\.php.*imageid=${imageId}`))) {
+                            if (match && imageIds.includes(match[1])) {
+                                console.log(`Deleting cached image ${url}`);
+                                // noinspection JSIgnoredPromiseFromCall
+                                cache.delete(request);
+                            }
+                        }
+                    })
+            });
 
     }
 
@@ -1366,9 +1481,10 @@ export class App extends EventHarness {
      *
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
+     * @param {boolean} [setCurrentSurvey] if set then, if possible, set a survey as current, default true
      * @return {Promise}
      */
-    restoreOccurrences(targetSurveyId = '', neverAddBlank = false) {
+    restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true) {
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
 
         if (targetSurveyId === 'undefined') {
@@ -1377,21 +1493,21 @@ export class App extends EventHarness {
         }
 
         return (targetSurveyId) ?
-            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank)
+            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank, setCurrentSurvey)
             :
             this.getLastSurveyId().then(
                 (lastSurveyId) => {
                     console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
-                    return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank).catch(() => {
+                    return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank, setCurrentSurvey).catch(() => {
                         console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
 
                         this.currentSurvey = null;
-                        return this._restoreOccurrenceImp('', neverAddBlank);
+                        return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey);
                     });
                 },
                 // probably can't reach this catch phase
-                () => this._restoreOccurrenceImp('', neverAddBlank)
+                () => this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey)
             );
     }
 
@@ -1399,10 +1515,11 @@ export class App extends EventHarness {
      *
      * @param {string} [targetSurveyId] default ''
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
+     * @param {boolean} [setCurrentSurvey] default true
      * @returns {Promise<void>|Promise<unknown>}
      * @protected
      */
-    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false) {
+    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true) {
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
         // only present in current App.surveys
@@ -1441,17 +1558,18 @@ export class App extends EventHarness {
                     let timer;
                     const timeoutMs = 15 * 1000;
 
-                    return Promise.race([
+                    const promisesToRace = [
                         new Promise((resolve, reject) => {
                             // Set up the timeout
                             timer = setTimeout(() => {
                                 timer = null;
+                                console.error(`Refresh from server timeout.`);
                                 reject(new Error(`Survey load timed out after ${timeoutMs} ms`));
                             }, timeoutMs);
                         }),
                         this.refreshFromServer(storedObjectKeys.survey)
                             // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                            // do this for both promise states (can't use finally as it doesn't chain returned promises
+                            // do this for both promise states (can't use finally as it doesn't chain returned promises)
                             .then(
                                 () => this.seekKeys(storedObjectKeys),
                                 () => this.seekKeys(storedObjectKeys),
@@ -1461,15 +1579,45 @@ export class App extends EventHarness {
                                     clearTimeout(timer);
                                 }
                             })
-                    ]);
+                    ];
 
-                    // return this.refreshFromServer(storedObjectKeys.survey)
-                    //     // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                    //     // do this for both promise states (can't use finally has it doesn't chain returned promises
-                    //     .then(
-                    //         () => this.seekKeys(storedObjectKeys),
-                    //         () => this.seekKeys(storedObjectKeys),
-                    //     );
+                    // The split approach below isn't yet safe
+                    /*
+                    if (targetSurveyId) {
+                        // as single batch try to get just the survey of interest
+
+                        promisesToRace.push(
+                            this.refreshFromServer([targetSurveyId], true)
+                                // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                                // do this for both promise states (can't use finally as it doesn't chain returned promises)
+                                .then(
+                                    () => this.seekKeys(storedObjectKeys),
+                                    () => this.seekKeys(storedObjectKeys),
+                                )
+                                .finally(() => {
+                                    console.info(`Returned from narrow survey load.`);
+                                    if (timer) {
+                                        clearTimeout(timer);
+                                    }
+                                })
+                        );
+                    }
+
+                    // request other relevant recent surveys more generally
+                    // will usually complete more slowly
+                    promisesToRace.push(
+                        this.refreshFromServer(storedObjectKeys.survey)
+                            .then(() => this.seekKeys(storedObjectKeys))
+                            .finally(() => {
+                                console.info(`Returned from broad survey load.`);
+                                if (timer) {
+                                    clearTimeout(timer);
+                                }
+                            })
+                    );
+                     */
+
+                    return Promise.race(promisesToRace);
                 } else {
                     return null;
                 }
@@ -1502,7 +1650,7 @@ export class App extends EventHarness {
 
                         restorePromise = restorePromise
                             .then(() => {
-                                return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0));
+                                return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, setCurrentSurvey && ((targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0)));
                             })
                             .catch((reason) => {
                                 console.log({'failed to restore from local' : {surveyKey, reason}});
@@ -1519,7 +1667,7 @@ export class App extends EventHarness {
                         .finally(() => {
                             //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
-                            if (!this.currentSurvey && neverAddBlank) {
+                            if (!this.currentSurvey && neverAddBlank && setCurrentSurvey) {
                                 // survey doesn't actually exist
                                 // this could have happened in an invalid survey id was provided as a targetSurveyId
                                 console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
@@ -1779,7 +1927,7 @@ export class App extends EventHarness {
 
                     return imageFetchingPromise;
                 } else {
-                    return Promise.reject()
+                    return Promise.reject(`Failed to restore survey id '${surveyId}' from local set.`);
                 }
 
                 // if the target survey belonged to a different user then could be undefined here

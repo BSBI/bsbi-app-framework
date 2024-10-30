@@ -6,7 +6,11 @@ import {NotFoundError} from "../utils/exceptions/NotFoundError";
 import {UUID_REGEX} from "../models/Model";
 //import {App} from "../framework/App";
 import {Logger} from "../utils/Logger";
-import {APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_RESET_SURVEYS} from "../framework/AppEvents";
+import {
+    APP_EVENT_ADD_SURVEY_USER_REQUEST,
+    APP_EVENT_RESET_SURVEYS,
+    APP_EVENT_SURVEYS_CHANGED
+} from "../framework/AppEvents";
 
 /**
  * @typedef {import('bsbi-app-framework-view').SurveyPickerView} SurveyPickerView
@@ -133,28 +137,48 @@ export class SurveyPickerController extends AppController {
     }
 
     beforeSaveAllHandler(done) {
-        // invoke sync of any/all unsaved data
-        // show pop-ups on success and failure
-        this.app.syncAll(false).then((result) => {
-            console.log({'In save all handler, success result' : result});
 
-            this.view.showSaveAllSuccess(result);
+        if (navigator.onLine) {
+            // invoke sync of any/all unsaved data
+            // show pop-ups on success and failure
+            this.app.syncAll(false).then((result) => {
+                console.log({'In save all handler, success result': result});
 
-            // if (Array.isArray(result)) {
-            //     this.view.showSaveAllSuccess();
-            // } else {
-            //     Logger.logError(`Failed to sync all (line 138): ${result}`);
-            //     this.view.showSaveAllFailure();
-            // }
-        }, (result) => {
-            console.log({'In save all handler, failure result' : result});
-            // noinspection JSIgnoredPromiseFromCall
-            Logger.logError(`Failed to sync all (line 143): ${JSON.stringify(result)}`);
-            this.view.showSaveAllFailure(result);
-        }).finally(() => {
-            // stop the spinner
+                this.view.showSaveAllSuccess(result);
 
-        });
+                return this.app.refreshFromServer(Array.from(this.app.surveys.keys()))
+                    .then(() => {
+                        console.log('Surveys refreshed from the server');
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+
+                        // @todo should now update the current survey from indexDb without clearing existing entries
+                    });
+
+                //const currentSurvey = this.app.currentSurvey
+                // this.app.restoreOccurrences(currentSurvey?.id || '', true, !!currentSurvey)
+                //     .then((result) => {
+                //             console.log({'result from restoreOccurrences': result});
+                //         },
+                //         (result) => {
+                //             console.log({'failed result from restoreOccurrences': result});
+                //         }
+                //     );
+
+                // if (Array.isArray(result)) {
+                //     this.view.showSaveAllSuccess();
+                // } else {
+                //     Logger.logError(`Failed to sync all (line 138): ${result}`);
+                //     this.view.showSaveAllFailure();
+                // }
+            }, (result) => {
+                console.log({'In save all handler, failure result': result});
+                // noinspection JSIgnoredPromiseFromCall
+                Logger.logError(`Failed to sync all (line 143): ${JSON.stringify(result)}`);
+                this.view.showSaveAllFailure(result);
+            }).finally(() => {
+                // stop the spinner
+            });
+        }
 
         this.app.router.pause();
         if (window.history.state) {

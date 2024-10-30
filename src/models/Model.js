@@ -19,6 +19,8 @@ export const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
 
 export const MODEL_EVENT_SAVED_REMOTELY = 'savedremotely';
 
+export const MODEL_EVENT_DESTROYED = 'destroyed';
+
 export class Model extends EventHarness {
     /**
      * @type {string}
@@ -37,6 +39,13 @@ export class Model extends EventHarness {
     static bsbiAppVersion = '';
 
     /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Model';
+
+    /**
      *
      * @param {boolean} savedFlag
      */
@@ -48,6 +57,14 @@ export class Model extends EventHarness {
                 this.fireEvent(MODEL_EVENT_SAVED_REMOTELY, {id : this.id});
             }
         }
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    get savedRemotely() {
+        return this._savedRemotely;
     }
 
     /**
@@ -180,7 +197,8 @@ export class Model extends EventHarness {
                 return this.post(formData, isSync)
                     .catch((reason) => {
                         // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.name} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+                        Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+
                         return Promise.reject(reason);
                     })
                     .then(resolve, reject);
@@ -273,7 +291,7 @@ export class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.name}`);
+                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.className}`);
             }
         });
     }
@@ -414,5 +432,10 @@ export class Model extends EventHarness {
             requiredFieldsPresent,
             validity
         };
+    }
+
+    destructor() {
+        this.fireEvent(MODEL_EVENT_DESTROYED)
+        super.destructor();
     }
 }

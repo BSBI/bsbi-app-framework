@@ -169,6 +169,11 @@ class Logger {
     static app;
 
     /**
+     * @type {string}
+     */
+    static bsbiAppVersion;
+
+    /**
      * reports a javascript error
      *
      * @param {string} message
@@ -178,11 +183,30 @@ class Logger {
      * @param {Error|null} [errorObj]
      * @returns {Promise<void>}
      */
-    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
-
+    static logError(message, url = '', line= '', column = null, errorObj = null) {
         window.onerror = null;
 
         console.error(message, url, line, errorObj);
+
+        if (!errorObj) {
+            // on V8 construction of PlaceholderError will capture a stack trace automatically
+            errorObj = new _PlaceholderError(message);
+
+            // otherwise may need to throw and catch the error
+            if (!Error.captureStackTrace) {
+                try {
+                    // thrown just to generate a stack trace
+                    // noinspection ExceptionCaughtLocallyJS
+                    throw errorObj;
+                } catch (error) {
+
+                }
+            }
+        }
+
+        if (!url) {
+            url = window?.location?.href;
+        }
 
         if (console.trace) {
             console.trace('Trace');
@@ -203,15 +227,15 @@ class Logger {
             errorEl.setAttribute('url', url);
         }
 
-        if (window.location.href) {
+        if (window?.location?.href) {
             errorEl.setAttribute('referrer', window.location.href);
         }
 
-        if (window.location.search) {
+        if (window?.location?.search) {
             errorEl.setAttribute('urlquery', window.location.search);
         }
 
-        if (window.location.hash) {
+        if (window?.location?.hash) {
             errorEl.setAttribute('urlhash', window.location.hash);
         }
 
@@ -223,7 +247,7 @@ class Logger {
         errorEl.setAttribute('browser', navigator.appName);
         errorEl.setAttribute('browserv', navigator.appVersion);
         errorEl.setAttribute('userAgent', navigator.userAgent);
-        errorEl.setAttribute('versions', Model.bsbiAppVersion);
+        errorEl.setAttribute('versions', Logger.bsbiAppVersion);
 
         errorEl.appendChild(doc.createTextNode(message));
 
@@ -246,6 +270,17 @@ class Logger {
             window.onerror = Logger.logError; // turn on error handling again
         });
     };
+}
+
+/**
+ * Throw this only from within logError
+ */
+class _PlaceholderError extends Error {
+    constructor(...args) {
+        super(...args);
+
+        Error.captureStackTrace?.(this, Logger.logError); // see https://v8.dev/docs/stack-trace-api
+    }
 }
 
 /**
@@ -315,9 +350,13 @@ class EventHarness {
     removeListener(eventName, handle) {
         if (this._eventListeners[eventName]?.[handle]) {
             delete this._eventListeners[eventName][handle];
-        } else {
-            console.log('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
         }
+        // no need for console warning if event listener already gone
+        // as a model may have been destroyed legitimately without the awareness of everyone who holds listeners
+
+        // else {
+        //     console.info('trying to remove non-existent event handler, event = ' + eventName + ' handle = ' + handle);
+        // }
         return undefined;
     }
 
@@ -3212,6 +3251,8 @@ const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
 
 const MODEL_EVENT_SAVED_REMOTELY = 'savedremotely';
 
+const MODEL_EVENT_DESTROYED = 'destroyed';
+
 class Model extends EventHarness {
     /**
      * @type {string}
@@ -3230,6 +3271,13 @@ class Model extends EventHarness {
     static bsbiAppVersion = '';
 
     /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Model';
+
+    /**
      *
      * @param {boolean} savedFlag
      */
@@ -3241,6 +3289,14 @@ class Model extends EventHarness {
                 this.fireEvent(MODEL_EVENT_SAVED_REMOTELY, {id : this.id});
             }
         }
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    get savedRemotely() {
+        return this._savedRemotely;
     }
 
     /**
@@ -3373,7 +3429,8 @@ class Model extends EventHarness {
                 return this.post(formData, isSync)
                     .catch((reason) => {
                         // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.name} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+                        Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+
                         return Promise.reject(reason);
                     })
                     .then(resolve, reject);
@@ -3466,7 +3523,7 @@ class Model extends EventHarness {
                 this._savedLocally = false;
                 this.savedRemotely = false;
 
-                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.name}`);
+                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.className}`);
             }
         });
     }
@@ -3607,6 +3664,11 @@ class Model extends EventHarness {
             requiredFieldsPresent,
             validity
         };
+    }
+
+    destructor() {
+        this.fireEvent(MODEL_EVENT_DESTROYED);
+        super.destructor();
     }
 }
 
@@ -3845,28 +3907,48 @@ class SurveyPickerController extends AppController {
     }
 
     beforeSaveAllHandler(done) {
-        // invoke sync of any/all unsaved data
-        // show pop-ups on success and failure
-        this.app.syncAll(false).then((result) => {
-            console.log({'In save all handler, success result' : result});
 
-            this.view.showSaveAllSuccess(result);
+        if (navigator.onLine) {
+            // invoke sync of any/all unsaved data
+            // show pop-ups on success and failure
+            this.app.syncAll(false).then((result) => {
+                console.log({'In save all handler, success result': result});
 
-            // if (Array.isArray(result)) {
-            //     this.view.showSaveAllSuccess();
-            // } else {
-            //     Logger.logError(`Failed to sync all (line 138): ${result}`);
-            //     this.view.showSaveAllFailure();
-            // }
-        }, (result) => {
-            console.log({'In save all handler, failure result' : result});
-            // noinspection JSIgnoredPromiseFromCall
-            Logger.logError(`Failed to sync all (line 143): ${JSON.stringify(result)}`);
-            this.view.showSaveAllFailure(result);
-        }).finally(() => {
-            // stop the spinner
+                this.view.showSaveAllSuccess(result);
 
-        });
+                return this.app.refreshFromServer(Array.from(this.app.surveys.keys()))
+                    .then(() => {
+                        console.log('Surveys refreshed from the server');
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+
+                        // @todo should now update the current survey from indexDb without clearing existing entries
+                    });
+
+                //const currentSurvey = this.app.currentSurvey
+                // this.app.restoreOccurrences(currentSurvey?.id || '', true, !!currentSurvey)
+                //     .then((result) => {
+                //             console.log({'result from restoreOccurrences': result});
+                //         },
+                //         (result) => {
+                //             console.log({'failed result from restoreOccurrences': result});
+                //         }
+                //     );
+
+                // if (Array.isArray(result)) {
+                //     this.view.showSaveAllSuccess();
+                // } else {
+                //     Logger.logError(`Failed to sync all (line 138): ${result}`);
+                //     this.view.showSaveAllFailure();
+                // }
+            }, (result) => {
+                console.log({'In save all handler, failure result': result});
+                // noinspection JSIgnoredPromiseFromCall
+                Logger.logError(`Failed to sync all (line 143): ${JSON.stringify(result)}`);
+                this.view.showSaveAllFailure(result);
+            }).finally(() => {
+                // stop the spinner
+            });
+        }
 
         this.app.router.pause();
         if (window.history.state) {
@@ -4037,6 +4119,14 @@ class DeviceType extends EventHarness {
 				// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
 				console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
 				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+			} else if (navigator.platform && /iPhone|iPad/.test(navigator.platform)) {
+				// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+				console.log(`Detected mobile via platform string: ${navigator.platform}`);
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+			} else if (navigator.platform && /Win32|^Mac/.test(navigator.platform)) {
+				// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+				console.log(`Detected immobility via platform string: ${navigator.platform}`);
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_IMMOBILE;
 			} else {
 				console.log('Flagging device type as unknown.');
 				DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
@@ -4062,6 +4152,13 @@ const TRACK_END_REASON_SURVEY_CHANGED = 3;
  */
 
 class Track extends Model {
+
+    /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Track';
 
     /**
      * @todo consider whether PointTriplet should also include accuracy
@@ -4624,11 +4721,20 @@ class Track extends Model {
 // shared, keyed by email.
 
 
+const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+
 /**
  * @typedef {import('bsbi-app-framework-view').SurveyForm} SurveyForm
  */
 
 class Survey extends Model {
+
+    /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Survey';
 
     /**
      * fired from Survey when the object's contents have been modified
@@ -4646,7 +4752,7 @@ class Survey extends Model {
      *
      * @type {string}
      */
-    static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+    static EVENT_OCCURRENCES_CHANGED = SURVEY_EVENT_OCCURRENCES_CHANGED;
 
     /**
      * fired on Survey when one of its occurrences has been added, deleted or reloaded
@@ -5503,7 +5609,7 @@ class Taxon {
     static initialiseTaxa(taxa, sourceUrl) {
         Taxon.rawTaxa = taxa;
 
-        if ((taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
+        if (navigator.onLine && (taxa.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
             console.log(`Taxon list may be stale (stamp is ${taxa.stamp}), prompting re-cache.`);
             navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
@@ -5669,6 +5775,13 @@ class Taxon {
  */
 
 class Occurrence extends Model {
+
+    /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Occurrence';
 
     /**
      *
@@ -5914,6 +6027,13 @@ const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
 class OccurrenceImage extends Model {
 
     /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'OccurrenceImage';
+
+    /**
      * raw file object retrieved from a file upload image element
      *
      * @type {File}
@@ -6132,6 +6252,14 @@ class OccurrenceImage extends Model {
     }
 }
 
+class PurgeInconsistencyError extends Error {
+    constructor(...args) {
+        super(...args);
+
+        Error.captureStackTrace?.(this, PurgeInconsistencyError); // see https://v8.dev/docs/stack-trace-api
+    }
+}
+
 // App.js
 // base class for single page application
 // allows binding of controllers and routes
@@ -6171,6 +6299,15 @@ class App extends EventHarness {
      * @type {Array.<{url : string}>}
      */
     routeHistory = [];
+
+    /**
+     * Used when re-opening with no specified survey
+     *
+     * @type {string}
+     */
+    homeRoute = '/list/survey/welcome';
+
+    defaultListRoute = '/list';
 
     /**
      * keyed by occurrence id (a UUID string)
@@ -6350,6 +6487,23 @@ class App extends EventHarness {
      */
     static devMode = false;
 
+    /**
+     *
+     * @private
+     */
+    static _DATA_CACHE_VERSION;
+
+    static set DATA_CACHE_VERSION(version) {
+        App._DATA_CACHE_VERSION = `bsbi-data-${version}`;
+    }
+
+    static get DATA_CACHE_VERSION() {
+        if (!App._DATA_CACHE_VERSION) {
+            throw new Error('DATA_CACHE_VERSION has not been initialized');
+        }
+        return App._DATA_CACHE_VERSION;
+    }
+
     constructor() {
         super();
     }
@@ -6430,7 +6584,7 @@ class App extends EventHarness {
         if (!this._deviceId) {
             return localforage.getItem(App.DEVICE_ID_KEY_NAME)
                 .then((deviceId) => {
-                    if (deviceId) {
+                    if (deviceId && deviceId !== 'undefined') {
                         this._deviceId = deviceId;
                         return deviceId;
                     } else {
@@ -6482,6 +6636,14 @@ class App extends EventHarness {
      */
     forageRemoveItem(key) {
         return localforage.removeItem(key);
+    }
+
+    /**
+     * @abstract
+     * @protected
+     */
+    _updateUnsavedMarkerCss() {
+
     }
 
     /**
@@ -6555,8 +6717,24 @@ class App extends EventHarness {
      * @returns {Promise<void | null>}
      */
     clearCurrentSurvey() {
+        try {
+            for (let occurrenceTuple of this.occurrences) {
+                occurrenceTuple[1].destructor();
+            }
+        } catch (e) {
+            console.error({"in clearCurrentSurvey, failed occurrence destruction" : e});
+        }
+
         this.occurrences = new Map();
-        this._currentSurvey = null; // must not use setter here otherwise local storage saved previous id will be lost
+
+        try {
+            if (this._currentSurvey) {
+                this._currentSurvey.destructor();
+                this._currentSurvey = null; // must not use setter here otherwise local storage saved previous id will be lost
+            }
+        } catch (e) {
+            console.error({"in clearCurrentSurvey, failed survey destruction" : e});
+        }
         return this.clearLastSurveyId();
     }
 
@@ -6620,14 +6798,19 @@ class App extends EventHarness {
         this._router.on(() => {
             // special-case redirect (replacing in history) from '/' to '/list' without updating browser history
 
-            console.log("redirecting from '/' to '/list'");
+            console.log("redirecting from '/'");
 
             this._router.pause();
 
-            if (this.currentSurvey && this.currentSurvey.isPristine) {
-                this._router.navigate('/list/survey/welcome').resume();
+            if (!this.currentSurvey) {
+                console.log(`redirecting without survey from '/' to '${this.homeRoute}'`);
+                this._router.navigate(this.homeRoute).resume();
+            } else if (this.currentSurvey && this.currentSurvey.isPristine) {
+                console.log(`redirecting from '/' to '${this.homeRoute}'`);
+                this._router.navigate(this.homeRoute).resume();
             } else {
-                this._router.navigate('/list').resume();
+                console.log(`redirecting from '/' to '${this.defaultListRoute}'`);
+                this._router.navigate(this.defaultListRoute).resume();
             }
             this._router.resolve();
         });
@@ -6639,11 +6822,12 @@ class App extends EventHarness {
 
     display() {
         //console.log('App display');
+        this._router.resolve();
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.syncAll(true).then(() => {
-            this._router.resolve();
-        });
+        // this.syncAll(true).then(() => {
+        //     this._router.resolve();
+        // });
     }
 
     saveRoute() {
@@ -6785,9 +6969,10 @@ class App extends EventHarness {
      * no service worker interception of this call - passed through and not cached
      *
      * @param {Array.<string>} surveyIds
+     * @param {boolean} specifiedSurveysOnly if set then don't return a full extended refresh, only the specified surveys
      * @return {Promise}
      */
-    refreshFromServer(surveyIds) {
+    refreshFromServer(surveyIds, specifiedSurveysOnly = false) {
         console.log({'Refresh from server, ids' : surveyIds});
         const formData = new FormData;
 
@@ -6800,6 +6985,10 @@ class App extends EventHarness {
 
         if (this.session?.userId) {
             formData.append('userId', this.session.userId);
+        }
+
+        if (specifiedSurveysOnly) {
+            formData.append('specifiedOnly', '1');
         }
 
         return fetch(App.LOAD_SURVEYS_ENDPOINT, {
@@ -6938,7 +7127,7 @@ class App extends EventHarness {
      *
      * @returns {Promise}
      */
-    purgeStale() {
+    purgeStale(fastReturn = true) {
         const storedObjectKeys = {
             survey : [],
             occurrence : [],
@@ -6946,7 +7135,10 @@ class App extends EventHarness {
             track : [],
         };
 
-        return this.seekKeys(storedObjectKeys)
+        return fastReturn ?
+            Promise.resolve()
+            :
+            this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
                     .then((result) => {
@@ -7001,7 +7193,7 @@ class App extends EventHarness {
                         return result;
                     }, (failedResult) => {
                         this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
-                        return Promise.reject(failedResult);
+                        return Promise.reject({'_syncLocalUnsaved failedResult' : failedResult});
                     });
             }, (failedResult) => {
                 console.error(`Failed to seek keys: ${failedResult}`);
@@ -7141,14 +7333,13 @@ class App extends EventHarness {
          *
          */
         const queueSync = (objectKey, objectClass) => {
-            const classLowerName = objectClass.name.toLowerCase();
-
+            const classLowerName = objectClass.className.toLowerCase();
 
                 /**
                  * @returns {Promise}
                  */
                 return () => {
-                    console.log({'queueing sync': {key: objectKey, type: classLowerName}});
+                    //console.log({'queueing sync': {key: objectKey, type: classLowerName}});
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
                         .then((/** Model */ model) => {
                             if (model.unsaved()) {
@@ -7157,6 +7348,16 @@ class App extends EventHarness {
                                         // for sync, only a remote save should count as successful
                                         if (!model.savedRemotely) {
                                             return Promise.reject(`Failed to save ${classLowerName} to server.`);
+                                        }
+
+                                        // make sure that the local copy of the object matches the saved
+                                        // in terms of save flags
+                                        // (as retrieveFromLocal has substituted a new object with the same values)
+                                        if (classLowerName === 'occurrence' &&
+                                            this.occurrences.has(model.id) &&
+                                            this.occurrences.get(model.id).modifiedStamp === model.modifiedStamp
+                                        ) {
+                                            this.occurrences.get(model.id).savedRemotely = true;
                                         }
                                     })
                                     .then(() => {
@@ -7174,7 +7375,7 @@ class App extends EventHarness {
                             return Promise.resolve('Continuing after sync failure.');
                         })
                         .finally(() => {
-                            console.log({'processed sync': {key: objectKey, type: classLowerName}});
+                            //console.log({'processed sync': {key: objectKey, type: classLowerName}});
                         });
                 };
 
@@ -7242,6 +7443,8 @@ class App extends EventHarness {
                         savedFlag
                     });
                 }
+
+                this._updateUnsavedMarkerCss();
             });
 
 
@@ -7266,191 +7469,240 @@ class App extends EventHarness {
         }
     }
 
-    // /**
-    //  *
-    //  * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
-    //  * @param {boolean} fastReturn default false
-    //  * @returns {Promise}
-    //  * @private
-    //  */
-    // _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
-    //     // synchronises surveys first, then occurrences, then images from indexedDb
-    //
-    //     const surveyPromises = [];
-    //
-    //     for(let surveyKey of storedObjectKeys.survey) {
-    //         surveyPromises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
-    //             .then((/** Survey */ survey) => {
-    //                 if (survey.unsaved()) { //} || this.session?.userId === '2cd4p9h.31ecsw') {
-    //                     return survey.save(true);
-    //                 }
-    //             })
-    //         );
-    //     }
-    //
-    //     let errors = false;
-    //
-    //     // this ensures that saves happen in order (surveys > occurrences > images > tracks)
-    //     const savePromise = Promise.allSettled(surveyPromises)
-    //         .catch((reason) => {
-    //             console.log({'save survey errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             const occurrencePromises = [];
-    //
-    //             for(let occurrenceKey of storedObjectKeys.occurrence) {
-    //                 occurrencePromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-    //                     .then((/** Occurrence */ occurrence) => {
-    //                         if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
-    //                             return occurrence.save('', true);
-    //                         }
-    //                     })
-    //                 );
-    //             }
-    //
-    //             return Promise.allSettled(occurrencePromises);
-    //         })
-    //         .catch((reason) => {
-    //             console.log({'save occurrence errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             const imagePromises = [];
-    //
-    //             for(let imageKey of storedObjectKeys.image) {
-    //                 imagePromises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
-    //                     .then((/** OccurrenceImage */ image) => {
-    //                         if (image.unsaved()) {
-    //                             return image.save();
-    //                         }
-    //                     })
-    //                 );
-    //             }
-    //
-    //             return Promise.allSettled(imagePromises);
-    //         })
-    //         .catch((reason) => {
-    //             console.log({'save image errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             const trackPromises = []
-    //
-    //             for(let trackKey of storedObjectKeys.track) {
-    //                 trackPromises.push(Track.retrieveFromLocal(trackKey, new Track)
-    //                     .then((/** Track */ track) => {
-    //                         if (track.unsaved()) {
-    //                             return track.save();
-    //                         }
-    //                     })
-    //                 );
-    //             }
-    //
-    //             return Promise.allSettled(trackPromises);
-    //         })
-    //         .catch((reason) => {
-    //             console.log({'save track errors' : reason});
-    //             errors = true;
-    //             return Promise.resolve()
-    //         })
-    //         .finally(() => {
-    //             if (errors) {
-    //                 return Promise.reject();
-    //             } else {
-    //                 return Promise.resolve();
-    //             }
-    //         })
-    //     ;
-    //
-    //     if (fastReturn) {
-    //         // this will return near instantaneously as there is an already resolved promise at the head of the array
-    //         // the other promises will continue to resolve
-    //         //return Promise.race(promises);
-    //         return Promise.race([
-    //             Promise.resolve(true), // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
-    //             savePromise
-    //         ]);
-    //     } else {
-    //         //return Promise.all(promises).catch((result) => {
-    //         return savePromise.catch((result) => {
-    //             console.log(`Save failure: ${result}`);
-    //             return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-    //         });
-    //     }
-    // }
-
     /**
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
      *
      * @returns {Promise}
      *
-     * @todo implement this
      * @private
      */
-    _purgeLocalFOO(storedObjectKeys) {
+    _purgeLocal(storedObjectKeys) {
         // synchronises surveys first, then occurrences, then images from indexedDb
 
-        const promises = [];
+        let purgePromise = Promise.resolve();
 
-        // if (fastReturn) {
-        //     // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
-        //     promises[0] = Promise.resolve(true);
-        // }
+        const deletionCandidateKeys = {
+            survey : [],
+            occurrence : [],
+            image : [],
+            track : [],
+        };
+
+        const preservedKeys = {
+            survey : [],
+            occurrence : [],
+            image : [],
+            track : [],
+        };
+
+        const recentSurveyKeys = [];
 
         const thresholdStamp = Math.floor(Date.now() / 1000) - this.staleThreshold;
 
-        for(let surveyKey of storedObjectKeys.survey) {
-            promises.push(Survey.retrieveFromLocal(surveyKey, new Survey)
-                .then((/** Survey */ survey) => {
-                    if (survey.savedRemotely && survey.modifiedStamp <= thresholdStamp) {
-                        // survey hasn't been modified recently
+        const recentThresholdStamp = Math.floor(Date.now() / 1000) - (3600 * 24);
 
-                        if (!(survey.attributes?.defaultCasual && survey.createdInCurrentYear() && survey.userId === this.userId)) ;
+        const currentSurveyId = this.currentSurvey?.id;
+
+        for(let surveyKey of storedObjectKeys.survey) {
+            purgePromise = purgePromise.then(() => Survey.retrieveFromLocal(surveyKey, new Survey)
+                .then((/** Survey */ survey) => {
+                    if (survey.id !== currentSurveyId && survey.savedRemotely && (
+                        (survey.modifiedStamp <= thresholdStamp) || (this.session?.userId && survey.userId && this.session.userId !== survey.userId)
+                    )) {
+                        // survey hasn't been modified recently or belongs to a different user
+
+                        if (!(survey.attributes?.defaultCasual && survey.createdInCurrentYear() && survey.userId === this.userId)) {
+                            // survey isn't the set of casual records for the current year for the current user
+
+                            deletionCandidateKeys.survey.push(survey.id);
+                        } else {
+                            preservedKeys.survey.push(survey.id);
+
+                            if (survey.modifiedStamp <= recentThresholdStamp &&
+                                !survey.attributes?.defaultCasual &&
+                                !survey.attributes?.nulllist // NYPH-specific
+                            ) {
+                                recentSurveyKeys.push(survey.id);
+                            }
+                        }
+                    } else {
+                        preservedKeys.survey.push(survey.id);
                     }
                 })
             );
         }
 
-        for(let occurrenceKey of storedObjectKeys.occurrence) {
-            promises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
+        // at this point all surveys will have been checked by the time the next thenables are processed
+        for (let occurrenceKey of storedObjectKeys.occurrence) {
+            purgePromise = purgePromise.then(() => Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence))
                 .then((/** Occurrence */ occurrence) => {
-                    if (occurrence.unsaved()) { // || this.session?.userId === '2cd4p9h.31ecsw') {
-                        return occurrence.save('', true);
+
+                    if (!occurrence.deleted) {
+                        // see if occurrence belongs to one of the threshold recent surveys
+                        // if so then the survey should be kept (so removed from the imperiled recent list)
+                        const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
+                        if (recentIndex !== -1) {
+                            delete recentSurveyKeys[recentIndex];
+                        }
                     }
-                })
-            );
+
+                    if (occurrence.unsaved()) {
+                        if (deletionCandidateKeys.survey.includes(occurrence.surveyId)) {
+                            throw new PurgeInconsistencyError(`Occurrence ${occurrence.id} from deletable survey ${occurrence.surveyId} is unsaved.`);
+                        } else {
+                            preservedKeys.occurrence.push(occurrence.id);
+                        }
+                    } else if (deletionCandidateKeys.survey.includes(occurrence.surveyId) || occurrence.deleted) {
+                        deletionCandidateKeys.occurrence.push(occurrence.id);
+                    } else if (!preservedKeys.survey.includes(occurrence.surveyId)) {
+                        // have an orphaned occurrence
+                        console.log(`Queueing purge of orphaned occurrence id ${occurrence.id}`);
+                        deletionCandidateKeys.occurrence.push(occurrence.id);
+                    } else {
+                        preservedKeys.occurrence.push(occurrence.id);
+                    }
+                });
         }
 
         for(let imageKey of storedObjectKeys.image) {
-            promises.push(OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
+            purgePromise = purgePromise.then(() => OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
                 .then((/** OccurrenceImage */ image) => {
                     if (image.unsaved()) {
-                        return image.save();
+                        if (deletionCandidateKeys.survey.includes(image.surveyId)) {
+                            throw new PurgeInconsistencyError(`Image ${image.id} from deletable survey ${image.surveyId} is unsaved.`);
+                        } else if (deletionCandidateKeys.occurrence.includes(image.occurrenceId)) {
+                            throw new PurgeInconsistencyError(`Image ${image.id} from deletable occurrence ${image.occurrenceId} is unsaved.`);
+                        } else {
+                            preservedKeys.image.push(image.id);
+                        }
+                    } else {
+                        if (deletionCandidateKeys.survey.includes(image.surveyId) ||
+                            deletionCandidateKeys.occurrence.includes(image.occurrenceId) ||
+                            image.deleted
+                        ) {
+                            deletionCandidateKeys.image.push(image.id);
+                        } else if (!(
+                            preservedKeys.survey.includes(image.surveyId) ||
+                            preservedKeys.occurrence.includes(image.occurrenceId)
+                        )) {
+                            // have an orphaned image
+                            console.log(`Queueing purge of orphaned image id ${image.id}`);
+                            deletionCandidateKeys.image.push(image.id);
+                        } else {
+                            preservedKeys.image.push(image.id);
+                        }
                     }
                 })
             );
         }
 
         for(let trackKey of storedObjectKeys.track) {
-            promises.push(Track.retrieveFromLocal(trackKey, new Track)
+            purgePromise = purgePromise.then(() => Track.retrieveFromLocal(trackKey, new Track)
                 .then((/** Track */ track) => {
-                    if (track.unsaved()) {
-                        return track.save();
+                    // use trackKey rather track.id as keys for tracks are expressed as id.deviceId
+
+                    if (!track.deviceId || track.deviceId === 'undefined') {
+                        console.log(`Queueing purge of corrupt track id ${track.id} with no device.`);
+                        deletionCandidateKeys.track.push(trackKey);
+                    } else if (track.unsaved()) {
+                        if (deletionCandidateKeys.survey.includes(track.surveyId)) {
+                            throw new PurgeInconsistencyError(`Track ${trackKey} from deletable survey ${track.surveyId} is unsaved.`);
+                        } else {
+                            preservedKeys.track.push(trackKey);
+                        }
+                    } else {
+                        if (deletionCandidateKeys.survey.includes(track.surveyId) || track.deleted) {
+                            deletionCandidateKeys.track.push(trackKey);
+                        } else if (!preservedKeys.survey.includes(track.surveyId)) {
+                            // have an orphaned image
+                            console.log(`Queueing purge of orphaned track id ${track.id} for survey ${track.surveyId}.`);
+                            deletionCandidateKeys.track.push(trackKey);
+                        } else {
+                            preservedKeys.track.push(trackKey);
+                        }
                     }
                 })
             );
         }
 
+        // add remaining recent surveys that have no records to the purge list
+        deletionCandidateKeys.survey.push(recentSurveyKeys);
 
-        return Promise.all(promises).catch((result) => {
-            console.log(`Save failure: ${result}`);
-            return Promise.reject(result); // pass on the failed save (catch was only for logging, not to allow subsequent success)
-        });
+        purgePromise = purgePromise.then(
+            () => {
+                console.log({'Purging' : deletionCandidateKeys});
+
+                return this._applyPurge(deletionCandidateKeys);
+            },
+            (reason) => {
+                console.error({'purge failed reason' : reason});
+                console.log({'would have purged' : deletionCandidateKeys});
+
+                Logger.logError(`Purge failed: ${reason}`);
+            });
+
+        return purgePromise;
+    }
+
+    /**
+     *
+     * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, track : Array<string>}} deletionIds
+     * @private
+     */
+    _applyPurge(deletionIds) {
+        let purgePromise = Promise.resolve();
+
+        for (let type in deletionIds) {
+            for (let key of deletionIds[type]) {
+                purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`));
+            }
+        }
+
+        if (deletionIds.image.length > 0) {
+            purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image));
+        }
+
+        if (deletionIds.survey.length > 0) {
+            purgePromise = purgePromise.then(() => {
+                for (let key of deletionIds.survey) {
+                    this.surveys.delete(key);
+                }
+
+                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+            });
+        }
+
+        return purgePromise;
+    }
+
+    /**
+     *
+     * @param {Array<string>} imageIds
+     * @returns {Promise<void>}
+     * @private
+     */
+    _purgeCachedImages(imageIds) {
+        const cacheName = App.DATA_CACHE_VERSION;
+
+        return caches.open(cacheName)
+            .then((cache) => {
+                return cache.keys()
+                    .then((/** Array<Request> */ requests) => {
+                        for (let request of requests) {
+                            const url = request.url;
+
+                            const match = url.match(/image\.php.*imageid=([a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12})/);
+
+                            //if (url.match(new RegExp(`image\.php.*imageid=${imageId}`))) {
+                            if (match && imageIds.includes(match[1])) {
+                                console.log(`Deleting cached image ${url}`);
+                                // noinspection JSIgnoredPromiseFromCall
+                                cache.delete(request);
+                            }
+                        }
+                    })
+            });
 
     }
 
@@ -7460,9 +7712,10 @@ class App extends EventHarness {
      *
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
+     * @param {boolean} [setCurrentSurvey] if set then, if possible, set a survey as current, default true
      * @return {Promise}
      */
-    restoreOccurrences(targetSurveyId = '', neverAddBlank = false) {
+    restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true) {
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
 
         if (targetSurveyId === 'undefined') {
@@ -7471,21 +7724,21 @@ class App extends EventHarness {
         }
 
         return (targetSurveyId) ?
-            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank)
+            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank, setCurrentSurvey)
             :
             this.getLastSurveyId().then(
                 (lastSurveyId) => {
                     console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
-                    return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank).catch(() => {
+                    return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank, setCurrentSurvey).catch(() => {
                         console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
 
                         this.currentSurvey = null;
-                        return this._restoreOccurrenceImp('', neverAddBlank);
+                        return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey);
                     });
                 },
                 // probably can't reach this catch phase
-                () => this._restoreOccurrenceImp('', neverAddBlank)
+                () => this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey)
             );
     }
 
@@ -7493,10 +7746,11 @@ class App extends EventHarness {
      *
      * @param {string} [targetSurveyId] default ''
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
+     * @param {boolean} [setCurrentSurvey] default true
      * @returns {Promise<void>|Promise<unknown>}
      * @protected
      */
-    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false) {
+    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true) {
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
         // only present in current App.surveys
@@ -7535,17 +7789,18 @@ class App extends EventHarness {
                     let timer;
                     const timeoutMs = 15 * 1000;
 
-                    return Promise.race([
+                    const promisesToRace = [
                         new Promise((resolve, reject) => {
                             // Set up the timeout
                             timer = setTimeout(() => {
                                 timer = null;
+                                console.error(`Refresh from server timeout.`);
                                 reject(new Error(`Survey load timed out after ${timeoutMs} ms`));
                             }, timeoutMs);
                         }),
                         this.refreshFromServer(storedObjectKeys.survey)
                             // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                            // do this for both promise states (can't use finally as it doesn't chain returned promises
+                            // do this for both promise states (can't use finally as it doesn't chain returned promises)
                             .then(
                                 () => this.seekKeys(storedObjectKeys),
                                 () => this.seekKeys(storedObjectKeys),
@@ -7555,15 +7810,45 @@ class App extends EventHarness {
                                     clearTimeout(timer);
                                 }
                             })
-                    ]);
+                    ];
 
-                    // return this.refreshFromServer(storedObjectKeys.survey)
-                    //     // re-seek keys from indexed db, to take account of any new occurrences received from the server
-                    //     // do this for both promise states (can't use finally has it doesn't chain returned promises
-                    //     .then(
-                    //         () => this.seekKeys(storedObjectKeys),
-                    //         () => this.seekKeys(storedObjectKeys),
-                    //     );
+                    // The split approach below isn't yet safe
+                    /*
+                    if (targetSurveyId) {
+                        // as single batch try to get just the survey of interest
+
+                        promisesToRace.push(
+                            this.refreshFromServer([targetSurveyId], true)
+                                // re-seek keys from indexed db, to take account of any new occurrences received from the server
+                                // do this for both promise states (can't use finally as it doesn't chain returned promises)
+                                .then(
+                                    () => this.seekKeys(storedObjectKeys),
+                                    () => this.seekKeys(storedObjectKeys),
+                                )
+                                .finally(() => {
+                                    console.info(`Returned from narrow survey load.`);
+                                    if (timer) {
+                                        clearTimeout(timer);
+                                    }
+                                })
+                        );
+                    }
+
+                    // request other relevant recent surveys more generally
+                    // will usually complete more slowly
+                    promisesToRace.push(
+                        this.refreshFromServer(storedObjectKeys.survey)
+                            .then(() => this.seekKeys(storedObjectKeys))
+                            .finally(() => {
+                                console.info(`Returned from broad survey load.`);
+                                if (timer) {
+                                    clearTimeout(timer);
+                                }
+                            })
+                    );
+                     */
+
+                    return Promise.race(promisesToRace);
                 } else {
                     return null;
                 }
@@ -7594,7 +7879,7 @@ class App extends EventHarness {
 
                         restorePromise = restorePromise
                             .then(() => {
-                                return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0));
+                                return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, setCurrentSurvey && ((targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0)));
                             })
                             .catch((reason) => {
                                 console.log({'failed to restore from local' : {surveyKey, reason}});
@@ -7611,7 +7896,7 @@ class App extends EventHarness {
                         .finally(() => {
                             //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
-                            if (!this.currentSurvey && neverAddBlank) {
+                            if (!this.currentSurvey && neverAddBlank && setCurrentSurvey) {
                                 // survey doesn't actually exist
                                 // this could have happened in an invalid survey id was provided as a targetSurveyId
                                 console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
@@ -7871,7 +8156,7 @@ class App extends EventHarness {
 
                     return imageFetchingPromise;
                 } else {
-                    return Promise.reject()
+                    return Promise.reject(`Failed to restore survey id '${surveyId}' from local set.`);
                 }
 
                 // if the target survey belonged to a different user then could be undefined here
@@ -7897,14 +8182,6 @@ class App extends EventHarness {
     notFoundView() {
         // const view = new NotFoundView();
         // view.display();
-    }
-}
-
-class PartyError extends Error {
-    constructor(...args) {
-        super(...args);
-
-        Error.captureStackTrace?.(this, PartyError); // see https://v8.dev/docs/stack-trace-api
     }
 }
 
@@ -8042,8 +8319,18 @@ class Party {
         //Party.rawParties = [...Party._baseParties, ...parties];
         Party.rawParties = Party._baseParties;
 
-        if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
-            console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
+        Party.testPartyRecache(parties.stamp, sourceUrl);
+    }
+
+    /**
+     *
+     * @param {number|null} stamp
+     * @param {string} sourceUrl
+     * @param {number} interval
+     */
+    static testPartyRecache(stamp, sourceUrl, interval = (3600 * 24 * 7)) {
+        if (navigator.onLine && stamp && (stamp + interval) < (Date.now() / 1000)) {
+            console.log(`Party list may be stale (stamp is ${stamp}), prompting re-cache from ${sourceUrl}.`);
             navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
                     {
@@ -8055,6 +8342,8 @@ class Party {
         }
     }
 
+    static additionalPartiesUrl = 'https://database.bsbi.org/js/appuserpartylist.mjs.php?user=';
+
     /**
      *
      * @param {string} userId
@@ -8062,42 +8351,76 @@ class Party {
      */
     static addUserParties(userId) {
         // where parties are the newly-loaded extra set
-        //Party.rawParties = [...Party._baseParties, ...parties];
 
-        return Promise.resolve();
+        const url = `${Party.additionalPartiesUrl}${userId}`;
+
+        return import(url).then((imported) => {
+            const newParties = imported?.default;
+
+            if (newParties?.length) {
+                /**
+                 *
+                 * @type {Map<string, array<RawParty>>}
+                 */
+                const unique = new Map;
+
+                // base parties must come first as these will be tied to registered DDb users
+                // dynamically added in app names must come last
+                for (let party of [...Party._baseParties, ...newParties]) {
+                    /**
+                     * either the packed entity id, or a string-serialized forename-surname-orgname
+                     * @type {string}
+                     */
+                    let key = (party?.[PARTY_ID_INDEX]) || JSON.stringify([party?.[PARTY_FORENAMES_INDEX], party?.[PARTY_SURNAME_INDEX], party?.[PARTY_ORGNAME_INDEX]]);
+
+                    if (!unique.has(key)) {
+                        unique.set(key, party);
+                    }
+                }
+
+                Party.rawParties = Array.from(unique.values());
+            }
+            Party.testPartyRecache(newParties?.stamp, url);
+
+            return newParties;
+        }, (reason) => {
+            console.error({"Failed to import user parties" : reason});
+            return null;
+        });
     }
 
-    /**
-     *
-     * @param {string} id
-     * @returns {Party}
-     * @throws {PartyError}
-     */
-    static fromId (id) {
-        if (!Party.rawParties) {
-            throw new PartyError(`Party.fromId() called before list has been initialized.`);
-        }
-
-        if (!Party.rawParties.hasOwnProperty(id)) {
-            throw new PartyError(`Party id '${id}' not found.`);
-        }
-
-        const raw = Party.rawParties[id];
-
-        const party = new Party;
-
-        party.id = id;
-        party.surname = raw[0] || '';
-        party.firstName = raw[1] || '';
-        party.orgName = raw[2] || '';
-        party.type = raw[3];
-        party.prefix = raw[4] || '';
-        party.suffix = raw[5] || '';
-        party.disambiguation = raw[6] || '';
-        // @todo need to set party.name
-
-        return party;
-    }
+    // /**
+    //  * @todo this does not work as rawParties are not keyed by ID (as newly added parities in app won't have an entity id)
+    //  *
+    //  * @param {string} id
+    //  * @returns {Party}
+    //  * @throws {PartyError}
+    //  */
+    // static fromId (id) {
+    //     if (!Party.rawParties) {
+    //         throw new PartyError(`Party.fromId() called before list has been initialized.`);
+    //     }
+    //
+    //     if (!Party.rawParties.hasOwnProperty(id)) {
+    //         throw new PartyError(`Party id '${id}' not found.`);
+    //     }
+    //
+    //     const raw = Party.rawParties[id];
+    //
+    //     const party = new Party;
+    //
+    //     party.id = id;
+    //     party.surname = raw[0] || '';
+    //     party.firstName = raw[1] || '';
+    //     party.orgName = raw[2] || '';
+    //     party.type = raw[3];
+    //     party.prefix = raw[4] || '';
+    //     party.suffix = raw[5] || '';
+    //     party.disambiguation = raw[6] || '';
+    //     // @todo need to set party.name
+    //
+    //     return party;
+    // }
 
     /**
      *
@@ -8604,10 +8927,11 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1728572804-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1730308492-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
+        Logger.bsbiAppVersion = configuration.version;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -8654,7 +8978,7 @@ class BSBIServiceWorker {
             // resolves.
             evt.waitUntil(
                 this.precache()
-                    .catch(() => true) // allow installation even if not everything got cached
+                    .catch(() => true) // allow installation even if not everything got cached, can avoid problems if a once-cached file has now been deleted
 
                     // see https://serviceworke.rs/immediate-claim_service-worker_doc.html
                     // .finally(() => {
@@ -8716,7 +9040,6 @@ class BSBIServiceWorker {
             if (evt.request.method === 'POST') {
                 //console.log(`Got a post request`);
 
-                //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
                 if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
                     //console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
@@ -8760,13 +9083,33 @@ class BSBIServiceWorker {
                     // typically for content that won't change
                     evt.respondWith(this.fromCache(evt.request));
                 } else {
+                    let isStale = null;
+
                     console.log(`request is for non-image '${evt.request.url}'`);
                     // You can use `respondWith()` to answer immediately, without waiting for the
                     // network response to reach the service worker...
-                    evt.respondWith(this.fromCache(evt.request));
-                    // ...and `waitUntil()` to prevent the worker from being killed until the
-                    // cache is updated.
-                    evt.waitUntil(this.update(evt.request));
+                    evt.respondWith(this.fromCache(evt.request)
+                        .then((response) => {
+                            const dateAsString = response.headers.get('Date');
+
+                            if (dateAsString) {
+                                console.log(`Request for ${evt.request.url} date: ${dateAsString}`);
+
+                                const dateStamp = Date.parse(dateAsString); // ms
+                                isStale = (dateStamp + (3600000 * 48)) < Date.now();
+                            }
+
+                            return response;
+                        })
+                    );
+
+                    if (isStale) {
+                        // ...and `waitUntil()` to prevent the worker from being killed until the
+                        // cache is updated.
+                        evt.waitUntil(this.update(evt.request));
+                    } else {
+                        console.log(`Request for ${evt.request.url} is still fresh.`);
+                    }
                 }
             }
         });
@@ -8833,7 +9176,7 @@ class BSBIServiceWorker {
                         // don't need to store locally (as will already be present) and response is not needed
                         // so just reject
 
-                        return Promise.reject(remoteReason);
+                        return Promise.reject({remoteReason});
                     } else {
 
                         // /**
@@ -9005,13 +9348,8 @@ class BSBIServiceWorker {
     fromCache(request, tryRemoteFallback= true, remoteTimeoutMilliseconds = 0) {
         //console.log('attempting fromCache response');
 
-        let cacheName;
-
-        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url)) {
-            cacheName = this.DATA_CACHE_VERSION;
-        } else {
-            cacheName = this.CACHE_VERSION;
-        }
+        const cacheName = this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url) ?
+            this.DATA_CACHE_VERSION : this.CACHE_VERSION;
 
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
@@ -9087,7 +9425,7 @@ class BSBIServiceWorker {
                         return this.imageFromLocalDatabase(imageId);
                     } else {
                         console.error(`(via catch) Failed to match image id in url '${url}'`);
-                        return Promise.reject(null);
+                        return Promise.reject(`(via catch) Failed to match image id in url '${url}'`);
                     }
                 })
         );
@@ -9165,7 +9503,11 @@ class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             let signalController;
             let timeoutId;
-            const fetchOptions = {cache: "no-cache"};
+            const fetchOptions = {
+                cache: "no-cache",
+                mode: 'cors',
+                credentials: 'omit',
+            };
 
             if (timeout) {
                 signalController = new AbortController();
@@ -9221,5 +9563,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SURVEY_EVENT_OCCURRENCES_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

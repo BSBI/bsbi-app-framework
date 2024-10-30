@@ -6,6 +6,13 @@ export const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
 export class OccurrenceImage extends Model {
 
     /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'OccurrenceImage';
+
+    /**
      * raw file object retrieved from a file upload image element
      *
      * @type {File}

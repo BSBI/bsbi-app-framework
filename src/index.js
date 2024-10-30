@@ -3,10 +3,10 @@ export {StaticContentController} from './controllers/StaticContentController';
 export {SurveyPickerController} from './controllers/SurveyPickerController';
 export {App} from './framework/App';
 export {EventHarness} from './framework/EventHarness';
-export {Model, UUID_REGEX, uuid, MODEL_EVENT_SAVED_REMOTELY} from './models/Model';
+export {Model, UUID_REGEX, uuid, MODEL_EVENT_SAVED_REMOTELY, MODEL_EVENT_DESTROYED} from './models/Model';
 export {Occurrence} from './models/Occurrence';
 export {OccurrenceImage, IMAGE_CONTEXT_SURVEY, IMAGE_CONTEXT_OCCURRENCE} from './models/OccurrenceImage';
-export {Survey} from './models/Survey';
+export {Survey, SURVEY_EVENT_OCCURRENCES_CHANGED} from './models/Survey';
 export {Taxon, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES} from './models/Taxon';
 export {
     Party,

@@ -9,6 +9,13 @@ import {GridRef} from 'british-isles-gridrefs'
 export class Occurrence extends Model {
 
     /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Occurrence';
+
+    /**
      *
      * @type {Object.<string, *>}
      */

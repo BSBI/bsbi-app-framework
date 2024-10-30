@@ -24,6 +24,13 @@ const TRACK_END_REASON_SURVEY_CHANGED = 3;
 export class Track extends Model {
 
     /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Track';
+
+    /**
      * @todo consider whether PointTriplet should also include accuracy
      *
      * @typedef PointTriplet

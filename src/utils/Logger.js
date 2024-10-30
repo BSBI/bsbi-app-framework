@@ -1,4 +1,3 @@
-import {Model} from "../models/Model";
 
 export class Logger {
 
@@ -6,6 +5,11 @@ export class Logger {
      * @type {App}
      */
     static app;
+
+    /**
+     * @type {string}
+     */
+    static bsbiAppVersion;
 
     /**
      * reports a javascript error
@@ -17,11 +21,30 @@ export class Logger {
      * @param {Error|null} [errorObj]
      * @returns {Promise<void>}
      */
-    static logError = function(message, url = '', line= '', column = null, errorObj = null) {
-
+    static logError(message, url = '', line= '', column = null, errorObj = null) {
         window.onerror = null;
 
         console.error(message, url, line, errorObj);
+
+        if (!errorObj) {
+            // on V8 construction of PlaceholderError will capture a stack trace automatically
+            errorObj = new _PlaceholderError(message);
+
+            // otherwise may need to throw and catch the error
+            if (!Error.captureStackTrace) {
+                try {
+                    // thrown just to generate a stack trace
+                    // noinspection ExceptionCaughtLocallyJS
+                    throw errorObj;
+                } catch (error) {
+
+                }
+            }
+        }
+
+        if (!url) {
+            url = window?.location?.href;
+        }
 
         if (console.trace) {
             console.trace('Trace');
@@ -42,15 +65,15 @@ export class Logger {
             errorEl.setAttribute('url', url);
         }
 
-        if (window.location.href) {
+        if (window?.location?.href) {
             errorEl.setAttribute('referrer', window.location.href);
         }
 
-        if (window.location.search) {
+        if (window?.location?.search) {
             errorEl.setAttribute('urlquery', window.location.search);
         }
 
-        if (window.location.hash) {
+        if (window?.location?.hash) {
             errorEl.setAttribute('urlhash', window.location.hash);
         }
 
@@ -62,7 +85,7 @@ export class Logger {
         errorEl.setAttribute('browser', navigator.appName);
         errorEl.setAttribute('browserv', navigator.appVersion);
         errorEl.setAttribute('userAgent', navigator.userAgent);
-        errorEl.setAttribute('versions', Model.bsbiAppVersion);
+        errorEl.setAttribute('versions', Logger.bsbiAppVersion);
 
         errorEl.appendChild(doc.createTextNode(message));
 
@@ -85,4 +108,15 @@ export class Logger {
             window.onerror = Logger.logError; // turn on error handling again
         });
     };
+}
+
+/**
+ * Throw this only from within logError
+ */
+class _PlaceholderError extends Error {
+    constructor(...args) {
+        super(...args);
+
+        Error.captureStackTrace?.(this, Logger.logError); // see https://v8.dev/docs/stack-trace-api
+    }
 }

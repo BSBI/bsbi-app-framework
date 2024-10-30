@@ -135,8 +135,18 @@ export class Party {
         //Party.rawParties = [...Party._baseParties, ...parties];
         Party.rawParties = Party._baseParties;
 
-        if ((parties.stamp + (3600 * 24 * 7)) < (Date.now() / 1000)) {
-            console.log(`Party list may be stale (stamp is ${parties.stamp}), prompting re-cache.`);
+        Party.testPartyRecache(parties.stamp, sourceUrl);
+    }
+
+    /**
+     *
+     * @param {number|null} stamp
+     * @param {string} sourceUrl
+     * @param {number} interval
+     */
+    static testPartyRecache(stamp, sourceUrl, interval = (3600 * 24 * 7)) {
+        if (navigator.onLine && stamp && (stamp + interval) < (Date.now() / 1000)) {
+            console.log(`Party list may be stale (stamp is ${stamp}), prompting re-cache from ${sourceUrl}.`);
             navigator?.serviceWorker?.ready?.then?.((registration) => {
                 registration.active.postMessage(
                     {
@@ -148,6 +158,8 @@ export class Party {
         }
     }
 
+    static additionalPartiesUrl = 'https://database.bsbi.org/js/appuserpartylist.mjs.php?user=';
+
     /**
      *
      * @param {string} userId
@@ -155,42 +167,76 @@ export class Party {
      */
     static addUserParties(userId) {
         // where parties are the newly-loaded extra set
-        //Party.rawParties = [...Party._baseParties, ...parties];
 
-        return Promise.resolve();
+        const url = `${Party.additionalPartiesUrl}${userId}`;
+
+        return import(url).then((imported) => {
+            const newParties = imported?.default;
+
+            if (newParties?.length) {
+                /**
+                 *
+                 * @type {Map<string, array<RawParty>>}
+                 */
+                const unique = new Map;
+
+                // base parties must come first as these will be tied to registered DDb users
+                // dynamically added in app names must come last
+                for (let party of [...Party._baseParties, ...newParties]) {
+                    /**
+                     * either the packed entity id, or a string-serialized forename-surname-orgname
+                     * @type {string}
+                     */
+                    let key = (party?.[PARTY_ID_INDEX]) || JSON.stringify([party?.[PARTY_FORENAMES_INDEX], party?.[PARTY_SURNAME_INDEX], party?.[PARTY_ORGNAME_INDEX]]);
+
+                    if (!unique.has(key)) {
+                        unique.set(key, party);
+                    }
+                }
+
+                Party.rawParties = Array.from(unique.values());
+            }
+            Party.testPartyRecache(newParties?.stamp, url);
+
+            return newParties;
+        }, (reason) => {
+            console.error({"Failed to import user parties" : reason});
+            return null;
+        });
     }
 
-    /**
-     *
-     * @param {string} id
-     * @returns {Party}
-     * @throws {PartyError}
-     */
-    static fromId (id) {
-        if (!Party.rawParties) {
-            throw new PartyError(`Party.fromId() called before list has been initialized.`);
-        }
-
-        if (!Party.rawParties.hasOwnProperty(id)) {
-            throw new PartyError(`Party id '${id}' not found.`);
-        }
-
-        const raw = Party.rawParties[id];
-
-        const party = new Party;
-
-        party.id = id;
-        party.surname = raw[0] || '';
-        party.firstName = raw[1] || '';
-        party.orgName = raw[2] || '';
-        party.type = raw[3];
-        party.prefix = raw[4] || '';
-        party.suffix = raw[5] || '';
-        party.disambiguation = raw[6] || '';
-        // @todo need to set party.name
-
-        return party;
-    }
+    // /**
+    //  * @todo this does not work as rawParties are not keyed by ID (as newly added parities in app won't have an entity id)
+    //  *
+    //  * @param {string} id
+    //  * @returns {Party}
+    //  * @throws {PartyError}
+    //  */
+    // static fromId (id) {
+    //     if (!Party.rawParties) {
+    //         throw new PartyError(`Party.fromId() called before list has been initialized.`);
+    //     }
+    //
+    //     if (!Party.rawParties.hasOwnProperty(id)) {
+    //         throw new PartyError(`Party id '${id}' not found.`);
+    //     }
+    //
+    //     const raw = Party.rawParties[id];
+    //
+    //     const party = new Party;
+    //
+    //     party.id = id;
+    //     party.surname = raw[0] || '';
+    //     party.firstName = raw[1] || '';
+    //     party.orgName = raw[2] || '';
+    //     party.type = raw[3];
+    //     party.prefix = raw[4] || '';
+    //     party.suffix = raw[5] || '';
+    //     party.disambiguation = raw[6] || '';
+    //     // @todo need to set party.name
+    //
+    //     return party;
+    // }
 
     /**
      *

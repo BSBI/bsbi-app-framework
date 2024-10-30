@@ -12,6 +12,7 @@ import {OccurrenceResponse} from "./responses/OccurrenceResponse";
 import {OccurrenceImage} from "../models/OccurrenceImage";
 import {Model} from "../models/Model";
 import {TrackResponse} from "./responses/TrackResponse";
+import {Logger} from "../utils/Logger";
 
 export class BSBIServiceWorker {
 
@@ -70,6 +71,7 @@ export class BSBIServiceWorker {
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
+        Logger.bsbiAppVersion = configuration.version;
 
         const POST_PASS_THROUGH_WHITELIST = configuration.postPassThroughWhitelist;
         const POST_IMAGE_URL_MATCH = configuration.postImageUrlMatch;
@@ -178,7 +180,6 @@ export class BSBIServiceWorker {
             if (evt.request.method === 'POST') {
                 //console.log(`Got a post request`);
 
-                //if (evt.request.url.match(POST_PASS_THROUGH_WHITELIST)) {
                 if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
                     //console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
@@ -222,13 +223,33 @@ export class BSBIServiceWorker {
                     // typically for content that won't change
                     evt.respondWith(this.fromCache(evt.request));
                 } else {
+                    let isStale = null;
+
                     console.log(`request is for non-image '${evt.request.url}'`);
                     // You can use `respondWith()` to answer immediately, without waiting for the
                     // network response to reach the service worker...
-                    evt.respondWith(this.fromCache(evt.request));
-                    // ...and `waitUntil()` to prevent the worker from being killed until the
-                    // cache is updated.
-                    evt.waitUntil(this.update(evt.request));
+                    evt.respondWith(this.fromCache(evt.request)
+                        .then((response) => {
+                            const dateAsString = response.headers.get('Date');
+
+                            if (dateAsString) {
+                                console.log(`Request for ${evt.request.url} date: ${dateAsString}`);
+
+                                const dateStamp = Date.parse(dateAsString); // ms
+                                isStale = (dateStamp + (3600000 * 48)) < Date.now();
+                            }
+
+                            return response;
+                        })
+                    );
+
+                    if (isStale) {
+                        // ...and `waitUntil()` to prevent the worker from being killed until the
+                        // cache is updated.
+                        evt.waitUntil(this.update(evt.request));
+                    } else {
+                        console.log(`Request for ${evt.request.url} is still fresh.`);
+                    }
                 }
             }
         });
@@ -295,7 +316,7 @@ export class BSBIServiceWorker {
                         // don't need to store locally (as will already be present) and response is not needed
                         // so just reject
 
-                        return Promise.reject(remoteReason);
+                        return Promise.reject({remoteReason});
                     } else {
 
                         // /**
@@ -467,13 +488,8 @@ export class BSBIServiceWorker {
     fromCache(request, tryRemoteFallback= true, remoteTimeoutMilliseconds = 0) {
         //console.log('attempting fromCache response');
 
-        let cacheName;
-
-        if (this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url)) {
-            cacheName = this.DATA_CACHE_VERSION
-        } else {
-            cacheName = this.CACHE_VERSION;
-        }
+        const cacheName = this.SERVICE_WORKER_DATA_URL_MATCHES.test(request.url) ?
+            this.DATA_CACHE_VERSION : this.CACHE_VERSION;
 
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
@@ -549,7 +565,7 @@ export class BSBIServiceWorker {
                         return this.imageFromLocalDatabase(imageId);
                     } else {
                         console.error(`(via catch) Failed to match image id in url '${url}'`);
-                        return Promise.reject(null);
+                        return Promise.reject(`(via catch) Failed to match image id in url '${url}'`);
                     }
                 })
         );
@@ -627,7 +643,11 @@ export class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             let signalController;
             let timeoutId;
-            const fetchOptions = {cache: "no-cache"};
+            const fetchOptions = {
+                cache: "no-cache",
+                mode: 'cors',
+                credentials: 'omit',
+            };
 
             if (timeout) {
                 signalController = new AbortController();

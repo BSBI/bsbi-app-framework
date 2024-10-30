@@ -10,11 +10,20 @@ import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 
+export const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+
 /**
  * @typedef {import('bsbi-app-framework-view').SurveyForm} SurveyForm
  */
 
 export class Survey extends Model {
+
+    /**
+     * mirrors constructor.name but doesn't get mangled by minification
+     *
+     * @type {string}
+     */
+    static className = 'Survey';
 
     /**
      * fired from Survey when the object's contents have been modified
@@ -32,7 +41,7 @@ export class Survey extends Model {
      *
      * @type {string}
      */
-    static EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+    static EVENT_OCCURRENCES_CHANGED = SURVEY_EVENT_OCCURRENCES_CHANGED;
 
     /**
      * fired on Survey when one of its occurrences has been added, deleted or reloaded

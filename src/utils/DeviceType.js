@@ -29,6 +29,14 @@ export class DeviceType extends EventHarness {
 				// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
 				console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
 				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+			} else if (navigator.platform && /iPhone|iPad/.test(navigator.platform)) {
+				// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+				console.log(`Detected mobile via platform string: ${navigator.platform}`);
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+			} else if (navigator.platform && /Win32|^Mac/.test(navigator.platform)) {
+				// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+				console.log(`Detected immobility via platform string: ${navigator.platform}`);
+				DeviceType._deviceType = DeviceType.DEVICE_TYPE_IMMOBILE;
 			} else {
 				console.log('Flagging device type as unknown.');
 				DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
