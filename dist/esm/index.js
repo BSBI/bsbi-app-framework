@@ -66,6 +66,10 @@ class AppController {
         return AppController._handleIndex++;
     }
 
+    isCurrent() {
+        return this.app.currentControllerHandle === this.handle;
+    }
+
     /**
      * called from App.initialise() to trigger late-stage initialisation
      */
@@ -116,6 +120,16 @@ class AppController {
         for(let element of document.querySelectorAll('.dropdown-focused')) {
             element.classList.remove('dropdown-focused');
         }
+    }
+
+    /**
+     * If the controller currently allows a dynamic survey change to happen (triggered by GPS) then return true
+     *
+     * @returns {boolean}
+     * @protected
+     */
+    _allowGPSTriggeredSurveyChanges() {
+        return false;
     }
 }
 
@@ -172,6 +186,23 @@ class Logger {
      * @type {string}
      */
     static bsbiAppVersion;
+
+    /**
+     * For test builds reports a javascript error, otherwise is a no-op
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @param {string|number|null} [line]
+     * @param {number|null} [column]
+     * @param {Error|null} [errorObj]
+     * @returns {Promise<void>}
+     */
+    static logErrorDev(message, url = '', line= '', column = null, errorObj = null) {
+        return (Logger?.app?.isTestBuild) ?
+            Logger.logError(message, url, line, column, errorObj)
+            :
+            Promise.resolve();
+    }
 
     /**
      * reports a javascript error
@@ -253,22 +284,29 @@ class Logger {
 
         doc.documentElement.appendChild(errorEl);
 
-        return fetch('/javascriptErrorLog.php', {
-            method: "POST", // *GET, POST, PUT, DELETE, etc.
-            mode: "cors", // no-cors, *cors, same-origin
-            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-            credentials: "include", // include, *same-origin, omit
-            headers: {
-                "Content-Type": "text/xml",
-            },
-            redirect: "follow", // manual, *follow, error
-            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-            body: (new XMLSerializer()).serializeToString(doc),
-        }).catch((reason) => {
-            console.info({'Remote error logging failed' : reason});
-        }).finally(() => {
+        if (navigator.onLine) {
+            return fetch('/javascriptErrorLog.php', {
+                method: "POST", // *GET, POST, PUT, DELETE, etc.
+                mode: "cors", // no-cors, *cors, same-origin
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "include", // include, *same-origin, omit
+                headers: {
+                    "Content-Type": "text/xml",
+                },
+                redirect: "follow", // manual, *follow, error
+                referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                body: (new XMLSerializer()).serializeToString(doc),
+            }).catch((reason) => {
+                console.info({'Remote error logging failed': reason});
+            }).finally(() => {
+                window.onerror = Logger.logError; // turn on error handling again
+            });
+        } else {
+            console.info({'Offline, report not sent': doc});
             window.onerror = Logger.logError; // turn on error handling again
-        });
+
+            return Promise.resolve();
+        }
     };
 }
 
@@ -5336,6 +5374,12 @@ class Survey extends Model {
 
         // @todo need to be certain that are not cloning image attribute
         newSurvey.attributes = Object.assign(structuredClone(this.attributes), newAttributes);
+
+        if (newSurvey.attributes.hasOwnProperty('images') && newSurvey.attributes.images?.length > 0) {
+            // reset to default value
+            newSurvey.attributes.images = [];
+        }
+
         newSurvey.userId = properties.hasOwnProperty('userId') ? properties.userId : this.userId;
         newSurvey.isPristine = true;
         newSurvey.isNew = false; // don't want GPS override of geo-ref
@@ -5412,6 +5456,7 @@ const AGG_QUALIFIER = 'agg.';
 const SL_QUALIFIER = 's.l.';
 
 const INFO_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/></svg>';
+//export const RAW_TAXON_ATLAS_DOCS = 18;
 
 class Taxon {
     /**
@@ -6281,6 +6326,13 @@ class App extends EventHarness {
     _containerEl;
 
     /**
+     * flag marking test build, set in constructor of child class.
+     *
+     * @type {boolean}
+     */
+    isTestBuild = false;
+
+    /**
      *
      * @type {Array.<AppController>}
      */
@@ -6714,9 +6766,17 @@ class App extends EventHarness {
      *
      * updates local storage last saved survey id
      *
+     * @param {string|null} surveyId only used as a sanity check
+     *
      * @returns {Promise<void | null>}
      */
-    clearCurrentSurvey() {
+    clearCurrentSurvey(surveyId = null) {
+        if (surveyId && this._currentSurvey && surveyId !== this._currentSurvey.id) {
+            // theoretical weird error state where the current survey has changed prior to clear being called
+            console.error('Conflicting survey id in clearCurrentSurvey()');
+            return Promise.reject('Conflicting survey id in clearCurrentSurvey()');
+        }
+
         try {
             for (let occurrenceTuple of this.occurrences) {
                 occurrenceTuple[1].destructor();
@@ -7135,10 +7195,7 @@ class App extends EventHarness {
             track : [],
         };
 
-        return fastReturn ?
-            Promise.resolve()
-            :
-            this.seekKeys(storedObjectKeys)
+        let promise = this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
                     .then((result) => {
@@ -7165,7 +7222,20 @@ class App extends EventHarness {
                 //this.fireEvent(APP_EVENT_PURGE_FAILED);
                 return false;
             });
+
+        return fastReturn ?
+            Promise.resolve()
+            :
+            promise;
     }
+
+    /**
+     * Flag to prevent multiple syncAll sequences happening at once
+     *
+     * @type {boolean}
+     * @private
+     */
+    static _syncAllInProgress = false;
 
     /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
@@ -7173,6 +7243,13 @@ class App extends EventHarness {
      * @returns {Promise<{savedCount : {}}>}
      */
     syncAll(fastReturn = true) {
+        if (App._syncAllInProgress && fastReturn) {
+            console.info("Skipped sync all as another sync is already in progress.");
+            return Promise.resolve();
+        }
+
+        App._syncAllInProgress = true;
+
         const storedObjectKeys = {
             survey : [],
             occurrence : [],
@@ -7180,40 +7257,53 @@ class App extends EventHarness {
             track : [],
         };
 
-        return this.seekKeys(storedObjectKeys)
-            .then((storedObjectKeys) => {
-                return this._syncLocalUnsaved(storedObjectKeys, fastReturn)
-                    .then((result) => {
-                        if (!fastReturn) {
-                            // Can only trigger the event once the whole process is complete, rather than after
-                            // a short-cut fast return.
-                            this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER, result);
-                        }
+        let promise;
 
-                        return result;
-                    }, (failedResult) => {
-                        this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
-                        return Promise.reject({'_syncLocalUnsaved failedResult' : failedResult});
-                    });
-            }, (failedResult) => {
-                console.error(`Failed to seek keys: ${failedResult}`);
-                Logger.logError(`Failed to seek keys for sync all: ${failedResult}`)
-                    .finally(() => {
-                        // @todo need to check that failedResult can be parsed in this way
-                        // (possibly should happen earlier rather than here)
+        try {
+            promise = this.seekKeys(storedObjectKeys)
+                .then((storedObjectKeys) => {
+                    return this._syncLocalUnsaved(storedObjectKeys, fastReturn)
+                        .then((result) => {
+                            if (!fastReturn) {
+                                // Can only trigger the event once the whole process is complete, rather than after
+                                // a short-cut fast return.
+                                this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER, result);
+                            }
 
-                        // cope with pervasive Safari crash
-                        // see https://bugs.webkit.org/show_bug.cgi?id=197050
-                        if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
-                            App.indexedDbConnectionLost = true;
-                            location.reload();
-                        }
-                    })
-                ;
+                            return result;
+                        }, (failedResult) => {
+                            this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
+                            return Promise.reject({'_syncLocalUnsaved failedResult': failedResult});
+                        });
+                }, (failedResult) => {
+                    console.error(`Failed to seek keys: ${failedResult}`);
+                    Logger.logError(`Failed to seek keys for sync all: ${failedResult}`)
+                        .finally(() => {
+                            // @todo need to check that failedResult can be parsed in this way
+                            // (possibly should happen earlier rather than here)
 
-                this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
-                return Promise.reject(failedResult);
-            });
+                            // cope with pervasive Safari crash
+                            // see https://bugs.webkit.org/show_bug.cgi?id=197050
+                            if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                                App.indexedDbConnectionLost = true;
+                                location.reload();
+                            }
+                        })
+                    ;
+
+                    this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
+                    return Promise.reject(failedResult);
+                }).finally(() => {
+                    App._syncAllInProgress = false;
+                });
+
+
+        } catch (error) {
+            console.error({'syncAll reached outer catch' : error});
+            App._syncAllInProgress = false;
+        }
+
+        return fastReturn ? Promise.resolve() : promise;
     }
 
     /**
@@ -8927,7 +9017,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1730308492-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1731239148-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -9131,6 +9221,7 @@ class BSBIServiceWorker {
         } catch (e) {
             console.log('Failed to clone request.');
             console.log({'Cloning error': e});
+            return e;
         }
 
         evt.respondWith(fetch(evt.request)
@@ -9176,7 +9267,7 @@ class BSBIServiceWorker {
                         // don't need to store locally (as will already be present) and response is not needed
                         // so just reject
 
-                        return Promise.reject({remoteReason});
+                        return Promise.reject({'remote failed' : true, isSync, remoteReason});
                     } else {
 
                         // /**

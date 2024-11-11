@@ -47,6 +47,13 @@ export class App extends EventHarness {
     _containerEl;
 
     /**
+     * flag marking test build, set in constructor of child class.
+     *
+     * @type {boolean}
+     */
+    isTestBuild = false;
+
+    /**
      *
      * @type {Array.<AppController>}
      */
@@ -480,9 +487,17 @@ export class App extends EventHarness {
      *
      * updates local storage last saved survey id
      *
+     * @param {string|null} surveyId only used as a sanity check
+     *
      * @returns {Promise<void | null>}
      */
-    clearCurrentSurvey() {
+    clearCurrentSurvey(surveyId = null) {
+        if (surveyId && this._currentSurvey && surveyId !== this._currentSurvey.id) {
+            // theoretical weird error state where the current survey has changed prior to clear being called
+            console.error('Conflicting survey id in clearCurrentSurvey()');
+            return Promise.reject('Conflicting survey id in clearCurrentSurvey()');
+        }
+
         try {
             for (let occurrenceTuple of this.occurrences) {
                 occurrenceTuple[1].destructor();
@@ -901,10 +916,7 @@ export class App extends EventHarness {
             track : [],
         };
 
-        return fastReturn ?
-            Promise.resolve()
-            :
-            this.seekKeys(storedObjectKeys)
+        let promise = this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
                     .then((result) => {
@@ -931,7 +943,20 @@ export class App extends EventHarness {
                 //this.fireEvent(APP_EVENT_PURGE_FAILED);
                 return false;
             });
+
+        return fastReturn ?
+            Promise.resolve()
+            :
+            promise;
     }
+
+    /**
+     * Flag to prevent multiple syncAll sequences happening at once
+     *
+     * @type {boolean}
+     * @private
+     */
+    static _syncAllInProgress = false;
 
     /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
@@ -939,6 +964,13 @@ export class App extends EventHarness {
      * @returns {Promise<{savedCount : {}}>}
      */
     syncAll(fastReturn = true) {
+        if (App._syncAllInProgress && fastReturn) {
+            console.info("Skipped sync all as another sync is already in progress.");
+            return Promise.resolve();
+        }
+
+        App._syncAllInProgress = true;
+
         const storedObjectKeys = {
             survey : [],
             occurrence : [],
@@ -946,40 +978,53 @@ export class App extends EventHarness {
             track : [],
         };
 
-        return this.seekKeys(storedObjectKeys)
-            .then((storedObjectKeys) => {
-                return this._syncLocalUnsaved(storedObjectKeys, fastReturn)
-                    .then((result) => {
-                        if (!fastReturn) {
-                            // Can only trigger the event once the whole process is complete, rather than after
-                            // a short-cut fast return.
-                            this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER, result);
-                        }
+        let promise;
 
-                        return result;
-                    }, (failedResult) => {
-                        this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
-                        return Promise.reject({'_syncLocalUnsaved failedResult' : failedResult});
-                    });
-            }, (failedResult) => {
-                console.error(`Failed to seek keys: ${failedResult}`);
-                Logger.logError(`Failed to seek keys for sync all: ${failedResult}`)
-                    .finally(() => {
-                        // @todo need to check that failedResult can be parsed in this way
-                        // (possibly should happen earlier rather than here)
+        try {
+            promise = this.seekKeys(storedObjectKeys)
+                .then((storedObjectKeys) => {
+                    return this._syncLocalUnsaved(storedObjectKeys, fastReturn)
+                        .then((result) => {
+                            if (!fastReturn) {
+                                // Can only trigger the event once the whole process is complete, rather than after
+                                // a short-cut fast return.
+                                this.fireEvent(APP_EVENT_ALL_SYNCED_TO_SERVER, result);
+                            }
 
-                        // cope with pervasive Safari crash
-                        // see https://bugs.webkit.org/show_bug.cgi?id=197050
-                        if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
-                            App.indexedDbConnectionLost = true;
-                            location.reload();
-                        }
-                    })
-                ;
+                            return result;
+                        }, (failedResult) => {
+                            this.fireEvent(APP_EVENT_SYNC_ALL_FAILED, failedResult);
+                            return Promise.reject({'_syncLocalUnsaved failedResult': failedResult});
+                        });
+                }, (failedResult) => {
+                    console.error(`Failed to seek keys: ${failedResult}`);
+                    Logger.logError(`Failed to seek keys for sync all: ${failedResult}`)
+                        .finally(() => {
+                            // @todo need to check that failedResult can be parsed in this way
+                            // (possibly should happen earlier rather than here)
 
-                this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
-                return Promise.reject(failedResult);
-            });
+                            // cope with pervasive Safari crash
+                            // see https://bugs.webkit.org/show_bug.cgi?id=197050
+                            if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                                App.indexedDbConnectionLost = true;
+                                location.reload();
+                            }
+                        })
+                    ;
+
+                    this.fireEvent(APP_EVENT_SYNC_ALL_FAILED);
+                    return Promise.reject(failedResult);
+                }).finally(() => {
+                    App._syncAllInProgress = false;
+                });
+
+
+        } catch (error) {
+            console.error({'syncAll reached outer catch' : error});
+            App._syncAllInProgress = false;
+        }
+
+        return fastReturn ? Promise.resolve() : promise;
     }
 
     /**

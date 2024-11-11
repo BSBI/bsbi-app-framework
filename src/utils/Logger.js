@@ -12,6 +12,23 @@ export class Logger {
     static bsbiAppVersion;
 
     /**
+     * For test builds reports a javascript error, otherwise is a no-op
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @param {string|number|null} [line]
+     * @param {number|null} [column]
+     * @param {Error|null} [errorObj]
+     * @returns {Promise<void>}
+     */
+    static logErrorDev(message, url = '', line= '', column = null, errorObj = null) {
+        return (Logger?.app?.isTestBuild) ?
+            Logger.logError(message, url, line, column, errorObj)
+            :
+            Promise.resolve();
+    }
+
+    /**
      * reports a javascript error
      *
      * @param {string} message
@@ -91,22 +108,29 @@ export class Logger {
 
         doc.documentElement.appendChild(errorEl);
 
-        return fetch('/javascriptErrorLog.php', {
-            method: "POST", // *GET, POST, PUT, DELETE, etc.
-            mode: "cors", // no-cors, *cors, same-origin
-            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-            credentials: "include", // include, *same-origin, omit
-            headers: {
-                "Content-Type": "text/xml",
-            },
-            redirect: "follow", // manual, *follow, error
-            referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-            body: (new XMLSerializer()).serializeToString(doc),
-        }).catch((reason) => {
-            console.info({'Remote error logging failed' : reason});
-        }).finally(() => {
+        if (navigator.onLine) {
+            return fetch('/javascriptErrorLog.php', {
+                method: "POST", // *GET, POST, PUT, DELETE, etc.
+                mode: "cors", // no-cors, *cors, same-origin
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "include", // include, *same-origin, omit
+                headers: {
+                    "Content-Type": "text/xml",
+                },
+                redirect: "follow", // manual, *follow, error
+                referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                body: (new XMLSerializer()).serializeToString(doc),
+            }).catch((reason) => {
+                console.info({'Remote error logging failed': reason});
+            }).finally(() => {
+                window.onerror = Logger.logError; // turn on error handling again
+            });
+        } else {
+            console.info({'Offline, report not sent': doc});
             window.onerror = Logger.logError; // turn on error handling again
-        });
+
+            return Promise.resolve();
+        }
     };
 }
 

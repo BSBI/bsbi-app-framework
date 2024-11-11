@@ -271,6 +271,7 @@ export class BSBIServiceWorker {
         } catch (e) {
             console.log('Failed to clone request.');
             console.log({'Cloning error': e});
+            return e;
         }
 
         evt.respondWith(fetch(evt.request)
@@ -316,7 +317,7 @@ export class BSBIServiceWorker {
                         // don't need to store locally (as will already be present) and response is not needed
                         // so just reject
 
-                        return Promise.reject({remoteReason});
+                        return Promise.reject({'remote failed' : true, isSync, remoteReason});
                     } else {
 
                         // /**

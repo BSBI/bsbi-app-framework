@@ -64,6 +64,10 @@ export class AppController {
         return AppController._handleIndex++;
     }
 
+    isCurrent() {
+        return this.app.currentControllerHandle === this.handle;
+    }
+
     /**
      * called from App.initialise() to trigger late-stage initialisation
      */
@@ -114,5 +118,15 @@ export class AppController {
         for(let element of document.querySelectorAll('.dropdown-focused')) {
             element.classList.remove('dropdown-focused');
         }
+    }
+
+    /**
+     * If the controller currently allows a dynamic survey change to happen (triggered by GPS) then return true
+     *
+     * @returns {boolean}
+     * @protected
+     */
+    _allowGPSTriggeredSurveyChanges() {
+        return false;
     }
 }

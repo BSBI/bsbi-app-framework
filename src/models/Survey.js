@@ -625,6 +625,12 @@ export class Survey extends Model {
 
         // @todo need to be certain that are not cloning image attribute
         newSurvey.attributes = Object.assign(structuredClone(this.attributes), newAttributes);
+
+        if (newSurvey.attributes.hasOwnProperty('images') && newSurvey.attributes.images?.length > 0) {
+            // reset to default value
+            newSurvey.attributes.images = [];
+        }
+
         newSurvey.userId = properties.hasOwnProperty('userId') ? properties.userId : this.userId;
         newSurvey.isPristine = true;
         newSurvey.isNew = false; // don't want GPS override of geo-ref
