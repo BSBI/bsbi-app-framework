@@ -653,7 +653,11 @@ export class Survey extends Model {
         const track = new Track();
         track.surveyId = this.id;
         track.deviceId = app.deviceId;
-        track.projectId = app.projectId;
+
+        // In some cases more than one project id may be in use (e.g. RecordingApp v's NYPH)
+        // so use the survey rather than app project id as the source-of-truth
+        track.projectId = this.projectId;
+        //track.projectId = app.projectId;
         track.isPristine = true;
 
         this.track = track;

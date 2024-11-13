@@ -641,11 +641,21 @@ export class App extends EventHarness {
     }
 
     /**
+     * App implementations may replace this to allow more complex project id matching
+     *
+     * @param {number} projectId
+     * @returns {boolean}
+     */
+    projectIdIsCompatible(projectId) {
+        return projectId === this.projectId;
+    }
+
+    /**
      *
      * @param {Survey} survey
      */
     addSurvey(survey) {
-        if (survey.projectId !== this.projectId) {
+        if (!this.projectIdIsCompatible(survey.projectId)) {
             throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
         }
 
@@ -1758,8 +1768,9 @@ export class App extends EventHarness {
     /**
      *
      * @param {{}|null} [attributes]
+     * @param {number} [projectId]
      */
-    setNewSurvey(attributes) {
+    setNewSurvey(attributes, projectId) {
         const newSurvey = new Survey();
 
         newSurvey.id; // trigger id initialisation
@@ -1768,7 +1779,7 @@ export class App extends EventHarness {
             newSurvey.attributes = {...newSurvey.attributes, ...attributes};
         }
 
-        newSurvey.projectId = this.projectId;
+        newSurvey.projectId = projectId || this.projectId;
         newSurvey.isPristine = true;
         newSurvey.isNew = true;
 
@@ -1814,7 +1825,10 @@ export class App extends EventHarness {
 
         occurrence.id; // force initialisation of occurrence id
         occurrence.surveyId = currentSurvey.id;
-        occurrence.projectId = this.projectId;
+
+        // In some cases more than one project id may be in use (e.g. RecordingApp v's NYPH)
+        // so when adding occurrences use the survey rather than app project id as the source-of-truth
+        occurrence.projectId = currentSurvey.projectId;
 
         if (currentSurvey.userId) {
             occurrence.userId = currentSurvey.userId;
