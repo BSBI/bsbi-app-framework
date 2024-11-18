@@ -21,14 +21,16 @@ export const RAW_TAXON_VERNACULAR_ROOT = 7;
 export const RAW_TAXON_USED = 8;
 export const RAW_TAXON_SORT_ORDER = 9;
 export const RAW_TAXON_PARENT_IDS = 10;
-export const RAW_TAXON_NOT_FOR_ENTRY = 11;
+export const RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY = 11;
 export const RAW_TAXON_GB_NATIONAL_STATUS = 12;
 export const RAW_TAXON_IE_NATIONAL_STATUS = 13;
 export const RAW_TAXON_CI_NATIONAL_STATUS = 14;
 export const RAW_TAXON_GB_RARE_SCARCE = 15;
 export const RAW_TAXON_IE_RARE_SCARCE = 16;
 export const RAW_TAXON_NYPH_RANKING = 17;
-//export const RAW_TAXON_ATLAS_DOCS = 18;
+export const RAW_TAXON_BRC_CODE = 18;
+export const RAW_TAXON_NOT_FOR_NEW_RECORDING = 19
+export const RAW_TAXON_ATLAS_DOCS = 20;
 
 export class Taxon {
     /**
@@ -45,26 +47,28 @@ export class Taxon {
      * @property {number} 8 used
      * @property {number} 9 sortOrder
      * @property {Array.<string>} 10 parentIds id(s) of *immediate* parent(s)
-     * @property {number} [11] notForEntry (1 === not for entry)
+     * @property {number} [11] vernacularNotForEntry (1 === not for entry)
      * @property {string} [12] GB national status
      * @property {string} [13] IE national status
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
      * @property {number|null} [17] (optionally) NYPH percentile ranking or null
-     * @property {number} [18] documentation (Atlas captions etc.)
+     * @property {string|null} [18] BRC code
+     * @property {string|null} [19] Taxon not for new recording
+     * @property {number} [20] documentation (Atlas captions etc.) [not used yet]
      *
      * // properties beyond this point are not part of the source file
-     * @property {{}} [18] Presence in grid-squares (top-level object is keyed by grid-ref)
-     * @property {{}} [19] Presence on rpr
-     * @property {{}} [20] Presence in county (top-level object is keyed by vc code string, including prefix)
+     * @property {{}} [21] Presence in grid-squares (top-level object is keyed by grid-ref)
+     * @property {{}} [22] Presence on rpr
+     * @property {{}} [23] Presence in county (top-level object is keyed by vc code string, including prefix)
      */
 
     static PARENT_IDS_KEY = 10;
 
-    static GR_PRESENCE_KEY = 18;
-    static RPR_KEY = 19;
-    static VC_PRESENCE_KEY = 20;
+    static GR_PRESENCE_KEY = 21;
+    static RPR_KEY = 22;
+    static VC_PRESENCE_KEY = 23;
 
     /**
      *
@@ -200,6 +204,18 @@ export class Taxon {
 
     /**
      *
+     * @type {boolean}
+     */
+    notForNewRecording = false;
+
+    /**
+     *
+     * @type {string}
+     */
+    brcCode = '';
+
+    /**
+     *
      * @type {null|{description: string, trends: string, biogeog: string}}
      */
     documentation = null;
@@ -257,6 +273,10 @@ export class Taxon {
 
         const raw = Taxon.rawTaxa[id];
 
+        // if (raw[0] === 'Poa annua') {
+        //     console.log('got Poa annua');
+        // }
+
         const taxon = new Taxon;
 
         taxon.id = id;
@@ -272,7 +292,9 @@ export class Taxon {
         taxon.sortOrder = raw[9];
         taxon.parentIds = raw[10];
         taxon.badVernacular = !!raw[11];
-        taxon.nyphRanking = raw[17] || null;
+        taxon.nyphRanking = raw[RAW_TAXON_NYPH_RANKING] || null;
+        taxon.notForNewRecording = !!raw[RAW_TAXON_NOT_FOR_NEW_RECORDING];
+        taxon.brcCode = raw[RAW_TAXON_BRC_CODE] || '';
 
         taxon.nationalStatus = {
             GB: raw[12] || null,

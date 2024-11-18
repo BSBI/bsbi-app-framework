@@ -69,6 +69,21 @@ export class AppController {
     }
 
     /**
+     * Called when the app's current controller is about to change
+     * The controller may want to clear view listeners
+     */
+    makeNotActive() {
+
+    }
+
+    /**
+     * Called after the app's current controller has changed, to make this the current controller
+     */
+    makeActive() {
+
+    }
+
+    /**
      * called from App.initialise() to trigger late-stage initialisation
      */
     initialise() {

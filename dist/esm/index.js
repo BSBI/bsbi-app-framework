@@ -71,6 +71,21 @@ class AppController {
     }
 
     /**
+     * Called when the app's current controller is about to change
+     * The controller may want to clear view listeners
+     */
+    makeNotActive() {
+
+    }
+
+    /**
+     * Called after the app's current controller has changed, to make this the current controller
+     */
+    makeActive() {
+
+    }
+
+    /**
      * called from App.initialise() to trigger late-stage initialisation
      */
     initialise() {
@@ -5460,7 +5475,28 @@ const AGG_QUALIFIER = 'agg.';
 const SL_QUALIFIER = 's.l.';
 
 const INFO_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/></svg>';
-//export const RAW_TAXON_ATLAS_DOCS = 18;
+
+const RAW_TAXON_NAMESTRING = 0;
+const RAW_TAXON_CANONICAL = 1;
+const RAW_TAXON_HYBRID_CANONCIAL = 2;
+const RAW_TAXON_ACCEPTED_ENTITY_ID = 3;
+const RAW_TAXON_QUALIFIER = 4;
+const RAW_TAXON_AUTHORITY = 5;
+const RAW_TAXON_VERNACULAR = 6;
+const RAW_TAXON_VERNACULAR_ROOT = 7;
+const RAW_TAXON_USED = 8;
+const RAW_TAXON_SORT_ORDER = 9;
+const RAW_TAXON_PARENT_IDS = 10;
+const RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY = 11;
+const RAW_TAXON_GB_NATIONAL_STATUS = 12;
+const RAW_TAXON_IE_NATIONAL_STATUS = 13;
+const RAW_TAXON_CI_NATIONAL_STATUS = 14;
+const RAW_TAXON_GB_RARE_SCARCE = 15;
+const RAW_TAXON_IE_RARE_SCARCE = 16;
+const RAW_TAXON_NYPH_RANKING = 17;
+const RAW_TAXON_BRC_CODE = 18;
+const RAW_TAXON_NOT_FOR_NEW_RECORDING = 19;
+const RAW_TAXON_ATLAS_DOCS = 20;
 
 class Taxon {
     /**
@@ -5477,26 +5513,28 @@ class Taxon {
      * @property {number} 8 used
      * @property {number} 9 sortOrder
      * @property {Array.<string>} 10 parentIds id(s) of *immediate* parent(s)
-     * @property {number} [11] notForEntry (1 === not for entry)
+     * @property {number} [11] vernacularNotForEntry (1 === not for entry)
      * @property {string} [12] GB national status
      * @property {string} [13] IE national status
      * @property {string} [14] CI national status
      * @property {string} [15] GB rare/scarce conservation status
      * @property {string} [16] IE rare/scarce conservation status
      * @property {number|null} [17] (optionally) NYPH percentile ranking or null
-     * @property {number} [18] documentation (Atlas captions etc.)
+     * @property {string|null} [18] BRC code
+     * @property {string|null} [19] Taxon not for new recording
+     * @property {number} [20] documentation (Atlas captions etc.) [not used yet]
      *
      * // properties beyond this point are not part of the source file
-     * @property {{}} [18] Presence in grid-squares (top-level object is keyed by grid-ref)
-     * @property {{}} [19] Presence on rpr
-     * @property {{}} [20] Presence in county (top-level object is keyed by vc code string, including prefix)
+     * @property {{}} [21] Presence in grid-squares (top-level object is keyed by grid-ref)
+     * @property {{}} [22] Presence on rpr
+     * @property {{}} [23] Presence in county (top-level object is keyed by vc code string, including prefix)
      */
 
     static PARENT_IDS_KEY = 10;
 
-    static GR_PRESENCE_KEY = 18;
-    static RPR_KEY = 19;
-    static VC_PRESENCE_KEY = 20;
+    static GR_PRESENCE_KEY = 21;
+    static RPR_KEY = 22;
+    static VC_PRESENCE_KEY = 23;
 
     /**
      *
@@ -5632,6 +5670,18 @@ class Taxon {
 
     /**
      *
+     * @type {boolean}
+     */
+    notForNewRecording = false;
+
+    /**
+     *
+     * @type {string}
+     */
+    brcCode = '';
+
+    /**
+     *
      * @type {null|{description: string, trends: string, biogeog: string}}
      */
     documentation = null;
@@ -5689,6 +5739,10 @@ class Taxon {
 
         const raw = Taxon.rawTaxa[id];
 
+        // if (raw[0] === 'Poa annua') {
+        //     console.log('got Poa annua');
+        // }
+
         const taxon = new Taxon;
 
         taxon.id = id;
@@ -5704,7 +5758,9 @@ class Taxon {
         taxon.sortOrder = raw[9];
         taxon.parentIds = raw[10];
         taxon.badVernacular = !!raw[11];
-        taxon.nyphRanking = raw[17] || null;
+        taxon.nyphRanking = raw[RAW_TAXON_NYPH_RANKING] || null;
+        taxon.notForNewRecording = !!raw[RAW_TAXON_NOT_FOR_NEW_RECORDING];
+        taxon.brcCode = raw[RAW_TAXON_BRC_CODE] || '';
 
         taxon.nationalStatus = {
             GB: raw[12] || null,
@@ -6346,9 +6402,34 @@ class App extends EventHarness {
      * tracks the handle of the current page controller
      * updating this is the responsibility of the controller
      *
+     * *never* set this directly, always use setter
+     *
+     * @protected
      * @type {number|boolean}
      */
-    currentControllerHandle = false;
+    _currentControllerHandle = false;
+
+    /**
+     *
+     * @param {number|false} handle
+     */
+    set currentControllerHandle(handle) {
+        if (handle !== this._currentControllerHandle) {
+            if (this._currentControllerHandle) {
+                this.controllers[this._currentControllerHandle].makeNotActive();
+            }
+
+            this._currentControllerHandle = handle;
+
+            if (this._currentControllerHandle) {
+                this.controllers[this._currentControllerHandle].makeActive();
+            }
+        }
+    }
+
+    get currentControllerHandle() {
+        return this._currentControllerHandle;
+    }
 
     /**
      *
@@ -8086,6 +8167,15 @@ class App extends EventHarness {
     }
 
     /**
+     * specialized surveys might return an HTML <img> tag string
+     * @param {Survey} survey
+     * @returns {string}
+     */
+    getSurveyTypeMarkerIcon(survey) {
+        return '';
+    }
+
+    /**
      * Note that if attributes are set here, then the occurrence is regarded as changed and unsaved, rather than pristine
      * i.e. attributes setting here is *not* intended as a way to set defaults
      *
@@ -9035,7 +9125,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1731495435-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1731958861-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -9672,5 +9762,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SURVEY_EVENT_OCCURRENCES_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SURVEY_EVENT_OCCURRENCES_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

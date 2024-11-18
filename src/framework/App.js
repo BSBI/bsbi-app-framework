@@ -63,9 +63,34 @@ export class App extends EventHarness {
      * tracks the handle of the current page controller
      * updating this is the responsibility of the controller
      *
+     * *never* set this directly, always use setter
+     *
+     * @protected
      * @type {number|boolean}
      */
-    currentControllerHandle = false;
+    _currentControllerHandle = false;
+
+    /**
+     *
+     * @param {number|false} handle
+     */
+    set currentControllerHandle(handle) {
+        if (handle !== this._currentControllerHandle) {
+            if (this._currentControllerHandle) {
+                this.controllers[this._currentControllerHandle].makeNotActive();
+            }
+
+            this._currentControllerHandle = handle;
+
+            if (this._currentControllerHandle) {
+                this.controllers[this._currentControllerHandle].makeActive();
+            }
+        }
+    }
+
+    get currentControllerHandle() {
+        return this._currentControllerHandle;
+    }
 
     /**
      *
@@ -1805,6 +1830,15 @@ export class App extends EventHarness {
         this.currentSurvey = survey;
         this.addSurvey(survey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
+    }
+
+    /**
+     * specialized surveys might return an HTML <img> tag string
+     * @param {Survey} survey
+     * @returns {string}
+     */
+    getSurveyTypeMarkerIcon(survey) {
+        return '';
     }
 
     /**
