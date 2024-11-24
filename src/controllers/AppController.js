@@ -60,6 +60,11 @@ export class AppController {
 
     static _handleIndex = 0;
 
+    /**
+     * @type {function}
+     */
+    viewClass;
+
     static get nextHandle() {
         return AppController._handleIndex++;
     }
@@ -87,7 +92,9 @@ export class AppController {
      * called from App.initialise() to trigger late-stage initialisation
      */
     initialise() {
-        this.view.initialise();
+
+        // remove this once all controllers shift to having on-demand rather than permanent views
+        this.view?.initialise?.();
     }
 
     /**
@@ -101,7 +108,7 @@ export class AppController {
             throw new Error(`No route set for '${this.title}' controller.`);
         }
 
-        console.log({route : this.route});
+        //console.log({route : this.route});
 
         router.on(
             this.route,

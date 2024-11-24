@@ -579,6 +579,6 @@ export class Track extends Model {
         const survey = Track._app.surveys.get(this.surveyId);
 
         survey?.removeListener(Survey.EVENT_MODIFIED, this._surveyChangeListenerHandle);
-        this._surveyChangeListenerHandle = null;
+        this._surveyChangeListenerHandle = undefined;
     }
 }

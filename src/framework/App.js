@@ -789,7 +789,7 @@ export class App extends EventHarness {
      * @return {Promise}
      */
     refreshFromServer(surveyIds, specifiedSurveysOnly = false) {
-        console.log({'Refresh from server, ids' : surveyIds});
+        //console.log({'Refresh from server, ids' : surveyIds});
         const formData = new FormData;
 
         let n = 0;
@@ -819,7 +819,7 @@ export class App extends EventHarness {
         }).then((jsonResponse) => {
             /** @param {{survey : Array.<object>, occurrence: Array.<object>, image: Array.<object>}} jsonResponse */
 
-            console.log({'refresh from server json response' : jsonResponse});
+            //console.log({'refresh from server json response' : jsonResponse});
 
             // if external objects newer than local version then place in local storage
             let promise = Promise.resolve();
@@ -883,7 +883,7 @@ export class App extends EventHarness {
 
                 // no local copy or stale copy
                 // so store response locally
-                console.info(`Adding or replacing local copy of ${key}`);
+                //console.info(`Adding or replacing local copy of ${key}`);
                 return localforage.setItem(key, externalVersion);
             });
     }
@@ -1480,7 +1480,7 @@ export class App extends EventHarness {
 
         purgePromise = purgePromise.then(
             () => {
-                console.log({'Purging' : deletionCandidateKeys});
+                //console.log({'Purging' : deletionCandidateKeys});
 
                 return this._applyPurge(deletionCandidateKeys);
             },
@@ -1712,7 +1712,7 @@ export class App extends EventHarness {
                 // (because of previous catch)
                 // storedObjectKeys and indexed db should be as up-to-date as possible
 
-                console.log({storedObjectKeys});
+                //console.log({storedObjectKeys});
 
                 if (storedObjectKeys?.survey?.length) {
 
@@ -1911,7 +1911,7 @@ export class App extends EventHarness {
 
         let promise = Survey.retrieveFromLocal(surveyId, new Survey)
             .then((survey) => {
-                console.log(`retrieving local survey ${surveyId}`);
+                //console.log(`retrieving local survey ${surveyId}`);
 
                 this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 

@@ -225,7 +225,8 @@ export class BSBIServiceWorker {
                 } else {
                     let isStale = null;
 
-                    console.log(`request is for non-image '${evt.request.url}'`);
+                    //console.log(`request is for non-image '${evt.request.url}'`);
+
                     // You can use `respondWith()` to answer immediately, without waiting for the
                     // network response to reach the service worker...
                     evt.respondWith(this.fromCache(evt.request)
@@ -248,7 +249,7 @@ export class BSBIServiceWorker {
                         // cache is updated.
                         evt.waitUntil(this.update(evt.request));
                     } else {
-                        console.log(`Request for ${evt.request.url} is still fresh.`);
+                        //console.log(`Request for ${evt.request.url} is still fresh.`);
                     }
                 }
             }

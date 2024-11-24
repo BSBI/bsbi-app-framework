@@ -114,7 +114,7 @@ export class SurveyPickerController extends AppController {
 
         this.app.router.pause();
 
-        console.log({'route history' : this.app.routeHistory});
+        //console.log({'route history' : this.app.routeHistory});
 
         if (window.history.state) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
@@ -142,7 +142,7 @@ export class SurveyPickerController extends AppController {
             // invoke sync of any/all unsaved data
             // show pop-ups on success and failure
             this.app.syncAll(false).then((result) => {
-                console.log({'In save all handler, success result': result});
+                //console.log({'In save all handler, success result': result});
 
                 this.view.showSaveAllSuccess(result);
 
@@ -253,7 +253,7 @@ export class SurveyPickerController extends AppController {
      */
     addSurveyHandler(context, subcontext, rhs, queryParameters) {
         console.log("reached addSurveyHandler");
-        console.log({context: context, params: subcontext, query: queryParameters});
+        //console.log({context: context, params: subcontext, query: queryParameters});
 
         this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
@@ -298,6 +298,6 @@ export class SurveyPickerController extends AppController {
      */
     mainRouteHandler(context, subcontext, rhs, queryParameters) {
         console.log("reached special route handler for SurveyPickerController.js");
-        console.log({context: context, params: subcontext, query: queryParameters});
+        //console.log({context: context, params: subcontext, query: queryParameters});
     }
 }

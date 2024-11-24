@@ -225,7 +225,7 @@ export class Model extends EventHarness {
 
         if (Model._tasks.length) {
             // run the next task
-            console.log('Running the next task.');
+            //console.log('Running the next task.');
             return Model._tasks[0]().finally(Model._next);
         }
     }
@@ -261,7 +261,7 @@ export class Model extends EventHarness {
                 return clonedResponse.json().then((responseData) => {
                     /** @param {{saveState : string, created : number, modified : number}} responseData */
 
-                    console.log({'returned to client after save' : responseData});
+                    //console.log({'returned to client after save' : responseData});
 
                     switch (responseData.saveState) {
                         case SAVE_STATE_SERVER:

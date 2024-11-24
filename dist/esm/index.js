@@ -62,6 +62,11 @@ class AppController {
 
     static _handleIndex = 0;
 
+    /**
+     * @type {function}
+     */
+    viewClass;
+
     static get nextHandle() {
         return AppController._handleIndex++;
     }
@@ -89,7 +94,9 @@ class AppController {
      * called from App.initialise() to trigger late-stage initialisation
      */
     initialise() {
-        this.view.initialise();
+
+        // remove this once all controllers shift to having on-demand rather than permanent views
+        this.view?.initialise?.();
     }
 
     /**
@@ -103,7 +110,7 @@ class AppController {
             throw new Error(`No route set for '${this.title}' controller.`);
         }
 
-        console.log({route : this.route});
+        //console.log({route : this.route});
 
         router.on(
             this.route,
@@ -347,7 +354,32 @@ class EventHarness {
      */
     _eventListeners = {};
 
+    /**
+     *
+     * @type {Array<{element: Element, type: string, handler: Function, options}|null>)
+     * @private
+     */
+    _domEventListeners = [];
+
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
+
+    addDomEventListener(element, type, handler, options) {
+        element.addEventListener(type, handler, options);
+        return this._domEventListeners.push({element, type, handler, options}) - 1;
+    }
+
+    removeDomEventListener(handle) {
+        if (this._domEventListeners[handle]) {
+            const listener = this._domEventListeners[handle];
+            listener.element.removeEventListener(listener.type, listener.handler, listener.options);
+            this._domEventListeners[handle] = null;
+        }
+    }
+
+    removeDomEventListeners(handles) {
+        handles.forEach(this.removeDomEventListener.bind(this));
+        return [];
+    }
 
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
         //this._eventListeners = this._eventListeners || [];
@@ -372,6 +404,40 @@ class EventHarness {
             return 0; // first element in array
         }
     }
+
+    // /**
+    //  *
+    //  * @param {string} eventName
+    //  * @param {Function} handler
+    //  * @param {*=} constructionParam
+    //  * @return {EventHarness~Handle} handle
+    //  */
+    // addWeakListener(eventName, handler, constructionParam = {}) {
+    //     //this._eventListeners = this._eventListeners || [];
+    //
+    //     /**
+    //      *
+    //      * @type {WeakRef<Function>}
+    //      */
+    //     const weakWrapped = new WeakRef(handler);
+    //
+    //     const handlerFunction = (context, eventName, invocationParam = {}) => {
+    //         const handler = weakWrapped.deref();
+    //
+    //         if (handler) {
+    //             handler({context, eventName, ...invocationParam, ...constructionParam});
+    //         } else {
+    //             console.warn(`A ${eventName} handler has been garbage collected`);
+    //         }
+    //     }
+    //
+    //     if (this._eventListeners[eventName]) {
+    //         return (this._eventListeners[eventName].push(handlerFunction)) - 1;
+    //     } else {
+    //         this._eventListeners[eventName] = [handlerFunction];
+    //         return 0; // first element in array
+    //     }
+    // }
 
     /**
      *
@@ -418,6 +484,16 @@ class EventHarness {
      */
     destructor() {
         this._eventListeners = {};
+
+        for (let n in this._domEventListeners) {
+            if (this._domEventListeners.hasOwnProperty(n) && this._domEventListeners[n]) {
+                const listener = this._domEventListeners[n];
+                listener.element.removeEventListener(listener.type, listener.handler, listener.options);
+                this._domEventListeners[n] = null;
+            }
+        }
+
+        this._domEventListeners = [];
     }
 
     /**
@@ -3510,7 +3586,7 @@ class Model extends EventHarness {
 
         if (Model._tasks.length) {
             // run the next task
-            console.log('Running the next task.');
+            //console.log('Running the next task.');
             return Model._tasks[0]().finally(Model._next);
         }
     }
@@ -3546,7 +3622,7 @@ class Model extends EventHarness {
                 return clonedResponse.json().then((responseData) => {
                     /** @param {{saveState : string, created : number, modified : number}} responseData */
 
-                    console.log({'returned to client after save' : responseData});
+                    //console.log({'returned to client after save' : responseData});
 
                     switch (responseData.saveState) {
                         case SAVE_STATE_SERVER:
@@ -3937,7 +4013,7 @@ class SurveyPickerController extends AppController {
 
         this.app.router.pause();
 
-        console.log({'route history' : this.app.routeHistory});
+        //console.log({'route history' : this.app.routeHistory});
 
         if (window.history.state) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
@@ -3965,7 +4041,7 @@ class SurveyPickerController extends AppController {
             // invoke sync of any/all unsaved data
             // show pop-ups on success and failure
             this.app.syncAll(false).then((result) => {
-                console.log({'In save all handler, success result': result});
+                //console.log({'In save all handler, success result': result});
 
                 this.view.showSaveAllSuccess(result);
 
@@ -4076,7 +4152,7 @@ class SurveyPickerController extends AppController {
      */
     addSurveyHandler(context, subcontext, rhs, queryParameters) {
         console.log("reached addSurveyHandler");
-        console.log({context: context, params: subcontext, query: queryParameters});
+        //console.log({context: context, params: subcontext, query: queryParameters});
 
         this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
@@ -4121,7 +4197,7 @@ class SurveyPickerController extends AppController {
      */
     mainRouteHandler(context, subcontext, rhs, queryParameters) {
         console.log("reached special route handler for SurveyPickerController.js");
-        console.log({context: context, params: subcontext, query: queryParameters});
+        //console.log({context: context, params: subcontext, query: queryParameters});
     }
 }
 
@@ -4762,7 +4838,7 @@ class Track extends Model {
         const survey = Track._app.surveys.get(this.surveyId);
 
         survey?.removeListener(Survey.EVENT_MODIFIED, this._surveyChangeListenerHandle);
-        this._surveyChangeListenerHandle = null;
+        this._surveyChangeListenerHandle = undefined;
     }
 }
 
@@ -7128,7 +7204,7 @@ class App extends EventHarness {
      * @return {Promise}
      */
     refreshFromServer(surveyIds, specifiedSurveysOnly = false) {
-        console.log({'Refresh from server, ids' : surveyIds});
+        //console.log({'Refresh from server, ids' : surveyIds});
         const formData = new FormData;
 
         let n = 0;
@@ -7158,7 +7234,7 @@ class App extends EventHarness {
         }).then((jsonResponse) => {
             /** @param {{survey : Array.<object>, occurrence: Array.<object>, image: Array.<object>}} jsonResponse */
 
-            console.log({'refresh from server json response' : jsonResponse});
+            //console.log({'refresh from server json response' : jsonResponse});
 
             // if external objects newer than local version then place in local storage
             let promise = Promise.resolve();
@@ -7222,7 +7298,7 @@ class App extends EventHarness {
 
                 // no local copy or stale copy
                 // so store response locally
-                console.info(`Adding or replacing local copy of ${key}`);
+                //console.info(`Adding or replacing local copy of ${key}`);
                 return localforage.setItem(key, externalVersion);
             });
     }
@@ -7816,7 +7892,7 @@ class App extends EventHarness {
 
         purgePromise = purgePromise.then(
             () => {
-                console.log({'Purging' : deletionCandidateKeys});
+                //console.log({'Purging' : deletionCandidateKeys});
 
                 return this._applyPurge(deletionCandidateKeys);
             },
@@ -8048,7 +8124,7 @@ class App extends EventHarness {
                 // (because of previous catch)
                 // storedObjectKeys and indexed db should be as up-to-date as possible
 
-                console.log({storedObjectKeys});
+                //console.log({storedObjectKeys});
 
                 if (storedObjectKeys?.survey?.length) {
                     let n = 0;
@@ -8245,7 +8321,7 @@ class App extends EventHarness {
 
         let promise = Survey.retrieveFromLocal(surveyId, new Survey)
             .then((survey) => {
-                console.log(`retrieving local survey ${surveyId}`);
+                //console.log(`retrieving local survey ${surveyId}`);
 
                 this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 
@@ -9125,7 +9201,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1731958861-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1732485848-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -9283,7 +9359,8 @@ class BSBIServiceWorker {
                 } else {
                     let isStale = null;
 
-                    console.log(`request is for non-image '${evt.request.url}'`);
+                    //console.log(`request is for non-image '${evt.request.url}'`);
+
                     // You can use `respondWith()` to answer immediately, without waiting for the
                     // network response to reach the service worker...
                     evt.respondWith(this.fromCache(evt.request)
@@ -9305,8 +9382,6 @@ class BSBIServiceWorker {
                         // ...and `waitUntil()` to prevent the worker from being killed until the
                         // cache is updated.
                         evt.waitUntil(this.update(evt.request));
-                    } else {
-                        console.log(`Request for ${evt.request.url} is still fresh.`);
                     }
                 }
             }

@@ -10,7 +10,32 @@ export class EventHarness {
      */
     _eventListeners = {};
 
+    /**
+     *
+     * @type {Array<{element: Element, type: string, handler: Function, options}|null>)
+     * @private
+     */
+    _domEventListeners = [];
+
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
+
+    addDomEventListener(element, type, handler, options) {
+        element.addEventListener(type, handler, options);
+        return this._domEventListeners.push({element, type, handler, options}) - 1;
+    }
+
+    removeDomEventListener(handle) {
+        if (this._domEventListeners[handle]) {
+            const listener = this._domEventListeners[handle];
+            listener.element.removeEventListener(listener.type, listener.handler, listener.options);
+            this._domEventListeners[handle] = null;
+        }
+    }
+
+    removeDomEventListeners(handles) {
+        handles.forEach(this.removeDomEventListener.bind(this));
+        return [];
+    }
 
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
         //this._eventListeners = this._eventListeners || [];
@@ -35,6 +60,40 @@ export class EventHarness {
             return 0; // first element in array
         }
     }
+
+    // /**
+    //  *
+    //  * @param {string} eventName
+    //  * @param {Function} handler
+    //  * @param {*=} constructionParam
+    //  * @return {EventHarness~Handle} handle
+    //  */
+    // addWeakListener(eventName, handler, constructionParam = {}) {
+    //     //this._eventListeners = this._eventListeners || [];
+    //
+    //     /**
+    //      *
+    //      * @type {WeakRef<Function>}
+    //      */
+    //     const weakWrapped = new WeakRef(handler);
+    //
+    //     const handlerFunction = (context, eventName, invocationParam = {}) => {
+    //         const handler = weakWrapped.deref();
+    //
+    //         if (handler) {
+    //             handler({context, eventName, ...invocationParam, ...constructionParam});
+    //         } else {
+    //             console.warn(`A ${eventName} handler has been garbage collected`);
+    //         }
+    //     }
+    //
+    //     if (this._eventListeners[eventName]) {
+    //         return (this._eventListeners[eventName].push(handlerFunction)) - 1;
+    //     } else {
+    //         this._eventListeners[eventName] = [handlerFunction];
+    //         return 0; // first element in array
+    //     }
+    // }
 
     /**
      *
@@ -81,6 +140,16 @@ export class EventHarness {
      */
     destructor() {
         this._eventListeners = {};
+
+        for (let n in this._domEventListeners) {
+            if (this._domEventListeners.hasOwnProperty(n) && this._domEventListeners[n]) {
+                const listener = this._domEventListeners[n];
+                listener.element.removeEventListener(listener.type, listener.handler, listener.options);
+                this._domEventListeners[n] = null;
+            }
+        }
+
+        this._domEventListeners = [];
     }
 
     /**
