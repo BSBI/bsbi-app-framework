@@ -81,7 +81,8 @@ export class Survey extends Model {
      *     [surveyName] : string|null,
      *     [casual] : "1"|null,
      *     [defaultCasual] : "1"|null,
-     *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null
+     *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
+     *     [nulllist] : boolean
      * }}
      */
     attributes = {

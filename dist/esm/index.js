@@ -356,7 +356,7 @@ class EventHarness {
 
     /**
      *
-     * @type {Array<{element: Element, type: string, handler: Function, options}|null>)
+     * @type {Array<{element: Element, type: string, handler: Function, options}|null>}
      * @private
      */
     _domEventListeners = [];
@@ -4922,7 +4922,8 @@ class Survey extends Model {
      *     [surveyName] : string|null,
      *     [casual] : "1"|null,
      *     [defaultCasual] : "1"|null,
-     *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null
+     *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
+     *     [nulllist] : boolean
      * }}
      */
     attributes = {
@@ -9208,7 +9209,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1732557208-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1732564892-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

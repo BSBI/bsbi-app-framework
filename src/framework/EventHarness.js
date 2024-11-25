@@ -12,7 +12,7 @@ export class EventHarness {
 
     /**
      *
-     * @type {Array<{element: Element, type: string, handler: Function, options}|null>)
+     * @type {Array<{element: Element, type: string, handler: Function, options}|null>}
      * @private
      */
     _domEventListeners = [];
