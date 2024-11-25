@@ -372,13 +372,14 @@ class EventHarness {
         if (this._domEventListeners[handle]) {
             const listener = this._domEventListeners[handle];
             listener.element.removeEventListener(listener.type, listener.handler, listener.options);
+            listener.handler = null;
+            listener.element = null;
             this._domEventListeners[handle] = null;
         }
     }
 
     removeDomEventListeners(handles) {
         handles.forEach(this.removeDomEventListener.bind(this));
-        return [];
     }
 
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
@@ -5204,12 +5205,15 @@ class Survey extends Model {
     formChangedHandler(params) {
         console.log('Survey change handler invoked.');
 
-        params.form.updateModelFromContent().then(() => {
+        const form = params.form;
+        params = null;
+
+        form.updateModelFromContent().then(() => {
 
             console.log('Survey calling conditional validation.');
 
             // refresh the form's validation state
-            params.form.conditionallyValidateForm();
+            form.conditionallyValidateForm();
 
             this.touch();
             this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
@@ -6058,11 +6062,14 @@ class Occurrence extends Model {
     formChangedHandler(params) {
         console.log('Occurrence change handler invoked.');
 
+        const form = params.form;
+        params = null;
+
         // read new values
         // then fire its own change event (Occurrence.EVENT_MODIFIED)
-        params.form.updateModelFromContent().then(() => {
+        form.updateModelFromContent().then(() => {
             // refresh the form's validation state
-            params.form.conditionallyValidateForm();
+            form.conditionallyValidateForm();
 
            this.changeApplied();
         });
@@ -9201,7 +9208,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1732485848-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1732557208-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -9629,10 +9636,10 @@ class BSBIServiceWorker {
             //console.log('cache is open');
 
             return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)}).then((cachedResponse) => {
-                console.log(cachedResponse ?
-                    `cache matched ${request.url}`
-                    :
-                    `no cache match for ${request.url}`);
+                // console.log(cachedResponse ?
+                //     `cache matched ${request.url}`
+                //     :
+                //     `no cache match for ${request.url}`);
 
                 return cachedResponse || (tryRemoteFallback && this.update(request, remoteTimeoutMilliseconds)); // return cache match or if not cached then go out to network (and then locally cache the response)
 

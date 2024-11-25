@@ -28,13 +28,14 @@ export class EventHarness {
         if (this._domEventListeners[handle]) {
             const listener = this._domEventListeners[handle];
             listener.element.removeEventListener(listener.type, listener.handler, listener.options);
+            listener.handler = null;
+            listener.element = null;
             this._domEventListeners[handle] = null;
         }
     }
 
     removeDomEventListeners(handles) {
         handles.forEach(this.removeDomEventListener.bind(this));
-        return [];
     }
 
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {

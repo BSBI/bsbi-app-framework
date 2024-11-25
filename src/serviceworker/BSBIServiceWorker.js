@@ -497,10 +497,10 @@ export class BSBIServiceWorker {
             //console.log('cache is open');
 
             return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)}).then((cachedResponse) => {
-                console.log(cachedResponse ?
-                    `cache matched ${request.url}`
-                    :
-                    `no cache match for ${request.url}`);
+                // console.log(cachedResponse ?
+                //     `cache matched ${request.url}`
+                //     :
+                //     `no cache match for ${request.url}`);
 
                 return cachedResponse || (tryRemoteFallback && this.update(request, remoteTimeoutMilliseconds)); // return cache match or if not cached then go out to network (and then locally cache the response)
 

@@ -109,11 +109,14 @@ export class Occurrence extends Model {
     formChangedHandler(params) {
         console.log('Occurrence change handler invoked.');
 
+        const form = params.form;
+        params = null;
+
         // read new values
         // then fire its own change event (Occurrence.EVENT_MODIFIED)
-        params.form.updateModelFromContent().then(() => {
+        form.updateModelFromContent().then(() => {
             // refresh the form's validation state
-            params.form.conditionallyValidateForm();
+            form.conditionallyValidateForm();
 
            this.changeApplied();
         });

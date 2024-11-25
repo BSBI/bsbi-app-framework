@@ -364,12 +364,15 @@ export class Survey extends Model {
     formChangedHandler(params) {
         console.log('Survey change handler invoked.');
 
-        params.form.updateModelFromContent().then(() => {
+        const form = params.form;
+        params = null;
+
+        form.updateModelFromContent().then(() => {
 
             console.log('Survey calling conditional validation.');
 
             // refresh the form's validation state
-            params.form.conditionallyValidateForm();
+            form.conditionallyValidateForm();
 
             this.touch();
             this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
