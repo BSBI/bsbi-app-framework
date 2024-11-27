@@ -1,12 +1,14 @@
 // AppController
 // Abstract super-class for page controllers
 
+import {EventHarness} from "../framework/EventHarness";
+
 /**
  * @typedef {import('bsbi-app-framework-view').Page} Page
  * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
  */
 
-export class AppController {
+export class AppController extends EventHarness {
 
     /**
      *
