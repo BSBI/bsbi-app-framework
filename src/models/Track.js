@@ -47,11 +47,11 @@ export class Track extends Model {
      * @property {number} 1 end reason code
      */
 
-    /**
-     *
-     * @type {Object}
-     */
-    attributes = {};
+    // /**
+    //  *
+    //  * @type {{}}
+    //  */
+    // attributes = {};
 
     /**
      *
@@ -175,82 +175,87 @@ export class Track extends Model {
         Track._app = app;
     }
 
+    static _staticListenersRegistered = false;
+
     static registerStaticListeners() {
-        const app = Track._app;
-        if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-            app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
-                const survey = Track._app.currentSurvey;
+        if (!Track._staticListenersRegistered) {
+            const app = Track._app;
+            if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
+                app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
+                    const survey = Track._app.currentSurvey;
 
-                if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
-                    /**
-                     *
-                     * @type {null|Survey}
-                     */
-                    let previouslyTrackedSurvey = null;
+                    if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
+                        /**
+                         *
+                         * @type {null|Survey}
+                         */
+                        let previouslyTrackedSurvey = null;
 
-                    if (Track._currentlyTrackedSurveyId) {
-                        const oldTrack =
-                            Track._tracks.get(Track._currentlyTrackedSurveyId)
-                                ?.get?.(Track._currentlyTrackedDeviceId);
+                        if (Track._currentlyTrackedSurveyId) {
+                            const oldTrack =
+                                Track._tracks.get(Track._currentlyTrackedSurveyId)
+                                    ?.get?.(Track._currentlyTrackedDeviceId);
 
-                        previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
+                            previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
-                        if (oldTrack) {
-                            if (oldTrack._surveyChangeListenerHandle) {
-                                oldTrack.removeSurveyChangeListener();
+                            if (oldTrack) {
+                                if (oldTrack._surveyChangeListenerHandle) {
+                                    oldTrack.removeSurveyChangeListener();
+                                }
+
+                                oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+
+                                oldTrack.save(true).then(() => {
+                                    console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
+                                });
+                            } else {
+                                console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`)
                             }
 
-                            oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
-
-                            oldTrack.save(true).then(() => {
-                                console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
-                            });
-                        } else {
-                            console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`)
+                            Track._currentlyTrackedSurveyId = null;
+                            Track._currentlyTrackedDeviceId = null;
                         }
 
-                        Track._currentlyTrackedSurveyId = null;
-                        Track._currentlyTrackedDeviceId = null;
+                        Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
                     }
+                });
+            }
 
-                    Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
+            Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
+                const survey = this._app.currentSurvey;
+
+                if (survey) {
+                    if (!survey.attributes?.casual && survey.isToday()) {
+                        // Resume existing tracking, or start a new track.
+                        Track._trackSurvey(survey);
+                        Track.trackingIsActive = true;
+                    }
                 }
             });
+
+            Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+
+                if (Track.trackingIsActive) {
+                    /**
+                     * @type {Track|null}
+                     */
+                    const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
+
+                    if (track) {
+                        track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
+
+                        track.save(true).then(() => {
+                            console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
+                        });
+                    }
+
+                    Track._currentlyTrackedSurveyId = null;
+                    Track._currentlyTrackedDeviceId = null;
+                    Track.trackingIsActive = false;
+                }
+            });
+            Track._staticListenersRegistered = true;
         }
-
-        Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
-            const survey = this._app.currentSurvey;
-
-            if (survey) {
-                if (!survey.attributes?.casual && survey.isToday()) {
-                    // Resume existing tracking, or start a new track.
-                    Track._trackSurvey(survey);
-                    Track.trackingIsActive = true;
-                }
-            }
-        });
-
-        Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
-
-            if (Track.trackingIsActive) {
-                /**
-                 * @type {Track|null}
-                 */
-                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
-
-                if (track) {
-                    track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
-
-                    track.save(true).then(() => {
-                        console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
-                    });
-                }
-
-                Track._currentlyTrackedSurveyId = null;
-                Track._currentlyTrackedDeviceId = null;
-                Track.trackingIsActive = false;
-            }
-        });
     }
 
     /**

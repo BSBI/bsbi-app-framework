@@ -13,14 +13,19 @@ export class StaticContentController extends AppController {
 
     /**
      *
-     * @param {Page} view
-     * @param {string} route
+     * @param {?Page} [view]
+     * @param {?string} [route]
      */
-    constructor (view, route) {
+    constructor (view = null, route = null) {
         super();
 
-        this.view = view;
-        this.route = route;
+        if (view) {
+            this.view = view;
+        }
+
+        if (route) {
+            this.route = route;
+        }
 
         this.handle = AppController.nextHandle;
     }

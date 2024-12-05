@@ -72,22 +72,15 @@ export class Occurrence extends Model {
      * @returns {(Taxon|null)} returns null for unmatched taxa specified by name
      */
     get taxon() {
-        return this.attributes.taxon?.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
-    };
+        try {
+            return this.attributes.taxon?.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
+        } catch (error) {
+            // occasionally, taxon not found errors might end up here
 
-    // /**
-    //  *
-    //  * @param {OccurrenceForm} form
-    //  * @returns {OccurrenceForm}
-    //  */
-    // setForm(form) {
-    //     form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
-    //
-    //     if (!this.isNew) {
-    //         form.liveValidation = true;
-    //     }
-    //     return form;
-    // }
+            console.error(error);
+            return null;
+        }
+    };
 
     /**
      * Returns true or false based on occurrence date compatibility of *this* occurrence,

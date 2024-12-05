@@ -25,6 +25,8 @@ export class AppController extends EventHarness {
     title = 'untitled';
 
     /**
+     * integer controller handle
+     * note that 0 is a valid handle
      *
      * @type {number}
      */

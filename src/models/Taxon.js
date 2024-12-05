@@ -346,7 +346,8 @@ export class Taxon {
                     try {
                         parentStack[parentStack.length] = Taxon.fromId(parentId);
                     } catch {
-
+                        // occasionally, taxon not found errors might end up here
+                        console.error(error);
                     }
                 }
             }
@@ -362,8 +363,15 @@ export class Taxon {
      */
     formattedHTML(vernacularMatched) {
         let acceptedTaxon;
-        if (this.id !== this.acceptedEntityId) {
-            acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
+
+        try {
+            if (this.id !== this.acceptedEntityId) {
+                acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
+            }
+        } catch (error) {
+            // occasionally, taxon not found errors might end up here
+            // in which case acceptedTaxon can stay unset
+            console.error(error);
         }
 
         let infoLink = '';

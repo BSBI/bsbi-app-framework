@@ -85,9 +85,7 @@ export class Survey extends Model {
      *     [nulllist] : boolean
      * }}
      */
-    attributes = {
-
-    };
+    attributes = {};
 
     /**
      * if set then provide default values (e.g. GPS look-up of current geo-reference)

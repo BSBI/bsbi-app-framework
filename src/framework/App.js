@@ -66,28 +66,32 @@ export class App extends EventHarness {
      * *never* set this directly, always use setter
      *
      * @protected
-     * @type {number|boolean}
+     * @type {number|null}
      */
-    _currentControllerHandle = false;
+    _currentControllerHandle = null;
 
     /**
      *
-     * @param {number|false} handle
+     * @param {number|null} handle
      */
     set currentControllerHandle(handle) {
         if (handle !== this._currentControllerHandle) {
-            if (this._currentControllerHandle) {
+            if (this._currentControllerHandle !== null) {
                 this.controllers[this._currentControllerHandle].makeNotActive();
             }
 
             this._currentControllerHandle = handle;
 
-            if (this._currentControllerHandle) {
+            if (this._currentControllerHandle !== null) {
                 this.controllers[this._currentControllerHandle].makeActive();
             }
         }
     }
 
+    /**
+     *
+     * @returns {number|null}
+     */
     get currentControllerHandle() {
         return this._currentControllerHandle;
     }
@@ -316,7 +320,7 @@ export class App extends EventHarness {
 
             let surveyId = survey?.id;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId)
-                .then(() => {
+                .finally(() => {
                     this.fireEvent(APP_EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
                 });
         }
@@ -347,7 +351,6 @@ export class App extends EventHarness {
 
                     this.fireEvent(APP_EVENT_OPTIONS_RESTORED, clonedOptions);
 
-
                     return clonedOptions;
                 });
         } else {
@@ -357,6 +360,22 @@ export class App extends EventHarness {
 
     clearOptions() {
         this._options = null;
+    }
+
+    setOptions(rawOptions) {
+        const userId = this.userId;
+
+        if (userId) {
+            if (!this.options) {
+                this.options = {};
+            }
+
+            Object.assign(this._options, rawOptions);
+
+            return localforage.setItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`, this._options);
+        } else {
+            throw new Error(`User ID unset when setting options.`);
+        }
     }
 
     setOption(key, value) {
@@ -371,8 +390,22 @@ export class App extends EventHarness {
         }
     }
 
+    /**
+     *
+     * @param {string} key
+     * @returns {any|undefined}
+     */
     getOption(key) {
         return this._options?.hasOwnProperty?.(key) ? JSON.parse(JSON.stringify(this._options[key])) : undefined;
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @returns {boolean}
+     */
+    hasOption(key) {
+        return this._options?.hasOwnProperty?.(key) || false;
     }
 
     /**
@@ -648,6 +681,19 @@ export class App extends EventHarness {
     }
 
     /**
+     * returns true if window history state is not null and not an empty object
+     *
+     * @returns {boolean}
+     */
+    windowHasHistoryState() {
+        return this.routeHistory.length > 0;
+
+        // const state = window.history.state;
+        //
+        // return (state !== null && typeof state === 'object' && Object.keys(state).length > 0);
+    }
+
+    /**
      * mark the current survey and its constituent records as subject to validation checks (not pristine)
      */
     markAllNotPristine() {
@@ -746,6 +792,7 @@ export class App extends EventHarness {
         //console.log(`in addOccurrence setting id '${occurrence.id}'`);
         this.occurrences.set(occurrence.id, occurrence);
 
+        // listener will be cleared when the occurrence is destroyed (which happens during survey change)
         occurrence.addListener(Occurrence.EVENT_MODIFIED,
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
@@ -1604,16 +1651,23 @@ export class App extends EventHarness {
         // i.e. new and unmodified
         // only present in current App.surveys
         // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
+        // and also in some other automated navigation sequences
         if (targetSurveyId && this.surveys.has(targetSurveyId)) {
             const localSurvey = this.surveys.get(targetSurveyId);
 
             if (localSurvey.isPristine) {
+                // local survey is not current then
                 // clear occurrences from the previous survey
-                return this.clearCurrentSurvey().then(() => {
-                    this.currentSurvey = localSurvey;
-                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+
+                if (localSurvey !== this._currentSurvey) {
+                    return this.clearCurrentSurvey().then(() => {
+                        this.currentSurvey = localSurvey;
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                        return Promise.resolve();
+                    });
+                } else {
                     return Promise.resolve();
-                });
+                }
             }
         }
 

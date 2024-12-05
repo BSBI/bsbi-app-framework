@@ -45,6 +45,8 @@ export class Model extends EventHarness {
      */
     static className = 'Model';
 
+    attributes = {};
+
     /**
      *
      * @param {boolean} savedFlag

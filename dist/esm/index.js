@@ -355,6 +355,8 @@ class AppController extends EventHarness {
     title = 'untitled';
 
     /**
+     * integer controller handle
+     * note that 0 is a valid handle
      *
      * @type {number}
      */
@@ -499,14 +501,19 @@ class StaticContentController extends AppController {
 
     /**
      *
-     * @param {Page} view
-     * @param {string} route
+     * @param {?Page} [view]
+     * @param {?string} [route]
      */
-    constructor (view, route) {
+    constructor (view = null, route = null) {
         super();
 
-        this.view = view;
-        this.route = route;
+        if (view) {
+            this.view = view;
+        }
+
+        if (route) {
+            this.route = route;
+        }
 
         this.handle = AppController.nextHandle;
     }
@@ -3408,6 +3415,8 @@ class Model extends EventHarness {
      */
     static className = 'Model';
 
+    attributes = {};
+
     /**
      *
      * @param {boolean} savedFlag
@@ -4308,11 +4317,11 @@ class Track extends Model {
      * @property {number} 1 end reason code
      */
 
-    /**
-     *
-     * @type {Object}
-     */
-    attributes = {};
+    // /**
+    //  *
+    //  * @type {{}}
+    //  */
+    // attributes = {};
 
     /**
      *
@@ -4436,82 +4445,87 @@ class Track extends Model {
         Track._app = app;
     }
 
+    static _staticListenersRegistered = false;
+
     static registerStaticListeners() {
-        const app = Track._app;
-        if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-            app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
-                const survey = Track._app.currentSurvey;
+        if (!Track._staticListenersRegistered) {
+            const app = Track._app;
+            if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
+                app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
+                    const survey = Track._app.currentSurvey;
 
-                if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
-                    /**
-                     *
-                     * @type {null|Survey}
-                     */
-                    let previouslyTrackedSurvey = null;
+                    if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
+                        /**
+                         *
+                         * @type {null|Survey}
+                         */
+                        let previouslyTrackedSurvey = null;
 
-                    if (Track._currentlyTrackedSurveyId) {
-                        const oldTrack =
-                            Track._tracks.get(Track._currentlyTrackedSurveyId)
-                                ?.get?.(Track._currentlyTrackedDeviceId);
+                        if (Track._currentlyTrackedSurveyId) {
+                            const oldTrack =
+                                Track._tracks.get(Track._currentlyTrackedSurveyId)
+                                    ?.get?.(Track._currentlyTrackedDeviceId);
 
-                        previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
+                            previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
 
-                        if (oldTrack) {
-                            if (oldTrack._surveyChangeListenerHandle) {
-                                oldTrack.removeSurveyChangeListener();
+                            if (oldTrack) {
+                                if (oldTrack._surveyChangeListenerHandle) {
+                                    oldTrack.removeSurveyChangeListener();
+                                }
+
+                                oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
+
+                                oldTrack.save(true).then(() => {
+                                    console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`);
+                                });
+                            } else {
+                                console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`);
                             }
 
-                            oldTrack.endCurrentSeries(TRACK_END_REASON_SURVEY_CHANGED);
-
-                            oldTrack.save(true).then(() => {
-                                console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`);
-                            });
-                        } else {
-                            console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`);
+                            Track._currentlyTrackedSurveyId = null;
+                            Track._currentlyTrackedDeviceId = null;
                         }
 
-                        Track._currentlyTrackedSurveyId = null;
-                        Track._currentlyTrackedDeviceId = null;
+                        Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
                     }
+                });
+            }
 
-                    Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
+            Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
+                const survey = this._app.currentSurvey;
+
+                if (survey) {
+                    if (!survey.attributes?.casual && survey.isToday()) {
+                        // Resume existing tracking, or start a new track.
+                        Track._trackSurvey(survey);
+                        Track.trackingIsActive = true;
+                    }
                 }
             });
+
+            Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+
+                if (Track.trackingIsActive) {
+                    /**
+                     * @type {Track|null}
+                     */
+                    const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
+
+                    if (track) {
+                        track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
+
+                        track.save(true).then(() => {
+                            console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`);
+                        });
+                    }
+
+                    Track._currentlyTrackedSurveyId = null;
+                    Track._currentlyTrackedDeviceId = null;
+                    Track.trackingIsActive = false;
+                }
+            });
+            Track._staticListenersRegistered = true;
         }
-
-        Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
-            const survey = this._app.currentSurvey;
-
-            if (survey) {
-                if (!survey.attributes?.casual && survey.isToday()) {
-                    // Resume existing tracking, or start a new track.
-                    Track._trackSurvey(survey);
-                    Track.trackingIsActive = true;
-                }
-            }
-        });
-
-        Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
-
-            if (Track.trackingIsActive) {
-                /**
-                 * @type {Track|null}
-                 */
-                const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
-
-                if (track) {
-                    track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
-
-                    track.save(true).then(() => {
-                        console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`);
-                    });
-                }
-
-                Track._currentlyTrackedSurveyId = null;
-                Track._currentlyTrackedDeviceId = null;
-                Track.trackingIsActive = false;
-            }
-        });
     }
 
     /**
@@ -4927,9 +4941,7 @@ class Survey extends Model {
      *     [nulllist] : boolean
      * }}
      */
-    attributes = {
-
-    };
+    attributes = {};
 
     /**
      * if set then provide default values (e.g. GPS look-up of current geo-reference)
@@ -5894,7 +5906,8 @@ class Taxon {
                     try {
                         parentStack[parentStack.length] = Taxon.fromId(parentId);
                     } catch {
-
+                        // occasionally, taxon not found errors might end up here
+                        console.error(error);
                     }
                 }
             }
@@ -5910,8 +5923,15 @@ class Taxon {
      */
     formattedHTML(vernacularMatched) {
         let acceptedTaxon;
-        if (this.id !== this.acceptedEntityId) {
-            acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
+
+        try {
+            if (this.id !== this.acceptedEntityId) {
+                acceptedTaxon = Taxon.fromId(this.acceptedEntityId);
+            }
+        } catch (error) {
+            // occasionally, taxon not found errors might end up here
+            // in which case acceptedTaxon can stay unset
+            console.error(error);
         }
 
         let infoLink = '';
@@ -6027,22 +6047,15 @@ class Occurrence extends Model {
      * @returns {(Taxon|null)} returns null for unmatched taxa specified by name
      */
     get taxon() {
-        return this.attributes.taxon?.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
-    };
+        try {
+            return this.attributes.taxon?.taxonId ? Taxon.fromId(this.attributes.taxon.taxonId) : null;
+        } catch (error) {
+            // occasionally, taxon not found errors might end up here
 
-    // /**
-    //  *
-    //  * @param {OccurrenceForm} form
-    //  * @returns {OccurrenceForm}
-    //  */
-    // setForm(form) {
-    //     form.addListener(Form.CHANGE_EVENT, this.formChangedHandler.bind(this));
-    //
-    //     if (!this.isNew) {
-    //         form.liveValidation = true;
-    //     }
-    //     return form;
-    // }
+            console.error(error);
+            return null;
+        }
+    };
 
     /**
      * Returns true or false based on occurrence date compatibility of *this* occurrence,
@@ -6490,28 +6503,32 @@ class App extends EventHarness {
      * *never* set this directly, always use setter
      *
      * @protected
-     * @type {number|boolean}
+     * @type {number|null}
      */
-    _currentControllerHandle = false;
+    _currentControllerHandle = null;
 
     /**
      *
-     * @param {number|false} handle
+     * @param {number|null} handle
      */
     set currentControllerHandle(handle) {
         if (handle !== this._currentControllerHandle) {
-            if (this._currentControllerHandle) {
+            if (this._currentControllerHandle !== null) {
                 this.controllers[this._currentControllerHandle].makeNotActive();
             }
 
             this._currentControllerHandle = handle;
 
-            if (this._currentControllerHandle) {
+            if (this._currentControllerHandle !== null) {
                 this.controllers[this._currentControllerHandle].makeActive();
             }
         }
     }
 
+    /**
+     *
+     * @returns {number|null}
+     */
     get currentControllerHandle() {
         return this._currentControllerHandle;
     }
@@ -6740,7 +6757,7 @@ class App extends EventHarness {
 
             let surveyId = survey?.id;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId)
-                .then(() => {
+                .finally(() => {
                     this.fireEvent(APP_EVENT_CURRENT_SURVEY_CHANGED, {newSurvey: survey});
                 });
         }
@@ -6771,7 +6788,6 @@ class App extends EventHarness {
 
                     this.fireEvent(APP_EVENT_OPTIONS_RESTORED, clonedOptions);
 
-
                     return clonedOptions;
                 });
         } else {
@@ -6781,6 +6797,22 @@ class App extends EventHarness {
 
     clearOptions() {
         this._options = null;
+    }
+
+    setOptions(rawOptions) {
+        const userId = this.userId;
+
+        if (userId) {
+            if (!this.options) {
+                this.options = {};
+            }
+
+            Object.assign(this._options, rawOptions);
+
+            return localforage.setItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`, this._options);
+        } else {
+            throw new Error(`User ID unset when setting options.`);
+        }
     }
 
     setOption(key, value) {
@@ -6795,8 +6827,22 @@ class App extends EventHarness {
         }
     }
 
+    /**
+     *
+     * @param {string} key
+     * @returns {any|undefined}
+     */
     getOption(key) {
         return this._options?.hasOwnProperty?.(key) ? JSON.parse(JSON.stringify(this._options[key])) : undefined;
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @returns {boolean}
+     */
+    hasOption(key) {
+        return this._options?.hasOwnProperty?.(key) || false;
     }
 
     /**
@@ -7072,6 +7118,19 @@ class App extends EventHarness {
     }
 
     /**
+     * returns true if window history state is not null and not an empty object
+     *
+     * @returns {boolean}
+     */
+    windowHasHistoryState() {
+        return this.routeHistory.length > 0;
+
+        // const state = window.history.state;
+        //
+        // return (state !== null && typeof state === 'object' && Object.keys(state).length > 0);
+    }
+
+    /**
      * mark the current survey and its constituent records as subject to validation checks (not pristine)
      */
     markAllNotPristine() {
@@ -7170,6 +7229,7 @@ class App extends EventHarness {
         //console.log(`in addOccurrence setting id '${occurrence.id}'`);
         this.occurrences.set(occurrence.id, occurrence);
 
+        // listener will be cleared when the occurrence is destroyed (which happens during survey change)
         occurrence.addListener(Occurrence.EVENT_MODIFIED,
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
@@ -8025,16 +8085,23 @@ class App extends EventHarness {
         // i.e. new and unmodified
         // only present in current App.surveys
         // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
+        // and also in some other automated navigation sequences
         if (targetSurveyId && this.surveys.has(targetSurveyId)) {
             const localSurvey = this.surveys.get(targetSurveyId);
 
             if (localSurvey.isPristine) {
+                // local survey is not current then
                 // clear occurrences from the previous survey
-                return this.clearCurrentSurvey().then(() => {
-                    this.currentSurvey = localSurvey;
-                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+
+                if (localSurvey !== this._currentSurvey) {
+                    return this.clearCurrentSurvey().then(() => {
+                        this.currentSurvey = localSurvey;
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                        return Promise.resolve();
+                    });
+                } else {
                     return Promise.resolve();
-                });
+                }
             }
         }
 
@@ -9210,7 +9277,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1732570065-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1733410989-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
