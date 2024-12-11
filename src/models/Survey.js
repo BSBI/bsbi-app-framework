@@ -530,7 +530,12 @@ export class Survey extends Model {
                 place = '(unlocalized)';
             }
 
-            return `${escapeHTML(place)} ${this.prettyDate || this._createdDateString()}`;
+            let surveyName = '';
+            if (this.attributes.listname) {
+                surveyName = ` “${escapeHTML(this.attributes.listname)}”`;
+            }
+
+            return `${escapeHTML(place)}${surveyName} ${this.prettyDate || this._createdDateString()}`;
         }
     }
 

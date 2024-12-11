@@ -1951,6 +1951,22 @@ export class App extends EventHarness {
     }
 
     /**
+     * Test if user has the necessary admin rights for the given survey.
+     * May be overridden in child classes to cope with administration of specialized survey types
+     *
+     * @param {Survey} survey
+     * @returns {boolean}
+     * @protected
+     */
+    _userHasSurveyAdminRights(survey) {
+        if (this.session?.userId) {
+            return survey.userId === this.session.userId || this.session?.superAdmin
+        } else {
+            return false;
+        }
+    }
+
+    /**
      *
      * @param {string} surveyId
      * @param {{survey: Array, occurrence: Array, image: Array}} storedObjectKeys
@@ -1969,7 +1985,7 @@ export class App extends EventHarness {
 
                 this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
 
-                if ((!userIdFilter && !survey.userId) || survey.userId === userIdFilter || this.session?.superAdmin) {
+                if ((!userIdFilter && !survey.userId) || this._userHasSurveyAdminRights(survey)) {
                     if (setAsCurrent) {
                         // the apps occurrences should only relate to the current survey
                         // (the reset records are remote or in IndexedDb)

@@ -112,8 +112,6 @@ export class AppController extends EventHarness {
             throw new Error(`No route set for '${this.title}' controller.`);
         }
 
-        //console.log({route : this.route});
-
         router.on(
             this.route,
             this.routeHandler.bind(this),
