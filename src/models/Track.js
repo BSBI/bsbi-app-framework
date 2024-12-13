@@ -1,10 +1,11 @@
 import {Model} from "./Model";
 import {DeviceType} from "../utils/DeviceType";
-import {Survey} from "./Survey";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
     APP_EVENT_CURRENT_SURVEY_CHANGED,
-    APP_EVENT_WATCH_GPS_USER_REQUEST
+    APP_EVENT_WATCH_GPS_USER_REQUEST,
+    SURVEY_EVENT_MODIFIED,
+    SURVEY_EVENT_OCCURRENCES_CHANGED
 } from "../framework/AppEvents";
 
 /**
@@ -546,7 +547,7 @@ export class Track extends Model {
         }
 
         if (!this._surveyChangeListenerHandle) {
-            this._surveyChangeListenerHandle = survey.addListener(Survey.EVENT_MODIFIED, () => {
+            this._surveyChangeListenerHandle = survey.addListener(SURVEY_EVENT_MODIFIED, () => {
                 // need to check for change to date
 
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId) {
@@ -566,7 +567,7 @@ export class Track extends Model {
         }
 
         if (!this._surveyOccurrencesChangeListenerHandle) {
-            this._surveyOccurrencesChangeListenerHandle = survey.addListener(Survey.EVENT_OCCURRENCES_CHANGED, () => {
+            this._surveyOccurrencesChangeListenerHandle = survey.addListener(SURVEY_EVENT_OCCURRENCES_CHANGED, () => {
                 // if occurrences have changed, then worth ensuring that tracking is up-to-date
 
                 this.isPristine = false; // probably not required, but safety fallback to ensure survey is saved
@@ -583,7 +584,7 @@ export class Track extends Model {
     removeSurveyChangeListener() {
         const survey = Track._app.surveys.get(this.surveyId);
 
-        survey?.removeListener(Survey.EVENT_MODIFIED, this._surveyChangeListenerHandle);
+        survey?.removeListener(SURVEY_EVENT_MODIFIED, this._surveyChangeListenerHandle);
         this._surveyChangeListenerHandle = undefined;
     }
 }

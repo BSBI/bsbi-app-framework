@@ -3425,7 +3425,7 @@ class Model extends EventHarness {
      */
     _savedRemotely = false;
 
-    static EVENT_SAVED_REMOTELY = MODEL_EVENT_SAVED_REMOTELY;
+    // static EVENT_SAVED_REMOTELY = MODEL_EVENT_SAVED_REMOTELY;
 
     static bsbiAppVersion = '';
 
@@ -3938,6 +3938,24 @@ const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
  * @type {string}
  */
 const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
+
+/**
+ * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+ *
+ * no parameters
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+
+/**
+ * fired from Survey when the object's contents have been modified
+ *
+ * parameter is {surveyId : string}
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_MODIFIED = 'modified';
 
 // SurveyPickerController
 //
@@ -4837,7 +4855,7 @@ class Track extends Model {
         }
 
         if (!this._surveyChangeListenerHandle) {
-            this._surveyChangeListenerHandle = survey.addListener(Survey.EVENT_MODIFIED, () => {
+            this._surveyChangeListenerHandle = survey.addListener(SURVEY_EVENT_MODIFIED, () => {
                 // need to check for change to date
 
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId) {
@@ -4857,7 +4875,7 @@ class Track extends Model {
         }
 
         if (!this._surveyOccurrencesChangeListenerHandle) {
-            this._surveyOccurrencesChangeListenerHandle = survey.addListener(Survey.EVENT_OCCURRENCES_CHANGED, () => {
+            this._surveyOccurrencesChangeListenerHandle = survey.addListener(SURVEY_EVENT_OCCURRENCES_CHANGED, () => {
                 // if occurrences have changed, then worth ensuring that tracking is up-to-date
 
                 this.isPristine = false; // probably not required, but safety fallback to ensure survey is saved
@@ -4874,7 +4892,7 @@ class Track extends Model {
     removeSurveyChangeListener() {
         const survey = Track._app.surveys.get(this.surveyId);
 
-        survey?.removeListener(Survey.EVENT_MODIFIED, this._surveyChangeListenerHandle);
+        survey?.removeListener(SURVEY_EVENT_MODIFIED, this._surveyChangeListenerHandle);
         this._surveyChangeListenerHandle = undefined;
     }
 }
@@ -4887,7 +4905,39 @@ class Track extends Model {
 // shared, keyed by email.
 
 
-const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+// /**
+//   * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+//   *
+//   * no parameters
+//   *
+//   * @type {string}
+//   */
+// export const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+
+/**
+ * fired on Survey when one of its occurrences has been added, deleted or reloaded
+ *
+ * no parameters
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
+
+/**
+ * parameter is {currentHectadSubunit : string}
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+
+// /**
+//  * fired from Survey when the object's contents have been modified
+//  *
+//  * parameter is {surveyId : string}
+//  *
+//  * @type {string}
+//  */
+// export const SURVEY_EVENT_MODIFIED = 'modified';
 
 /**
  * @typedef {import('bsbi-app-framework-view').SurveyForm} SurveyForm
@@ -4902,39 +4952,39 @@ class Survey extends Model {
      */
     static className = 'Survey';
 
-    /**
-     * fired from Survey when the object's contents have been modified
-     *
-     * parameter is {surveyId : string}
-     *
-     * @type {string}
-     */
-    static EVENT_MODIFIED = 'modified';
+    // /**
+    //  * fired from Survey when the object's contents have been modified
+    //  *
+    //  * parameter is {surveyId : string}
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_MODIFIED = SURVEY_EVENT_MODIFIED;
 
-    /**
-     * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
-     *
-     * no parameters
-     *
-     * @type {string}
-     */
-    static EVENT_OCCURRENCES_CHANGED = SURVEY_EVENT_OCCURRENCES_CHANGED;
+    // /**
+    //  * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+    //  *
+    //  * no parameters
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_OCCURRENCES_CHANGED = SURVEY_EVENT_OCCURRENCES_CHANGED;
 
-    /**
-     * fired on Survey when one of its occurrences has been added, deleted or reloaded
-     *
-     * no parameters
-     *
-     * @type {string}
-     */
-    static EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
+    // /**
+    //  * fired on Survey when one of its occurrences has been added, deleted or reloaded
+    //  *
+    //  * no parameters
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
 
-    /**
-     * parameter is {currentHectadSubunit : string}
-     *
-     * @type {string}
-     */
-    static EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+    // /**
+    //  * parameter is {currentHectadSubunit : string}
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
 
     SAVE_ENDPOINT = '/savesurvey.php';
 
@@ -4959,7 +5009,8 @@ class Survey extends Model {
      *     [casual] : "1"|null,
      *     [defaultCasual] : "1"|null,
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
-     *     [nulllist] : boolean
+     *     [nulllist] : boolean,
+     *     [listname] : string,
      * }}
      */
     attributes = {};
@@ -5251,7 +5302,7 @@ class Survey extends Model {
             form.conditionallyValidateForm();
 
             this.touch();
-            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
+            this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId: this.id});
         })
         .catch((error) => {
             // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want survey to save
@@ -5272,7 +5323,7 @@ class Survey extends Model {
             this.attributes[attributeName] = value;
 
             this.touch();
-            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+            this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId : this.id});
         }
     }
 
@@ -6007,6 +6058,13 @@ class Taxon {
  * @typedef {import('bsbi-app-framework-view').Form} Form
  */
 
+/**
+ * fired from Occurrence when the object's contents have been modified
+ *
+ * @type {string}
+ */
+const OCCURRENCE_EVENT_MODIFIED = 'modified';
+
 class Occurrence extends Model {
 
     /**
@@ -6053,12 +6111,12 @@ class Occurrence extends Model {
 
     TYPE = 'occurrence';
 
-    /**
-     * fired from Occurrence when the object's contents have been modified
-     *
-     * @type {string}
-     */
-    static EVENT_MODIFIED = 'modified';
+    // /**
+    //  * fired from Occurrence when the object's contents have been modified
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_MODIFIED = OCCURRENCE_EVENT_MODIFIED;
 
     /**
      * set if this is a new entry (before user has moved on to the next entry)
@@ -6118,7 +6176,7 @@ class Occurrence extends Model {
 
     changeApplied() {
         this.touch();
-        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
+        this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId: this.id});
     }
 
     delete() {
@@ -6126,7 +6184,7 @@ class Occurrence extends Model {
             this.touch();
             this.deleted = true;
 
-            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId : this.id});
+            this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId : this.id});
         }
     }
 
@@ -6634,100 +6692,100 @@ class App extends EventHarness {
      */
     static indexedDbConnectionLost = false;
 
-    /**
-     * Event fired when user requests a new blank survey
-     *
-     * @type {string}
-     */
-    static EVENT_ADD_SURVEY_USER_REQUEST = APP_EVENT_ADD_SURVEY_USER_REQUEST;
+    // /**
+    //  * Event fired when user requests a new blank survey
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_ADD_SURVEY_USER_REQUEST = APP_EVENT_ADD_SURVEY_USER_REQUEST;
 
-    /**
-     * Event fired when user requests a reset (local clearance) of all surveys
-     * @type {string}
-     */
-    static EVENT_RESET_SURVEYS = APP_EVENT_RESET_SURVEYS;
+    // /**
+    //  * Event fired when user requests a reset (local clearance) of all surveys
+    //  * @type {string}
+    //  */
+    // static EVENT_RESET_SURVEYS = APP_EVENT_RESET_SURVEYS;
 
-    /**
-     * Fired after App.currentSurvey has been set to a new blank survey
-     * the survey will be accessible in App.currentSurvey
-     *
-     * @type {string}
-     */
-    static EVENT_NEW_SURVEY = APP_EVENT_NEW_SURVEY;
+    // /**
+    //  * Fired after App.currentSurvey has been set to a new blank survey
+    //  * the survey will be accessible in App.currentSurvey
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_NEW_SURVEY = APP_EVENT_NEW_SURVEY;
 
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
-    /**
-     * Fired when a brand-new occurrence is added
-     *
-     * @type {string}
-     */
-    static EVENT_OCCURRENCE_ADDED = APP_EVENT_OCCURRENCE_ADDED;
+    // /**
+    //  * Fired when a brand-new occurrence is added
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_OCCURRENCE_ADDED = APP_EVENT_OCCURRENCE_ADDED;
 
-    /**
-     * Fired when a survey is retrieved from local storage
-     * parameter is {survey : Survey}
-     *
-     * @type {string}
-     */
-    static EVENT_SURVEY_LOADED = APP_EVENT_SURVEY_LOADED;
+    // /**
+    //  * Fired when a survey is retrieved from local storage
+    //  * parameter is {survey : Survey}
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_SURVEY_LOADED = APP_EVENT_SURVEY_LOADED;
 
-    /**
-     * Fired when an occurrence is retrieved from local storage or newly initialised
-     * parameter is {occurrence : Occurrence}
-     *
-     * @type {string}
-     */
-    static EVENT_OCCURRENCE_LOADED = APP_EVENT_OCCURRENCE_LOADED;
+    // /**
+    //  * Fired when an occurrence is retrieved from local storage or newly initialised
+    //  * parameter is {occurrence : Occurrence}
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_OCCURRENCE_LOADED = APP_EVENT_OCCURRENCE_LOADED;
 
-    static EVENT_CURRENT_OCCURRENCE_CHANGED = APP_EVENT_CURRENT_OCCURRENCE_CHANGED;
+    //static EVENT_CURRENT_OCCURRENCE_CHANGED = APP_EVENT_CURRENT_OCCURRENCE_CHANGED;
 
-    /**
-     * Fired when the selected current survey id is changed
-     * parameter is {newSurvey : Survey|null}
-     *
-     * (this is not fired for modification of the survey content)
-     *
-     * @type {string}
-     */
-    static EVENT_CURRENT_SURVEY_CHANGED = APP_EVENT_CURRENT_SURVEY_CHANGED;
+    // /**
+    //  * Fired when the selected current survey id is changed
+    //  * parameter is {newSurvey : Survey|null}
+    //  *
+    //  * (this is not fired for modification of the survey content)
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_CURRENT_SURVEY_CHANGED = APP_EVENT_CURRENT_SURVEY_CHANGED;
 
-    /**
-     * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
-     *
-     * @type {string}
-     */
-    static EVENT_SURVEYS_CHANGED = APP_EVENT_SURVEYS_CHANGED;
+    // /**
+    //  * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_SURVEYS_CHANGED = APP_EVENT_SURVEYS_CHANGED;
 
-    /**
-     * Fired after fully-successful sync-all
-     * (or if sync-all resolved with nothing to send)
-     *
-     * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
-     *
-     * @type {string}
-     */
-    static EVENT_ALL_SYNCED_TO_SERVER = APP_EVENT_ALL_SYNCED_TO_SERVER;
+    // /**
+    //  * Fired after fully-successful sync-all
+    //  * (or if sync-all resolved with nothing to send)
+    //  *
+    //  * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_ALL_SYNCED_TO_SERVER = APP_EVENT_ALL_SYNCED_TO_SERVER;
 
-    /**
-     * fired if sync-all called, but one or more objects failed to be stored
-     *
-     * @type {string}
-     */
-    static EVENT_SYNC_ALL_FAILED = APP_EVENT_SYNC_ALL_FAILED;
+    // /**
+    //  * fired if sync-all called, but one or more objects failed to be stored
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_SYNC_ALL_FAILED = APP_EVENT_SYNC_ALL_FAILED;
 
-    static EVENT_USER_LOGIN = APP_EVENT_USER_LOGIN;
+    // static EVENT_USER_LOGIN = APP_EVENT_USER_LOGIN;
 
-    static EVENT_USER_LOGOUT = APP_EVENT_USER_LOGOUT;
+    // static EVENT_USER_LOGOUT = APP_EVENT_USER_LOGOUT;
 
-    /**
-     * Fired when watching of GPS has been granted following user request.
-     *
-     * @type {string}
-     */
-    static EVENT_WATCH_GPS_USER_REQUEST = APP_EVENT_WATCH_GPS_USER_REQUEST;
+    // /**
+    //  * Fired when watching of GPS has been granted following user request.
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_WATCH_GPS_USER_REQUEST = APP_EVENT_WATCH_GPS_USER_REQUEST;
 
-    static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST;
+    // static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST;
 
     /**
      * IndexedDb key used for storing id of current (last accessed) survey (or null)
@@ -7198,7 +7256,7 @@ class App extends EventHarness {
 
             //console.log("setting survey's modified/save handler");
             survey.addListener(
-                Survey.EVENT_MODIFIED,
+                SURVEY_EVENT_MODIFIED,
                 () => {
                     survey.save().finally(() => {
                         this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
@@ -7256,7 +7314,7 @@ class App extends EventHarness {
         this.occurrences.set(occurrence.id, occurrence);
 
         // listener will be cleared when the occurrence is destroyed (which happens during survey change)
-        occurrence.addListener(Occurrence.EVENT_MODIFIED,
+        occurrence.addListener(OCCURRENCE_EVENT_MODIFIED,
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
                 if (!survey) {
@@ -7278,7 +7336,7 @@ class App extends EventHarness {
                     // survey.save(true);
 
                     occurrence.save().finally(() => {
-                        survey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
+                        survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
                     });
                 }
             });
@@ -8281,8 +8339,8 @@ class App extends EventHarness {
                             }
 
                             this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
-                            this.currentSurvey?.fireEvent?.(Survey.EVENT_OCCURRENCES_CHANGED);
-                            this.currentSurvey?.fireEvent?.(Survey.EVENT_LIST_LENGTH_CHANGED);
+                            this.currentSurvey?.fireEvent?.(SURVEY_EVENT_OCCURRENCES_CHANGED);
+                            this.currentSurvey?.fireEvent?.(SURVEY_EVENT_LIST_LENGTH_CHANGED);
 
                             //return Promise.resolve();
                         });
@@ -8399,11 +8457,11 @@ class App extends EventHarness {
 
         this.fireEvent(APP_EVENT_OCCURRENCE_ADDED, {occurrenceId: occurrence.id, surveyId: occurrence.surveyId});
 
-        currentSurvey.fireEvent(Survey.EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
-        currentSurvey.fireEvent(Survey.EVENT_LIST_LENGTH_CHANGED);
+        currentSurvey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId : occurrence.id});
+        currentSurvey.fireEvent(SURVEY_EVENT_LIST_LENGTH_CHANGED);
 
         // occurrence modified event fired to ensure that the occurrence is saved
-        occurrence.fireEvent(Occurrence.EVENT_MODIFIED);
+        occurrence.fireEvent(OCCURRENCE_EVENT_MODIFIED);
 
         return occurrence;
     }
@@ -9319,7 +9377,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1733874222-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1734127603-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -9955,5 +10013,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SURVEY_EVENT_OCCURRENCES_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

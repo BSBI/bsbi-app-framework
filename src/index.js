@@ -4,9 +4,12 @@ export {SurveyPickerController} from './controllers/SurveyPickerController';
 export {App} from './framework/App';
 export {EventHarness} from './framework/EventHarness';
 export {Model, UUID_REGEX, uuid, MODEL_EVENT_SAVED_REMOTELY, MODEL_EVENT_DESTROYED} from './models/Model';
-export {Occurrence} from './models/Occurrence';
+export {Occurrence, OCCURRENCE_EVENT_MODIFIED} from './models/Occurrence';
 export {OccurrenceImage, IMAGE_CONTEXT_SURVEY, IMAGE_CONTEXT_OCCURRENCE} from './models/OccurrenceImage';
-export {Survey, SURVEY_EVENT_OCCURRENCES_CHANGED} from './models/Survey';
+export {Survey,
+    SURVEY_EVENT_LIST_LENGTH_CHANGED,
+    SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED,
+} from './models/Survey';
 export {Taxon, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES,
     RAW_TAXON_NAMESTRING,
     RAW_TAXON_CANONICAL,
@@ -68,5 +71,7 @@ export {
     APP_EVENT_WATCH_GPS_USER_REQUEST,
     APP_EVENT_USER_LOGOUT,
     APP_EVENT_OPTIONS_RESTORED,
+    SURVEY_EVENT_OCCURRENCES_CHANGED,
+    SURVEY_EVENT_MODIFIED,
 } from './framework/AppEvents';
 

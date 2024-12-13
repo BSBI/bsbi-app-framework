@@ -9,8 +9,41 @@ import {Model, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
+import {SURVEY_EVENT_MODIFIED} from "../framework/AppEvents";
 
-export const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+// /**
+//   * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+//   *
+//   * no parameters
+//   *
+//   * @type {string}
+//   */
+// export const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+
+/**
+ * fired on Survey when one of its occurrences has been added, deleted or reloaded
+ *
+ * no parameters
+ *
+ * @type {string}
+ */
+export const SURVEY_EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
+
+/**
+ * parameter is {currentHectadSubunit : string}
+ *
+ * @type {string}
+ */
+export const SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+
+// /**
+//  * fired from Survey when the object's contents have been modified
+//  *
+//  * parameter is {surveyId : string}
+//  *
+//  * @type {string}
+//  */
+// export const SURVEY_EVENT_MODIFIED = 'modified';
 
 /**
  * @typedef {import('bsbi-app-framework-view').SurveyForm} SurveyForm
@@ -25,39 +58,39 @@ export class Survey extends Model {
      */
     static className = 'Survey';
 
-    /**
-     * fired from Survey when the object's contents have been modified
-     *
-     * parameter is {surveyId : string}
-     *
-     * @type {string}
-     */
-    static EVENT_MODIFIED = 'modified';
+    // /**
+    //  * fired from Survey when the object's contents have been modified
+    //  *
+    //  * parameter is {surveyId : string}
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_MODIFIED = SURVEY_EVENT_MODIFIED;
 
-    /**
-     * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
-     *
-     * no parameters
-     *
-     * @type {string}
-     */
-    static EVENT_OCCURRENCES_CHANGED = SURVEY_EVENT_OCCURRENCES_CHANGED;
+    // /**
+    //  * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+    //  *
+    //  * no parameters
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_OCCURRENCES_CHANGED = SURVEY_EVENT_OCCURRENCES_CHANGED;
 
-    /**
-     * fired on Survey when one of its occurrences has been added, deleted or reloaded
-     *
-     * no parameters
-     *
-     * @type {string}
-     */
-    static EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
+    // /**
+    //  * fired on Survey when one of its occurrences has been added, deleted or reloaded
+    //  *
+    //  * no parameters
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
 
-    /**
-     * parameter is {currentHectadSubunit : string}
-     *
-     * @type {string}
-     */
-    static EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+    // /**
+    //  * parameter is {currentHectadSubunit : string}
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
 
     SAVE_ENDPOINT = '/savesurvey.php';
 
@@ -82,7 +115,8 @@ export class Survey extends Model {
      *     [casual] : "1"|null,
      *     [defaultCasual] : "1"|null,
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
-     *     [nulllist] : boolean
+     *     [nulllist] : boolean,
+     *     [listname] : string,
      * }}
      */
     attributes = {};
@@ -374,7 +408,7 @@ export class Survey extends Model {
             form.conditionallyValidateForm();
 
             this.touch();
-            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId: this.id});
+            this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId: this.id});
         })
         .catch((error) => {
             // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want survey to save
@@ -395,7 +429,7 @@ export class Survey extends Model {
             this.attributes[attributeName] = value;
 
             this.touch();
-            this.fireEvent(Survey.EVENT_MODIFIED, {surveyId : this.id});
+            this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId : this.id});
         }
     }
 

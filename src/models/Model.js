@@ -34,7 +34,7 @@ export class Model extends EventHarness {
      */
     _savedRemotely = false;
 
-    static EVENT_SAVED_REMOTELY = MODEL_EVENT_SAVED_REMOTELY;
+    // static EVENT_SAVED_REMOTELY = MODEL_EVENT_SAVED_REMOTELY;
 
     static bsbiAppVersion = '';
 

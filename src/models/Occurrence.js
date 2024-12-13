@@ -6,6 +6,13 @@ import {GridRef} from 'british-isles-gridrefs'
  * @typedef {import('bsbi-app-framework-view').Form} Form
  */
 
+/**
+ * fired from Occurrence when the object's contents have been modified
+ *
+ * @type {string}
+ */
+export const OCCURRENCE_EVENT_MODIFIED = 'modified';
+
 export class Occurrence extends Model {
 
     /**
@@ -52,12 +59,12 @@ export class Occurrence extends Model {
 
     TYPE = 'occurrence';
 
-    /**
-     * fired from Occurrence when the object's contents have been modified
-     *
-     * @type {string}
-     */
-    static EVENT_MODIFIED = 'modified';
+    // /**
+    //  * fired from Occurrence when the object's contents have been modified
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_MODIFIED = OCCURRENCE_EVENT_MODIFIED;
 
     /**
      * set if this is a new entry (before user has moved on to the next entry)
@@ -117,7 +124,7 @@ export class Occurrence extends Model {
 
     changeApplied() {
         this.touch();
-        this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId: this.id});
+        this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId: this.id});
     }
 
     delete() {
@@ -125,7 +132,7 @@ export class Occurrence extends Model {
             this.touch();
             this.deleted = true;
 
-            this.fireEvent(Occurrence.EVENT_MODIFIED, {occurrenceId : this.id});
+            this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId : this.id});
         }
     }
 
