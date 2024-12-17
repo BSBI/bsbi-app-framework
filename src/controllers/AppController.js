@@ -129,19 +129,21 @@ export class AppController extends EventHarness {
 
     }
 
-    leaveRouteHandler(params) {
-        console.log('leave route handler');
-        document.body.classList.remove('hide-controls');
+    leaveRouteHandler() {
+        //this is low priority, so yield here
+        setTimeout(() => {
+            document.body.classList.remove('hide-controls');
 
-        for(let element of document.querySelectorAll('.needs-bsbi-controls')) {
-            if (!element.classList.contains('bsbi-controls')) {
-                element.classList.add('bsbi-controls');
+            for (let element of document.querySelectorAll('.needs-bsbi-controls')) {
+                if (!element.classList.contains('bsbi-controls')) {
+                    element.classList.add('bsbi-controls');
+                }
             }
-        }
 
-        for(let element of document.querySelectorAll('.dropdown-focused')) {
-            element.classList.remove('dropdown-focused');
-        }
+            for (let element of document.querySelectorAll('.dropdown-focused')) {
+                element.classList.remove('dropdown-focused');
+            }
+        });
     }
 
     /**

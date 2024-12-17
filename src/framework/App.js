@@ -727,30 +727,50 @@ export class App extends EventHarness {
     }
 
     /**
+     * Adds or updates the survey
+     * Caller should always use the returned value, *which may have become a reference to the original now amended survey*
      *
      * @param {Survey} survey
+     * @returns {Survey}
      */
     addSurvey(survey) {
         if (!this.projectIdIsCompatible(survey.projectId)) {
             throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
         }
 
-        if (!survey.hasAppModifiedListener) {
-            survey.hasAppModifiedListener = true;
+        let changes = false;
 
-            //console.log("setting survey's modified/save handler");
-            survey.addListener(
-                SURVEY_EVENT_MODIFIED,
-                () => {
-                    survey.save().finally(() => {
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                    });
-                }
-            );
+        if (this.surveys.has(survey.id)) {
+            const previousSurvey = this.surveys.get(survey.id);
+
+            if (previousSurvey.modifiedStamp !== this.modifiedStamp) {
+                changes = true;
+            }
+
+            survey = previousSurvey.mergeUpdate(survey);
+        } else {
+            if (!survey.hasAppModifiedListener) {
+                survey.hasAppModifiedListener = true;
+
+                //console.log("setting survey's modified/save handler");
+                survey.addListener(
+                    SURVEY_EVENT_MODIFIED,
+                    () => {
+                        survey.save().finally(() => {
+                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                        });
+                    }
+                );
+            }
+
+            this.surveys.set(survey.id, survey);
+            changes = true;
         }
 
-        this.surveys.set(survey.id, survey);
-        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+        if (changes) {
+            this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+        }
+        return survey;
     }
 
     /**
@@ -889,18 +909,6 @@ export class App extends EventHarness {
                 }
             }
 
-            // const promises = [];
-            //
-            // for (let type in jsonResponse) {
-            //     if (jsonResponse.hasOwnProperty(type)) {
-            //         for (let object of jsonResponse[type]) {
-            //             promises.push(this._conditionallyReplaceObject(object));
-            //         }
-            //     }
-            // }
-            //
-            // return Promise.all(promises);
-
             return promise;
         });
     }
@@ -931,6 +939,8 @@ export class App extends EventHarness {
                         console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
                         return Promise.resolve();
                     }
+                } else {
+                    console.info(`Adding new ${key} from server. (locally absent) `);
                 }
 
                 // no local copy or stale copy
@@ -951,7 +961,7 @@ export class App extends EventHarness {
      *      [track]: Array<string>
      *      }>}
      */
-    seekKeys(storedObjectKeys) {
+    seekKeys(storedObjectKeys = {survey: [], occurrence: [], image: [], track: []}) {
         //console.log('starting seekKeys');
 
         return localforage.keys().then((keys) => {
@@ -1712,7 +1722,13 @@ export class App extends EventHarness {
                             .then(
                                 () => this.seekKeys(storedObjectKeys),
                                 () => this.seekKeys(storedObjectKeys),
-                            )
+                            ).then(() => {
+                                if (!timer) {
+                                    console.log('Adding surveys for late response to load surveys');
+
+                                    return this.app.addAllSurveysFromLocal();
+                                }
+                            })
                             .finally(() => {
                                 if (timer) {
                                     clearTimeout(timer);
@@ -1775,7 +1791,7 @@ export class App extends EventHarness {
 
                 if (storedObjectKeys?.survey?.length) {
 
-                    const surveyFetchingPromises = [];
+                    //const surveyFetchingPromises = [];
                     let n = 0;
 
                     let restorePromise = Promise.resolve();
@@ -1850,6 +1866,34 @@ export class App extends EventHarness {
     }
 
     /**
+     * Adds surveys from local storage to the app's current list (if survey is compatible)
+     * Does not affect the current survey or refresh any dependent occurrences etc.
+     *
+     * Called as part of refresh following sync all (not used during app start-up, when current survey also needs to be set)
+     *
+     * @returns {Promise<void>}
+     *
+     */
+    addAllSurveysFromLocal() {
+        return this.seekKeys()
+            .then((storedObjectKeys) => {
+                let wrappedPromise = Promise.resolve();
+                if (storedObjectKeys?.survey?.length) {
+                    for (let surveyKey of storedObjectKeys.survey) {
+                        wrappedPromise = wrappedPromise.then(() => {
+                            return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, false);
+                        })
+                        .catch((reason) => {
+                            console.log({'failed to restore from local': {surveyKey, reason}});
+                            return Promise.resolve();
+                        })
+                    }
+                }
+                return wrappedPromise;
+            });
+    }
+
+    /**
      *
      * @param {{}|null} [attributes]
      * @param {number} [projectId]
@@ -1873,8 +1917,7 @@ export class App extends EventHarness {
 
         // Important: don't set this.currentSurvey until default attributes have been set,
         // as currentSurvey setter fires an event that may depend on these attributes
-        this.currentSurvey = newSurvey;
-        this.addSurvey(newSurvey);
+        this.currentSurvey = this.addSurvey(newSurvey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
 
         Track.applyChangedSurveyTrackingResumption(newSurvey);
@@ -1886,8 +1929,7 @@ export class App extends EventHarness {
      * @param survey
      */
     addAndSetSurvey(survey) {
-        this.currentSurvey = survey;
-        this.addSurvey(survey);
+        this.currentSurvey = this.addSurvey(survey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
     }
 
@@ -1979,7 +2021,7 @@ export class App extends EventHarness {
      * @returns {Promise}
      * @private
      */
-    _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
+    _restoreSurveyFromLocal(surveyId, storedObjectKeys = {survey: [], occurrence: [], image: []}, setAsCurrent = false) {
         // retrieve surveys first, then occurrences, then images from indexedDb
 
         let userIdFilter = this.session?.userId;
@@ -1995,7 +2037,7 @@ export class App extends EventHarness {
                         // the apps occurrences should only relate to the current survey
                         // (the reset records are remote or in IndexedDb)
                         return this.clearCurrentSurvey().then(() => {
-                            this.addSurvey(survey);
+                            survey = this.addSurvey(survey);
                             //const occurrenceFetchingPromises = [];
                             let occurrenceFetchingPromise = Promise.resolve();
 
@@ -2042,7 +2084,7 @@ export class App extends EventHarness {
                         });
                     } else {
                         // not the current survey, so just add it but don't load occurrences
-                        this.addSurvey(survey);
+                        survey = this.addSurvey(survey);
                         return Promise.resolve();
                     }
                 } else {

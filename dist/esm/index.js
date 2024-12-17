@@ -459,19 +459,21 @@ class AppController extends EventHarness {
 
     }
 
-    leaveRouteHandler(params) {
-        console.log('leave route handler');
-        document.body.classList.remove('hide-controls');
+    leaveRouteHandler() {
+        //this is low priority, so yield here
+        setTimeout(() => {
+            document.body.classList.remove('hide-controls');
 
-        for(let element of document.querySelectorAll('.needs-bsbi-controls')) {
-            if (!element.classList.contains('bsbi-controls')) {
-                element.classList.add('bsbi-controls');
+            for (let element of document.querySelectorAll('.needs-bsbi-controls')) {
+                if (!element.classList.contains('bsbi-controls')) {
+                    element.classList.add('bsbi-controls');
+                }
             }
-        }
 
-        for(let element of document.querySelectorAll('.dropdown-focused')) {
-            element.classList.remove('dropdown-focused');
-        }
+            for (let element of document.querySelectorAll('.dropdown-focused')) {
+                element.classList.remove('dropdown-focused');
+            }
+        });
     }
 
     /**
@@ -4065,7 +4067,7 @@ class SurveyPickerController extends AppController {
 
         //console.log({'route history' : this.app.routeHistory});
 
-        if (window.history.state) {
+        if (this.app.windowHasHistoryState()) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
         this.app.router.resume();
@@ -4077,7 +4079,7 @@ class SurveyPickerController extends AppController {
         this.view.showResetDialog();
 
         this.app.router.pause();
-        if (window.history.state) {
+        if (this.app.windowHasHistoryState()) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
         this.app.router.resume();
@@ -4096,29 +4098,13 @@ class SurveyPickerController extends AppController {
                 this.view.showSaveAllSuccess(result);
 
                 return this.app.refreshFromServer(Array.from(this.app.surveys.keys()))
+                    .then(() => this.app.addAllSurveysFromLocal())
                     .then(() => {
                         console.log('Surveys refreshed from the server');
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                        // this.fireEvent(APP_EVENT_SURVEYS_CHANGED); this will have been fired alread from app.addSurvey()
 
                         // @todo should now update the current survey from indexDb without clearing existing entries
                     });
-
-                //const currentSurvey = this.app.currentSurvey
-                // this.app.restoreOccurrences(currentSurvey?.id || '', true, !!currentSurvey)
-                //     .then((result) => {
-                //             console.log({'result from restoreOccurrences': result});
-                //         },
-                //         (result) => {
-                //             console.log({'failed result from restoreOccurrences': result});
-                //         }
-                //     );
-
-                // if (Array.isArray(result)) {
-                //     this.view.showSaveAllSuccess();
-                // } else {
-                //     Logger.logError(`Failed to sync all (line 138): ${result}`);
-                //     this.view.showSaveAllFailure();
-                // }
             }, (result) => {
                 console.log({'In save all handler, failure result': result});
                 // noinspection JSIgnoredPromiseFromCall
@@ -4130,7 +4116,7 @@ class SurveyPickerController extends AppController {
         }
 
         this.app.router.pause();
-        if (window.history.state) {
+        if (this.app.windowHasHistoryState()) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
         this.app.router.resume();
@@ -5616,6 +5602,31 @@ class Survey extends Model {
      */
     set track(track) {
         this._track = track;
+    }
+
+    mergeUpdate(newSurvey) {
+        if (newSurvey.id !== this._id) {
+            throw new Error(`Survey merge id mismatch: ${newSurvey.id} !== ${this._id}`);
+        }
+
+        if (!(this.isPristine || this._savedLocally)) {
+            throw new Error(`Can merge with unsaved local survey, for survey id ${this._id}`);
+        }
+
+        Object.assign(this.attributes, newSurvey.attributes);
+
+        this.userId = newSurvey.userId; // generally this should be the same anyway
+        this.deleted = newSurvey.deleted; // probably doesn't change here
+        //this.created = newSurvey.created; // should be the same
+        this.modified = newSurvey.modified;
+        this.projectId = newSurvey.projectId; // generally this should be the same anyway
+        this.isPristine = newSurvey.isPristine;
+
+        if (newSurvey.baseSurveyId) {
+            this.baseSurveyId = newSurvey.baseSurveyId;
+        }
+
+        return this;
     }
 }
 
@@ -7243,30 +7254,50 @@ class App extends EventHarness {
     }
 
     /**
+     * Adds or updates the survey
+     * Caller should always use the returned value, *which may have become a reference to the original now amended survey*
      *
      * @param {Survey} survey
+     * @returns {Survey}
      */
     addSurvey(survey) {
         if (!this.projectIdIsCompatible(survey.projectId)) {
             throw new Error(`Survey project id '${survey.projectId} does not match with current project ('${this.projectId}')`);
         }
 
-        if (!survey.hasAppModifiedListener) {
-            survey.hasAppModifiedListener = true;
+        let changes = false;
 
-            //console.log("setting survey's modified/save handler");
-            survey.addListener(
-                SURVEY_EVENT_MODIFIED,
-                () => {
-                    survey.save().finally(() => {
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                    });
-                }
-            );
+        if (this.surveys.has(survey.id)) {
+            const previousSurvey = this.surveys.get(survey.id);
+
+            if (previousSurvey.modifiedStamp !== this.modifiedStamp) {
+                changes = true;
+            }
+
+            survey = previousSurvey.mergeUpdate(survey);
+        } else {
+            if (!survey.hasAppModifiedListener) {
+                survey.hasAppModifiedListener = true;
+
+                //console.log("setting survey's modified/save handler");
+                survey.addListener(
+                    SURVEY_EVENT_MODIFIED,
+                    () => {
+                        survey.save().finally(() => {
+                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                        });
+                    }
+                );
+            }
+
+            this.surveys.set(survey.id, survey);
+            changes = true;
         }
 
-        this.surveys.set(survey.id, survey);
-        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+        if (changes) {
+            this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+        }
+        return survey;
     }
 
     /**
@@ -7405,18 +7436,6 @@ class App extends EventHarness {
                 }
             }
 
-            // const promises = [];
-            //
-            // for (let type in jsonResponse) {
-            //     if (jsonResponse.hasOwnProperty(type)) {
-            //         for (let object of jsonResponse[type]) {
-            //             promises.push(this._conditionallyReplaceObject(object));
-            //         }
-            //     }
-            // }
-            //
-            // return Promise.all(promises);
-
             return promise;
         });
     }
@@ -7447,6 +7466,8 @@ class App extends EventHarness {
                         console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
                         return Promise.resolve();
                     }
+                } else {
+                    console.info(`Adding new ${key} from server. (locally absent) `);
                 }
 
                 // no local copy or stale copy
@@ -7467,7 +7488,7 @@ class App extends EventHarness {
      *      [track]: Array<string>
      *      }>}
      */
-    seekKeys(storedObjectKeys) {
+    seekKeys(storedObjectKeys = {survey: [], occurrence: [], image: [], track: []}) {
         //console.log('starting seekKeys');
 
         return localforage.keys().then((keys) => {
@@ -8225,7 +8246,13 @@ class App extends EventHarness {
                             .then(
                                 () => this.seekKeys(storedObjectKeys),
                                 () => this.seekKeys(storedObjectKeys),
-                            )
+                            ).then(() => {
+                                if (!timer) {
+                                    console.log('Adding surveys for late response to load surveys');
+
+                                    return this.app.addAllSurveysFromLocal();
+                                }
+                            })
                             .finally(() => {
                                 if (timer) {
                                     clearTimeout(timer);
@@ -8287,6 +8314,8 @@ class App extends EventHarness {
                 //console.log({storedObjectKeys});
 
                 if (storedObjectKeys?.survey?.length) {
+
+                    //const surveyFetchingPromises = [];
                     let n = 0;
 
                     let restorePromise = Promise.resolve();
@@ -8361,6 +8390,34 @@ class App extends EventHarness {
     }
 
     /**
+     * Adds surveys from local storage to the app's current list (if survey is compatible)
+     * Does not affect the current survey or refresh any dependent occurrences etc.
+     *
+     * Called as part of refresh following sync all (not used during app start-up, when current survey also needs to be set)
+     *
+     * @returns {Promise<void>}
+     *
+     */
+    addAllSurveysFromLocal() {
+        return this.seekKeys()
+            .then((storedObjectKeys) => {
+                let wrappedPromise = Promise.resolve();
+                if (storedObjectKeys?.survey?.length) {
+                    for (let surveyKey of storedObjectKeys.survey) {
+                        wrappedPromise = wrappedPromise.then(() => {
+                            return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, false);
+                        })
+                        .catch((reason) => {
+                            console.log({'failed to restore from local': {surveyKey, reason}});
+                            return Promise.resolve();
+                        });
+                    }
+                }
+                return wrappedPromise;
+            });
+    }
+
+    /**
      *
      * @param {{}|null} [attributes]
      * @param {number} [projectId]
@@ -8384,8 +8441,7 @@ class App extends EventHarness {
 
         // Important: don't set this.currentSurvey until default attributes have been set,
         // as currentSurvey setter fires an event that may depend on these attributes
-        this.currentSurvey = newSurvey;
-        this.addSurvey(newSurvey);
+        this.currentSurvey = this.addSurvey(newSurvey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
 
         Track.applyChangedSurveyTrackingResumption(newSurvey);
@@ -8397,8 +8453,7 @@ class App extends EventHarness {
      * @param survey
      */
     addAndSetSurvey(survey) {
-        this.currentSurvey = survey;
-        this.addSurvey(survey);
+        this.currentSurvey = this.addSurvey(survey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
     }
 
@@ -8490,7 +8545,7 @@ class App extends EventHarness {
      * @returns {Promise}
      * @private
      */
-    _restoreSurveyFromLocal(surveyId, storedObjectKeys, setAsCurrent) {
+    _restoreSurveyFromLocal(surveyId, storedObjectKeys = {survey: [], occurrence: [], image: []}, setAsCurrent = false) {
         // retrieve surveys first, then occurrences, then images from indexedDb
 
         let userIdFilter = this.session?.userId;
@@ -8506,7 +8561,7 @@ class App extends EventHarness {
                         // the apps occurrences should only relate to the current survey
                         // (the reset records are remote or in IndexedDb)
                         return this.clearCurrentSurvey().then(() => {
-                            this.addSurvey(survey);
+                            survey = this.addSurvey(survey);
                             //const occurrenceFetchingPromises = [];
                             let occurrenceFetchingPromise = Promise.resolve();
 
@@ -8553,7 +8608,7 @@ class App extends EventHarness {
                         });
                     } else {
                         // not the current survey, so just add it but don't load occurrences
-                        this.addSurvey(survey);
+                        survey = this.addSurvey(survey);
                         return Promise.resolve();
                     }
                 } else {
@@ -9377,7 +9432,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1734127603-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1734454823-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

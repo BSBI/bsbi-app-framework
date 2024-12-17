@@ -723,4 +723,29 @@ export class Survey extends Model {
     set track(track) {
         this._track = track;
     }
+
+    mergeUpdate(newSurvey) {
+        if (newSurvey.id !== this._id) {
+            throw new Error(`Survey merge id mismatch: ${newSurvey.id} !== ${this._id}`);
+        }
+
+        if (!(this.isPristine || this._savedLocally)) {
+            throw new Error(`Can merge with unsaved local survey, for survey id ${this._id}`);
+        }
+
+        Object.assign(this.attributes, newSurvey.attributes);
+
+        this.userId = newSurvey.userId; // generally this should be the same anyway
+        this.deleted = newSurvey.deleted; // probably doesn't change here
+        //this.created = newSurvey.created; // should be the same
+        this.modified = newSurvey.modified;
+        this.projectId = newSurvey.projectId; // generally this should be the same anyway
+        this.isPristine = newSurvey.isPristine;
+
+        if (newSurvey.baseSurveyId) {
+            this.baseSurveyId = newSurvey.baseSurveyId;
+        }
+
+        return this;
+    }
 }

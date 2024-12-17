@@ -116,7 +116,7 @@ export class SurveyPickerController extends AppController {
 
         //console.log({'route history' : this.app.routeHistory});
 
-        if (window.history.state) {
+        if (this.app.windowHasHistoryState()) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
         this.app.router.resume();
@@ -128,7 +128,7 @@ export class SurveyPickerController extends AppController {
         this.view.showResetDialog();
 
         this.app.router.pause();
-        if (window.history.state) {
+        if (this.app.windowHasHistoryState()) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
         this.app.router.resume();
@@ -147,29 +147,13 @@ export class SurveyPickerController extends AppController {
                 this.view.showSaveAllSuccess(result);
 
                 return this.app.refreshFromServer(Array.from(this.app.surveys.keys()))
+                    .then(() => this.app.addAllSurveysFromLocal())
                     .then(() => {
                         console.log('Surveys refreshed from the server');
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                        // this.fireEvent(APP_EVENT_SURVEYS_CHANGED); this will have been fired alread from app.addSurvey()
 
                         // @todo should now update the current survey from indexDb without clearing existing entries
                     });
-
-                //const currentSurvey = this.app.currentSurvey
-                // this.app.restoreOccurrences(currentSurvey?.id || '', true, !!currentSurvey)
-                //     .then((result) => {
-                //             console.log({'result from restoreOccurrences': result});
-                //         },
-                //         (result) => {
-                //             console.log({'failed result from restoreOccurrences': result});
-                //         }
-                //     );
-
-                // if (Array.isArray(result)) {
-                //     this.view.showSaveAllSuccess();
-                // } else {
-                //     Logger.logError(`Failed to sync all (line 138): ${result}`);
-                //     this.view.showSaveAllFailure();
-                // }
             }, (result) => {
                 console.log({'In save all handler, failure result': result});
                 // noinspection JSIgnoredPromiseFromCall
@@ -181,7 +165,7 @@ export class SurveyPickerController extends AppController {
         }
 
         this.app.router.pause();
-        if (window.history.state) {
+        if (this.app.windowHasHistoryState()) {
             window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
         }
         this.app.router.resume();
