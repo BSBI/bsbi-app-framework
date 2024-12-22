@@ -114,6 +114,12 @@ export const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
 export const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
 /**
+ *
+ * @type {string}
+ */
+export const SURVEY_EVENT_DELETED = 'surveydeleted';
+
+/**
  * fired from Survey when the object's contents have been modified
  *
  * parameter is {surveyId : string}

@@ -111,27 +111,13 @@ export class SurveyPickerController extends AppController {
 
     beforeNewHandler(done) {
         this.view.newSurveyDialog();
-
-        this.app.router.pause();
-
-        //console.log({'route history' : this.app.routeHistory});
-
-        if (this.app.windowHasHistoryState()) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-        }
-        this.app.router.resume();
-
+        this.app.revertUrl();
         done(false); // block navigation
     }
 
     beforeResetHandler(done) {
         this.view.showResetDialog();
-
-        this.app.router.pause();
-        if (this.app.windowHasHistoryState()) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-        }
-        this.app.router.resume();
+        this.app.revertUrl();
 
         done(false); // block navigation
     }
@@ -164,12 +150,7 @@ export class SurveyPickerController extends AppController {
             });
         }
 
-        this.app.router.pause();
-        if (this.app.windowHasHistoryState()) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
-        }
-        this.app.router.resume();
-
+        this.app.revertUrl();
         done(false); // block navigation
     }
 

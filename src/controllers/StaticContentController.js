@@ -55,8 +55,37 @@ export class StaticContentController extends AppController {
 
     routeHandler(context, subcontext, rhs, queryParameters) {
         // console.log("reached route handler for StaticContentController.js");
+        this.app.saveRoute();
 
         this.app.currentControllerHandle = this.handle;
         this.view.display();
+    }
+
+    backHandler() {
+        // backHandler may still be attached to other inactive controllers
+        // need to check that only the current one takes effect
+        if (this.isCurrent()) {
+
+            // check that previous page is within app (i.e. that someone hasn't bizarrely navigated from outside, straight to this page)
+            if (this.app.routeHistory.length >= 2) {
+                this.app.routeHistory.length--;
+                console.log('using standard back navigation');
+
+                window.history.back();
+            } else {
+                console.log(`navigating back to home page '${this.app.homeRoute}'`);
+
+                if (this.app.routeHistory.length > 0) {
+                    this.app.routeHistory.length--;
+                } else {
+                    console.error(`In static content controller back handler route history length was ${this.app.routeHistory.length} before back navigation.`)
+                }
+
+                // pause so that replace rather than push history state
+                this.app.router.pause();
+                this.app.router.navigate(this.app.homeRoute).resume();
+                this.app.router.resolve();
+            }
+        }
     }
 }

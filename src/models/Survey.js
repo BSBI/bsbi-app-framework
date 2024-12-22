@@ -9,7 +9,8 @@ import {Model, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
-import {SURVEY_EVENT_MODIFIED} from "../framework/AppEvents";
+import {SURVEY_EVENT_MODIFIED, SURVEY_EVENT_DELETED} from "../framework/AppEvents";
+import {OCCURRENCE_EVENT_MODIFIED} from "./Occurrence";
 
 // /**
 //   * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
@@ -532,6 +533,21 @@ export class Survey extends Model {
             return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Survey ${this.id} has already been saved.`);
+        }
+    }
+
+    /**
+     * low-level delete of survey
+     * does not test whether there are extant occurrences
+     *
+     */
+    delete() {
+        if (!this.deleted) {
+            this.touch();
+            this.deleted = true;
+            this.save().finally(() => {
+                this.fireEvent(SURVEY_EVENT_DELETED, {surveyId : this.id});
+            });
         }
     }
 

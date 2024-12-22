@@ -31,7 +31,7 @@ import {
     APP_EVENT_USER_LOGOUT,
     APP_EVENT_OPTIONS_RESTORED,
     SURVEY_EVENT_MODIFIED,
-    SURVEY_EVENT_OCCURRENCES_CHANGED
+    SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_DELETED
 } from './AppEvents';
 import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
 
@@ -699,6 +699,18 @@ export class App extends EventHarness {
     }
 
     /**
+     * Go back to the last page logged in the app's history thread
+     * Usually used after temporary navigation to service handling urls
+     */
+    revertUrl() {
+        this.router.pause();
+        if (this.windowHasHistoryState()) {
+            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+        }
+        this.router.resume();
+    }
+
+    /**
      * mark the current survey and its constituent records as subject to validation checks (not pristine)
      */
     markAllNotPristine() {
@@ -759,6 +771,31 @@ export class App extends EventHarness {
                         survey.save().finally(() => {
                             this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
                         });
+                    }
+                );
+            }
+
+            if (!survey.hasDeleteListener) {
+                survey.hasDeleteListener = true;
+
+                survey.addListener(
+                    SURVEY_EVENT_DELETED,
+                    () => {
+                        // do this slightly more safely via ids, in case surveys somehow refer to different objects
+                        if (this.currentSurvey?.id === survey.id) {
+                            this.currentSurvey = null;
+                        }
+
+                        this.surveys.delete(survey.id);
+
+                        // only clear from local storage if the deletion has gone through
+                        if (survey.savedRemotely) {
+                            // noinspection JSIgnoredPromiseFromCall
+                            this.forageRemoveItem(`survey.${survey.id}`);
+                        }
+
+                        survey.destructor();
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
                     }
                 );
             }
@@ -2031,6 +2068,11 @@ export class App extends EventHarness {
                 //console.log(`retrieving local survey ${surveyId}`);
 
                 this.fireEvent(APP_EVENT_SURVEY_LOADED, {survey}); // provides a hook point in case any attributes need to be re-initialised
+
+                if (survey.deleted) {
+                    console.log(`Skipping deleted survey id ${survey.id}.`);
+                    return Promise.reject(`Skipping deleted survey id ${survey.id}.`);
+                }
 
                 if ((!userIdFilter && !survey.userId) || this._userHasSurveyAdminRights(survey)) {
                     if (setAsCurrent) {
