@@ -305,6 +305,11 @@ export class Model extends EventHarness {
      * @returns {Promise}
      */
     static retrieveFromLocal(key, modelObject) {
+        if (!key || key === 'undefined') {
+            // bad key or literal string 'undefined'
+            throw new Error(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
+        }
+
         return localforage.getItem(`${modelObject.TYPE}.${key}`)
             .then(
                 (descriptor) => {

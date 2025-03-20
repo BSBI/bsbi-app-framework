@@ -611,7 +611,7 @@ function requireLocalforage () {
 	if (hasRequiredLocalforage) return localforage$1.exports;
 	hasRequiredLocalforage = 1;
 	(function (module, exports) {
-		(function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw (f.code="MODULE_NOT_FOUND", f)}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+		(function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,true);if(i)return i(o,true);var f=new Error("Cannot find module '"+o+"'");throw (f.code="MODULE_NOT_FOUND", f)}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 		(function (global){
 		var Mutation = global.MutationObserver || global.WebKitMutationObserver;
 
@@ -3727,6 +3727,11 @@ class Model extends EventHarness {
      * @returns {Promise}
      */
     static retrieveFromLocal(key, modelObject) {
+        if (!key || key === 'undefined') {
+            // bad key or literal string 'undefined'
+            throw new Error(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
+        }
+
         return localforage.getItem(`${modelObject.TYPE}.${key}`)
             .then(
                 (descriptor) => {
@@ -4081,15 +4086,19 @@ class SurveyPickerController extends AppController {
 
         router.on(
             '/survey/add/:surveyId/:occurrenceId',
-            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+            this.addSurveyHandler.bind(this, 'survey', 'add', ''),
+            {
+                before: this.beforeRouteLoginHandler.bind(this),
+            }
         );
 
         router.on(
             '/survey/add/:surveyId',
-            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+            this.addSurveyHandler.bind(this, 'survey', 'add', ''),
+            {
+                before: this.beforeRouteLoginHandler.bind(this),
+            }
         );
-
-
 
         this.app.addListener(APP_EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
         this.app.addListener(APP_EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
@@ -4250,6 +4259,16 @@ class SurveyPickerController extends AppController {
     mainRouteHandler(context, subcontext, rhs, queryParameters) {
         console.log("reached special route handler for SurveyPickerController.js");
         //console.log({context: context, params: subcontext, query: queryParameters});
+    }
+
+    /**
+     * Placeholder hook for login, overriden in descendants as required
+     *
+     * @param done
+     * @param params
+     */
+    beforeRouteLoginHandler(done, params) {
+        done(true);
     }
 }
 
@@ -4470,6 +4489,13 @@ class Track extends Model {
      */
     _surveyChangeListenerHandle = null;
 
+    // /**
+    //  * Project ids of survey types that are trackable
+    //  *
+    //  * @type {Array<number>}
+    //  */
+    // static trackableSurveyProjects = [];
+
     static reset() {
         Track._tracks = new Map();
         Track.trackingIsActive = false;
@@ -4579,7 +4605,11 @@ class Track extends Model {
         // to a new square and tracking was previously active.
 
         // otherwise, there is a risk that a survey switch will lead to spurious new points
-        if (survey && !survey.attributes?.casual && survey.isToday() !== false && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
+        if (survey &&
+            !survey.attributes?.casual &&
+            survey.isToday() !== false &&
+            survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId
+        ) {
             // Resume existing tracking, or start a new track.
 
             console.log('continuing tracking for survey with common baseSurvey');
@@ -5687,7 +5717,7 @@ class Survey extends Model {
      *     [place] : string|null,
      *     [surveyName] : string|null,
      *     [casual] : "1"|null,
-     *     [defaultCasual] : "1"|null,
+     *     [defaultCasual] : true|null,
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
      *     [nulllist] : boolean,
      *     [listname] : string,
@@ -6889,6 +6919,14 @@ class App extends EventHarness {
         }
     }
 
+    /**
+     *
+     * @returns {?Survey}
+     */
+    get currentSurvey() {
+        return this._currentSurvey;
+    }
+
     get userId() {
         return this.session?.userId;
     }
@@ -7041,14 +7079,6 @@ class App extends EventHarness {
     }
 
     /**
-     *
-     * @returns {?Survey}
-     */
-    get currentSurvey() {
-        return this._currentSurvey;
-    }
-
-    /**
      * note that the last survey might not belong to the current user
      *
      * @returns {Promise<string | null>}
@@ -7184,6 +7214,10 @@ class App extends EventHarness {
     initialise() {
         this.layout.initialise();
 
+        for (let controller of this.controllers) {
+            controller.initialise();
+        }
+
         this._router.notFound((query) => {
             // called when there is path specified but
             // there is no route matching
@@ -7216,10 +7250,6 @@ class App extends EventHarness {
             }
             this._router.resolve();
         });
-
-        for (let controller of this.controllers) {
-            controller.initialise();
-        }
     }
 
     display() {
@@ -7656,8 +7686,9 @@ class App extends EventHarness {
      * @returns {Promise<{savedCount : {}}>}
      */
     syncAll(fastReturn = true) {
-        if (App._syncAllInProgress && fastReturn) {
-            console.info("Skipped sync all as another sync is already in progress.");
+
+        if ((App._syncAllInProgress || !navigator.onLine) && fastReturn) {
+            console.info("Skipped sync-all as another sync is already in progress or the device is offline.");
             return Promise.resolve();
         }
 
@@ -9505,7 +9536,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1734907048-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1742485935-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

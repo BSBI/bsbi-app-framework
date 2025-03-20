@@ -160,6 +160,13 @@ export class Track extends Model {
      */
     _surveyChangeListenerHandle = null;
 
+    // /**
+    //  * Project ids of survey types that are trackable
+    //  *
+    //  * @type {Array<number>}
+    //  */
+    // static trackableSurveyProjects = [];
+
     static reset() {
         Track._tracks = new Map();
         Track.trackingIsActive = false;
@@ -269,7 +276,11 @@ export class Track extends Model {
         // to a new square and tracking was previously active.
 
         // otherwise, there is a risk that a survey switch will lead to spurious new points
-        if (survey && !survey.attributes?.casual && survey.isToday() !== false && survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId) {
+        if (survey &&
+            !survey.attributes?.casual &&
+            survey.isToday() !== false &&
+            survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId
+        ) {
             // Resume existing tracking, or start a new track.
 
             console.log('continuing tracking for survey with common baseSurvey')

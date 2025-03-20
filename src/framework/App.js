@@ -331,6 +331,14 @@ export class App extends EventHarness {
         }
     }
 
+    /**
+     *
+     * @returns {?Survey}
+     */
+    get currentSurvey() {
+        return this._currentSurvey;
+    }
+
     get userId() {
         return this.session?.userId;
     }
@@ -483,14 +491,6 @@ export class App extends EventHarness {
     }
 
     /**
-     *
-     * @returns {?Survey}
-     */
-    get currentSurvey() {
-        return this._currentSurvey;
-    }
-
-    /**
      * note that the last survey might not belong to the current user
      *
      * @returns {Promise<string | null>}
@@ -626,6 +626,10 @@ export class App extends EventHarness {
     initialise() {
         this.layout.initialise();
 
+        for (let controller of this.controllers) {
+            controller.initialise();
+        }
+
         this._router.notFound((query) => {
             // called when there is path specified but
             // there is no route matching
@@ -658,10 +662,6 @@ export class App extends EventHarness {
             }
             this._router.resolve();
         });
-
-        for (let controller of this.controllers) {
-            controller.initialise();
-        }
     }
 
     display() {
@@ -1098,8 +1098,9 @@ export class App extends EventHarness {
      * @returns {Promise<{savedCount : {}}>}
      */
     syncAll(fastReturn = true) {
-        if (App._syncAllInProgress && fastReturn) {
-            console.info("Skipped sync all as another sync is already in progress.");
+
+        if ((App._syncAllInProgress || !navigator.onLine) && fastReturn) {
+            console.info("Skipped sync-all as another sync is already in progress or the device is offline.");
             return Promise.resolve();
         }
 

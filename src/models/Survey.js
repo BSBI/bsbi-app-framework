@@ -114,7 +114,7 @@ export class Survey extends Model {
      *     [place] : string|null,
      *     [surveyName] : string|null,
      *     [casual] : "1"|null,
-     *     [defaultCasual] : "1"|null,
+     *     [defaultCasual] : true|null,
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
      *     [nulllist] : boolean,
      *     [listname] : string,

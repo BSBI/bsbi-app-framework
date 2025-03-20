@@ -95,15 +95,19 @@ export class SurveyPickerController extends AppController {
 
         router.on(
             '/survey/add/:surveyId/:occurrenceId',
-            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+            this.addSurveyHandler.bind(this, 'survey', 'add', ''),
+            {
+                before: this.beforeRouteLoginHandler.bind(this),
+            }
         );
 
         router.on(
             '/survey/add/:surveyId',
-            this.addSurveyHandler.bind(this, 'survey', 'add', '')
+            this.addSurveyHandler.bind(this, 'survey', 'add', ''),
+            {
+                before: this.beforeRouteLoginHandler.bind(this),
+            }
         );
-
-
 
         this.app.addListener(APP_EVENT_ADD_SURVEY_USER_REQUEST, this.addNewSurveyHandler.bind(this));
         this.app.addListener(APP_EVENT_RESET_SURVEYS, this.resetSurveysHandler.bind(this));
@@ -264,5 +268,15 @@ export class SurveyPickerController extends AppController {
     mainRouteHandler(context, subcontext, rhs, queryParameters) {
         console.log("reached special route handler for SurveyPickerController.js");
         //console.log({context: context, params: subcontext, query: queryParameters});
+    }
+
+    /**
+     * Placeholder hook for login, overriden in descendants as required
+     *
+     * @param done
+     * @param params
+     */
+    beforeRouteLoginHandler(done, params) {
+        done(true);
     }
 }
