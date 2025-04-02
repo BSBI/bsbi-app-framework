@@ -1662,9 +1662,10 @@ export class App extends EventHarness {
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
      * @param {boolean} [setCurrentSurvey] if set then, if possible, set a survey as current, default true
+     * @param {boolean} [localOnly] if set then only retrieve data from local storage (applies only if a targetSurveyId is specified, default false
      * @return {Promise}
      */
-    restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true) {
+    restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false) {
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
 
         if (targetSurveyId === 'undefined') {
@@ -1673,7 +1674,7 @@ export class App extends EventHarness {
         }
 
         return (targetSurveyId) ?
-            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank, setCurrentSurvey)
+            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank, setCurrentSurvey, localOnly)
             :
             this.getLastSurveyId().then(
                 (lastSurveyId) => {
@@ -1696,10 +1697,14 @@ export class App extends EventHarness {
      * @param {string} [targetSurveyId] default ''
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
      * @param {boolean} [setCurrentSurvey] default true
+     * @param {boolean} [localOnly] default false if set do fast local switch rather than refreshing from server
+     *
+     * @todo implement localOnly 2025-04-01
+     *
      * @returns {Promise<void>|Promise<unknown>}
      * @protected
      */
-    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true) {
+    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false) {
         // need to check for a special case where restoring a survey that has never been saved even locally
         // i.e. new and unmodified
         // only present in current App.surveys
@@ -1741,7 +1746,7 @@ export class App extends EventHarness {
 
         return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys))
             .then((storedObjectKeys) => {
-                if (storedObjectKeys.survey.length || this.session?.userId) {
+                if (!localOnly && (storedObjectKeys.survey.length || this.session?.userId)) {
                     let timer;
                     const timeoutMs = 15 * 1000;
 
@@ -1825,21 +1830,13 @@ export class App extends EventHarness {
                 // (because of previous catch)
                 // storedObjectKeys and indexed db should be as up-to-date as possible
 
-                //console.log({storedObjectKeys});
-
                 if (storedObjectKeys?.survey?.length) {
-
-                    //const surveyFetchingPromises = [];
                     let n = 0;
 
                     let restorePromise = Promise.resolve();
 
                     for (let surveyKey of storedObjectKeys.survey) {
                         // arbitrarily set first survey key as current if a target id hasn't been specified
-
-                        // surveyFetchingPromises.push(
-                        //     this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, (targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0))
-                        // );
 
                         restorePromise = restorePromise
                             .then(() => {
@@ -1850,11 +1847,6 @@ export class App extends EventHarness {
                                 return Promise.resolve();
                             })
                     }
-
-                    // can use Promise.all as don't want these to run concurrently
-                    // which may overwhelm Safari
-                    // instead need a chain of then()s
-                    //return Promise.all(surveyFetchingPromises)
 
                     return restorePromise
                         .finally(() => {
