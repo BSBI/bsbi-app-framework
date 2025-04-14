@@ -189,8 +189,10 @@ export class Track extends Model {
         if (!Track._staticListenersRegistered) {
             const app = Track._app;
             if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-                app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
-                    const survey = Track._app.currentSurvey;
+                app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, (/** {newSurvey : Survey|null}|null */ params) => {
+                    //const survey = Track._app.currentSurvey;
+                    const survey = params?.newSurvey;
+                    params = null;
 
                     if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
                         /**

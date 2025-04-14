@@ -3,6 +3,7 @@ import {escapeHTML} from "../utils/escapeHTML";
 
 export const SORT_ORDER_GENUS = 28;
 export const SORT_ORDER_SPECIES = 56;
+export const SORT_ORDER_SUBSPECIES = 76;
 export const SORT_ORDER_CULTIVAR = 120;
 
 const AGG_QUALIFIER = 'agg.';

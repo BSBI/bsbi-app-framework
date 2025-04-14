@@ -4127,7 +4127,7 @@ class SurveyPickerController extends AppController {
 
                 this.view.showSaveAllSuccess(result);
 
-                return this.app.refreshFromServer(Array.from(this.app.surveys.keys()))
+                return this.app.refreshFromServer(Array.from(this.app.surveys.keys()), false)
                     .then(() => this.app.addAllSurveysFromLocal())
                     .then(() => {
                         console.log('Surveys refreshed from the server');
@@ -4518,8 +4518,10 @@ class Track extends Model {
         if (!Track._staticListenersRegistered) {
             const app = Track._app;
             if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
-                app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, () => {
-                    const survey = Track._app.currentSurvey;
+                app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, (/** {newSurvey : Survey|null}|null */ params) => {
+                    //const survey = Track._app.currentSurvey;
+                    const survey = params?.newSurvey;
+                    params = null;
 
                     if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
                         /**
@@ -6463,7 +6465,7 @@ class OccurrenceImage extends Model {
      * @param {boolean} [isSync]
      * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
      *
-     * @returns {Promise}
+     * @returns {Promise<{}>}
      */
     save(forceSave = false, isSync = false, params) {
         if (params?.surveyId) {
@@ -7483,9 +7485,10 @@ class App extends EventHarness {
      *
      * @param {Array.<string>} surveyIds
      * @param {boolean} specifiedSurveysOnly if set then don't return a full extended refresh, only the specified surveys
+     * @param {number|null} maxAge maximum age of surveys to retrieve (excluding specified ids, which are unconstrained), applicable only if a userid is provided, default null
      * @return {Promise}
      */
-    refreshFromServer(surveyIds, specifiedSurveysOnly = false) {
+    refreshFromServer(surveyIds, specifiedSurveysOnly = false, maxAge = null) {
         //console.log({'Refresh from server, ids' : surveyIds});
         const formData = new FormData;
 
@@ -7498,6 +7501,11 @@ class App extends EventHarness {
 
         if (this.session?.userId) {
             formData.append('userId', this.session.userId);
+
+            // relevant only if a user is logged in
+            if (maxAge) {
+                formData.append('userMaxAge', maxAge.toString());
+            }
         }
 
         if (specifiedSurveysOnly) {
@@ -7638,7 +7646,7 @@ class App extends EventHarness {
             track : [],
         };
 
-        let promise = this.seekKeys(storedObjectKeys)
+        const promise = this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
                     .then((result) => {
@@ -7863,6 +7871,7 @@ class App extends EventHarness {
         /**
          * @param {string} objectKey
          * @param {typeof Model} objectClass
+         * @returns {function(): Promise<unknown>}
          * @private
          *
          */
@@ -7968,7 +7977,7 @@ class App extends EventHarness {
         //console.log('got to 1105');
 
         syncPromise = syncPromise.finally(() => {
-                //console.log('got to 1139');
+                this._updateUnsavedMarkerCss();
                 if (errorFlag) {
                     console.log({'local sync failed with errors': errors});
                     return Promise.reject({
@@ -7977,8 +7986,6 @@ class App extends EventHarness {
                         savedFlag
                     });
                 }
-
-                this._updateUnsavedMarkerCss();
             });
 
 
@@ -8189,12 +8196,14 @@ class App extends EventHarness {
 
         for (let type in deletionIds) {
             for (let key of deletionIds[type]) {
-                purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`));
+                purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`))
+                    .catch(error => console.error({'purge error' : {key: `${type}.${key}`, error}}));
             }
         }
 
         if (deletionIds.image.length > 0) {
-            purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image));
+            purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image))
+                .catch(error => console.error({'purge images error' : {imagekeys: deletionIds.image, error}}));
         }
 
         if (deletionIds.survey.length > 0) {
@@ -8204,7 +8213,8 @@ class App extends EventHarness {
                 }
 
                 this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-            });
+            })
+                .catch(error => console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}}));
         }
 
         return purgePromise;
@@ -8251,7 +8261,7 @@ class App extends EventHarness {
      * @return {Promise}
      */
     restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false) {
-        console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}`);
+        console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}, localOnly: '${localOnly.toString()}'`);
 
         if (targetSurveyId === 'undefined') {
             console.error(`Attempt to restore occurrences for literal 'undefined' survey id.`);
@@ -8284,8 +8294,6 @@ class App extends EventHarness {
      * @param {boolean} [setCurrentSurvey] default true
      * @param {boolean} [localOnly] default false if set do fast local switch rather than refreshing from server
      *
-     * @todo implement localOnly 2025-04-01
-     *
      * @returns {Promise<void>|Promise<unknown>}
      * @protected
      */
@@ -8312,6 +8320,8 @@ class App extends EventHarness {
                     return Promise.resolve();
                 }
             }
+        } else {
+            localOnly = false;
         }
 
         /**
@@ -8344,7 +8354,7 @@ class App extends EventHarness {
                                 reject(new Error(`Survey load timed out after ${timeoutMs} ms`));
                             }, timeoutMs);
                         }),
-                        this.refreshFromServer(storedObjectKeys.survey)
+                        this.refreshFromServer(storedObjectKeys.survey, !!targetSurveyId)
                             // re-seek keys from indexed db, to take account of any new occurrences received from the server
                             // do this for both promise states (can't use finally as it doesn't chain returned promises)
                             .then(
@@ -8736,6 +8746,7 @@ class App extends EventHarness {
                                         }
                                     }, (reason) => {
                                         console.log(`Failed to retrieve an image: ${reason}`);
+                                        return Promise.resolve();
                                     })
                                 ,
                                 () => Promise.resolve() // always finish with a resolved promise, even on failure
@@ -9528,7 +9539,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1743579008-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1744643130-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

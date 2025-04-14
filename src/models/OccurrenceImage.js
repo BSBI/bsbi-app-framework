@@ -83,7 +83,7 @@ export class OccurrenceImage extends Model {
      * @param {boolean} [isSync]
      * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
      *
-     * @returns {Promise}
+     * @returns {Promise<{}>}
      */
     save(forceSave = false, isSync = false, params) {
         if (params?.surveyId) {

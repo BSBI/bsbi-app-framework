@@ -136,7 +136,7 @@ export class SurveyPickerController extends AppController {
 
                 this.view.showSaveAllSuccess(result);
 
-                return this.app.refreshFromServer(Array.from(this.app.surveys.keys()))
+                return this.app.refreshFromServer(Array.from(this.app.surveys.keys()), false)
                     .then(() => this.app.addAllSurveysFromLocal())
                     .then(() => {
                         console.log('Surveys refreshed from the server');
