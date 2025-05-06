@@ -534,16 +534,16 @@ export class App extends EventHarness {
      * @returns {Promise<void>|Promise<boolean>}
      */
     tryPersistStorage(always = false) {
-        if ((always || window.matchMedia('(display-mode: standalone)').matches) &&
+        if ((always || (window.matchMedia('(display-mode: standalone)').matches) &&
             navigator?.storage?.persist && navigator?.storage?.persisted &&
-            DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE
+            DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE)
         ) {
-            return navigator.storage.persisted((persistent) => {
+            return navigator.storage.persisted().then((persistent) => {
                 if (persistent) {
                     console.log('Storage already persisted');
                 } else {
                     console.log('Attempting to enable persistent storage');
-                    return navigator.storage.persist((persistent) => {
+                    return navigator.storage.persist().then((persistent) => {
                         if (persistent) {
                             console.log('Storage now persists.');
                             return Logger.logError('Storage now persists.');
@@ -553,6 +553,8 @@ export class App extends EventHarness {
                         }
                     });
                 }
+            }, (error) => {
+                console.log({'Failure reading state of persistent storage' : error});
             });
         } else {
             return Promise.resolve();
@@ -1771,7 +1773,7 @@ export class App extends EventHarness {
         if (navigator.storage?.estimate || performance?.measureUserAgentSpecificMemory) {
             let memory, storage, promise;
 
-            promise = new Promise.resolve();
+            promise = Promise.resolve();
 
             if (performance?.measureUserAgentSpecificMemory) {
                 promise = promise.then(() => {

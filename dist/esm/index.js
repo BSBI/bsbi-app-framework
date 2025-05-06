@@ -7131,16 +7131,16 @@ class App extends EventHarness {
      * @returns {Promise<void>|Promise<boolean>}
      */
     tryPersistStorage(always = false) {
-        if ((always || window.matchMedia('(display-mode: standalone)').matches) &&
+        if ((always || (window.matchMedia('(display-mode: standalone)').matches) &&
             navigator?.storage?.persist && navigator?.storage?.persisted &&
-            DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE
+            DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE)
         ) {
-            return navigator.storage.persisted((persistent) => {
+            return navigator.storage.persisted().then((persistent) => {
                 if (persistent) {
                     console.log('Storage already persisted');
                 } else {
                     console.log('Attempting to enable persistent storage');
-                    return navigator.storage.persist((persistent) => {
+                    return navigator.storage.persist().then((persistent) => {
                         if (persistent) {
                             console.log('Storage now persists.');
                             return Logger.logError('Storage now persists.');
@@ -7150,6 +7150,8 @@ class App extends EventHarness {
                         }
                     });
                 }
+            }, (error) => {
+                console.log({'Failure reading state of persistent storage' : error});
             });
         } else {
             return Promise.resolve();
@@ -8365,7 +8367,7 @@ class App extends EventHarness {
         if (navigator.storage?.estimate || performance?.measureUserAgentSpecificMemory) {
             let memory, storage, promise;
 
-            promise = new Promise.resolve();
+            promise = Promise.resolve();
 
             if (performance?.measureUserAgentSpecificMemory) {
                 promise = promise.then(() => {
@@ -9653,7 +9655,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1746548438-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1746559801-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
