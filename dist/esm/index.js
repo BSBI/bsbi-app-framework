@@ -329,6 +329,143 @@ class EventHarness {
     }
 }
 
+/**
+ * Event fired when user requests a new blank survey
+ *
+ * @type {string}
+ */
+const APP_EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';
+
+/**
+ * Event fired when user requests a reset (local clearance) of all surveys
+ * @type {string}
+ */
+const APP_EVENT_RESET_SURVEYS = 'userresetsurveys';
+
+/**
+ * Fired after App.currentSurvey has been set to a new blank survey
+ * the survey will be accessible in App.currentSurvey
+ *
+ * @type {string}
+ */
+const APP_EVENT_NEW_SURVEY = 'newsurvey';
+
+/**
+ * Fired when a brand-new occurrence is added
+ *
+ * @type {string}
+ */
+const APP_EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
+
+/**
+ * Fired when new user preferences are first restored from local storage
+ *
+ * @type {string}
+ */
+const APP_EVENT_OPTIONS_RESTORED = 'optionsrestored';
+
+/**
+ * Fired when a survey is retrieved from local storage
+ * parameter is {survey : Survey}
+ *
+ * @type {string}
+ */
+const APP_EVENT_SURVEY_LOADED = 'surveyloaded';
+
+/**
+ * Fired when an occurrence is retrieved from local storage or newly initialised
+ * parameter is {occurrence : Occurrence}
+ *
+ * @type {string}
+ */
+const APP_EVENT_OCCURRENCE_LOADED = 'occurrenceloaded';
+
+const APP_EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
+
+/**
+ * Fired when the selected current survey id is changed
+ * parameter is {newSurvey : Survey|null}
+ *
+ * (this is not fired for modification of the survey content)
+ *
+ * @type {string}
+ */
+const APP_EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
+
+/**
+ * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
+ *
+ * @type {string}
+ */
+const APP_EVENT_SURVEYS_CHANGED = 'surveyschanged';
+
+/**
+ * Fired after fully-successful sync-all
+ * (or if sync-all resolved with nothing to send)
+ *
+ * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
+ *
+ * @type {string}
+ */
+const APP_EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
+
+/**
+ * fired if sync-all called, but one or more objects failed to be stored
+ *
+ * @type {string}
+ */
+const APP_EVENT_SYNC_ALL_FAILED = 'syncallfailed';
+
+const APP_EVENT_USER_LOGIN = 'login';
+
+const APP_EVENT_USER_LOGOUT = 'logout';
+
+/**
+ * Fired when watching of GPS has been granted following user request.
+ *
+ * @type {string}
+ */
+const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
+
+/**
+ * fired when GPS tracking should cease
+ * parameter 'auto' set if this was triggered by a non-explicit user action
+ *
+ * @type {string}
+ */
+const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
+
+/**
+ * fired after the new controller activates
+ *
+ * @type {string}
+ */
+const APP_EVENT_CONTROLLER_CHANGED = 'controllerchanged';
+
+/**
+ * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
+ *
+ * no parameters
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
+
+/**
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_DELETED = 'surveydeleted';
+
+/**
+ * fired from Survey when the object's contents have been modified
+ *
+ * parameter is {surveyId : string}
+ *
+ * @type {string}
+ */
+const SURVEY_EVENT_MODIFIED = 'modified';
+
 // AppController
 // Abstract super-class for page controllers
 
@@ -408,18 +545,18 @@ class AppController extends EventHarness {
     }
 
     /**
-     * Called when the app's current controller is about to change
-     * The controller may want to clear view listeners
+     * Called when the app's current controller is about to change.
+     * The controller may want to clear view listeners.
      */
     makeNotActive() {
 
     }
 
     /**
-     * Called after the app's current controller has changed, to make this the current controller
+     * Called after the app's current controller has changed, to make this the current controller.
      */
     makeActive() {
-
+        this.app.fireEvent(APP_EVENT_CONTROLLER_CHANGED);
     }
 
     /**
@@ -460,7 +597,7 @@ class AppController extends EventHarness {
     }
 
     leaveRouteHandler() {
-        //this is low priority, so yield here
+        //this is a low priority, so yield here
         setTimeout(() => {
             document.body.classList.remove('hide-controls');
 
@@ -3447,7 +3584,7 @@ class Model extends EventHarness {
     /**
      * @type {string}
      */
-    _id;
+    _id = '';
 
     /**
      * set if the object has been posted to the server
@@ -3869,136 +4006,6 @@ class Model extends EventHarness {
     }
 }
 
-/**
- * Event fired when user requests a new blank survey
- *
- * @type {string}
- */
-const APP_EVENT_ADD_SURVEY_USER_REQUEST = 'useraddsurveyrequest';
-
-/**
- * Event fired when user requests a reset (local clearance) of all surveys
- * @type {string}
- */
-const APP_EVENT_RESET_SURVEYS = 'userresetsurveys';
-
-/**
- * Fired after App.currentSurvey has been set to a new blank survey
- * the survey will be accessible in App.currentSurvey
- *
- * @type {string}
- */
-const APP_EVENT_NEW_SURVEY = 'newsurvey';
-
-/**
- * Fired when a brand-new occurrence is added
- *
- * @type {string}
- */
-const APP_EVENT_OCCURRENCE_ADDED = 'occurrenceadded';
-
-/**
- * Fired when new user preferences are first restored from local storage
- *
- * @type {string}
- */
-const APP_EVENT_OPTIONS_RESTORED = 'optionsrestored';
-
-/**
- * Fired when a survey is retrieved from local storage
- * parameter is {survey : Survey}
- *
- * @type {string}
- */
-const APP_EVENT_SURVEY_LOADED = 'surveyloaded';
-
-/**
- * Fired when an occurrence is retrieved from local storage or newly initialised
- * parameter is {occurrence : Occurrence}
- *
- * @type {string}
- */
-const APP_EVENT_OCCURRENCE_LOADED = 'occurrenceloaded';
-
-const APP_EVENT_CURRENT_OCCURRENCE_CHANGED = 'currentoccurrencechanged';
-
-/**
- * Fired when the selected current survey id is changed
- * parameter is {newSurvey : Survey|null}
- *
- * (this is not fired for modification of the survey content)
- *
- * @type {string}
- */
-const APP_EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
-
-/**
- * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
- *
- * @type {string}
- */
-const APP_EVENT_SURVEYS_CHANGED = 'surveyschanged';
-
-/**
- * Fired after fully-successful sync-all
- * (or if sync-all resolved with nothing to send)
- *
- * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
- *
- * @type {string}
- */
-const APP_EVENT_ALL_SYNCED_TO_SERVER = 'allsyncedtoserver';
-
-/**
- * fired if sync-all called, but one or more objects failed to be stored
- *
- * @type {string}
- */
-const APP_EVENT_SYNC_ALL_FAILED = 'syncallfailed';
-
-const APP_EVENT_USER_LOGIN = 'login';
-
-const APP_EVENT_USER_LOGOUT = 'logout';
-
-/**
- * Fired when watching of GPS has been granted following user request.
- *
- * @type {string}
- */
-const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
-
-/**
- * fired when GPS tracking should cease
- * parameter 'auto' set if this was triggered by a non-explicit user action
- *
- * @type {string}
- */
-const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
-
-/**
- * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
- *
- * no parameters
- *
- * @type {string}
- */
-const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
-
-/**
- *
- * @type {string}
- */
-const SURVEY_EVENT_DELETED = 'surveydeleted';
-
-/**
- * fired from Survey when the object's contents have been modified
- *
- * parameter is {surveyId : string}
- *
- * @type {string}
- */
-const SURVEY_EVENT_MODIFIED = 'modified';
-
 // SurveyPickerController
 //
 
@@ -4131,7 +4138,7 @@ class SurveyPickerController extends AppController {
                     .then(() => this.app.addAllSurveysFromLocal())
                     .then(() => {
                         console.log('Surveys refreshed from the server');
-                        // this.fireEvent(APP_EVENT_SURVEYS_CHANGED); this will have been fired alread from app.addSurvey()
+                        // this.fireEvent(APP_EVENT_SURVEYS_CHANGED); this will have been fired already from app.addSurvey()
 
                         // @todo should now update the current survey from indexDb without clearing existing entries
                     });
@@ -4171,7 +4178,7 @@ class SurveyPickerController extends AppController {
         // it's opportune at this point to try to ping the server again to save anything left outstanding
         this.app.syncAll(true).finally(() => {
 
-            // the apps occurrences should only relate to the current survey
+            // the app's occurrences should only relate to the current survey
             // (the reset are remote or in IndexedDb)
             this.app.clearCurrentSurvey().then(() => {
 
@@ -4228,7 +4235,7 @@ class SurveyPickerController extends AppController {
         // hide the left panel before loading, otherwise there can be a confusing delay
         this.view.hideLeftPanel();
 
-        this.app.restoreOccurrences(surveyId)
+        this.app.restoreOccurrences(surveyId, false, true, false, true)
             .then(() => {
                 this.app.markAllNotPristine();
 
@@ -6099,13 +6106,13 @@ class Survey extends Model {
     }
 
     /**
-     * if not securely saved then makes a post to /savesurvey.php
+     * if not securely saved, then makes a post to /savesurvey.php
      *
      * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a json response containing the uri from which the object may be retrieved
+     * a successful save will result in a JSON response containing the uri from which the object may be retrieved
      * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the object directly to indexeddb
      *
      * must test indexeddb for this eventuality after the save has returned
@@ -7118,6 +7125,38 @@ class App extends EventHarness {
     }
 
     /**
+     * Try to enable persistent storage if installed and running on mobile.
+     *
+     * @param always
+     * @returns {Promise<void>|Promise<boolean>}
+     */
+    tryPersistStorage(always = false) {
+        if ((always || window.matchMedia('(display-mode: standalone)').matches) &&
+            navigator?.storage?.persist && navigator?.storage?.persisted &&
+            DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE
+        ) {
+            return navigator.storage.persisted((persistent) => {
+                if (persistent) {
+                    console.log('Storage already persisted');
+                } else {
+                    console.log('Attempting to enable persistent storage');
+                    return navigator.storage.persist((persistent) => {
+                        if (persistent) {
+                            console.log('Storage now persists.');
+                            return Logger.logError('Storage now persists.');
+                        } else {
+                            console.log('Failed to enable persistent storage.');
+                            return Logger.logError('Failed to enable persistent storage.');
+                        }
+                    });
+                }
+            });
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    /**
      *
      * @returns {Promise<void | null>}
      */
@@ -7147,7 +7186,7 @@ class App extends EventHarness {
      */
     clearCurrentSurvey(surveyId = null) {
         if (surveyId && this._currentSurvey && surveyId !== this._currentSurvey.id) {
-            // theoretical weird error state where the current survey has changed prior to clear being called
+            // theoretical weird error state where the current survey has changed prior to call to clearCurrentSurvey()
             console.error('Conflicting survey id in clearCurrentSurvey()');
             return Promise.reject('Conflicting survey id in clearCurrentSurvey()');
         }
@@ -7478,7 +7517,7 @@ class App extends EventHarness {
 
     /**
      * attempts to refresh the state of local storage for the specified survey ids
-     * if fetch fails then return a failed promise
+     * If the fetch fails, then return a failed promise.
      *
      * updates local copy of surveys and occurrences
      *
@@ -7635,7 +7674,7 @@ class App extends EventHarness {
     }
 
     /**
-     * Purge local entries that are older than threshold or orphaned and which have been saved externally
+     * Purge local entries that are older than the threshold or orphaned and which have been saved externally
      *
      * @returns {Promise}
      */
@@ -7663,7 +7702,7 @@ class App extends EventHarness {
                 console.error(`Failed to purge: ${failedResult}`);
                 Logger.logError(`Failed to purge: ${failedResult}`)
                     .finally(() => {
-                        // cope with pervasive Safari crash
+                        // cope with the pervasive Safari crash
                         // see https://bugs.webkit.org/show_bug.cgi?id=197050
                         if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
                             App.indexedDbConnectionLost = true;
@@ -7692,7 +7731,7 @@ class App extends EventHarness {
     /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
      * This should allow surveys to be switched etc. without disrupting the ongoing save process.
-     * @returns {Promise<{savedCount : {}}>}
+     * @returns {Promise<{savedCount : {}}|void>}
      */
     syncAll(fastReturn = true) {
 
@@ -7760,7 +7799,7 @@ class App extends EventHarness {
     }
 
     /**
-     *
+     * @param queryFilters
      * @param {boolean} [queryFilters.structuredSurvey]
      * @param {boolean} [queryFilters.createdInCurrentYear]
      * @param {boolean} [queryFilters.isToday]
@@ -7771,12 +7810,16 @@ class App extends EventHarness {
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
      * @param {boolean} [queryFilters.defaultCasual]
+     * @param {string|null} preferredBaseSurveyId
      * @returns {Array<Survey>}
      */
-    queryLocalSurveys(queryFilters) {
+    queryLocalSurveys(queryFilters, preferredBaseSurveyId = null) {
         const matches = [];
 
         for (const surveyTuple of this.surveys) {
+            /**
+             * @type {Survey}
+             */
             const survey = surveyTuple[1];
 
             if (queryFilters.structuredSurvey && survey.attributes.casual) {
@@ -7812,7 +7855,7 @@ class App extends EventHarness {
                     continue;
                 }
             } else {
-                // test if survey belongs to session user by default (only relevant if an explicit userId selector wasn't applied)
+                // test if the survey belongs to session user by default (only relevant if an explicit userId selector wasn't applied)
                 if (this.session?.userId && survey.userId !== this.session.userId) {
                     continue;
                 }
@@ -7826,9 +7869,26 @@ class App extends EventHarness {
                 continue;
             }
 
-
-
             matches[matches.length] = survey;
+        }
+
+        if (preferredBaseSurveyId && matches.length) {
+            // sort matches with a compatible base survey first
+            matches.sort((a, b) => {
+                if (a.baseSurveyId === preferredBaseSurveyId) {
+                    if (b.baseSurveyId === preferredBaseSurveyId) {
+                        return b.createdStamp - a.createdStamp; // return earliest first
+                    } else {
+                        return -1;
+                    }
+                }
+
+                if (b.baseSurveyId === preferredBaseSurveyId) {
+                    return 1;
+                }
+
+                return b.createdStamp - a.createdStamp; // return earliest first
+            });
         }
 
         return matches;
@@ -8082,7 +8142,7 @@ class App extends EventHarness {
 
                     if (!occurrence.deleted) {
                         // see if occurrence belongs to one of the threshold recent surveys
-                        // if so then the survey should be kept (so removed from the imperiled recent list)
+                        // if so, then the survey should be kept (so removed from the imperilled recent list)
                         const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
                         if (recentIndex !== -1) {
                             delete recentSurveyKeys[recentIndex];
@@ -8259,9 +8319,10 @@ class App extends EventHarness {
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
      * @param {boolean} [setCurrentSurvey] if set then, if possible, set a survey as current, default true
      * @param {boolean} [localOnly] if set then only retrieve data from local storage (applies only if a targetSurveyId is specified, default false
+     * @param {boolean} [specifiedSurveyOnly] if set (default FALSE) then pull-back only the target survey and no others
      * @return {Promise}
      */
-    restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false) {
+    restoreOccurrences(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false, specifiedSurveyOnly = false) {
         console.log(`Invoked restoreOccurrences, target survey id: ${targetSurveyId}, localOnly: '${localOnly.toString()}'`);
 
         if (targetSurveyId === 'undefined') {
@@ -8270,22 +8331,65 @@ class App extends EventHarness {
         }
 
         return (targetSurveyId) ?
-            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank, setCurrentSurvey, localOnly)
+            this._restoreOccurrenceImp(targetSurveyId, neverAddBlank, setCurrentSurvey, localOnly, specifiedSurveyOnly)
             :
             this.getLastSurveyId().then(
                 (lastSurveyId) => {
                     console.log(`Retrieved last used survey id '${lastSurveyId}'`);
 
-                    return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank, setCurrentSurvey).catch(() => {
-                        console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
-
-                        this.currentSurvey = null;
-                        return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey);
-                    });
+                    if (lastSurveyId) {
+                        return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank, setCurrentSurvey, localOnly, false /* specifiedSurveyOnly can't apply */).catch(() => {
+                            console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
+                            // noinspection JSIgnoredPromiseFromCall
+                            Logger.logError(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
+                            this.currentSurvey = null;
+                            return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey, false, false);
+                        });
+                    } else {
+                        // noinspection JSIgnoredPromiseFromCall
+                        Logger.logError('Failed to retrieve lastSurveyId.');
+                        return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey, false, false);
+                    }
                 },
                 // probably can't reach this catch phase
-                () => this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey)
+                () => this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey, false, false)
             );
+    }
+
+    /**
+     *
+     * @param {string} contextMessage
+     * @return Promise<void>
+     */
+    static logMemoryUsage(contextMessage) {
+        if (navigator.storage?.estimate || performance?.measureUserAgentSpecificMemory) {
+            let memory, storage, promise;
+
+            promise = new Promise.resolve();
+
+            if (performance?.measureUserAgentSpecificMemory) {
+                promise = promise.then(() => {
+                    return performance.measureUserAgentSpecificMemory().then(memorySpec => {
+                        memory = memorySpec;
+                    });
+                });
+            }
+
+            if (navigator.storage?.estimate) {
+                promise = promise.then(() => {
+                    return navigator.storage?.estimate().then(storageSpec => {
+                        storage = storageSpec;
+                    });
+                });
+            }
+
+            return promise.then(() => Logger.logError(`Memory and storage logs: ${contextMessage} : ${JSON.stringify({
+                memory,
+                storage
+            })}`));
+        } else {
+            return Promise.resolve();
+        }
     }
 
     /**
@@ -8293,28 +8397,30 @@ class App extends EventHarness {
      * @param {string} [targetSurveyId] default ''
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
      * @param {boolean} [setCurrentSurvey] default true
-     * @param {boolean} [localOnly] default false if set do fast local switch rather than refreshing from server
+     * @param {boolean} [localOnly] default false, if set then do a fast local switch rather than refreshing from server
+     * @param {boolean} [specifiedSurveyOnly] default FALSE, if set then only seek the targetSurveyId from the server
      *
-     * @returns {Promise<void>|Promise<unknown>}
+     * @returns {Promise<void>}
      * @protected
      */
-    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false) {
-        // need to check for a special case where restoring a survey that has never been saved even locally
-        // i.e. new and unmodified
-        // only present in current App.surveys
-        // this occurs if user creates a new survey, makes no changes, switches away from it then switches back
-        // and also in some other automated navigation sequences
+    _restoreOccurrenceImp(targetSurveyId = '', neverAddBlank = false, setCurrentSurvey = true, localOnly = false, specifiedSurveyOnly = false) {
+        // Need to check for a special case where restoring a survey that has never been saved even locally
+        // i.e. new and unmodified and only present in current App.surveys
+        // This occurs if the user creates a new survey, makes no changes, switches away from it, then switches back
+        // and also in some other automated navigation sequences.
         if (targetSurveyId && this.surveys.has(targetSurveyId)) {
             const localSurvey = this.surveys.get(targetSurveyId);
 
             if (localSurvey.isPristine) {
-                // local survey is not current then
-                // clear occurrences from the previous survey
+                // If the local survey is not current, then
+                // clear occurrences from the previous survey.
 
-                if (localSurvey !== this._currentSurvey) {
+                if (setCurrentSurvey && localSurvey.id !== this._currentSurvey?.id) {
+                    Logger.logError(`Switching to pristine survey ${targetSurveyId}.`);
+
                     return this.clearCurrentSurvey().then(() => {
                         this.currentSurvey = localSurvey;
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // the current survey should be set now, so the menu needs refreshing
                         return Promise.resolve();
                     });
                 } else {
@@ -8338,10 +8444,24 @@ class App extends EventHarness {
 
         if (targetSurveyId) {
             storedObjectKeys.survey[0] = targetSurveyId;
+        } else {
+            specifiedSurveyOnly = false;
         }
 
-        return this.clearCurrentSurvey().then(() => this.seekKeys(storedObjectKeys))
+        let promise;
+        // only clear the current survey if the new one is different
+        if (this.currentSurvey && this.currentSurvey.id !== targetSurveyId) {
+            promise = this.clearCurrentSurvey();
+        } else {
+            promise = Promise.resolve();
+        }
+
+        return promise.then(() => this.seekKeys(storedObjectKeys))
             .then((storedObjectKeys) => {
+                // if (!navigator.onLine) { // insufficiently reliable
+                //     localOnly = true;
+                // }
+
                 if (!localOnly && (storedObjectKeys.survey.length || this.session?.userId)) {
                     let timer;
                     const timeoutMs = 15 * 1000;
@@ -8355,7 +8475,7 @@ class App extends EventHarness {
                                 reject(new Error(`Survey load timed out after ${timeoutMs} ms`));
                             }, timeoutMs);
                         }),
-                        this.refreshFromServer(storedObjectKeys.survey, !!targetSurveyId)
+                        this.refreshFromServer(specifiedSurveyOnly ? [targetSurveyId] : storedObjectKeys.survey, specifiedSurveyOnly)
                             // re-seek keys from indexed db, to take account of any new occurrences received from the server
                             // do this for both promise states (can't use finally as it doesn't chain returned promises)
                             .then(
@@ -8432,14 +8552,23 @@ class App extends EventHarness {
                     let restorePromise = Promise.resolve();
 
                     for (let surveyKey of storedObjectKeys.survey) {
-                        // arbitrarily set first survey key as current if a target id hasn't been specified
+                        // arbitrarily set the first survey key as current if a target id hasn't been specified
+
+                        if (localOnly
+                            && targetSurveyId
+                            && surveyKey !== targetSurveyId
+                            && this.surveys.has(surveyKey)
+                        ) {
+                            // don't bother with non-target surveys that are already in the survey list, as for local-only we know nothing has changed
+                            continue;
+                        }
 
                         restorePromise = restorePromise
                             .then(() => {
                                 return this._restoreSurveyFromLocal(surveyKey, storedObjectKeys, setCurrentSurvey && ((targetSurveyId === surveyKey) || (!targetSurveyId && n++ === 0)));
                             })
                             .catch((reason) => {
-                                console.log({'failed to restore from local' : {surveyKey, reason}});
+                                console.log({'failed to restore from local': {surveyKey, reason}});
                                 return Promise.resolve();
                             });
                     }
@@ -8449,14 +8578,14 @@ class App extends EventHarness {
                             //this.currentSurvey = this.surveys.get(storedObjectKeys.survey[0]);
 
                             if (!this.currentSurvey && neverAddBlank && setCurrentSurvey) {
-                                // survey doesn't actually exist
+                                // survey doesn't exist
                                 // this could have happened in an invalid survey id was provided as a targetSurveyId
                                 console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
                                 return Promise.reject(new Error(`Failed to retrieve survey id '${targetSurveyId}'`));
                             }
 
                             if (this.currentSurvey?.deleted) {
-                                // unusual case where survey is deleted or was not found
+                                // unusual case where the survey was deleted or was not found
                                 // substitute a new one
 
                                 // this should probably never happen, as items deleted on the server ought to have been
@@ -8472,8 +8601,6 @@ class App extends EventHarness {
                             this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
                             this.currentSurvey?.fireEvent?.(SURVEY_EVENT_OCCURRENCES_CHANGED);
                             this.currentSurvey?.fireEvent?.(SURVEY_EVENT_LIST_LENGTH_CHANGED);
-
-                            //return Promise.resolve();
                         });
                 } else {
                     // no pre-existing surveys
@@ -8665,7 +8792,7 @@ class App extends EventHarness {
 
                 if ((!userIdFilter && !survey.userId) || this._userHasSurveyAdminRights(survey)) {
                     if (setAsCurrent) {
-                        // the apps occurrences should only relate to the current survey
+                        // the app's occurrences should only relate to the current survey
                         // (the reset records are remote or in IndexedDb)
                         return this.clearCurrentSurvey().then(() => {
                             survey = this.addSurvey(survey);
@@ -8682,7 +8809,7 @@ class App extends EventHarness {
 
                                                 survey.extantOccurrenceKeys.add(occurrence.id);
                                             } else {
-                                                // not part of current survey but should still add to key list for counting purposes
+                                                // not part of the current survey but should still add it to the key list for counting purposes
 
                                                 this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
                                             }
@@ -8693,21 +8820,6 @@ class App extends EventHarness {
                                         console.error({'Failed to fetch occurrence for current survey' : {occurrenceKey, reason}});
                                         return Promise.resolve();
                                     });
-
-                                // occurrenceFetchingPromises.push(Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence)
-                                //     .then((occurrence) => {
-                                //         if (occurrence.surveyId === surveyId) {
-                                //             //console.log(`adding occurrence ${occurrenceKey}`);
-                                //             this.addOccurrence(occurrence);
-                                //
-                                //             survey.extantOccurrenceKeys.add(occurrence.id);
-                                //         } else {
-                                //             // not part of current survey but should still add to key list for counting purposes
-                                //
-                                //             this.surveys.get(occurrence.surveyId)?.extantOccurrenceKeys?.add?.(occurrence.id);
-                                //         }
-                                //
-                                //     }));
                             }
 
                             //return Promise.all(occurrenceFetchingPromises);
@@ -8769,6 +8881,7 @@ class App extends EventHarness {
 
                     return imageFetchingPromise;
                 } else {
+                    Logger.logError(`Failed to retrieve survey id '${surveyId}' from local set in _restoreSurveyFromLocal().`);
                     return Promise.reject(`Failed to restore survey id '${surveyId}' from local set.`);
                 }
 
@@ -9540,7 +9653,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1744643293-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1746548438-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -10176,5 +10289,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CONTROLLER_CHANGED, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map

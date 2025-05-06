@@ -105,6 +105,13 @@ export const APP_EVENT_WATCH_GPS_USER_REQUEST = 'watchgps';
 export const APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = 'cancelgpswatch';
 
 /**
+ * fired after the new controller activates
+ *
+ * @type {string}
+ */
+export const APP_EVENT_CONTROLLER_CHANGED = 'controllerchanged';
+
+/**
  * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
  *
  * no parameters

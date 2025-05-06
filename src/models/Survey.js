@@ -493,13 +493,13 @@ export class Survey extends Model {
     }
 
     /**
-     * if not securely saved then makes a post to /savesurvey.php
+     * if not securely saved, then makes a post to /savesurvey.php
      *
      * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a json response containing the uri from which the object may be retrieved
+     * a successful save will result in a JSON response containing the uri from which the object may be retrieved
      * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the object directly to indexeddb
      *
      * must test indexeddb for this eventuality after the save has returned

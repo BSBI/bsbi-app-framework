@@ -140,7 +140,7 @@ export class SurveyPickerController extends AppController {
                     .then(() => this.app.addAllSurveysFromLocal())
                     .then(() => {
                         console.log('Surveys refreshed from the server');
-                        // this.fireEvent(APP_EVENT_SURVEYS_CHANGED); this will have been fired alread from app.addSurvey()
+                        // this.fireEvent(APP_EVENT_SURVEYS_CHANGED); this will have been fired already from app.addSurvey()
 
                         // @todo should now update the current survey from indexDb without clearing existing entries
                     });
@@ -180,7 +180,7 @@ export class SurveyPickerController extends AppController {
         // it's opportune at this point to try to ping the server again to save anything left outstanding
         this.app.syncAll(true).finally(() => {
 
-            // the apps occurrences should only relate to the current survey
+            // the app's occurrences should only relate to the current survey
             // (the reset are remote or in IndexedDb)
             this.app.clearCurrentSurvey().then(() => {
 
@@ -237,7 +237,7 @@ export class SurveyPickerController extends AppController {
         // hide the left panel before loading, otherwise there can be a confusing delay
         this.view.hideLeftPanel();
 
-        this.app.restoreOccurrences(surveyId)
+        this.app.restoreOccurrences(surveyId, false, true, false, true)
             .then(() => {
                 this.app.markAllNotPristine();
 

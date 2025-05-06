@@ -2,6 +2,7 @@
 // Abstract super-class for page controllers
 
 import {EventHarness} from "../framework/EventHarness";
+import {APP_EVENT_CONTROLLER_CHANGED} from "../framework/AppEvents";
 
 /**
  * @typedef {import('bsbi-app-framework-view').Page} Page
@@ -78,18 +79,18 @@ export class AppController extends EventHarness {
     }
 
     /**
-     * Called when the app's current controller is about to change
-     * The controller may want to clear view listeners
+     * Called when the app's current controller is about to change.
+     * The controller may want to clear view listeners.
      */
     makeNotActive() {
 
     }
 
     /**
-     * Called after the app's current controller has changed, to make this the current controller
+     * Called after the app's current controller has changed, to make this the current controller.
      */
     makeActive() {
-
+        this.app.fireEvent(APP_EVENT_CONTROLLER_CHANGED);
     }
 
     /**
@@ -130,7 +131,7 @@ export class AppController extends EventHarness {
     }
 
     leaveRouteHandler() {
-        //this is low priority, so yield here
+        //this is a low priority, so yield here
         setTimeout(() => {
             document.body.classList.remove('hide-controls');
 

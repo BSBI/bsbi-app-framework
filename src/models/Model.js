@@ -25,7 +25,7 @@ export class Model extends EventHarness {
     /**
      * @type {string}
      */
-    _id;
+    _id = '';
 
     /**
      * set if the object has been posted to the server
