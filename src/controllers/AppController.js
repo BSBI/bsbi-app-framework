@@ -131,6 +131,13 @@ export class AppController extends EventHarness {
     }
 
     leaveRouteHandler() {
+        AppController.clearControlHiding();
+    }
+
+    /**
+     * If a CSS body class has been set to hide controls due to open drop-boxes, then clear any hiding
+     */
+    static clearControlHiding() {
         //this is a low priority, so yield here
         setTimeout(() => {
             document.body.classList.remove('hide-controls');

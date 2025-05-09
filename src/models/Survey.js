@@ -5,12 +5,13 @@
 // this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
-import {Model, uuid} from "./Model";
+import {Model, MODEL_EVENT_DESTROYED, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 import {SURVEY_EVENT_MODIFIED, SURVEY_EVENT_DELETED} from "../framework/AppEvents";
 import {OCCURRENCE_EVENT_MODIFIED} from "./Occurrence";
+import {Logger} from "../utils/Logger";
 
 // /**
 //   * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
@@ -131,9 +132,17 @@ export class Survey extends Model {
 
     /**
      * kludge to flag once the App singleton has set up a listener for changes on the survey
+     *
      * @type {boolean}
      */
     hasAppModifiedListener = false;
+
+    /**
+     * kludge to flag once the App singleton has set up a listener for deletion on the survey
+     *
+     * @type {boolean}
+     */
+    hasDeleteListener = false;
 
     /**
      *
@@ -165,7 +174,7 @@ export class Survey extends Model {
     get geoReference() {
         return this.attributes.georef || {
             gridRef: '',
-            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            rawString: '', // the string provided by the user to generate this grid-ref (might be a postcode or placename)
             source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
             latLng: null,
             precision: null
@@ -363,18 +372,18 @@ export class Survey extends Model {
     }
 
     /**
-     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
-     *
+     * Returns true or false based on date compatibility or null if the survey is undated (e.g. ongoing casual)
+     * @param {string} [today] (iso YYYY-MM-DD) defaults to current day
      * @returns {boolean|null}
      */
-    isToday() {
+    isToday(today = (new Date).toISOString().slice(0,10)) {
         const date = this.date;
 
-        return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
+        return date === '' ? null : (date === today);
     }
 
     /**
-     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
+     * Returns true or false based on date compatibility or null if the survey is undated (e.g. ongoing casual)
      *
      * @returns {boolean}
      */
@@ -469,11 +478,11 @@ export class Survey extends Model {
             const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
-                if (gridRef.length <= 100 && surveyGridUnit === 100) {
+                if (gridRef.length <= 100 && surveyGridUnit && surveyGridUnit <= 100) {
                     result.hectare = gridRef.gridCoords.to_gridref(100);
                 }
 
-                if (gridRef.length <= 1000) {
+                if (gridRef.length <= 1000 && surveyGridUnit && surveyGridUnit <= 1000) {
                     result.monad = gridRef.gridCoords.to_gridref(1000);
                 }
 
@@ -746,7 +755,10 @@ export class Survey extends Model {
         }
 
         if (!(this.isPristine || this._savedLocally)) {
-            throw new Error(`Can merge with unsaved local survey, for survey id ${this._id}`);
+            //throw new Error(`Cannot merge with unsaved local survey, for survey id ${this._id}`);
+            console.error(`Dangerous merge with unsaved local survey, for survey id ${this._id}`);
+            // noinspection JSIgnoredPromiseFromCall
+            Logger.logError(`Dangerous merge with unsaved local survey, for survey id ${this._id}`);
         }
 
         Object.assign(this.attributes, newSurvey.attributes);
@@ -763,5 +775,11 @@ export class Survey extends Model {
         }
 
         return this;
+    }
+
+    destructor() {
+        super.destructor();
+        this.hasAppModifiedListener = false;
+        this.hasDeleteListener = false;
     }
 }

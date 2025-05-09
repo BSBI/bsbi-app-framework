@@ -597,6 +597,13 @@ class AppController extends EventHarness {
     }
 
     leaveRouteHandler() {
+        AppController.clearControlHiding();
+    }
+
+    /**
+     * If a CSS body class has been set to hide controls due to open drop-boxes, then clear any hiding
+     */
+    static clearControlHiding() {
         //this is a low priority, so yield here
         setTimeout(() => {
             document.body.classList.remove('hide-controls');
@@ -3816,7 +3823,7 @@ class Model extends EventHarness {
                 // need to find out whether this was a local store in indexedDb by the service worker
                 // or a server-side save
 
-                // to do that need to decode the json response
+                // to do that, need to decode the JSON response
                 // which can only be done once, so need to clone first
                 const clonedResponse = response.clone();
                 return clonedResponse.json().then((responseData) => {
@@ -4479,7 +4486,7 @@ class Track extends Model {
     static _tracks = new Map();
 
     /**
-     * Unix timestamp of most recent co-ordinate ping, in ms
+     * Unix timestamp of the most recent co-ordinate ping, in ms
      * @type {number}
      */
     static lastPingStamp = 0;
@@ -4495,6 +4502,18 @@ class Track extends Model {
      * @type {EventHarness~Handle|null}
      */
     _surveyChangeListenerHandle = null;
+
+    /**
+     *
+     * @type {EventHarness~Handle|null}
+     */
+    _surveyDestroyedListenerHandle = null;
+
+    /**
+     *
+     * @type {EventHarness~Handle|null}
+     */
+    _surveyOccurrencesChangeListenerHandle = null;
 
     // /**
     //  * Project ids of survey types that are trackable
@@ -4538,6 +4557,9 @@ class Track extends Model {
                         let previouslyTrackedSurvey = null;
 
                         if (Track._currentlyTrackedSurveyId) {
+                            /**
+                             * @type {Track|null}
+                             */
                             const oldTrack =
                                 Track._tracks.get(Track._currentlyTrackedSurveyId)
                                     ?.get?.(Track._currentlyTrackedDeviceId);
@@ -4619,7 +4641,7 @@ class Track extends Model {
             survey.isToday() !== false &&
             survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId
         ) {
-            // Resume existing tracking, or start a new track.
+            // Resume existing tracking or start a new track.
 
             console.log('continuing tracking for survey with common baseSurvey');
             Track._trackSurvey(survey);
@@ -4928,13 +4950,25 @@ class Track extends Model {
                 }
             });
         }
+
+        if (!this._surveyDestroyedListenerHandle) {
+            this._surveyDestroyedListenerHandle = survey.addListener(MODEL_EVENT_DESTROYED, () => {
+                this.removeSurveyChangeListener();
+            });
+        }
     }
 
     removeSurveyChangeListener() {
         const survey = Track._app.surveys.get(this.surveyId);
 
-        survey?.removeListener(SURVEY_EVENT_MODIFIED, this._surveyChangeListenerHandle);
+        survey?.removeListener?.(SURVEY_EVENT_MODIFIED, this._surveyChangeListenerHandle);
         this._surveyChangeListenerHandle = undefined;
+
+        survey?.removeListener?.(SURVEY_EVENT_MODIFIED, this._surveyOccurrencesChangeListenerHandle);
+        this._surveyOccurrencesChangeListenerHandle = undefined;
+
+        survey?.removeListener?.(MODEL_EVENT_DESTROYED, this._surveyDestroyedListenerHandle);
+        this._surveyDestroyedListenerHandle = undefined;
     }
 }
 
@@ -5744,9 +5778,17 @@ class Survey extends Model {
 
     /**
      * kludge to flag once the App singleton has set up a listener for changes on the survey
+     *
      * @type {boolean}
      */
     hasAppModifiedListener = false;
+
+    /**
+     * kludge to flag once the App singleton has set up a listener for deletion on the survey
+     *
+     * @type {boolean}
+     */
+    hasDeleteListener = false;
 
     /**
      *
@@ -5778,7 +5820,7 @@ class Survey extends Model {
     get geoReference() {
         return this.attributes.georef || {
             gridRef: '',
-            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+            rawString: '', // the string provided by the user to generate this grid-ref (might be a postcode or placename)
             source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
             latLng: null,
             precision: null
@@ -5976,18 +6018,18 @@ class Survey extends Model {
     }
 
     /**
-     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
-     *
+     * Returns true or false based on date compatibility or null if the survey is undated (e.g. ongoing casual)
+     * @param {string} [today] (iso YYYY-MM-DD) defaults to current day
      * @returns {boolean|null}
      */
-    isToday() {
+    isToday(today = (new Date).toISOString().slice(0,10)) {
         const date = this.date;
 
-        return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
+        return date === '' ? null : (date === today);
     }
 
     /**
-     * Returns true or false based on date compatibility, or null if the survey is undated (e.g. ongoing casual)
+     * Returns true or false based on date compatibility or null if the survey is undated (e.g. ongoing casual)
      *
      * @returns {boolean}
      */
@@ -6082,11 +6124,11 @@ class Survey extends Model {
             const gridRef = GridRef.fromString(geoRef.gridRef);
 
             if (gridRef) {
-                if (gridRef.length <= 100 && surveyGridUnit === 100) {
+                if (gridRef.length <= 100 && surveyGridUnit && surveyGridUnit <= 100) {
                     result.hectare = gridRef.gridCoords.to_gridref(100);
                 }
 
-                if (gridRef.length <= 1000) {
+                if (gridRef.length <= 1000 && surveyGridUnit && surveyGridUnit <= 1000) {
                     result.monad = gridRef.gridCoords.to_gridref(1000);
                 }
 
@@ -6359,7 +6401,10 @@ class Survey extends Model {
         }
 
         if (!(this.isPristine || this._savedLocally)) {
-            throw new Error(`Can merge with unsaved local survey, for survey id ${this._id}`);
+            //throw new Error(`Cannot merge with unsaved local survey, for survey id ${this._id}`);
+            console.error(`Dangerous merge with unsaved local survey, for survey id ${this._id}`);
+            // noinspection JSIgnoredPromiseFromCall
+            Logger.logError(`Dangerous merge with unsaved local survey, for survey id ${this._id}`);
         }
 
         Object.assign(this.attributes, newSurvey.attributes);
@@ -6376,6 +6421,12 @@ class Survey extends Model {
         }
 
         return this;
+    }
+
+    destructor() {
+        super.destructor();
+        this.hasAppModifiedListener = false;
+        this.hasDeleteListener = false;
     }
 }
 
@@ -7143,7 +7194,8 @@ class App extends EventHarness {
                     return navigator.storage.persist().then((persistent) => {
                         if (persistent) {
                             console.log('Storage now persists.');
-                            return Logger.logError('Storage now persists.');
+                            //return Logger.logError('Storage now persists.');
+                            return Promise.resolve();
                         } else {
                             console.log('Failed to enable persistent storage.');
                             return Logger.logError('Failed to enable persistent storage.');
@@ -7337,7 +7389,7 @@ class App extends EventHarness {
     revertUrl() {
         this.router.pause();
         if (this.windowHasHistoryState()) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+            window.history.back(); // this could fail if the previous url was not under the single-page-app umbrella (should test)
         }
         this.router.resume();
     }
@@ -7393,45 +7445,6 @@ class App extends EventHarness {
 
             survey = previousSurvey.mergeUpdate(survey);
         } else {
-            if (!survey.hasAppModifiedListener) {
-                survey.hasAppModifiedListener = true;
-
-                //console.log("setting survey's modified/save handler");
-                survey.addListener(
-                    SURVEY_EVENT_MODIFIED,
-                    () => {
-                        survey.save().finally(() => {
-                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                        });
-                    }
-                );
-            }
-
-            if (!survey.hasDeleteListener) {
-                survey.hasDeleteListener = true;
-
-                survey.addListener(
-                    SURVEY_EVENT_DELETED,
-                    () => {
-                        // do this slightly more safely via ids, in case surveys somehow refer to different objects
-                        if (this.currentSurvey?.id === survey.id) {
-                            this.currentSurvey = null;
-                        }
-
-                        this.surveys.delete(survey.id);
-
-                        // only clear from local storage if the deletion has gone through
-                        if (survey.savedRemotely) {
-                            // noinspection JSIgnoredPromiseFromCall
-                            this.forageRemoveItem(`survey.${survey.id}`);
-                        }
-
-                        survey.destructor();
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                    }
-                );
-            }
-
             this.surveys.set(survey.id, survey);
             changes = true;
         }
@@ -7439,6 +7452,46 @@ class App extends EventHarness {
         if (changes) {
             this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
         }
+
+        if (!survey.hasAppModifiedListener) {
+            survey.hasAppModifiedListener = true;
+
+            //console.log("setting survey's modified/save handler");
+            survey.addListener(
+                SURVEY_EVENT_MODIFIED,
+                () => {
+                    survey.save().finally(() => {
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                    });
+                }
+            );
+        }
+
+        if (!survey.hasDeleteListener) {
+            survey.hasDeleteListener = true;
+
+            survey.addListener(
+                SURVEY_EVENT_DELETED,
+                () => {
+                    // do this slightly more safely via ids, in case surveys somehow refer to different objects
+                    if (this.currentSurvey?.id === survey.id) {
+                        this.currentSurvey = null;
+                    }
+
+                    this.surveys.delete(survey.id);
+
+                    // only clear from local storage if the deletion has gone through
+                    if (survey.savedRemotely) {
+                        // noinspection JSIgnoredPromiseFromCall
+                        this.forageRemoveItem(`survey.${survey.id}`);
+                    }
+
+                    survey.destructor();
+                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                }
+            );
+        }
+
         return survey;
     }
 
@@ -7857,7 +7910,7 @@ class App extends EventHarness {
                     continue;
                 }
             } else {
-                // test if the survey belongs to session user by default (only relevant if an explicit userId selector wasn't applied)
+                // test if the survey belongs to the session user by default (only relevant if an explicit userId selector wasn't applied)
                 if (this.session?.userId && survey.userId !== this.session.userId) {
                     continue;
                 }
@@ -9655,7 +9708,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1746559801-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1746785250-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

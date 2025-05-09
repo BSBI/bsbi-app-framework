@@ -257,7 +257,7 @@ export class Model extends EventHarness {
                 // need to find out whether this was a local store in indexedDb by the service worker
                 // or a server-side save
 
-                // to do that need to decode the json response
+                // to do that, need to decode the JSON response
                 // which can only be done once, so need to clone first
                 const clonedResponse = response.clone();
                 return clonedResponse.json().then((responseData) => {
@@ -442,7 +442,7 @@ export class Model extends EventHarness {
     }
 
     destructor() {
-        this.fireEvent(MODEL_EVENT_DESTROYED)
+        this.fireEvent(MODEL_EVENT_DESTROYED);
         super.destructor();
     }
 }

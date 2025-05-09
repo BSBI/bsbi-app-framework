@@ -546,7 +546,8 @@ export class App extends EventHarness {
                     return navigator.storage.persist().then((persistent) => {
                         if (persistent) {
                             console.log('Storage now persists.');
-                            return Logger.logError('Storage now persists.');
+                            //return Logger.logError('Storage now persists.');
+                            return Promise.resolve();
                         } else {
                             console.log('Failed to enable persistent storage.');
                             return Logger.logError('Failed to enable persistent storage.');
@@ -740,7 +741,7 @@ export class App extends EventHarness {
     revertUrl() {
         this.router.pause();
         if (this.windowHasHistoryState()) {
-            window.history.back(); // this could fail if previous url was not under the single-page-app umbrella (should test)
+            window.history.back(); // this could fail if the previous url was not under the single-page-app umbrella (should test)
         }
         this.router.resume();
     }
@@ -796,45 +797,6 @@ export class App extends EventHarness {
 
             survey = previousSurvey.mergeUpdate(survey);
         } else {
-            if (!survey.hasAppModifiedListener) {
-                survey.hasAppModifiedListener = true;
-
-                //console.log("setting survey's modified/save handler");
-                survey.addListener(
-                    SURVEY_EVENT_MODIFIED,
-                    () => {
-                        survey.save().finally(() => {
-                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                        });
-                    }
-                );
-            }
-
-            if (!survey.hasDeleteListener) {
-                survey.hasDeleteListener = true;
-
-                survey.addListener(
-                    SURVEY_EVENT_DELETED,
-                    () => {
-                        // do this slightly more safely via ids, in case surveys somehow refer to different objects
-                        if (this.currentSurvey?.id === survey.id) {
-                            this.currentSurvey = null;
-                        }
-
-                        this.surveys.delete(survey.id);
-
-                        // only clear from local storage if the deletion has gone through
-                        if (survey.savedRemotely) {
-                            // noinspection JSIgnoredPromiseFromCall
-                            this.forageRemoveItem(`survey.${survey.id}`);
-                        }
-
-                        survey.destructor();
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                    }
-                );
-            }
-
             this.surveys.set(survey.id, survey);
             changes = true;
         }
@@ -842,6 +804,46 @@ export class App extends EventHarness {
         if (changes) {
             this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
         }
+
+        if (!survey.hasAppModifiedListener) {
+            survey.hasAppModifiedListener = true;
+
+            //console.log("setting survey's modified/save handler");
+            survey.addListener(
+                SURVEY_EVENT_MODIFIED,
+                () => {
+                    survey.save().finally(() => {
+                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                    });
+                }
+            );
+        }
+
+        if (!survey.hasDeleteListener) {
+            survey.hasDeleteListener = true;
+
+            survey.addListener(
+                SURVEY_EVENT_DELETED,
+                () => {
+                    // do this slightly more safely via ids, in case surveys somehow refer to different objects
+                    if (this.currentSurvey?.id === survey.id) {
+                        this.currentSurvey = null;
+                    }
+
+                    this.surveys.delete(survey.id);
+
+                    // only clear from local storage if the deletion has gone through
+                    if (survey.savedRemotely) {
+                        // noinspection JSIgnoredPromiseFromCall
+                        this.forageRemoveItem(`survey.${survey.id}`);
+                    }
+
+                    survey.destructor();
+                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                }
+            );
+        }
+
         return survey;
     }
 
@@ -1260,7 +1262,7 @@ export class App extends EventHarness {
                     continue;
                 }
             } else {
-                // test if the survey belongs to session user by default (only relevant if an explicit userId selector wasn't applied)
+                // test if the survey belongs to the session user by default (only relevant if an explicit userId selector wasn't applied)
                 if (this.session?.userId && survey.userId !== this.session.userId) {
                     continue;
                 }

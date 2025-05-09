@@ -1,4 +1,4 @@
-import {Model} from "./Model";
+import {Model, MODEL_EVENT_DESTROYED} from "./Model";
 import {DeviceType} from "../utils/DeviceType";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
@@ -143,7 +143,7 @@ export class Track extends Model {
     static _tracks = new Map();
 
     /**
-     * Unix timestamp of most recent co-ordinate ping, in ms
+     * Unix timestamp of the most recent co-ordinate ping, in ms
      * @type {number}
      */
     static lastPingStamp = 0;
@@ -159,6 +159,18 @@ export class Track extends Model {
      * @type {EventHarness~Handle|null}
      */
     _surveyChangeListenerHandle = null;
+
+    /**
+     *
+     * @type {EventHarness~Handle|null}
+     */
+    _surveyDestroyedListenerHandle = null;
+
+    /**
+     *
+     * @type {EventHarness~Handle|null}
+     */
+    _surveyOccurrencesChangeListenerHandle = null;
 
     // /**
     //  * Project ids of survey types that are trackable
@@ -202,6 +214,9 @@ export class Track extends Model {
                         let previouslyTrackedSurvey = null;
 
                         if (Track._currentlyTrackedSurveyId) {
+                            /**
+                             * @type {Track|null}
+                             */
                             const oldTrack =
                                 Track._tracks.get(Track._currentlyTrackedSurveyId)
                                     ?.get?.(Track._currentlyTrackedDeviceId);
@@ -283,7 +298,7 @@ export class Track extends Model {
             survey.isToday() !== false &&
             survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId
         ) {
-            // Resume existing tracking, or start a new track.
+            // Resume existing tracking or start a new track.
 
             console.log('continuing tracking for survey with common baseSurvey')
             Track._trackSurvey(survey);
@@ -592,12 +607,24 @@ export class Track extends Model {
                 }
             });
         }
+
+        if (!this._surveyDestroyedListenerHandle) {
+            this._surveyDestroyedListenerHandle = survey.addListener(MODEL_EVENT_DESTROYED, () => {
+                this.removeSurveyChangeListener();
+            })
+        }
     }
 
     removeSurveyChangeListener() {
         const survey = Track._app.surveys.get(this.surveyId);
 
-        survey?.removeListener(SURVEY_EVENT_MODIFIED, this._surveyChangeListenerHandle);
+        survey?.removeListener?.(SURVEY_EVENT_MODIFIED, this._surveyChangeListenerHandle);
         this._surveyChangeListenerHandle = undefined;
+
+        survey?.removeListener?.(SURVEY_EVENT_MODIFIED, this._surveyOccurrencesChangeListenerHandle);
+        this._surveyOccurrencesChangeListenerHandle = undefined;
+
+        survey?.removeListener?.(MODEL_EVENT_DESTROYED, this._surveyDestroyedListenerHandle);
+        this._surveyDestroyedListenerHandle = undefined;
     }
 }
