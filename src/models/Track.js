@@ -305,7 +305,7 @@ export class Track extends Model {
             Track.trackingIsActive = true;
         } else if (survey && !survey.attributes?.casual && survey.isToday() !== false) {
             // Dependent on user preferences may restart tracking
-            const trackingLocation = Track._app.getOption('trackLocation');
+            const trackingLocation = Track._app.getOption('trackLocation')  && DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE;
 
             if (trackingLocation) {
                 // start tracking

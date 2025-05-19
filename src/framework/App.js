@@ -77,6 +77,14 @@ export class App extends EventHarness {
     _currentControllerHandle = null;
 
     /**
+     * Set while a purge is in progress, to prevent overlapping conflicting purge operations
+     *
+     * @type {boolean}
+     * @private
+     */
+    _doingPurge = false;
+
+    /**
      *
      * @param {number|null} handle
      */
@@ -200,80 +208,8 @@ export class App extends EventHarness {
 
     static LOAD_SURVEYS_ENDPOINT = '/loadsurveys.php';
 
-    // /**
-    //  * Fired when a brand-new occurrence is added
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_OCCURRENCE_ADDED = APP_EVENT_OCCURRENCE_ADDED;
-
-    // /**
-    //  * Fired when a survey is retrieved from local storage
-    //  * parameter is {survey : Survey}
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_SURVEY_LOADED = APP_EVENT_SURVEY_LOADED;
-
-    // /**
-    //  * Fired when an occurrence is retrieved from local storage or newly initialised
-    //  * parameter is {occurrence : Occurrence}
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_OCCURRENCE_LOADED = APP_EVENT_OCCURRENCE_LOADED;
-
-    //static EVENT_CURRENT_OCCURRENCE_CHANGED = APP_EVENT_CURRENT_OCCURRENCE_CHANGED;
-
-    // /**
-    //  * Fired when the selected current survey id is changed
-    //  * parameter is {newSurvey : Survey|null}
-    //  *
-    //  * (this is not fired for modification of the survey content)
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_CURRENT_SURVEY_CHANGED = APP_EVENT_CURRENT_SURVEY_CHANGED;
-
-    // /**
-    //  * Fired if the surveys list might need updating (as a survey has been added, removed or changed)
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_SURVEYS_CHANGED = APP_EVENT_SURVEYS_CHANGED;
-
-    // /**
-    //  * Fired after fully-successful sync-all
-    //  * (or if sync-all resolved with nothing to send)
-    //  *
-    //  * @todo this is misleading as in fact is fired when all saved to indexeddb or to server
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_ALL_SYNCED_TO_SERVER = APP_EVENT_ALL_SYNCED_TO_SERVER;
-
-    // /**
-    //  * fired if sync-all called, but one or more objects failed to be stored
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_SYNC_ALL_FAILED = APP_EVENT_SYNC_ALL_FAILED;
-
-    // static EVENT_USER_LOGIN = APP_EVENT_USER_LOGIN;
-
-    // static EVENT_USER_LOGOUT = APP_EVENT_USER_LOGOUT;
-
-    // /**
-    //  * Fired when watching of GPS has been granted following user request.
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_WATCH_GPS_USER_REQUEST = APP_EVENT_WATCH_GPS_USER_REQUEST;
-
-    // static EVENT_CANCEL_WATCHED_GPS_USER_REQUEST = APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST;
-
     /**
-     * IndexedDb key used for storing id of current (last accessed) survey (or null)
+     * IndexedDb key used for storing id of the current (last accessed) survey (or null)
      *
      * @type {string}
      */
@@ -323,6 +259,13 @@ export class App extends EventHarness {
     set currentSurvey(survey) {
         if (this._currentSurvey !== survey) {
             this._currentSurvey = survey || null;
+
+            if (survey) {
+                // listeners should have been set by App.addSurvey()
+                // but there might be edge-cases where the listeners have been cleared
+                // and not re-established.
+                this._applySurveyListeners(survey);
+            }
 
             let surveyId = survey?.id;
             localforage.setItem(App.CURRENT_SURVEY_KEY_NAME, surveyId)
@@ -805,6 +748,17 @@ export class App extends EventHarness {
             this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
         }
 
+        this._applySurveyListeners(survey);
+
+        return survey;
+    }
+
+    /**
+     *
+     * @param {Survey} survey
+     * @private
+     */
+    _applySurveyListeners(survey) {
         if (!survey.hasAppModifiedListener) {
             survey.hasAppModifiedListener = true;
 
@@ -843,8 +797,6 @@ export class App extends EventHarness {
                 }
             );
         }
-
-        return survey;
     }
 
     /**
@@ -900,9 +852,9 @@ export class App extends EventHarness {
                 } else {
                     survey.isPristine = false;
 
-                    // need to ensure that currentSurvey is saved before occurrence
-                    // rather than using a promise chain here, instead rely on enforced queuing of post requests in Model
-                    // otherwise there are problems with queue-jumping (e.g. when an image needs to be saved after both previous requests)
+                    // Need to ensure that currentSurvey is saved before occurrence.
+                    // Rather than using a promise chain here, instead rely on the enforced queuing of post requests by Model,
+                    // otherwise there are problems with queue-jumping (e.g. when an image needs to be saved after both previous requests).
                     if (survey.unsaved()) {
                         // noinspection JSIgnoredPromiseFromCall
                         survey.save(true);
@@ -1065,7 +1017,9 @@ export class App extends EventHarness {
                                 storedObjectKeys[type].push(`${id}.${deviceId}`);
                             }
                         } else if (!storedObjectKeys[type].includes(id)) {
-                            storedObjectKeys[type].push(id);
+                            if (id && id !== 'undefined') {
+                                storedObjectKeys[type].push(id);
+                            }
                         }
                     } else {
                         // 'track' and 'log' records not always wanted here, but not an error
@@ -1093,6 +1047,16 @@ export class App extends EventHarness {
             track : [],
         };
 
+        if (this._doingPurge) {
+            console.error('Already doing a purge');
+
+            // noinspection JSIgnoredPromiseFromCall
+            Logger.logError('Already doing a purge');
+            return Promise.resolve();
+        }
+
+        this._doingPurge = true;
+
         const promise = this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
@@ -1119,6 +1083,8 @@ export class App extends EventHarness {
 
                 //this.fireEvent(APP_EVENT_PURGE_FAILED);
                 return false;
+            }).finally(() => {
+                this._doingPurge = false;
             });
 
         return fastReturn ?
@@ -1542,6 +1508,9 @@ export class App extends EventHarness {
                         preservedKeys.survey.push(survey.id);
                     }
                 })
+                // .catch((reason) => {
+                //     console.error({'survey pre-purge failed reason' : reason});
+                // })
             );
         }
 
@@ -1651,6 +1620,7 @@ export class App extends EventHarness {
                 console.error({'purge failed reason' : reason});
                 console.log({'would have purged' : deletionCandidateKeys});
 
+                // noinspection JSIgnoredPromiseFromCall
                 Logger.logError(`Purge failed: ${reason}`);
             });
 
@@ -1826,6 +1796,7 @@ export class App extends EventHarness {
                 // clear occurrences from the previous survey.
 
                 if (setCurrentSurvey && localSurvey.id !== this._currentSurvey?.id) {
+                    // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(`Switching to pristine survey ${targetSurveyId}.`);
 
                     return this.clearCurrentSurvey().then(() => {
@@ -1908,7 +1879,7 @@ export class App extends EventHarness {
                     // The split approach below isn't yet safe
                     /*
                     if (targetSurveyId) {
-                        // as single batch try to get just the survey of interest
+                        // as a single batch, try to get just the survey of interest
 
                         promisesToRace.push(
                             this.refreshFromServer([targetSurveyId], true)
@@ -1954,7 +1925,7 @@ export class App extends EventHarness {
             .then(() => {
                 // called regardless of whether a server refresh was successful
                 // (because of previous catch)
-                // storedObjectKeys and indexed db should be as up-to-date as possible
+                // storedObjectKeys and indexed db should be as up to date as possible
 
                 if (storedObjectKeys?.survey?.length) {
                     let n = 0;
@@ -2097,7 +2068,7 @@ export class App extends EventHarness {
     }
 
     /**
-     * specialized surveys might return an HTML <img> tag string
+     * specialised surveys might return an HTML <img> tag string
      * @param {Survey} survey
      * @returns {string}
      */

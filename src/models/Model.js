@@ -233,13 +233,13 @@ export class Model extends EventHarness {
     }
 
     /**
-     * if not securely saved then makes a post to /save<object>
+     * if not securely saved, then makes a post to /save<object>
      *
      * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
+     * a successful save will result in a JSON response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the image directly to indexeddb
      *
      * must test indexeddb for this eventuality after the save has returned
@@ -283,8 +283,8 @@ export class Model extends EventHarness {
                     this.createdStamp = parseInt(responseData.created, 10);
                     this.modifiedStamp = parseInt(responseData.modified, 10);
 
-                    // return the json version of the original response as a promise
-                    return response.json(); // assign appropriate JSON type to the response
+                    // return the JSON version of the original response as a promise
+                    return response.json(); // assign a JSON type to the response
                 });
             } else {
                 // try instead to write the data to local storage
