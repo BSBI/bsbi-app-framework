@@ -1763,7 +1763,7 @@ export class App extends EventHarness {
                 });
             }
 
-            return promise.then(() => Logger.logError(`Memory and storage logs: ${contextMessage} : ${JSON.stringify({
+            return promise.then(() => Logger.logErrorDev(`Memory and storage logs: ${contextMessage} : ${JSON.stringify({
                 memory,
                 storage
             })}`));

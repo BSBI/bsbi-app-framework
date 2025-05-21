@@ -301,8 +301,36 @@ export class Model extends EventHarness {
     /**
      *
      * @param {string} key
+     * @param {string} type
+     * @returns {Promise<{}>}
+     */
+    static retrieveRawFromLocal(key, type) {
+        if (!key || key === 'undefined') {
+            // bad key or literal string 'undefined'
+            throw new Error(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
+        }
+
+        return localforage.getItem(`${type}.${key}`)
+            .then(
+                (descriptor) => {
+                    if (descriptor) {
+                        return descriptor;
+                    } else {
+                        return Promise.reject(`Failed to retrieve ${type}.${key} locally`);
+                    }
+                },
+                (reason) => {
+                    console.error({'Error retrieving from localforage' : {type : `${type}.${key}`}, reason});
+                    return Promise.reject(`Failed to retrieve ${type}.${key} locally (forage error)`);
+                }
+            );
+    }
+
+    /**
+     *
+     * @param {string} key
      * @param {(Survey|Occurrence|OccurrenceImage|Track)} modelObject
-     * @returns {Promise}
+     * @returns {Promise<Model>}
      */
     static retrieveFromLocal(key, modelObject) {
         if (!key || key === 'undefined') {

@@ -43,7 +43,7 @@ export class LocalResponse {
     }
 
     /**
-     * @param {boolean} remoteSuccess set if object has been saved remotely
+     * @param {boolean} remoteSuccess set if the object has been saved remotely
      * @returns {Promise<Response>}
      */
     storeLocally(remoteSuccess = true) {

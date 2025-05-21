@@ -13,6 +13,8 @@ import {GridRef} from 'british-isles-gridrefs'
  */
 export const OCCURRENCE_EVENT_MODIFIED = 'modified';
 
+export const MODEL_TYPE_OCCURRENCE = 'occurrence';
+
 export class Occurrence extends Model {
 
     /**
@@ -57,7 +59,7 @@ export class Occurrence extends Model {
 
     SAVE_ENDPOINT = '/saveoccurrence.php';
 
-    TYPE = 'occurrence';
+    TYPE = MODEL_TYPE_OCCURRENCE;
 
     // /**
     //  * fired from Occurrence when the object's contents have been modified

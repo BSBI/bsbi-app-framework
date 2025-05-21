@@ -367,10 +367,7 @@ export class Track extends Model {
                 // survey must be saved first
                 if (currentSurvey?.unsaved?.()) {
                     if (!currentSurvey.isPristine) {
-                        currentSurvey.save().then(() => {
-                                return track.save();
-                            }
-                        );
+                        currentSurvey.save().then(() => track.save());
                     }
                 } else {
                     track.save();

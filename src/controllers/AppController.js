@@ -139,7 +139,8 @@ export class AppController extends EventHarness {
      */
     static clearControlHiding() {
         //this is a low priority, so yield here
-        setTimeout(() => {
+
+        const yieldCallback = () => {
             document.body.classList.remove('hide-controls');
 
             for (let element of document.querySelectorAll('.needs-bsbi-controls')) {
@@ -151,7 +152,9 @@ export class AppController extends EventHarness {
             for (let element of document.querySelectorAll('.dropdown-focused')) {
                 element.classList.remove('dropdown-focused');
             }
-        });
+        };
+
+        window.requestIdleCallback?.(yieldCallback, {timeout: 500}) ?? setTimeout(yieldCallback);
     }
 
     /**

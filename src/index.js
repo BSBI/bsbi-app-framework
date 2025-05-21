@@ -4,7 +4,7 @@ export {SurveyPickerController} from './controllers/SurveyPickerController';
 export {App} from './framework/App';
 export {EventHarness} from './framework/EventHarness';
 export {Model, UUID_REGEX, uuid, MODEL_EVENT_SAVED_REMOTELY, MODEL_EVENT_DESTROYED} from './models/Model';
-export {Occurrence, OCCURRENCE_EVENT_MODIFIED} from './models/Occurrence';
+export {Occurrence, OCCURRENCE_EVENT_MODIFIED, MODEL_TYPE_OCCURRENCE} from './models/Occurrence';
 export {OccurrenceImage, IMAGE_CONTEXT_SURVEY, IMAGE_CONTEXT_OCCURRENCE} from './models/OccurrenceImage';
 export {Survey,
     SURVEY_EVENT_LIST_LENGTH_CHANGED,

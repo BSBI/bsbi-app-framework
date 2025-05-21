@@ -605,7 +605,8 @@ class AppController extends EventHarness {
      */
     static clearControlHiding() {
         //this is a low priority, so yield here
-        setTimeout(() => {
+
+        const yieldCallback = () => {
             document.body.classList.remove('hide-controls');
 
             for (let element of document.querySelectorAll('.needs-bsbi-controls')) {
@@ -617,7 +618,9 @@ class AppController extends EventHarness {
             for (let element of document.querySelectorAll('.dropdown-focused')) {
                 element.classList.remove('dropdown-focused');
             }
-        });
+        };
+
+        window.requestIdleCallback?.(yieldCallback, {timeout: 500}) ?? setTimeout(yieldCallback);
     }
 
     /**
@@ -3799,13 +3802,13 @@ class Model extends EventHarness {
     }
 
     /**
-     * if not securely saved then makes a post to /save<object>
+     * if not securely saved, then makes a post to /save<object>
      *
      * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
+     * a successful save will result in a JSON response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the image directly to indexeddb
      *
      * must test indexeddb for this eventuality after the save has returned
@@ -3849,8 +3852,8 @@ class Model extends EventHarness {
                     this.createdStamp = parseInt(responseData.created, 10);
                     this.modifiedStamp = parseInt(responseData.modified, 10);
 
-                    // return the json version of the original response as a promise
-                    return response.json(); // assign appropriate JSON type to the response
+                    // return the JSON version of the original response as a promise
+                    return response.json(); // assign a JSON type to the response
                 });
             } else {
                 // try instead to write the data to local storage
@@ -3867,8 +3870,36 @@ class Model extends EventHarness {
     /**
      *
      * @param {string} key
+     * @param {string} type
+     * @returns {Promise<{}>}
+     */
+    static retrieveRawFromLocal(key, type) {
+        if (!key || key === 'undefined') {
+            // bad key or literal string 'undefined'
+            throw new Error(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
+        }
+
+        return localforage.getItem(`${type}.${key}`)
+            .then(
+                (descriptor) => {
+                    if (descriptor) {
+                        return descriptor;
+                    } else {
+                        return Promise.reject(`Failed to retrieve ${type}.${key} locally`);
+                    }
+                },
+                (reason) => {
+                    console.error({'Error retrieving from localforage' : {type : `${type}.${key}`}, reason});
+                    return Promise.reject(`Failed to retrieve ${type}.${key} locally (forage error)`);
+                }
+            );
+    }
+
+    /**
+     *
+     * @param {string} key
      * @param {(Survey|Occurrence|OccurrenceImage|Track)} modelObject
-     * @returns {Promise}
+     * @returns {Promise<Model>}
      */
     static retrieveFromLocal(key, modelObject) {
         if (!key || key === 'undefined') {
@@ -4710,10 +4741,7 @@ class Track extends Model {
                 // survey must be saved first
                 if (currentSurvey?.unsaved?.()) {
                     if (!currentSurvey.isPristine) {
-                        currentSurvey.save().then(() => {
-                                return track.save();
-                            }
-                        );
+                        currentSurvey.save().then(() => track.save());
                     }
                 } else {
                     track.save();
@@ -5408,6 +5436,8 @@ class Taxon {
  */
 const OCCURRENCE_EVENT_MODIFIED = 'modified';
 
+const MODEL_TYPE_OCCURRENCE = 'occurrence';
+
 class Occurrence extends Model {
 
     /**
@@ -5452,7 +5482,7 @@ class Occurrence extends Model {
 
     SAVE_ENDPOINT = '/saveoccurrence.php';
 
-    TYPE = 'occurrence';
+    TYPE = MODEL_TYPE_OCCURRENCE;
 
     // /**
     //  * fired from Occurrence when the object's contents have been modified
@@ -8408,7 +8438,7 @@ class App extends EventHarness {
                 });
             }
 
-            return promise.then(() => Logger.logError(`Memory and storage logs: ${contextMessage} : ${JSON.stringify({
+            return promise.then(() => Logger.logErrorDev(`Memory and storage logs: ${contextMessage} : ${JSON.stringify({
                 memory,
                 storage
             })}`));
@@ -8441,6 +8471,7 @@ class App extends EventHarness {
                 // clear occurrences from the previous survey.
 
                 if (setCurrentSurvey && localSurvey.id !== this._currentSurvey?.id) {
+                    // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(`Switching to pristine survey ${targetSurveyId}.`);
 
                     return this.clearCurrentSurvey().then(() => {
@@ -9321,7 +9352,7 @@ class LocalResponse {
     }
 
     /**
-     * @param {boolean} remoteSuccess set if object has been saved remotely
+     * @param {boolean} remoteSuccess set if the object has been saved remotely
      * @returns {Promise<Response>}
      */
     storeLocally(remoteSuccess = true) {
@@ -9678,7 +9709,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1747038082-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1747727498-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -10314,5 +10345,5 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CONTROLLER_CHANGED, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CONTROLLER_CHANGED, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, MODEL_TYPE_OCCURRENCE, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
 //# sourceMappingURL=index.js.map
