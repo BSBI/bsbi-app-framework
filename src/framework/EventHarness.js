@@ -12,6 +12,20 @@ export class EventHarness {
 
     /**
      *
+     * @type {Map<Object, Object<string,Array<function>>>}
+     * @private
+     */
+    static _staticEventListeners = new Map;
+
+    /**
+     *
+     * @type {Map<Object, Array<{eventName: string, handle: EventHarness~Handle}>>}
+     * @private
+     */
+    _wrappedStaticHandles = new Map;
+
+    /**
+     *
      * @type {Array<{element: Element, type: string, handler: Function, options}|null>}
      * @private
      */
@@ -58,7 +72,7 @@ export class EventHarness {
             return (this._eventListeners[eventName].push(handlerFunction)) - 1;
         } else {
             this._eventListeners[eventName] = [handlerFunction];
-            return 0; // first element in array
+            return 0; // first element in the array
         }
     }
 
@@ -104,8 +118,6 @@ export class EventHarness {
      * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
-        //this._eventListeners = this._eventListeners || [];
-
         const handlerFunction = (context, eventName, invocationParam = {}) =>
             handler({context, eventName, ...invocationParam, ...constructionParam});
 
@@ -113,8 +125,54 @@ export class EventHarness {
             return (this._eventListeners[eventName].push(handlerFunction)) - 1;
         } else {
             this._eventListeners[eventName] = [handlerFunction];
-            return 0; // first element in array
+            return 0; // first element in the array
         }
+    }
+
+    /**
+     *
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {Function} handler
+     * @param {*=} constructionParam
+     * @return {EventHarness~Handle} handle
+     */
+    static staticAddListener (staticTarget, eventName, handler, constructionParam = {}) {
+        const handlerFunction = (context, eventName, invocationParam = {}) =>
+            handler({context, eventName, ...invocationParam, ...constructionParam});
+
+        if (!EventHarness._staticEventListeners.has(staticTarget)) {
+            EventHarness._staticEventListeners.set(staticTarget, {});
+        }
+
+        const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
+
+        if (eventListeners[eventName]) {
+            return (eventListeners[eventName].push(handlerFunction)) - 1;
+        } else {
+            eventListeners[eventName] = [handlerFunction];
+            return 0; // first element in the array
+        }
+    }
+
+    /**
+     *
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {Function} handler
+     * @param {*=} constructionParam
+     */
+    addStaticListenerWrapper(staticTarget, eventName, handler, constructionParam = {}) {
+        let wrappedHandles;
+
+        if (this._wrappedStaticHandles.has(staticTarget)) {
+            wrappedHandles = this._wrappedStaticHandles.get(staticTarget);
+        } else {
+            wrappedHandles = [];
+            this._wrappedStaticHandles.set(staticTarget, wrappedHandles);
+        }
+
+        wrappedHandles.push({eventName, handle: EventHarness.staticAddListener(staticTarget, eventName, handler, constructionParam)});
     }
 
     /**
@@ -136,6 +194,16 @@ export class EventHarness {
         return undefined;
     }
 
+    static staticRemoveListener(staticTarget, eventName, handle) {
+        const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
+
+        if (eventListeners[eventName]?.[handle]) {
+            delete eventListeners[eventName][handle];
+        }
+        // no need for console warning if event listener already gone
+        // as a model may have been destroyed legitimately without the awareness of everyone who holds listeners
+    }
+
     /**
      *
      */
@@ -151,6 +219,13 @@ export class EventHarness {
         }
 
         this._domEventListeners = [];
+
+        for (const [targetClass, eventDescriptors]  of this._wrappedStaticHandles) {
+            for (let descriptor of eventDescriptors) {
+                EventHarness.staticRemoveListener(targetClass, descriptor.eventName, descriptor.handle);
+            }
+        }
+        this._wrappedStaticHandles.clear();
     }
 
     /**
@@ -171,6 +246,36 @@ export class EventHarness {
                     // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(
                         `Exception thrown in event handler '${eventName}': ${exception.message}`,
+                        '',
+                        null,
+                        null,
+                        exception
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {Object=} param optional parameter to pass on to listener
+     * @return void
+     */
+    static staticFireEvent (staticTarget, eventName, param) {
+        const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
+
+        if (eventListeners) {
+            for (let f in eventListeners[eventName]) {
+                try {
+                    if (eventListeners[eventName][f](this, eventName, arguments[2]) === EventHarness.STOP_PROPAGATION) {
+                        break;
+                    }
+                } catch (exception) {
+                    console.error({'Exception thrown in static event handler' : {eventName, exception}});
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(
+                        `Exception thrown in static event handler '${eventName}': ${exception.message}`,
                         '',
                         null,
                         null,

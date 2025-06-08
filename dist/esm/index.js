@@ -159,6 +159,20 @@ class EventHarness {
 
     /**
      *
+     * @type {Map<Object, Object<string,Array<function>>>}
+     * @private
+     */
+    static _staticEventListeners = new Map;
+
+    /**
+     *
+     * @type {Map<Object, Array<{eventName: string, handle: EventHarness~Handle}>>}
+     * @private
+     */
+    _wrappedStaticHandles = new Map;
+
+    /**
+     *
      * @type {Array<{element: Element, type: string, handler: Function, options}|null>}
      * @private
      */
@@ -205,7 +219,7 @@ class EventHarness {
             return (this._eventListeners[eventName].push(handlerFunction)) - 1;
         } else {
             this._eventListeners[eventName] = [handlerFunction];
-            return 0; // first element in array
+            return 0; // first element in the array
         }
     }
 
@@ -251,8 +265,6 @@ class EventHarness {
      * @return {EventHarness~Handle} handle
      */
     addListener (eventName, handler, constructionParam = {}) {
-        //this._eventListeners = this._eventListeners || [];
-
         const handlerFunction = (context, eventName, invocationParam = {}) =>
             handler({context, eventName, ...invocationParam, ...constructionParam});
 
@@ -260,8 +272,54 @@ class EventHarness {
             return (this._eventListeners[eventName].push(handlerFunction)) - 1;
         } else {
             this._eventListeners[eventName] = [handlerFunction];
-            return 0; // first element in array
+            return 0; // first element in the array
         }
+    }
+
+    /**
+     *
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {Function} handler
+     * @param {*=} constructionParam
+     * @return {EventHarness~Handle} handle
+     */
+    static staticAddListener (staticTarget, eventName, handler, constructionParam = {}) {
+        const handlerFunction = (context, eventName, invocationParam = {}) =>
+            handler({context, eventName, ...invocationParam, ...constructionParam});
+
+        if (!EventHarness._staticEventListeners.has(staticTarget)) {
+            EventHarness._staticEventListeners.set(staticTarget, {});
+        }
+
+        const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
+
+        if (eventListeners[eventName]) {
+            return (eventListeners[eventName].push(handlerFunction)) - 1;
+        } else {
+            eventListeners[eventName] = [handlerFunction];
+            return 0; // first element in the array
+        }
+    }
+
+    /**
+     *
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {Function} handler
+     * @param {*=} constructionParam
+     */
+    addStaticListenerWrapper(staticTarget, eventName, handler, constructionParam = {}) {
+        let wrappedHandles;
+
+        if (this._wrappedStaticHandles.has(staticTarget)) {
+            wrappedHandles = this._wrappedStaticHandles.get(staticTarget);
+        } else {
+            wrappedHandles = [];
+            this._wrappedStaticHandles.set(staticTarget, wrappedHandles);
+        }
+
+        wrappedHandles.push({eventName, handle: EventHarness.staticAddListener(staticTarget, eventName, handler, constructionParam)});
     }
 
     /**
@@ -283,6 +341,16 @@ class EventHarness {
         return undefined;
     }
 
+    static staticRemoveListener(staticTarget, eventName, handle) {
+        const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
+
+        if (eventListeners[eventName]?.[handle]) {
+            delete eventListeners[eventName][handle];
+        }
+        // no need for console warning if event listener already gone
+        // as a model may have been destroyed legitimately without the awareness of everyone who holds listeners
+    }
+
     /**
      *
      */
@@ -298,6 +366,13 @@ class EventHarness {
         }
 
         this._domEventListeners = [];
+
+        for (const [targetClass, eventDescriptors]  of this._wrappedStaticHandles) {
+            for (let descriptor of eventDescriptors) {
+                EventHarness.staticRemoveListener(targetClass, descriptor.eventName, descriptor.handle);
+            }
+        }
+        this._wrappedStaticHandles.clear();
     }
 
     /**
@@ -318,6 +393,36 @@ class EventHarness {
                     // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(
                         `Exception thrown in event handler '${eventName}': ${exception.message}`,
+                        '',
+                        null,
+                        null,
+                        exception
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {Object=} param optional parameter to pass on to listener
+     * @return void
+     */
+    static staticFireEvent (staticTarget, eventName, param) {
+        const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
+
+        if (eventListeners) {
+            for (let f in eventListeners[eventName]) {
+                try {
+                    if (eventListeners[eventName][f](this, eventName, arguments[2]) === EventHarness.STOP_PROPAGATION) {
+                        break;
+                    }
+                } catch (exception) {
+                    console.error({'Exception thrown in static event handler' : {eventName, exception}});
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(
+                        `Exception thrown in static event handler '${eventName}': ${exception.message}`,
                         '',
                         null,
                         null,
@@ -7646,11 +7751,11 @@ class App extends EventHarness {
                     // }
 
                     if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
-                        console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
+                        this.isTestBuild && console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
                         return Promise.resolve();
                     }
                 } else {
-                    console.info(`Adding new ${key} from server. (locally absent) `);
+                    this.isTestBuild && console.info(`Adding new ${key} from server. (locally absent) `);
                 }
 
                 // no local copy or stale copy
@@ -9015,7 +9120,7 @@ class Party {
     static _baseParties = [];
 
     /**
-     * Current party working set, combining base set with per-user extras
+     * Current party working set, combining the base set with per-user extras
      *
      * @type {Array.<RawParty>}
      */
@@ -9094,14 +9199,20 @@ class Party {
      *
      * @param {Array.<RawParty>} parties
      * @param {number} parties.stamp
-     * @param {string} sourceUrl
+     * @param {string|null} sourceUrl
      */
-    static initialiseParties(parties, sourceUrl) {
+    static initialiseParties(parties, sourceUrl = null) {
         Party._baseParties = parties;
         //Party.rawParties = [...Party._baseParties, ...parties];
         Party.rawParties = Party._baseParties;
 
-        Party.testPartyRecache(parties.stamp, sourceUrl);
+        if (sourceUrl) {
+            Party.testPartyRecache(parties.stamp, sourceUrl);
+        }
+    }
+
+    static clearUserParties() {
+        Party.rawParties = Party._baseParties;
     }
 
     /**
@@ -9109,6 +9220,7 @@ class Party {
      * @param {number|null} stamp
      * @param {string} sourceUrl
      * @param {number} interval
+     * @todo default interval for re-cache should be shorter on desktops than on mobile
      */
     static testPartyRecache(stamp, sourceUrl, interval = (3600 * 24 * 7)) {
         if (navigator.onLine && stamp && (stamp + interval) < (Date.now() / 1000)) {
@@ -9132,7 +9244,7 @@ class Party {
      * @returns {Promise}
      */
     static addUserParties(userId) {
-        // where parties are the newly-loaded extra set
+        // where parties are the newly loaded extra set
 
         const url = `${Party.additionalPartiesUrl}${userId}`;
 
@@ -9147,10 +9259,10 @@ class Party {
                 const unique = new Map;
 
                 // base parties must come first as these will be tied to registered DDb users
-                // dynamically added in app names must come last
+                // dynamically added in-app names must come last
                 for (let party of [...Party._baseParties, ...newParties]) {
                     /**
-                     * either the packed entity id, or a string-serialized forename-surname-orgname
+                     * either the packed entity id, or a string-serialised forename-surname-orgname
                      * @type {string}
                      */
                     let key = (party?.[PARTY_ID_INDEX]) || JSON.stringify([party?.[PARTY_FORENAMES_INDEX], party?.[PARTY_SURNAME_INDEX], party?.[PARTY_ORGNAME_INDEX]]);
@@ -9709,7 +9821,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1747727498-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1749380975-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;

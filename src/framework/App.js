@@ -968,11 +968,11 @@ export class App extends EventHarness {
                     // }
 
                     if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
-                        console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
+                        this.isTestBuild && console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
                         return Promise.resolve();
                     }
                 } else {
-                    console.info(`Adding new ${key} from server. (locally absent) `);
+                    this.isTestBuild && console.info(`Adding new ${key} from server. (locally absent) `);
                 }
 
                 // no local copy or stale copy

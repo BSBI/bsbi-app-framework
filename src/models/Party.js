@@ -49,7 +49,7 @@ export class Party {
     static _baseParties = [];
 
     /**
-     * Current party working set, combining base set with per-user extras
+     * Current party working set, combining the base set with per-user extras
      *
      * @type {Array.<RawParty>}
      */
@@ -128,14 +128,20 @@ export class Party {
      *
      * @param {Array.<RawParty>} parties
      * @param {number} parties.stamp
-     * @param {string} sourceUrl
+     * @param {string|null} sourceUrl
      */
-    static initialiseParties(parties, sourceUrl) {
+    static initialiseParties(parties, sourceUrl = null) {
         Party._baseParties = parties;
         //Party.rawParties = [...Party._baseParties, ...parties];
         Party.rawParties = Party._baseParties;
 
-        Party.testPartyRecache(parties.stamp, sourceUrl);
+        if (sourceUrl) {
+            Party.testPartyRecache(parties.stamp, sourceUrl);
+        }
+    }
+
+    static clearUserParties() {
+        Party.rawParties = Party._baseParties;
     }
 
     /**
@@ -143,6 +149,7 @@ export class Party {
      * @param {number|null} stamp
      * @param {string} sourceUrl
      * @param {number} interval
+     * @todo default interval for re-cache should be shorter on desktops than on mobile
      */
     static testPartyRecache(stamp, sourceUrl, interval = (3600 * 24 * 7)) {
         if (navigator.onLine && stamp && (stamp + interval) < (Date.now() / 1000)) {
@@ -166,7 +173,7 @@ export class Party {
      * @returns {Promise}
      */
     static addUserParties(userId) {
-        // where parties are the newly-loaded extra set
+        // where parties are the newly loaded extra set
 
         const url = `${Party.additionalPartiesUrl}${userId}`;
 
@@ -181,10 +188,10 @@ export class Party {
                 const unique = new Map;
 
                 // base parties must come first as these will be tied to registered DDb users
-                // dynamically added in app names must come last
+                // dynamically added in-app names must come last
                 for (let party of [...Party._baseParties, ...newParties]) {
                     /**
-                     * either the packed entity id, or a string-serialized forename-surname-orgname
+                     * either the packed entity id, or a string-serialised forename-surname-orgname
                      * @type {string}
                      */
                     let key = (party?.[PARTY_ID_INDEX]) || JSON.stringify([party?.[PARTY_FORENAMES_INDEX], party?.[PARTY_SURNAME_INDEX], party?.[PARTY_ORGNAME_INDEX]]);
