@@ -225,17 +225,17 @@ export class Occurrence extends Model {
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {
-                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                    result.monad = gridRef.gridCoords.toGridRef(1000);
                 }
 
                 if (gridRef.length <= 2000) {
-                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                    result.tetrad = gridRef.gridCoords.toGridRef(2000);
                 }
 
                 result.country = gridRef.country;
             }
 
-            result.hectad = gridRef.gridCoords.to_gridref(10000);
+            result.hectad = gridRef.gridCoords.toGridRef(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }

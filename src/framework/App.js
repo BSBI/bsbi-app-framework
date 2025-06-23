@@ -16,7 +16,6 @@ import {Track} from "../models/Track";
 import {
     APP_EVENT_ADD_SURVEY_USER_REQUEST,
     APP_EVENT_ALL_SYNCED_TO_SERVER,
-    APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
     APP_EVENT_CURRENT_OCCURRENCE_CHANGED,
     APP_EVENT_CURRENT_SURVEY_CHANGED,
     APP_EVENT_NEW_SURVEY,
@@ -27,7 +26,6 @@ import {
     APP_EVENT_SURVEYS_CHANGED,
     APP_EVENT_SYNC_ALL_FAILED,
     APP_EVENT_USER_LOGIN,
-    APP_EVENT_WATCH_GPS_USER_REQUEST,
     APP_EVENT_USER_LOGOUT,
     APP_EVENT_OPTIONS_RESTORED,
     SURVEY_EVENT_MODIFIED,
@@ -177,6 +175,13 @@ export class App extends EventHarness {
      * @type {number}
      */
     staleThreshold = 3600 * 24 * 14; // keep surveys for 14 days
+
+    /**
+     * called to resolve display promise after the very first navigation happens
+     *
+     * @type {function|null}
+     */
+    afterFirstNavigationHandler = null;
 
     /**
      * Flags the occurrence of a pervasive Safari bug
@@ -605,12 +610,20 @@ export class App extends EventHarness {
     initialise() {
         this.layout.initialise();
 
+        // this.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
+        //     EventHarness.staticFireEvent(App, APP_EVENT_WATCH_GPS_USER_REQUEST);
+        // });
+
+        // this.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+        //     EventHarness.staticFireEvent(App, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
+        // });
+
         for (let controller of this.controllers) {
             controller.initialise();
         }
 
         this._router.notFound((query) => {
-            // called when there is path specified but
+            // called when there is a path specified but
             // there is no route matching
 
             console.log(`no route found for '${query}'`);
@@ -619,6 +632,20 @@ export class App extends EventHarness {
             // const view = new NotFoundView();
             // view.display();
             this.notFoundView();
+        });
+
+        this._router.hooks({
+            //before: function(done, params) { ... },
+            after: (params) => {
+                // generic 'after' handler for all routes
+                if (this.afterFirstNavigationHandler) {
+                    try {
+                        this.afterFirstNavigationHandler();
+                    } finally {
+                        this.afterFirstNavigationHandler = null;
+                    }
+                }
+            }
         });
 
         //default homepage
@@ -643,14 +670,24 @@ export class App extends EventHarness {
         });
     }
 
+    /**
+     * Returns a promise that resolves after the initial navigation completes
+     *
+     * @returns {Promise<void>}
+     */
     display() {
         //console.log('App display');
-        this._router.resolve();
+        //this._router.resolve();
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
         // this.syncAll(true).then(() => {
         //     this._router.resolve();
         // });
+
+        return new Promise((resolve, reject) => {
+            this.afterFirstNavigationHandler = resolve;
+            this._router.resolve();
+        });
     }
 
     saveRoute() {
@@ -848,7 +885,18 @@ export class App extends EventHarness {
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
                 if (!survey) {
-                    throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
+                    // this should be impossible but seems to happen
+
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(`Failed to look up survey id ${occurrence.surveyId} in app listener for OCCURRENCE_EVENT_MODIFIED; available surveys: ${Array.from(this.surveys.keys()).join(',')}`);
+
+                    // in desperation, try to save the occurrence anyway
+                    occurrence.save().then(() => {
+                        // noinspection JSIgnoredPromiseFromCall
+                        Logger.logError(`Saved modified occurrence ${occurrence.id} for missing survey ${occurrence.surveyId}.`);
+                    });
+
+                    throw new Error(`Failed to look up survey id ${occurrence.surveyId} in app listener for OCCURRENCE_EVENT_MODIFIED`);
                 } else {
                     survey.isPristine = false;
 
@@ -1482,6 +1530,8 @@ export class App extends EventHarness {
 
         const currentSurveyId = this.currentSurvey?.id;
 
+        console.info(`in _purgeLocal currentSurveyId = ${currentSurveyId}`);
+
         for(let surveyKey of storedObjectKeys.survey) {
             purgePromise = purgePromise.then(() => Survey.retrieveFromLocal(surveyKey, new Survey)
                 .then((/** Survey */ survey) => {
@@ -1608,7 +1658,7 @@ export class App extends EventHarness {
         }
 
         // add remaining recent surveys that have no records to the purge list
-        deletionCandidateKeys.survey.push(recentSurveyKeys);
+        deletionCandidateKeys.survey.push(...recentSurveyKeys);
 
         purgePromise = purgePromise.then(
             () => {
@@ -1635,6 +1685,19 @@ export class App extends EventHarness {
     _applyPurge(deletionIds) {
         let purgePromise = Promise.resolve();
 
+        // local survey list should be cleared first, to avoid the risk of the user selecting a survey mid-purge
+        if (deletionIds.survey.length > 0) {
+            purgePromise = purgePromise.then(() => {
+                for (let key of deletionIds.survey) {
+                    console.info(`Purging survey id ${key}.`);
+                    this.surveys.delete(key);
+                }
+
+                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+            })
+                .catch(error => console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}}));
+        }
+
         for (let type in deletionIds) {
             for (let key of deletionIds[type]) {
                 purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`))
@@ -1645,17 +1708,6 @@ export class App extends EventHarness {
         if (deletionIds.image.length > 0) {
             purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image))
                 .catch(error => console.error({'purge images error' : {imagekeys: deletionIds.image, error}}));
-        }
-
-        if (deletionIds.survey.length > 0) {
-            purgePromise = purgePromise.then(() => {
-                for (let key of deletionIds.survey) {
-                    this.surveys.delete(key);
-                }
-
-                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-            })
-                .catch(error => console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}}));
         }
 
         return purgePromise;

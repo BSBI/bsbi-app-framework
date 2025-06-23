@@ -261,7 +261,7 @@ export class Survey extends Model {
                 const gridRef = GridRef.fromString(ref.gridRef);
 
                 if (gridRef && gridRef.length <= n) {
-                    const newRef = gridRef.gridCoords.to_gridref(n);
+                    const newRef = gridRef.gridCoords.toGridRef(n);
 
                     if (n === 2000) {
                         this.currentTetradSubunit = newRef;
@@ -479,21 +479,21 @@ export class Survey extends Model {
 
             if (gridRef) {
                 if (gridRef.length <= 100 && surveyGridUnit && surveyGridUnit <= 100) {
-                    result.hectare = gridRef.gridCoords.to_gridref(100);
+                    result.hectare = gridRef.gridCoords.toGridRef(100);
                 }
 
                 if (gridRef.length <= 1000 && surveyGridUnit && surveyGridUnit <= 1000) {
-                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                    result.monad = gridRef.gridCoords.toGridRef(1000);
                 }
 
                 if (gridRef.length <= 2000) {
-                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                    result.tetrad = gridRef.gridCoords.toGridRef(2000);
                 }
 
                 result.country = gridRef.country;
             }
 
-            result.hectad = gridRef.gridCoords.to_gridref(10000);
+            result.hectad = gridRef.gridCoords.toGridRef(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
@@ -621,7 +621,7 @@ export class Survey extends Model {
             if (precision) {
                 const gridRef = GridRef.fromString(rawGridRef);
 
-                return gridRef?.gridCoords?.to_gridref?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
+                return gridRef?.gridCoords?.toGridRef?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {
                 return rawGridRef;
             }

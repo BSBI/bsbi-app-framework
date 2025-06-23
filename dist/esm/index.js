@@ -4447,8 +4447,8 @@ class DeviceType extends EventHarness {
 	static DEVICE_TYPE_IMMOBILE = 'immobile';
 
 	/**
-	 * global flag affecting behaviour of some GPS functionality
-	 * e.g. on a non-mobile device, don't automatically seek GPS locality for new records
+	 * global flag affecting the behaviour of some GPS functionality,
+	 * e.g. on a non-mobile device don't automatically seek GPS locality for new records
 	 * @private
 	 *
 	 * @type {string}
@@ -4456,34 +4456,107 @@ class DeviceType extends EventHarness {
 	static _deviceType = DeviceType.DEVICE_TYPE_UNCHECKED;
 
 	/**
+	 * @type {App}
+	 */
+	static app;
+
+	/**
 	 * @returns {string}
 	 */
 	static getDeviceType() {
 		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
-			// noinspection JSUnresolvedReference
-			if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
-				DeviceType._deviceType = navigator.userAgentData.mobile ?
-					DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
-				console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
-			} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
-				// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
-				console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
+			const override = DeviceType?.app?.getOption?.('mobileOverride');
+
+			if (override === 'mobile') {
 				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
-			} else if (navigator.platform && /iPhone|iPad/.test(navigator.platform)) {
-				// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
-				console.log(`Detected mobile via platform string: ${navigator.platform}`);
-				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
-			} else if (navigator.platform && /Win32|^Mac/.test(navigator.platform)) {
-				// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
-				console.log(`Detected immobility via platform string: ${navigator.platform}`);
+			} else if (override === 'immobile') {
 				DeviceType._deviceType = DeviceType.DEVICE_TYPE_IMMOBILE;
 			} else {
-				console.log('Flagging device type as unknown.');
-				DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
+				DeviceType._deviceType = DeviceType.getDeviceTypeUncached();
 			}
 		}
 
 		return DeviceType._deviceType;
+	}
+
+	/**
+	 *
+	 * @returns {boolean} true if the device type has changed
+	 */
+	static reevaluate() {
+		const previous = DeviceType._deviceType;
+		DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNCHECKED; // reset
+		DeviceType._deviceType = DeviceType.getDeviceType();
+
+		return previous !== DeviceType._deviceType;
+	}
+
+	/**
+	 *
+	 * @param {string} deviceType
+	 */
+	static setDeviceType(deviceType) {
+		DeviceType._deviceType = deviceType;
+	}
+
+	// /**
+	//  * @returns {string}
+	//  */
+	// static getDeviceType() {
+	// 	if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
+	// 		// noinspection JSUnresolvedReference
+	// 		if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
+	// 			DeviceType._deviceType = navigator.userAgentData.mobile ?
+	// 				DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
+	// 			console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
+	// 		} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+	// 			// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
+	// 			console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
+	// 			DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+	// 		} else if (navigator.platform && /iPhone|iPad/.test(navigator.platform)) {
+	// 			// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+	// 			console.log(`Detected mobile via platform string: ${navigator.platform}`);
+	// 			DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+	// 		} else if (navigator.platform && /Win32|^Mac/.test(navigator.platform)) {
+	// 			// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+	// 			console.log(`Detected immobility via platform string: ${navigator.platform}`);
+	// 			DeviceType._deviceType = DeviceType.DEVICE_TYPE_IMMOBILE;
+	// 		} else {
+	// 			console.log('Flagging device type as unknown.');
+	// 			DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNKNOWN;
+	// 		}
+	// 	}
+	//
+	// 	return DeviceType._deviceType;
+	// }
+
+	/**
+	 * Evaluates the device type based on browser information, does not consider user-set overrides.
+	 *
+	 * @returns {string}
+	 */
+	static getDeviceTypeUncached() {
+		// noinspection JSUnresolvedReference
+		if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
+			return navigator.userAgentData.mobile ?
+				DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
+			// console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
+		} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+			// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
+			//console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
+			return DeviceType.DEVICE_TYPE_MOBILE;
+		} else if (navigator.platform && /iPhone|iPad/.test(navigator.platform)) {
+			// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+			//console.log(`Detected mobile via platform string: ${navigator.platform}`);
+			return DeviceType.DEVICE_TYPE_MOBILE;
+		} else if (navigator.platform && /Win32|^Mac/.test(navigator.platform)) {
+			// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
+			//console.log(`Detected immobility via platform string: ${navigator.platform}`);
+			return DeviceType.DEVICE_TYPE_IMMOBILE;
+		} else {
+			//console.log('Flagging device type as unknown.');
+			return DeviceType.DEVICE_TYPE_UNKNOWN;
+		}
 	}
 }
 
@@ -5753,17 +5826,17 @@ class Occurrence extends Model {
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {
-                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                    result.monad = gridRef.gridCoords.toGridRef(1000);
                 }
 
                 if (gridRef.length <= 2000) {
-                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                    result.tetrad = gridRef.gridCoords.toGridRef(2000);
                 }
 
                 result.country = gridRef.country;
             }
 
-            result.hectad = gridRef.gridCoords.to_gridref(10000);
+            result.hectad = gridRef.gridCoords.toGridRef(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
@@ -6042,7 +6115,7 @@ class Survey extends Model {
                 const gridRef = GridRef.fromString(ref.gridRef);
 
                 if (gridRef && gridRef.length <= n) {
-                    const newRef = gridRef.gridCoords.to_gridref(n);
+                    const newRef = gridRef.gridCoords.toGridRef(n);
 
                     if (n === 2000) {
                         this.currentTetradSubunit = newRef;
@@ -6260,21 +6333,21 @@ class Survey extends Model {
 
             if (gridRef) {
                 if (gridRef.length <= 100 && surveyGridUnit && surveyGridUnit <= 100) {
-                    result.hectare = gridRef.gridCoords.to_gridref(100);
+                    result.hectare = gridRef.gridCoords.toGridRef(100);
                 }
 
                 if (gridRef.length <= 1000 && surveyGridUnit && surveyGridUnit <= 1000) {
-                    result.monad = gridRef.gridCoords.to_gridref(1000);
+                    result.monad = gridRef.gridCoords.toGridRef(1000);
                 }
 
                 if (gridRef.length <= 2000) {
-                    result.tetrad = gridRef.gridCoords.to_gridref(2000);
+                    result.tetrad = gridRef.gridCoords.toGridRef(2000);
                 }
 
                 result.country = gridRef.country;
             }
 
-            result.hectad = gridRef.gridCoords.to_gridref(10000);
+            result.hectad = gridRef.gridCoords.toGridRef(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
@@ -6402,7 +6475,7 @@ class Survey extends Model {
             if (precision) {
                 const gridRef = GridRef.fromString(rawGridRef);
 
-                return gridRef?.gridCoords?.to_gridref?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
+                return gridRef?.gridCoords?.toGridRef?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {
                 return rawGridRef;
             }
@@ -6962,6 +7035,13 @@ class App extends EventHarness {
     staleThreshold = 3600 * 24 * 14; // keep surveys for 14 days
 
     /**
+     * called to resolve display promise after the very first navigation happens
+     *
+     * @type {function|null}
+     */
+    afterFirstNavigationHandler = null;
+
+    /**
      * Flags the occurrence of a pervasive Safari bug
      * see https://bugs.webkit.org/show_bug.cgi?id=197050
      * @type {boolean}
@@ -7388,12 +7468,20 @@ class App extends EventHarness {
     initialise() {
         this.layout.initialise();
 
+        // this.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
+        //     EventHarness.staticFireEvent(App, APP_EVENT_WATCH_GPS_USER_REQUEST);
+        // });
+
+        // this.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+        //     EventHarness.staticFireEvent(App, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST);
+        // });
+
         for (let controller of this.controllers) {
             controller.initialise();
         }
 
         this._router.notFound((query) => {
-            // called when there is path specified but
+            // called when there is a path specified but
             // there is no route matching
 
             console.log(`no route found for '${query}'`);
@@ -7402,6 +7490,20 @@ class App extends EventHarness {
             // const view = new NotFoundView();
             // view.display();
             this.notFoundView();
+        });
+
+        this._router.hooks({
+            //before: function(done, params) { ... },
+            after: (params) => {
+                // generic 'after' handler for all routes
+                if (this.afterFirstNavigationHandler) {
+                    try {
+                        this.afterFirstNavigationHandler();
+                    } finally {
+                        this.afterFirstNavigationHandler = null;
+                    }
+                }
+            }
         });
 
         //default homepage
@@ -7426,14 +7528,24 @@ class App extends EventHarness {
         });
     }
 
+    /**
+     * Returns a promise that resolves after the initial navigation completes
+     *
+     * @returns {Promise<void>}
+     */
     display() {
         //console.log('App display');
-        this._router.resolve();
+        //this._router.resolve();
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
         // this.syncAll(true).then(() => {
         //     this._router.resolve();
         // });
+
+        return new Promise((resolve, reject) => {
+            this.afterFirstNavigationHandler = resolve;
+            this._router.resolve();
+        });
     }
 
     saveRoute() {
@@ -7631,7 +7743,18 @@ class App extends EventHarness {
             () => {
                 const survey = this.surveys.get(occurrence.surveyId);
                 if (!survey) {
-                    throw new Error(`Failed to look up survey id ${occurrence.surveyId}`);
+                    // this should be impossible but seems to happen
+
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(`Failed to look up survey id ${occurrence.surveyId} in app listener for OCCURRENCE_EVENT_MODIFIED; available surveys: ${Array.from(this.surveys.keys()).join(',')}`);
+
+                    // in desperation, try to save the occurrence anyway
+                    occurrence.save().then(() => {
+                        // noinspection JSIgnoredPromiseFromCall
+                        Logger.logError(`Saved modified occurrence ${occurrence.id} for missing survey ${occurrence.surveyId}.`);
+                    });
+
+                    throw new Error(`Failed to look up survey id ${occurrence.surveyId} in app listener for OCCURRENCE_EVENT_MODIFIED`);
                 } else {
                     survey.isPristine = false;
 
@@ -8262,6 +8385,8 @@ class App extends EventHarness {
 
         const currentSurveyId = this.currentSurvey?.id;
 
+        console.info(`in _purgeLocal currentSurveyId = ${currentSurveyId}`);
+
         for(let surveyKey of storedObjectKeys.survey) {
             purgePromise = purgePromise.then(() => Survey.retrieveFromLocal(surveyKey, new Survey)
                 .then((/** Survey */ survey) => {
@@ -8388,7 +8513,7 @@ class App extends EventHarness {
         }
 
         // add remaining recent surveys that have no records to the purge list
-        deletionCandidateKeys.survey.push(recentSurveyKeys);
+        deletionCandidateKeys.survey.push(...recentSurveyKeys);
 
         purgePromise = purgePromise.then(
             () => {
@@ -8415,6 +8540,19 @@ class App extends EventHarness {
     _applyPurge(deletionIds) {
         let purgePromise = Promise.resolve();
 
+        // local survey list should be cleared first, to avoid the risk of the user selecting a survey mid-purge
+        if (deletionIds.survey.length > 0) {
+            purgePromise = purgePromise.then(() => {
+                for (let key of deletionIds.survey) {
+                    console.info(`Purging survey id ${key}.`);
+                    this.surveys.delete(key);
+                }
+
+                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+            })
+                .catch(error => console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}}));
+        }
+
         for (let type in deletionIds) {
             for (let key of deletionIds[type]) {
                 purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`))
@@ -8425,17 +8563,6 @@ class App extends EventHarness {
         if (deletionIds.image.length > 0) {
             purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image))
                 .catch(error => console.error({'purge images error' : {imagekeys: deletionIds.image, error}}));
-        }
-
-        if (deletionIds.survey.length > 0) {
-            purgePromise = purgePromise.then(() => {
-                for (let key of deletionIds.survey) {
-                    this.surveys.delete(key);
-                }
-
-                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-            })
-                .catch(error => console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}}));
         }
 
         return purgePromise;
@@ -9821,7 +9948,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1749380975-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1750621540-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
