@@ -54,6 +54,7 @@ export {DeviceType} from './utils/DeviceType';
 export {Logger} from './utils/Logger';
 export {formattedImplode} from './utils/formattedImplode'
 export {escapeHTML} from "./utils/escapeHTML";
+export {schedulerYield} from './utils/schedulerYield';
 export {
     APP_EVENT_ADD_SURVEY_USER_REQUEST,
     APP_EVENT_ALL_SYNCED_TO_SERVER,

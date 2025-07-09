@@ -9948,7 +9948,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1750621540-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1752052739-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -10208,13 +10208,24 @@ class BSBIServiceWorker {
 
                         return clonedRequest.formData()
                             .then((formData) => {
-                                    console.log('got to form data handler');
+                                    console.log('got to form data handler, after failed remote store');
                                     //console.log({formData});
 
                                     return ResponseFactory
                                         .fromPostedData(formData)
                                         .populateClientResponse()
-                                        .storeLocally(false);
+                                        .storeLocally(false)
+                                        .catch((reason) => {
+                                            let returnedToClient = {
+                                                error: 'Store posted data locally after failed remote save. (internal error: local store)',
+                                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected saving error occurred) ' +
+                                                    'Please try to re-establish a network connection and try again.' +
+                                                    `Error was: ${JSON.stringify(reason)}`
+                                            };
+
+                                            return Promise.reject(packageClientResponse(returnedToClient));
+                                        });
                                 }, (reason) => {
                                     console.log({'failed to read form data locally': reason});
 
@@ -10223,14 +10234,14 @@ class BSBIServiceWorker {
                                      * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
                                      */
                                     let returnedToClient = {
-                                        error: 'Failed to process posted response data. (internal error)',
+                                        error: 'Failed to process posted response data. (internal error: decoding)',
                                         errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected decoding error occurred) ' +
                                             'Please try to re-establish a network connection and try again.' +
                                             `Error was: ${JSON.stringify(remoteReason)}`
                                     };
 
-                                    return packageClientResponse(returnedToClient);
+                                    return Promise.reject(packageClientResponse(returnedToClient));
                                 }
                             );
                     }
@@ -10584,5 +10595,29 @@ function formattedImplode(separator, finalSeparator, list) {
     }
 }
 
-export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CONTROLLER_CHANGED, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, MODEL_TYPE_OCCURRENCE, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, uuid };
+/**
+ * Yield execution
+ * (implemented as scheduler.yield if available otherwise setTimeout(0) )
+ * @type {{(): Promise<void>}}
+ */
+const schedulerYield = ('scheduler' in globalThis && 'yield' in scheduler) ?
+    scheduler.yield
+    :
+    () => new Promise(resolve => {
+        setTimeout(resolve, 0);
+    });
+
+// export schedulerYield () {
+//     // Use scheduler.yield if it exists:
+//     if ('scheduler' in globalThis && 'yield' in scheduler) {
+//         return scheduler.yield();
+//     }
+//
+//     // Fall back to setTimeout:
+//     return new Promise(resolve => {
+//         setTimeout(resolve, 0);
+//     });
+// }
+
+export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CONTROLLER_CHANGED, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, MODEL_TYPE_OCCURRENCE, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, schedulerYield, uuid };
 //# sourceMappingURL=index.js.map

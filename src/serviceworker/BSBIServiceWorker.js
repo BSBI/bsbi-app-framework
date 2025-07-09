@@ -329,13 +329,24 @@ export class BSBIServiceWorker {
 
                         return clonedRequest.formData()
                             .then((formData) => {
-                                    console.log('got to form data handler');
+                                    console.log('got to form data handler, after failed remote store');
                                     //console.log({formData});
 
                                     return ResponseFactory
                                         .fromPostedData(formData)
                                         .populateClientResponse()
-                                        .storeLocally(false);
+                                        .storeLocally(false)
+                                        .catch((reason) => {
+                                            let returnedToClient = {
+                                                error: 'Store posted data locally after failed remote save. (internal error: local store)',
+                                                errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+                                                    'It wasn\'t possible to save a temporary copy on your device. (an unexpected saving error occurred) ' +
+                                                    'Please try to re-establish a network connection and try again.' +
+                                                    `Error was: ${JSON.stringify(reason)}`
+                                            };
+
+                                            return Promise.reject(packageClientResponse(returnedToClient));
+                                        });
                                 }, (reason) => {
                                     console.log({'failed to read form data locally': reason});
 
@@ -344,14 +355,14 @@ export class BSBIServiceWorker {
                                      * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
                                      */
                                     let returnedToClient = {
-                                        error: 'Failed to process posted response data. (internal error)',
+                                        error: 'Failed to process posted response data. (internal error: decoding)',
                                         errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
+                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected decoding error occurred) ' +
                                             'Please try to re-establish a network connection and try again.' +
                                             `Error was: ${JSON.stringify(remoteReason)}`
                                     };
 
-                                    return packageClientResponse(returnedToClient);
+                                    return Promise.reject(packageClientResponse(returnedToClient));
                                 }
                             );
                     }
