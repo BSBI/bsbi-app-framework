@@ -33,6 +33,7 @@ import {
 } from './AppEvents';
 import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
 import {DeviceType} from "../utils/DeviceType";
+import {schedulerYield} from "../utils/schedulerYield";
 
 /**
  * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
@@ -913,7 +914,7 @@ export class App extends EventHarness {
                     // // noinspection JSIgnoredPromiseFromCall
                     // survey.save(true);
 
-                    occurrence.save().finally(() => {
+                    schedulerYield().then(() => occurrence.save()).finally(() => {
                         survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
                     });
                 }
@@ -973,7 +974,7 @@ export class App extends EventHarness {
 
             //console.log({'refresh from server json response' : jsonResponse});
 
-            // if external objects newer than local version then place in local storage
+            // if the external object is newer than the local version then place in local storage
             let promise = Promise.resolve();
 
             for (let type in jsonResponse) {
@@ -1404,10 +1405,8 @@ export class App extends EventHarness {
                         })
                         .finally(() => {
                             //console.log({'processed sync': {key: objectKey, type: classLowerName}});
-                        });
+                        })
                 };
-
-
         };
 
         // /**
@@ -1440,12 +1439,14 @@ export class App extends EventHarness {
 
             // queueSync(surveyKey, Survey);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         for(let occurrenceKey of storedObjectKeys.occurrence) {
             syncPromise =syncPromise.then(() => queueSync(occurrenceKey, Occurrence)());
 
             // queueSync(occurrenceKey, Occurrence);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         for(let imageKey of storedObjectKeys.image) {
             syncPromise = syncPromise.then(() => queueSync(imageKey, OccurrenceImage)());
@@ -1453,11 +1454,13 @@ export class App extends EventHarness {
 
             // queueSync(imageKey, OccurrenceImage);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         for(let trackKey of storedObjectKeys.track) {
             syncPromise = syncPromise.then(() => queueSync(trackKey, Track)());
             // queueSync(trackKey, Track);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         //console.log('got to 1105');
 
@@ -1472,7 +1475,6 @@ export class App extends EventHarness {
                     });
                 }
             });
-
 
         if (fastReturn) {
             return Promise.resolve('Fast return before syncLocalUnsaved completed.');

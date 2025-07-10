@@ -419,7 +419,7 @@ class EventHarness {
                         break;
                     }
                 } catch (exception) {
-                    console.error({'Exception thrown in static event handler' : {eventName, exception}});
+                    console.error({'Exception thrown in static event handler': {eventName, exception}});
                     // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(
                         `Exception thrown in static event handler '${eventName}': ${exception.message}`,
@@ -6888,6 +6888,32 @@ class PurgeInconsistencyError extends Error {
     }
 }
 
+/**
+ * Yield execution
+ * (implemented as scheduler.yield if available otherwise setTimeout(0) )
+ * @type {{(): Promise<void>}}
+ */
+function schedulerYield () {
+    // Use scheduler.yield if it exists:
+    if ('scheduler' in globalThis && 'yield' in scheduler) {
+        return scheduler.yield();
+    }
+
+    // Fall back to setTimeout:
+    return new Promise(resolve => {
+        setTimeout(resolve, 0);
+    });
+}
+
+// can't use this, as out-of-context calls result in 'Illegal invocation' errors
+
+// export const schedulerYield = ('scheduler' in globalThis && 'yield' in scheduler) ?
+//     scheduler.yield
+//     :
+//     () => new Promise(resolve => {
+//         setTimeout(resolve, 0);
+//     });
+
 // App.js
 // base class for single page application
 // allows binding of controllers and routes
@@ -7771,7 +7797,7 @@ class App extends EventHarness {
                     // // noinspection JSIgnoredPromiseFromCall
                     // survey.save(true);
 
-                    occurrence.save().finally(() => {
+                    schedulerYield().then(() => occurrence.save()).finally(() => {
                         survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
                     });
                 }
@@ -7831,7 +7857,7 @@ class App extends EventHarness {
 
             //console.log({'refresh from server json response' : jsonResponse});
 
-            // if external objects newer than local version then place in local storage
+            // if the external object is newer than the local version then place in local storage
             let promise = Promise.resolve();
 
             for (let type in jsonResponse) {
@@ -8259,10 +8285,8 @@ class App extends EventHarness {
                         })
                         .finally(() => {
                             //console.log({'processed sync': {key: objectKey, type: classLowerName}});
-                        });
+                        })
                 };
-
-
         };
 
         // /**
@@ -8295,12 +8319,14 @@ class App extends EventHarness {
 
             // queueSync(surveyKey, Survey);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         for(let occurrenceKey of storedObjectKeys.occurrence) {
             syncPromise =syncPromise.then(() => queueSync(occurrenceKey, Occurrence)());
 
             // queueSync(occurrenceKey, Occurrence);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         for(let imageKey of storedObjectKeys.image) {
             syncPromise = syncPromise.then(() => queueSync(imageKey, OccurrenceImage)());
@@ -8308,11 +8334,13 @@ class App extends EventHarness {
 
             // queueSync(imageKey, OccurrenceImage);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         for(let trackKey of storedObjectKeys.track) {
             syncPromise = syncPromise.then(() => queueSync(trackKey, Track)());
             // queueSync(trackKey, Track);
         }
+        syncPromise = syncPromise.then(schedulerYield);
 
         //console.log('got to 1105');
 
@@ -8327,7 +8355,6 @@ class App extends EventHarness {
                     });
                 }
             });
-
 
         if (fastReturn) {
             return Promise.resolve('Fast return before syncLocalUnsaved completed.');
@@ -9948,7 +9975,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1752052739-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1752136879-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
@@ -10594,30 +10621,6 @@ function formattedImplode(separator, finalSeparator, list) {
         return list.join(` ${finalSeparator} `);
     }
 }
-
-/**
- * Yield execution
- * (implemented as scheduler.yield if available otherwise setTimeout(0) )
- * @type {{(): Promise<void>}}
- */
-const schedulerYield = ('scheduler' in globalThis && 'yield' in scheduler) ?
-    scheduler.yield
-    :
-    () => new Promise(resolve => {
-        setTimeout(resolve, 0);
-    });
-
-// export schedulerYield () {
-//     // Use scheduler.yield if it exists:
-//     if ('scheduler' in globalThis && 'yield' in scheduler) {
-//         return scheduler.yield();
-//     }
-//
-//     // Fall back to setTimeout:
-//     return new Promise(resolve => {
-//         setTimeout(resolve, 0);
-//     });
-// }
 
 export { APP_EVENT_ADD_SURVEY_USER_REQUEST, APP_EVENT_ALL_SYNCED_TO_SERVER, APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, APP_EVENT_CONTROLLER_CHANGED, APP_EVENT_CURRENT_OCCURRENCE_CHANGED, APP_EVENT_CURRENT_SURVEY_CHANGED, APP_EVENT_NEW_SURVEY, APP_EVENT_OCCURRENCE_ADDED, APP_EVENT_OCCURRENCE_LOADED, APP_EVENT_OPTIONS_RESTORED, APP_EVENT_RESET_SURVEYS, APP_EVENT_SURVEYS_CHANGED, APP_EVENT_SURVEY_LOADED, APP_EVENT_SYNC_ALL_FAILED, APP_EVENT_USER_LOGIN, APP_EVENT_USER_LOGOUT, APP_EVENT_WATCH_GPS_USER_REQUEST, App, AppController, BSBIServiceWorker, DeviceType, EventHarness, IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY, InternalAppError, Logger, MODEL_EVENT_DESTROYED, MODEL_EVENT_SAVED_REMOTELY, MODEL_TYPE_OCCURRENCE, Model, NotFoundError, OCCURRENCE_EVENT_MODIFIED, Occurrence, OccurrenceImage, PARTY_FORENAMES_INDEX, PARTY_ID_INDEX, PARTY_INITIALS_INDEX, PARTY_NAME_INDEX, PARTY_ORGNAME_INDEX, PARTY_ROLES_INDEX, PARTY_SURNAME_INDEX, PARTY_USERID_INDEX, Party, RAW_TAXON_ACCEPTED_ENTITY_ID, RAW_TAXON_ATLAS_DOCS, RAW_TAXON_AUTHORITY, RAW_TAXON_BRC_CODE, RAW_TAXON_CANONICAL, RAW_TAXON_CI_NATIONAL_STATUS, RAW_TAXON_GB_NATIONAL_STATUS, RAW_TAXON_GB_RARE_SCARCE, RAW_TAXON_HYBRID_CANONCIAL, RAW_TAXON_IE_NATIONAL_STATUS, RAW_TAXON_IE_RARE_SCARCE, RAW_TAXON_NAMESTRING, RAW_TAXON_NOT_FOR_NEW_RECORDING, RAW_TAXON_NYPH_RANKING, RAW_TAXON_PARENT_IDS, RAW_TAXON_QUALIFIER, RAW_TAXON_SORT_ORDER, RAW_TAXON_USED, RAW_TAXON_VERNACULAR, RAW_TAXON_VERNACULAR_NOT_FOR_ENTRY, RAW_TAXON_VERNACULAR_ROOT, SORT_ORDER_CULTIVAR, SORT_ORDER_GENUS, SORT_ORDER_SPECIES, SORT_ORDER_SUBSPECIES, SURVEY_EVENT_DELETED, SURVEY_EVENT_LIST_LENGTH_CHANGED, SURVEY_EVENT_MODIFIED, SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED, StaticContentController, Survey, SurveyPickerController, Taxon, TaxonError, Track, UUID_REGEX, escapeHTML, formattedImplode, schedulerYield, uuid };
 //# sourceMappingURL=index.js.map

@@ -272,7 +272,7 @@ export class EventHarness {
                         break;
                     }
                 } catch (exception) {
-                    console.error({'Exception thrown in static event handler' : {eventName, exception}});
+                    console.error({'Exception thrown in static event handler': {eventName, exception}});
                     // noinspection JSIgnoredPromiseFromCall
                     Logger.logError(
                         `Exception thrown in static event handler '${eventName}': ${exception.message}`,
