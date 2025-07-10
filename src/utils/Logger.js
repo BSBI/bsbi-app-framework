@@ -36,7 +36,7 @@ export class Logger {
      * @param {string|number|null} [line]
      * @param {number|null} [column]
      * @param {Error|null} [errorObj]
-     * @returns {Promise<void>}
+     * @returns {Promise<void>} a fulfilled promise (even if logging fails)
      */
     static logError(message, url = '', line= '', column = null, errorObj = null) {
         window.onerror = null;
@@ -122,6 +122,7 @@ export class Logger {
                 body: (new XMLSerializer()).serializeToString(doc),
             }).catch((reason) => {
                 console.info({'Remote error logging failed': reason});
+                // don't reject here, as the promise chain should continue, even after a failed log
             }).finally(() => {
                 window.onerror = Logger.logError; // turn on error handling again
             });

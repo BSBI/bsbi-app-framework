@@ -1,7 +1,7 @@
 /**
  * Yield execution
  * (implemented as scheduler.yield if available otherwise setTimeout(0) )
- * @type {{(): Promise<void>}}
+ * @returns {Promise<void>}
  */
 export function schedulerYield () {
     // Use scheduler.yield if it exists:

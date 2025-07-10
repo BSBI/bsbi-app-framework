@@ -504,7 +504,8 @@ export class App extends EventHarness {
                     });
                 }
             }, (error) => {
-                console.log({'Failure reading state of persistent storage' : error});
+                console.error({'Failure reading state of persistent storage' : error});
+                return Promise.reject({'Failure reading state of persistent storage' : error});
             });
         } else {
             return Promise.resolve();
@@ -1119,8 +1120,8 @@ export class App extends EventHarness {
                         return result;
                     });
             }, (failedResult) => {
-                console.error(`Failed to purge: ${failedResult}`);
-                Logger.logError(`Failed to purge: ${failedResult}`)
+                console.error({'Failed to purge': failedResult});
+                Logger.logError(`Failed to purge: ${JSON.stringify(failedResult)}`)
                     .finally(() => {
                         // cope with the pervasive Safari crash
                         // see https://bugs.webkit.org/show_bug.cgi?id=197050
@@ -1131,7 +1132,7 @@ export class App extends EventHarness {
                     });
 
                 //this.fireEvent(APP_EVENT_PURGE_FAILED);
-                return false;
+                return Promise.reject(failedResult);
             }).finally(() => {
                 this._doingPurge = false;
             });
@@ -2311,7 +2312,7 @@ export class App extends EventHarness {
                                             OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
                                         }
                                     }, (reason) => {
-                                        console.log(`Failed to retrieve an image: ${reason}`);
+                                        console.error({'Failed to retrieve an image': reason});
                                         return Promise.resolve();
                                     })
                                 ,

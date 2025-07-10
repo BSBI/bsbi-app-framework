@@ -208,7 +208,7 @@ export class Party {
             return newParties;
         }, (reason) => {
             console.error({"Failed to import user parties" : reason});
-            return null;
+            return Promise.reject({"Failed to import user parties" : reason});
         });
     }
 

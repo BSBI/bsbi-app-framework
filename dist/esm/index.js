@@ -37,7 +37,7 @@ class Logger {
      * @param {string|number|null} [line]
      * @param {number|null} [column]
      * @param {Error|null} [errorObj]
-     * @returns {Promise<void>}
+     * @returns {Promise<void>} a fulfilled promise (even if logging fails)
      */
     static logError(message, url = '', line= '', column = null, errorObj = null) {
         window.onerror = null;
@@ -123,6 +123,7 @@ class Logger {
                 body: (new XMLSerializer()).serializeToString(doc),
             }).catch((reason) => {
                 console.info({'Remote error logging failed': reason});
+                // don't reject here, as the promise chain should continue, even after a failed log
             }).finally(() => {
                 window.onerror = Logger.logError; // turn on error handling again
             });
@@ -3766,7 +3767,7 @@ class Model extends EventHarness {
 
     /**
      * unix timestamp (seconds since epoch)
-     * modified stamp is generally server assigned - rather than using a potentially discrepant client clock
+     * modified stamp is generally server assigned - rather than using a potentially discrepant client clock,
      * this may increase synchrony and trust between distributed clients
      *
      * @type {number}
@@ -6891,7 +6892,7 @@ class PurgeInconsistencyError extends Error {
 /**
  * Yield execution
  * (implemented as scheduler.yield if available otherwise setTimeout(0) )
- * @type {{(): Promise<void>}}
+ * @returns {Promise<void>}
  */
 function schedulerYield () {
     // Use scheduler.yield if it exists:
@@ -7387,7 +7388,8 @@ class App extends EventHarness {
                     });
                 }
             }, (error) => {
-                console.log({'Failure reading state of persistent storage' : error});
+                console.error({'Failure reading state of persistent storage' : error});
+                return Promise.reject({'Failure reading state of persistent storage' : error});
             });
         } else {
             return Promise.resolve();
@@ -9993,7 +9995,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1752152793-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1752163907-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
