@@ -8404,6 +8404,10 @@ class App extends EventHarness {
             track : [],
         };
 
+        /**
+         * Recent surveys, that if found to be empty should be purged
+         * @type {*[]}
+         */
         const recentSurveyKeys = [];
 
         const thresholdStamp = Math.floor(Date.now() / 1000) - this.staleThreshold;
@@ -8427,14 +8431,14 @@ class App extends EventHarness {
 
                             deletionCandidateKeys.survey.push(survey.id);
                         } else {
-                            preservedKeys.survey.push(survey.id);
-
                             if (survey.modifiedStamp <= recentThresholdStamp &&
                                 !survey.attributes?.defaultCasual &&
                                 !survey.attributes?.nulllist // NYPH-specific
                             ) {
                                 recentSurveyKeys.push(survey.id);
                             }
+
+                            preservedKeys.survey.push(survey.id);
                         }
                     } else {
                         preservedKeys.survey.push(survey.id);
@@ -8452,8 +8456,8 @@ class App extends EventHarness {
                 .then((/** Occurrence */ occurrence) => {
 
                     if (!occurrence.deleted) {
-                        // see if occurrence belongs to one of the threshold recent surveys
-                        // if so, then the survey should be kept (so removed from the imperilled recent list)
+                        // See if the occurrence belongs to one of the threshold recent surveys.
+                        // If so, then the survey is non-empty, so should be kept (so removed from the imperilled recent list)
                         const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
                         if (recentIndex !== -1) {
                             delete recentSurveyKeys[recentIndex];
@@ -8461,10 +8465,21 @@ class App extends EventHarness {
                     }
 
                     if (occurrence.unsaved()) {
+                        // unsaved locally or remotely
                         if (deletionCandidateKeys.survey.includes(occurrence.surveyId)) {
                             throw new PurgeInconsistencyError(`Occurrence ${occurrence.id} from deletable survey ${occurrence.surveyId} is unsaved.`);
                         } else {
                             preservedKeys.occurrence.push(occurrence.id);
+                        }
+
+                        if (occurrence.deleted) {
+                            // as special-case check for unsaved occurrences newly deleted offline on the recent list
+                            // which should cause a survey to be retained
+
+                            const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
+                            if (recentIndex !== -1) {
+                                delete recentSurveyKeys[recentIndex];
+                            }
                         }
                     } else if (deletionCandidateKeys.survey.includes(occurrence.surveyId) || occurrence.deleted) {
                         deletionCandidateKeys.occurrence.push(occurrence.id);
@@ -8539,8 +8554,10 @@ class App extends EventHarness {
             );
         }
 
-        // add remaining recent surveys that have no records to the purge list
-        deletionCandidateKeys.survey.push(...recentSurveyKeys);
+        purgePromise = purgePromise.then(() => {
+            // add remaining recent surveys that have no records to the purge list
+            deletionCandidateKeys.survey.push(...recentSurveyKeys);
+        });
 
         purgePromise = purgePromise.then(
             () => {
@@ -8553,7 +8570,8 @@ class App extends EventHarness {
                 console.log({'would have purged' : deletionCandidateKeys});
 
                 // noinspection JSIgnoredPromiseFromCall
-                Logger.logError(`Purge failed: ${reason}`);
+                Logger.logError({'Purge failed': reason});
+                return Promise.reject(`Purge failed: ${JSON.stringify(reason)}`)
             });
 
         return purgePromise;
@@ -9975,7 +9993,7 @@ class BSBIServiceWorker {
         OccurrenceResponse.register();
         TrackResponse.register();
 
-        this.CACHE_VERSION = `version-1.0.3.1752136879-${configuration.version}`;
+        this.CACHE_VERSION = `version-1.0.3.1752152793-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
