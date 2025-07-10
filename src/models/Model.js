@@ -92,7 +92,7 @@ export class Model extends EventHarness {
 
     /**
      * unix timestamp (seconds since epoch)
-     * modified stamp is generally server assigned - rather than using a potentially discrepant client clock
+     * modified stamp is generally server assigned - rather than using a potentially discrepant client clock,
      * this may increase synchrony and trust between distributed clients
      *
      * @type {number}
