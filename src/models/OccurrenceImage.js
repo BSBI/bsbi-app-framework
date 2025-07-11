@@ -94,7 +94,7 @@ export class OccurrenceImage extends Model {
             this.projectId = params.projectId;
         }
 
-        if (params?.occurrenceId) {
+        if (this.context === IMAGE_CONTEXT_OCCURRENCE && params?.occurrenceId) {
             this.occurrenceId = params.occurrenceId;
         }
 
@@ -105,36 +105,47 @@ export class OccurrenceImage extends Model {
         }
 
         if (forceSave || this.unsaved()) {
-            const formData = new FormData;
-            formData.append('type', this.TYPE);
-            formData.append('surveyId', params?.surveyId ? params.surveyId : (this.surveyId ? this.surveyId : '')); // avoid 'undefined'
-            formData.append('projectId', params?.projectId ? params.projectId.toString() : '');
-            formData.append('imageId', this.id);
-            formData.append('id', this.id);
-            if (!this.deleted) {
-                formData.append('image', this.file);
-            }
-            formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString?.() || '');
-            formData.append('modified', this.modifiedStamp?.toString?.() || '');
-
-            if (this.context === IMAGE_CONTEXT_SURVEY) {
-                formData.append('context', this.context);
-            } else {
-                formData.append('occurrenceId', params?.occurrenceId ? params.occurrenceId : this.occurrenceId); // avoid 'undefined'
-            }
-
-            if (this.userId) {
-                formData.append('userId', this.userId);
-            }
-
-            formData.append('appVersion', Model.bsbiAppVersion);
+            const formData = this.formData();
 
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }
+    }
+
+    /**
+     *
+     * @returns {FormData}
+     */
+    formData() {
+        const formData = new FormData;
+
+        formData.append('type', this.TYPE);
+        formData.append('surveyId', this.surveyId ? this.surveyId : ''); // avoid 'undefined'
+        formData.append('projectId', this.projectId ? this.projectId : '');
+        formData.append('imageId', this.id);
+        formData.append('id', this.id);
+        if (!this.deleted) {
+            formData.append('image', this.file);
+        }
+        formData.append('deleted', this.deleted.toString());
+        formData.append('created', this.createdStamp?.toString?.() || '');
+        formData.append('modified', this.modifiedStamp?.toString?.() || '');
+
+        if (this.context === IMAGE_CONTEXT_SURVEY) {
+            formData.append('context', this.context);
+        } else {
+            formData.append('occurrenceId', this.occurrenceId);
+        }
+
+        if (this.userId) {
+            formData.append('userId', this.userId);
+        }
+
+        formData.append('appVersion', Model.bsbiAppVersion);
+
+        return formData;
     }
 
     /**

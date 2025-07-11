@@ -473,4 +473,20 @@ export class Model extends EventHarness {
         this.fireEvent(MODEL_EVENT_DESTROYED);
         super.destructor();
     }
+
+    /**
+     * @abstract
+     * @returns {FormData}
+     */
+    formData() {
+
+    }
+
+    /**
+     * @abstract
+     * @returns {Promise}
+     */
+    storeLocally() {
+
+    }
 }

@@ -479,8 +479,6 @@ export class Track extends Model {
      */
     save(forceSave = false, isSync = false, params) {
         if (forceSave || this.unsaved()) {
-            const formData = new FormData;
-
             if (!this.surveyId) {
                 throw new Error(`Survey id must be set before saving a track.`);
             }
@@ -489,22 +487,7 @@ export class Track extends Model {
                 throw new Error(`Device id must be set before saving a track.`);
             }
 
-            formData.append('type', this.TYPE);
-            formData.append('surveyId', this.surveyId);
-            formData.append('deviceId', this.deviceId);
-            formData.append('id', `${this.surveyId}.${this.deviceId}`);
-            formData.append('projectId', this.projectId.toString());
-            formData.append('pointIndex', this.pointIndex.toString());
-            formData.append('points', JSON.stringify(this.points));
-            formData.append('attributes', JSON.stringify(this.attributes));
-            formData.append('created', this.createdStamp?.toString() || '');
-            formData.append('modified', this.modifiedStamp?.toString() || '');
-
-            if (this.userId) {
-                formData.append('userId', this.userId);
-            }
-
-            formData.append('appVersion', Model.bsbiAppVersion);
+            const formData = this.formData();
 
             console.log('queueing Track post');
             return this.queuePost(formData, isSync);
@@ -512,6 +495,33 @@ export class Track extends Model {
             return Promise.resolve();
             //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
         }
+    }
+
+    /**
+     *
+     * @returns {FormData}
+     */
+    formData() {
+        const formData = new FormData;
+
+        formData.append('type', this.TYPE);
+        formData.append('surveyId', this.surveyId);
+        formData.append('deviceId', this.deviceId);
+        formData.append('id', `${this.surveyId}.${this.deviceId}`);
+        formData.append('projectId', this.projectId.toString());
+        formData.append('pointIndex', this.pointIndex.toString());
+        formData.append('points', JSON.stringify(this.points));
+        formData.append('attributes', JSON.stringify(this.attributes));
+        formData.append('created', this.createdStamp?.toString() || '');
+        formData.append('modified', this.modifiedStamp?.toString() || '');
+
+        if (this.userId) {
+            formData.append('userId', this.userId);
+        }
+
+        formData.append('appVersion', Model.bsbiAppVersion);
+
+        return formData;
     }
 
     /**

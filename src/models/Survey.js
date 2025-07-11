@@ -521,28 +521,38 @@ export class Survey extends Model {
      */
     save(forceSave = false, isSync = false, params) {
         if (forceSave || this.unsaved()) {
-            const formData = new FormData;
-
-            formData.append('type', this.TYPE);
-            formData.append('surveyId', this.id);
-            formData.append('id', this.id); // this is incorrect duplication
-            formData.append('projectId', this.projectId.toString());
-            formData.append('attributes', JSON.stringify(this.attributes));
-            formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString?.() || '');
-            formData.append('baseSurveyId', this.baseSurveyId || this.id);
-
-            if (this.userId) {
-                formData.append('userId', this.userId);
-            }
-
-            formData.append('appVersion', Model.bsbiAppVersion);
+            const formData = this.formData();
 
             console.log(`queueing survey post ${this.id}`);
             return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Survey ${this.id} has already been saved.`);
         }
+    }
+
+    /**
+     *
+     * @returns {FormData}
+     */
+    formData() {
+        const formData = new FormData;
+
+        formData.append('type', this.TYPE);
+        formData.append('surveyId', this.id);
+        formData.append('id', this.id); // this is incorrect duplication
+        formData.append('projectId', this.projectId.toString());
+        formData.append('attributes', JSON.stringify(this.attributes));
+        formData.append('deleted', this.deleted.toString());
+        formData.append('created', this.createdStamp?.toString?.() || '');
+        formData.append('baseSurveyId', this.baseSurveyId || this.id);
+
+        if (this.userId) {
+            formData.append('userId', this.userId);
+        }
+
+        formData.append('appVersion', Model.bsbiAppVersion);
+
+        return formData;
     }
 
     /**
@@ -782,4 +792,6 @@ export class Survey extends Model {
         this.hasAppModifiedListener = false;
         this.hasDeleteListener = false;
     }
+
+
 }

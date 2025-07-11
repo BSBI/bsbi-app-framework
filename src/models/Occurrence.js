@@ -159,33 +159,43 @@ export class Occurrence extends Model {
      */
     save(forceSave = false, isSync = false, params) {
         if (this.unsaved() || forceSave) {
-            const formData = new FormData;
-
             if (!this.surveyId) {
                 throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
             }
 
-            formData.append('type', this.TYPE);
-            formData.append('surveyId', this.surveyId);
-            formData.append('occurrenceId', this.id);
-            formData.append('id', this.id); // this is incorrect duplication
-            formData.append('projectId', this.projectId.toString());
-            formData.append('attributes', JSON.stringify(this.attributes));
-            formData.append('deleted', this.deleted.toString());
-            formData.append('created', this.createdStamp?.toString?.() || '');
-            formData.append('modified', this.modifiedStamp?.toString?.() || '');
-
-            if (this.userId) {
-                formData.append('userId', this.userId);
-            }
-
-            formData.append('appVersion', Model.bsbiAppVersion);
+            const formData = this.formData();
 
             console.log('queueing occurrence post');
             return this.queuePost(formData, isSync);
         } else {
             return Promise.reject(`Occurrence ${this.id} has already been saved.`);
         }
+    }
+
+    /**
+     *
+     * @returns {FormData}
+     */
+    formData() {
+        const formData = new FormData;
+
+        formData.append('type', this.TYPE);
+        formData.append('surveyId', this.surveyId);
+        formData.append('occurrenceId', this.id);
+        formData.append('id', this.id); // this is incorrect duplication
+        formData.append('projectId', this.projectId.toString());
+        formData.append('attributes', JSON.stringify(this.attributes));
+        formData.append('deleted', this.deleted.toString());
+        formData.append('created', this.createdStamp?.toString?.() || '');
+        formData.append('modified', this.modifiedStamp?.toString?.() || '');
+
+        if (this.userId) {
+            formData.append('userId', this.userId);
+        }
+
+        formData.append('appVersion', Model.bsbiAppVersion);
+
+        return formData;
     }
 
     /**
