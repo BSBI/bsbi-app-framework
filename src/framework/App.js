@@ -9,7 +9,7 @@ import {
 import {InternalAppError} from "../utils/exceptions/InternalAppError";
 import {Occurrence, OCCURRENCE_EVENT_MODIFIED} from "../models/Occurrence";
 import localforage from "localforage";
-import {OccurrenceImage} from "../models/OccurrenceImage";
+import {MODEL_TYPE_IMAGE, OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
 import {uuid} from "../models/Model";
 import {Track} from "../models/Track";
@@ -1197,7 +1197,7 @@ export class App extends EventHarness {
                             // @todo need to check that failedResult can be parsed in this way
                             // (possibly should happen earlier rather than here)
 
-                            // cope with pervasive Safari crash
+                            // cope with a pervasive Safari crash issue
                             // see https://bugs.webkit.org/show_bug.cgi?id=197050
                             if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
                                 App.indexedDbConnectionLost = true;
@@ -1327,7 +1327,7 @@ export class App extends EventHarness {
     _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
         // synchronises surveys first, then occurrences, then images from indexedDb
 
-        const tasks = [];
+        //const tasks = [];
 
         /**
          *
@@ -1372,6 +1372,13 @@ export class App extends EventHarness {
                     //console.log({'queueing sync': {key: objectKey, type: classLowerName}});
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
                         .then((/** Model */ model) => {
+                            if (model.TYPE === MODEL_TYPE_IMAGE && !model.deleted && !model.file) {
+                                // special case where image data is no longer in local storage (but not flagged as deleted)
+                                // (assume that image has already been saved)
+
+                                return;
+                            }
+
                             if (model.unsaved()) {
                                 return model.save(true, true)
                                     .then(() => {
@@ -2168,8 +2175,8 @@ export class App extends EventHarness {
         occurrence.id; // force initialisation of occurrence id
         occurrence.surveyId = currentSurvey.id;
 
-        // In some cases more than one project id may be in use (e.g. RecordingApp v's NYPH)
-        // so when adding occurrences use the survey rather than app project id as the source-of-truth
+        // In some cases, more than one project id may be in use (e.g. RecordingApp v's NYPH),
+        // so when adding occurrences, use the survey rather than app project id as the source-of-truth.
         occurrence.projectId = currentSurvey.projectId;
 
         if (currentSurvey.userId) {

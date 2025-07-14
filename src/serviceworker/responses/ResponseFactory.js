@@ -36,7 +36,7 @@ export class ResponseFactory {
 
     /**
      *
-     * @param {{}} returnedToClient
+     * @returns {LocalResponse} returnedToClient
      */
     static fromPostResponse(returnedToClient) {
         if (!returnedToClient) {

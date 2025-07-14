@@ -1,4 +1,4 @@
-import {Model, MODEL_EVENT_DESTROYED} from "./Model";
+import {Model, MODEL_EVENT_DESTROYED, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
 import {DeviceType} from "../utils/DeviceType";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
@@ -179,6 +179,17 @@ export class Track extends Model {
     //  */
     // static trackableSurveyProjects = [];
 
+    /**
+     * @return {string}
+     */
+    get localKey() {
+        if (!this.deviceId) {
+            throw new Error(`Cannot generate a localKey for track, as the device id is undefined.`);
+        }
+
+        return `${this.TYPE}.${this.surveyId}.${this.deviceId}`;
+    }
+
     static reset() {
         Track._tracks = new Map();
         Track.trackingIsActive = false;
@@ -187,7 +198,7 @@ export class Track extends Model {
     }
 
     /**
-     * Need to listen for change of current survey
+     * Need to listen for change of the current survey
      *
      * @param {App} app
      */
@@ -487,14 +498,31 @@ export class Track extends Model {
                 throw new Error(`Device id must be set before saving a track.`);
             }
 
-            const formData = this.formData();
+            //const formData = this.formData();
 
             console.log('queueing Track post');
-            return this.queuePost(formData, isSync);
+            return this.queuePost(isSync);
         } else {
             return Promise.resolve();
             //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
         }
+    }
+
+    storeLocally() {
+        return this._storeLocalData({
+            surveyId : this.surveyId,
+            deviceId : this.deviceId,
+            type : this.TYPE,
+            attributes : this.attributes,
+            created : this.createdStamp,
+            modified : this.modifiedStamp,
+            saveState : this.saveState === SAVE_STATE_SERVER ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL,
+            deleted : this.deleted,
+            projectId : this.projectId,
+            userId : this.userId,
+            pointIndex : this.pointIndex,
+            points : this.points,
+        });
     }
 
     /**

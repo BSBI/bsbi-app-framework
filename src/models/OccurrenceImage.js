@@ -3,6 +3,8 @@ import {Model} from "./Model";
 export const IMAGE_CONTEXT_SURVEY = 'survey';
 export const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
 
+export const MODEL_TYPE_IMAGE = 'image';
+
 export class OccurrenceImage extends Model {
 
     /**
@@ -15,9 +17,9 @@ export class OccurrenceImage extends Model {
     /**
      * raw file object retrieved from a file upload image element
      *
-     * @type {File}
+     * @type {File|null}
      */
-    file;
+    file = null;
 
     /**
      *
@@ -25,7 +27,7 @@ export class OccurrenceImage extends Model {
      */
     static imageCache = new Map;
 
-    TYPE = 'image';
+    TYPE = MODEL_TYPE_IMAGE;
 
     /**
      * Only relevant for occurrence-linked images
@@ -71,7 +73,7 @@ export class OccurrenceImage extends Model {
      * if not securely saved then makes a post to /saveimage.php
      *
      * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a json response containing the uri from which the image may be retrieved
+     * a successful save will result in a JSON response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
      * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
@@ -98,6 +100,10 @@ export class OccurrenceImage extends Model {
             this.occurrenceId = params.occurrenceId;
         }
 
+        if (!this.deleted && !this.file) {
+            throw new Error(`Cannot save image id '${this.id}' with no local image data.`);
+        }
+
         // kludge to avoid historical instances of corrupted surveyId
         if (this.surveyId === true || this.surveyId === false) {
             console.log(`Fixing damaged survey id for image '${this.id}'`);
@@ -105,10 +111,10 @@ export class OccurrenceImage extends Model {
         }
 
         if (forceSave || this.unsaved()) {
-            const formData = this.formData();
+            // const formData = this.formData();
 
             console.log(`queueing image post, image id ${this.id}`);
-            return this.queuePost(formData, isSync);
+            return this.queuePost(isSync);
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }
@@ -127,7 +133,11 @@ export class OccurrenceImage extends Model {
         formData.append('imageId', this.id);
         formData.append('id', this.id);
         if (!this.deleted) {
-            formData.append('image', this.file);
+            if (this.file) {
+                formData.append('image', this.file);
+            } else {
+                throw new Error(`While retrieving form data, cannot save image id '${this.id}' with no local image data.`);
+            }
         }
         formData.append('deleted', this.deleted.toString());
         formData.append('created', this.createdStamp?.toString?.() || '');
@@ -202,7 +212,10 @@ export class OccurrenceImage extends Model {
         if (descriptor.occurrenceId) {
             this.occurrenceId = descriptor.occurrenceId;
         }
-        this.file = descriptor.image;
+
+        if (descriptor.image) {
+            this.file = descriptor.image;
+        }
 
         if (descriptor.context) {
             this.context = descriptor.context;
@@ -232,12 +245,16 @@ export class OccurrenceImage extends Model {
             :
             `height="${height}"`;
 
-        // try sized images first, before falling back to un-sized jpeg, that may match an offline cache
+        // Try sized images first, before falling back to an unsized JPEG, that may match an offline cache.
         return `<picture>` +
     //<source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=avif" type="image/avif">
     `<source srcset="/image.php?imageid=${id}&amp;height=${width}&amp;format=webp" type="image/webp">
     <source srcset="/image.php?imageid=${id}&amp;width=${width}&amp;format=jpeg" type="image/jpeg">
     <img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">
     </picture>`;
+    }
+
+    storeLocally() {
+        throw new Error("OccurrenceImages don't implement storeLocally(). Instead save requests should be posted.")
     }
 }

@@ -372,7 +372,7 @@ export class BSBIServiceWorker {
 
     /**
      * Used to handle image posts, which need to respond quickly even if the network is slow.
-     * Stores to the local cache first, then saves out to network.
+     * Stores to the local cache first, then saves out to the network.
      *
      * @param {FetchEvent} event
      */
@@ -533,7 +533,7 @@ export class BSBIServiceWorker {
     }
 
     /**
-     * A special case response for images.
+     * A special-case response for images.
      * Attempts to serve from the local cache first.
      * If that fails then go out to the network.
      * Finally, see if there is an image in indexeddb.

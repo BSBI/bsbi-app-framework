@@ -1,4 +1,4 @@
-import {Model} from "./Model";
+import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
 
@@ -163,13 +163,29 @@ export class Occurrence extends Model {
                 throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
             }
 
-            const formData = this.formData();
+            //const formData = this.formData();
 
             console.log('queueing occurrence post');
-            return this.queuePost(formData, isSync);
+            return this.queuePost(isSync);
         } else {
             return Promise.reject(`Occurrence ${this.id} has already been saved.`);
         }
+    }
+
+    storeLocally() {
+        return this._storeLocalData({
+            id : this.id,
+            occurrenceId : this.id, // unsure which id key should be preferred
+            type : this.TYPE,
+            surveyId : this.surveyId,
+            attributes : this.attributes,
+            created : this.createdStamp,
+            modified : this.modifiedStamp,
+            saveState : this.saveState === SAVE_STATE_SERVER ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL,
+            deleted : this.deleted,
+            projectId : this.projectId,
+            userId : this.userId,
+        });
     }
 
     /**

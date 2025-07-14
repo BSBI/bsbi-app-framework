@@ -48,6 +48,13 @@ export class Model extends EventHarness {
     attributes = {};
 
     /**
+     * @return {string}
+     */
+    get localKey() {
+        return `${this.TYPE}.${this.id}`;
+    }
+
+    /**
      *
      * @param {boolean} savedFlag
      */
@@ -185,18 +192,17 @@ export class Model extends EventHarness {
      *
      * The queue reduces the chance of requests being sent to the server out-of-order (which can lead to race conditions)
      *
-     * @param {FormData} formData
      * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
-    queuePost(formData, isSync = false) {
+    queuePost(isSync = false) {
         return new Promise((resolve, reject) => {
             /**
              * @returns {Promise}
              */
             const task = () => {
                 //console.log({'posting form data': formData});
-                return this.post(formData, isSync)
+                return this._post(this.formData(), isSync)
                     .catch((reason) => {
                         // noinspection JSIgnoredPromiseFromCall
                         Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
@@ -235,20 +241,14 @@ export class Model extends EventHarness {
     /**
      * if not securely saved, then makes a post to /save<object>
      *
-     * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a JSON response containing the uri from which the image may be retrieved
-     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
+     * this may be intercepted by a service worker, which could write the image to IndexedDb
      *
-     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexeddb
-     *
-     * must test indexeddb for this eventuality after the save has returned
-     *
+     * @private
      * @param {FormData} formData
      * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
-    post(formData, isSync = false) {
+    _post(formData, isSync = false) {
         return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
             method: 'POST',
             body: formData
@@ -265,33 +265,37 @@ export class Model extends EventHarness {
 
                     //console.log({'returned to client after save' : responseData});
 
-                    switch (responseData.saveState) {
-                        case SAVE_STATE_SERVER:
-                            this._savedLocally = true;
-                            this.savedRemotely = true;
-                            break;
+                    if (responseData.modified >= this.modifiedStamp) {
+                        switch (responseData.saveState) {
+                            case SAVE_STATE_SERVER:
+                                this._savedLocally = true;
+                                this.savedRemotely = true;
+                                break;
 
-                        case SAVE_STATE_LOCAL:
-                            this._savedLocally = true;
-                            this.savedRemotely = false;
-                            break;
+                            case SAVE_STATE_LOCAL:
+                                this._savedLocally = true;
+                                this.savedRemotely = false;
+                                break;
 
-                        default:
-                            console.log(`Unrecognised save state '${responseData.saveState}'`);
+                            default:
+                                console.log(`Unrecognised save state '${responseData.saveState}'`);
+                        }
+
+                        this.createdStamp = parseInt(responseData.created, 10);
+                        this.modifiedStamp = parseInt(responseData.modified, 10);
+                    } else {
+                        console.log(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
                     }
-
-                    this.createdStamp = parseInt(responseData.created, 10);
-                    this.modifiedStamp = parseInt(responseData.modified, 10);
 
                     // return the JSON version of the original response as a promise
                     return response.json(); // assign a JSON type to the response
                 });
             } else {
-                // try instead to write the data to local storage
+                console.log('Save failed, presumably service worker is missing and there is no network connection.');
 
-                console.log('Save failed, presumably service worker is missing and there is no network connection. Should write to IndexedDb here.');
-                this._savedLocally = false;
-                this.savedRemotely = false;
+                // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
+                // this._savedLocally = false;
+                // this.savedRemotely = false;
 
                 return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.className}`);
             }
@@ -488,5 +492,27 @@ export class Model extends EventHarness {
      */
     storeLocally() {
 
+    }
+
+    /**
+     *
+     * @param {{}} data
+     * @returns {Promise<void>}
+     * @protected
+     */
+    _storeLocalData(data) {
+
+        return localforage.setItem(this.localKey, data)
+            .then(() => {
+                    console.log(`Stored object ${this.localKey} locally`);
+                    if (this.saveState !== SAVE_STATE_SERVER) {
+                        this.saveState = SAVE_STATE_LOCAL;
+                    }
+                },
+                (reason) => {
+                    console.log({[`Failed to store object ${this.localKey} locally`] : reason});
+                    return Promise.reject({[`Failed to store object ${this.localKey} locally`] : reason});
+                }
+            );
     }
 }

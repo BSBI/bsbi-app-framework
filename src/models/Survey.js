@@ -5,7 +5,7 @@
 // this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
-import {Model, MODEL_EVENT_DESTROYED, uuid} from "./Model";
+import {Model, MODEL_EVENT_DESTROYED, SAVE_STATE_LOCAL, SAVE_STATE_SERVER, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
@@ -521,10 +521,10 @@ export class Survey extends Model {
      */
     save(forceSave = false, isSync = false, params) {
         if (forceSave || this.unsaved()) {
-            const formData = this.formData();
+            //const formData = this.formData();
 
             console.log(`queueing survey post ${this.id}`);
-            return this.queuePost(formData, isSync);
+            return this.queuePost(isSync);
         } else {
             return Promise.reject(`Survey ${this.id} has already been saved.`);
         }
@@ -555,9 +555,25 @@ export class Survey extends Model {
         return formData;
     }
 
+    storeLocally() {
+        return this._storeLocalData({
+            id : this.id,
+            surveyId : this.id, // unsure which id key should be preferred
+            baseSurveyId : this.baseSurveyId || this.id,
+            type : this.TYPE,
+            attributes : this.attributes,
+            created : this.createdStamp,
+            modified : this.modifiedStamp,
+            saveState : this.saveState === SAVE_STATE_SERVER ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL,
+            deleted : this.deleted,
+            projectId : this.projectId,
+            userId : this.userId,
+        });
+    }
+
     /**
-     * low-level delete of survey
-     * does not test whether there are extant occurrences
+     * Low-level deletion of the survey.
+     * Does not test whether there are extant occurrences.
      *
      */
     delete() {
@@ -759,6 +775,11 @@ export class Survey extends Model {
         this._track = track;
     }
 
+    /**
+     *
+     * @param {Survey} newSurvey
+     * @returns {Survey}
+     */
     mergeUpdate(newSurvey) {
         if (newSurvey.id !== this._id) {
             throw new Error(`Survey merge id mismatch: ${newSurvey.id} !== ${this._id}`);
@@ -773,11 +794,11 @@ export class Survey extends Model {
 
         Object.assign(this.attributes, newSurvey.attributes);
 
-        this.userId = newSurvey.userId; // generally this should be the same anyway
+        this.userId = newSurvey.userId; // generally, this should be the same anyway
         this.deleted = newSurvey.deleted; // probably doesn't change here
-        //this.created = newSurvey.created; // should be the same
-        this.modified = newSurvey.modified;
-        this.projectId = newSurvey.projectId; // generally this should be the same anyway
+        //this.createdStamp = newSurvey.createdStamp; // should be the same
+        this.modifiedStamp = newSurvey.modifiedStamp;
+        this.projectId = newSurvey.projectId; // generally, this should be the same anyway
         this.isPristine = newSurvey.isPristine;
 
         if (newSurvey.baseSurveyId) {

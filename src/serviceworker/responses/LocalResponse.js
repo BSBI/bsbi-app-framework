@@ -35,7 +35,7 @@ export class LocalResponse {
     /**
      *
      * @param {Response} prebuiltResponse
-     * @returns this
+     * @returns {this}
      */
     setPrebuiltResponse(prebuiltResponse) {
         this.prebuiltResponse = prebuiltResponse;
@@ -79,4 +79,12 @@ export class LocalResponse {
      */
     populateClientResponse() {
     }
+
+    /**
+     * called to mirror a response from the server locally
+     *
+     * @returns {this}
+     * @abstract
+     */
+    populateLocalSave(){}
 }
