@@ -513,6 +513,7 @@ export class App extends EventHarness {
     }
 
     /**
+     * This is a soft-reset (e.g. after log-out) rather than a hard clear of storage
      *
      * @returns {Promise<void | null>}
      */
@@ -520,14 +521,6 @@ export class App extends EventHarness {
         this.surveys = new Map();
         Track.reset();
         return this.clearCurrentSurvey().then(this.clearLastSurveyId);
-
-        // if (false) {
-        //     // currently disabled during testing to minimise data loss potential
-        //     this.surveys = new Map();
-        //     return this.clearCurrentSurvey().then(this.clearLastSurveyId);
-        // } else {
-        //     return Promise.resolve();
-        // }
     }
 
     /**
@@ -1152,6 +1145,36 @@ export class App extends EventHarness {
     static _syncAllInProgress = false;
 
     /**
+     * Timestamp (ms unixtime) of last successful sync all attempt
+     *
+     * @type {number}
+     */
+    static lastSyncAllTimestamp = 0;
+
+    /**
+     * Minimum interval after last sync all to attempt another automatically
+     *
+     * 15 min in milliseconds
+     */
+    static syncAllInterval = 15 * 60 * 1000;
+
+    registerSyncAllOnVisibleListener () {
+        document.addEventListener('visibilitychange',  () => {
+            if (document.visibilityState === "visible"
+                && navigator.onLine
+                && !App._syncAllInProgress
+                && (App.lastSyncAllTimestamp + App.syncAllInterval) < Date.now()) {
+
+                console.info('Sync all attempt triggered by visibility change.');
+
+                schedulerYield().then(() => this.syncAll().finally(() => {
+                    console.info('Sync all attempt triggered by visibility change - finished.');
+                }));
+            }
+        });
+    }
+
+    /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
      * This should allow surveys to be switched etc. without disrupting the ongoing save process.
      * @returns {Promise<{savedCount : {}}|void>}
@@ -1164,6 +1187,7 @@ export class App extends EventHarness {
         }
 
         App._syncAllInProgress = true;
+        App.lastSyncAllTimestamp = Date.now();
 
         const storedObjectKeys = {
             survey : [],
@@ -2369,6 +2393,19 @@ export class App extends EventHarness {
     notFoundView() {
         // const view = new NotFoundView();
         // view.display();
+    }
+
+    static deleteCacheByPrefix(prefix) {
+        return caches.keys()
+            .then((cacheNames) => Promise.all(
+                    cacheNames.map((cacheName) => {
+                        if (cacheName.startsWith(prefix)) {
+                            console.log(`Deleting cache: ${cacheName}`);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                )
+            );
     }
 }
 

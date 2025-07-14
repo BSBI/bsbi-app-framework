@@ -11,6 +11,7 @@ import {
     APP_EVENT_RESET_SURVEYS,
     APP_EVENT_SURVEYS_CHANGED
 } from "../framework/AppEvents";
+import {App} from "../framework/App";
 
 /**
  * @typedef {import('bsbi-app-framework-view').SurveyPickerView} SurveyPickerView
@@ -170,7 +171,7 @@ export class SurveyPickerController extends AppController {
     }
 
     /**
-     * called after user has confirmed add new survey dialog box
+     * called after user has confirmed add new survey dialogue box
      *
      */
     addNewSurveyHandler() {
@@ -194,14 +195,15 @@ export class SurveyPickerController extends AppController {
     }
 
     /**
-     * called after user has confirmed reset surveys dialog box
+     * called after user has confirmed reset surveys dialogue box
      */
     resetSurveysHandler() {
-        this.app.clearLocalForage().then(() => {
-            return this.app.reset();
-        }).finally(() => {
-            this.addNewSurveyHandler();
-        });
+        App.deleteCacheByPrefix('bsbi-images')
+            .then(() => this.app.clearLocalForage())
+            .then(() => this.app.reset())
+            .finally(() => {
+                this.addNewSurveyHandler();
+            });
     }
 
     /**
