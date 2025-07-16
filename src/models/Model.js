@@ -124,6 +124,7 @@ export class Model extends EventHarness {
         super();
 
         this.createdStamp = Math.floor(Date.now() / 1000);
+        this.modifiedStamp = this.createdStamp;
     }
 
     /**
@@ -239,9 +240,9 @@ export class Model extends EventHarness {
     }
 
     /**
-     * if not securely saved, then makes a post to /save<object>
+     * Makes a post to <this.SAVE_ENDPOINT>.
      *
-     * this may be intercepted by a service worker, which could write the image to IndexedDb
+     * This may be intercepted by a service worker, which for non-sync requests will attempt to write to indexedDb.
      *
      * @private
      * @param {FormData} formData
@@ -289,15 +290,21 @@ export class Model extends EventHarness {
 
                     // return the JSON version of the original response as a promise
                     return response.json(); // assign a JSON type to the response
+                }, reason => {
+                    console.error({'fetch error' : reason});
+                    return Promise.reject(reason);
                 });
             } else {
-                console.log('Save failed, presumably service worker is missing and there is no network connection.');
+                console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
 
                 // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
                 // this._savedLocally = false;
                 // this.savedRemotely = false;
 
-                return Promise.reject(`IndexedDb storage not yet implemented (probably no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                return Promise.reject(isSync ?
+                    `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
+                    :
+                    `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
             }
         });
     }

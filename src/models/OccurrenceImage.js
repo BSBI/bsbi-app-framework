@@ -61,9 +61,11 @@ export class OccurrenceImage extends Model {
     /**
      *
      * @param {File} file
+     * @returns {OccurrenceImage}
      */
     static fromFile(file) {
         const image = new OccurrenceImage;
+        image.id; // trigger id assigment
         image.file = file;
 
         return image;

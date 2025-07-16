@@ -1558,9 +1558,9 @@ export class App extends EventHarness {
 
         /**
          * Recent surveys, that if found to be empty should be purged
-         * @type {*[]}
+         * @type {Set<string>}
          */
-        const recentSurveyKeys = [];
+        const recentSurveyKeys = new Set();
 
         const thresholdStamp = Math.floor(Date.now() / 1000) - this.staleThreshold;
 
@@ -1587,7 +1587,7 @@ export class App extends EventHarness {
                                 !survey.attributes?.defaultCasual &&
                                 !survey.attributes?.nulllist // NYPH-specific
                             ) {
-                                recentSurveyKeys.push(survey.id);
+                                recentSurveyKeys.add(survey.id);
                             }
 
                             preservedKeys.survey.push(survey.id);
@@ -1610,10 +1610,15 @@ export class App extends EventHarness {
                     if (!occurrence.deleted) {
                         // See if the occurrence belongs to one of the threshold recent surveys.
                         // If so, then the survey is non-empty, so should be kept (so removed from the imperilled recent list)
-                        const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
-                        if (recentIndex !== -1) {
-                            delete recentSurveyKeys[recentIndex];
-                        }
+
+                        //if (recentSurveyKeys.has(occurrence.surveyId)) {
+                            recentSurveyKeys.delete(occurrence.surveyId);
+                        //}
+
+                        // const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
+                        // if (recentIndex !== -1) {
+                        //     delete recentSurveyKeys[recentIndex];
+                        // }
                     }
 
                     if (occurrence.unsaved()) {
@@ -1628,10 +1633,14 @@ export class App extends EventHarness {
                             // as special-case check for unsaved occurrences newly deleted offline on the recent list
                             // which should cause a survey to be retained
 
-                            const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
-                            if (recentIndex !== -1) {
-                                delete recentSurveyKeys[recentIndex];
-                            }
+                            //if (recentSurveyKeys.has(occurrence.surveyId)) {
+                                recentSurveyKeys.delete(occurrence.surveyId);
+                            //}
+
+                            // const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
+                            // if (recentIndex !== -1) {
+                            //     delete recentSurveyKeys[recentIndex];
+                            // }
                         }
                     } else if (deletionCandidateKeys.survey.includes(occurrence.surveyId) || occurrence.deleted) {
                         deletionCandidateKeys.occurrence.push(occurrence.id);
@@ -1732,6 +1741,7 @@ export class App extends EventHarness {
     /**
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, track : Array<string>}} deletionIds
+     * @return {Promise<void>}
      * @private
      */
     _applyPurge(deletionIds) {
@@ -1740,26 +1750,40 @@ export class App extends EventHarness {
         // local survey list should be cleared first, to avoid the risk of the user selecting a survey mid-purge
         if (deletionIds.survey.length > 0) {
             purgePromise = purgePromise.then(() => {
-                for (let key of deletionIds.survey) {
-                    console.info(`Purging survey id ${key}.`);
-                    this.surveys.delete(key);
-                }
+                    // re-check for the current survey amongst the deletion ids, in case the survey has changed since the purge process started.
+                    if (this._currentSurvey?.id && deletionIds.survey.includes(this._currentSurvey.id)) {
+                        throw new Error(`Cannot purge current survey, '${this._currentSurvey.id}'`);
+                    }
 
-                this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-            })
-                .catch(error => console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}}));
+                    for (let key of deletionIds.survey) {
+                        console.info(`Purging survey id ${key}.`);
+                        this.surveys.delete(key);
+                    }
+
+                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                })
+                .catch((error) => {
+                    console.error({'survey deletion error' : {surveyskeys: deletionIds.survey, error}})
+                    return Promise.reject({'survey deletion error' : {surveyskeys: deletionIds.survey, error}});
+                });
         }
 
         for (let type in deletionIds) {
             for (let key of deletionIds[type]) {
                 purgePromise = purgePromise.then(() => this.forageRemoveItem(`${type}.${key}`))
-                    .catch(error => console.error({'purge error' : {key: `${type}.${key}`, error}}));
+                    .catch((error) => {
+                        console.error({'purge error' : {key: `${type}.${key}`, error}});
+                        return Promise.reject({'purge error' : {key: `${type}.${key}`, error}});
+                    });
             }
         }
 
         if (deletionIds.image.length > 0) {
             purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image))
-                .catch(error => console.error({'purge images error' : {imagekeys: deletionIds.image, error}}));
+                .catch((error) => {
+                    console.error({'purge images error' : {imagekeys: deletionIds.image, error}});
+                    return Promise.reject({'purge images error' : {imagekeys: deletionIds.image, error}});
+                });
         }
 
         return purgePromise;
