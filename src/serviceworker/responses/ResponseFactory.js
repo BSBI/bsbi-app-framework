@@ -48,7 +48,7 @@ export class ResponseFactory {
         }
 
         if (ResponseFactory.responses.hasOwnProperty(returnedToClient.type)) {
-            console.log(`in fromPostResponse returning a ${returnedToClient.type}`);
+            //console.log(`in fromPostResponse returning a ${returnedToClient.type}`);
             return new ResponseFactory.responses[returnedToClient.type]({}, returnedToClient);
         } else {
             throw new Error(`Unrecognised post type '${returnedToClient.type}'`);

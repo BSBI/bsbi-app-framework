@@ -302,12 +302,12 @@ export class BSBIServiceWorker {
                             // save the response locally
                             // before returning it to the client
 
-                            console.log('About to clone the json response.')
+                            //console.log('About to clone the JSON response.')
 
                             return response.clone().json();
                         })
                         .then((jsonResponseData) => {
-                            console.log('Following successful remote post, about to save locally.');
+                            //console.log('Following successful remote post, about to save locally.');
 
                             return ResponseFactory
                                 .fromPostResponse(jsonResponseData)

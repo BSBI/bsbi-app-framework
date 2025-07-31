@@ -12,7 +12,7 @@ export class Logger {
     static bsbiAppVersion;
 
     /**
-     * For test builds reports a javascript error, otherwise is a no-op
+     * For test builds reports a JavaScript error, otherwise is a no-op
      *
      * @param {string} message
      * @param {string|null} [url]
@@ -29,7 +29,7 @@ export class Logger {
     }
 
     /**
-     * reports a javascript error
+     * reports a JavaScript error
      *
      * @param {string} message
      * @param {string|null} [url]
@@ -98,8 +98,9 @@ export class Logger {
             errorEl.setAttribute('userid', Logger.app.session.userId);
         }
 
-        // noinspection PlatformDetectionJS
+        // noinspection PlatformDetectionJS,JSDeprecatedSymbols
         errorEl.setAttribute('browser', navigator.appName);
+        // noinspection JSDeprecatedSymbols
         errorEl.setAttribute('browserv', navigator.appVersion);
         errorEl.setAttribute('userAgent', navigator.userAgent);
         errorEl.setAttribute('versions', Logger.bsbiAppVersion);

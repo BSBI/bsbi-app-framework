@@ -8,6 +8,8 @@ import {
     SURVEY_EVENT_OCCURRENCES_CHANGED
 } from "../framework/AppEvents";
 
+//import {App} from "../framework/App";
+
 /**
  * Used for saving current survey track that is still open
  * @type {number}
@@ -17,6 +19,12 @@ const TRACK_END_REASON_SURVEY_OPEN = 0;
 const TRACK_END_REASON_WATCHING_ENDED = 1;
 const TRACK_END_REASON_SURVEY_DATE = 2;
 const TRACK_END_REASON_SURVEY_CHANGED = 3;
+const TRACK_END_LOCATION_CHANGED = 4;
+
+// 0.00001 is approximately 1.1 m
+const LONGITUDE_MAX_DIFF_THRESHOLD = 0.00001 * (200 / 1.1); // 200m
+const LATITUDE_MAX_DIFF_THRESHOLD = 0.00001 * (200 / 1.1); // 200m
+const TIME_MAX_DIFF_THRESHOLD = 10 * 60; // 10 minutes
 
 /**
  * @typedef {import('british-isles-gridrefs').GridCoords} GridCoords
@@ -32,13 +40,12 @@ export class Track extends Model {
     static className = 'Track';
 
     /**
-     * @todo consider whether PointTriplet should also include accuracy
-     *
      * @typedef PointTriplet
      * @type {array}
      * @property {number} 0 lng
      * @property {number} 1 lat
      * @property {number} 2 stamp (seconds since epoch)
+     * @property {number} 3 accuracy (m 95% CI)
      */
 
     /**
@@ -47,12 +54,6 @@ export class Track extends Model {
      * @property {Array<PointTriplet>} 0 points
      * @property {number} 1 end reason code
      */
-
-    // /**
-    //  *
-    //  * @type {{}}
-    //  */
-    // attributes = {};
 
     /**
      *
@@ -87,21 +88,6 @@ export class Track extends Model {
      * @type {string}
      */
     deviceId = '';
-
-    // /**
-    //  * set if the image has been posted to the server
-    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
-    //  *
-    //  * @type {boolean}
-    //  */
-    // _savedRemotely = false;
-
-    // /**
-    //  * set if the image has been added to a temporary store (e.g. indexedDb)
-    //  *
-    //  * @type {boolean}
-    //  */
-    // _savedLocally = false;
 
     SAVE_ENDPOINT = '/savetrack.php';
 
@@ -148,11 +134,13 @@ export class Track extends Model {
      */
     static lastPingStamp = 0;
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Minimum interval between position updates in milliseconds
+     *
      * @type {number}
      */
-    static msInterval = 30 * 1000;
+    static msInterval = 15 * 1000;
 
     /**
      *
@@ -197,6 +185,7 @@ export class Track extends Model {
         Track.lastPingStamp = 0;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Need to listen for change of the current survey
      *
@@ -208,6 +197,7 @@ export class Track extends Model {
 
     static _staticListenersRegistered = false;
 
+    // noinspection JSUnusedGlobalSymbols
     static registerStaticListeners() {
         if (!Track._staticListenersRegistered) {
             const app = Track._app;
@@ -232,7 +222,7 @@ export class Track extends Model {
                                 Track._tracks.get(Track._currentlyTrackedSurveyId)
                                     ?.get?.(Track._currentlyTrackedDeviceId);
 
-                            previouslyTrackedSurvey = this._app.surveys.get(Track._currentlyTrackedSurveyId);
+                            previouslyTrackedSurvey = Track._app.surveys.get(Track._currentlyTrackedSurveyId);
 
                             if (oldTrack) {
                                 if (oldTrack._surveyChangeListenerHandle) {
@@ -258,7 +248,7 @@ export class Track extends Model {
             }
 
             Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
-                const survey = this._app.currentSurvey;
+                const survey = Track._app.currentSurvey;
 
                 if (survey) {
                     if (!survey.attributes?.casual && survey.isToday()) {
@@ -360,20 +350,23 @@ export class Track extends Model {
         track.registerSurvey(survey);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {GeolocationPosition} position
-     * @param {GridCoords} gridCoords
      */
-    static ping(position, gridCoords) {
+    static ping(position) {
+        /**
+         * @type {Track|null} track
+         */
         const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
 
         if (track) {
-            const changed = track.addPoint(position, gridCoords);
+            const changed = track.addPoint(position);
             Track.lastPingStamp = position.timestamp;
 
             if (changed) {
-                const currentSurvey = track._app?.currentSurvey;
+                const currentSurvey = Track._app?.currentSurvey;
 
                 // survey must be saved first
                 if (currentSurvey?.unsaved?.()) {
@@ -381,6 +374,7 @@ export class Track extends Model {
                         currentSurvey.save().then(() => track.save());
                     }
                 } else {
+                    // noinspection JSIgnoredPromiseFromCall
                     track.save();
                 }
             }
@@ -390,19 +384,35 @@ export class Track extends Model {
     /**
      *
      * @param {GeolocationPosition} position
-     * @param {GridCoords} gridCoords
      * @returns {boolean} changed
      */
-    addPoint(position, gridCoords) {
+    addPoint(position) {
         let series = this.points[this.points.length - 1];
 
         if (!series || series?.[1] !== TRACK_END_REASON_SURVEY_OPEN) {
             series = this.startPointSeries();
         }
 
-        const l = series[0].length;
+        let l = series[0].length;
 
-        // test if have moved since last point
+        // test if we have jumped too far and should start a new series
+        if (l > 0 &&
+            (Math.abs(series[0][l - 1][0] - position.coords.longitude) > LONGITUDE_MAX_DIFF_THRESHOLD ||
+            Math.abs(series[0][l - 1][1] - position.coords.latitude) > LATITUDE_MAX_DIFF_THRESHOLD ||
+            (Math.floor(position.timestamp / 1000) - series[0][l - 1][2]) > TIME_MAX_DIFF_THRESHOLD
+            )
+        ) {
+            console.log({'tracking jump' : {    latDiff : Math.abs(series[0][l - 1][1] - position.coords.latitude),
+                                                lngDiff : Math.abs(series[0][l - 1][0] - position.coords.longitude),
+                                                timeDiff: (Math.floor(position.timestamp / 1000) - series[0][l - 1][2]),
+                                           }
+                });
+            this.endCurrentSeries(TRACK_END_LOCATION_CHANGED);
+            series = this.startPointSeries();
+            l = 0;
+        }
+
+        // test if we have moved at all since last point
         if (l > 0 && series[0][l - 1][0] === position.coords.longitude && series[0][l - 1][1] === position.coords.latitude) {
             // no change since last point
             return false;
@@ -412,6 +422,7 @@ export class Track extends Model {
                 position.coords.longitude,
                 position.coords.latitude,
                 Math.floor(position.timestamp / 1000),
+                position.coords.accuracy,
             ];
 
             this.touch();
@@ -458,7 +469,7 @@ export class Track extends Model {
 
                 lastEntry[1] = reason;
             } else {
-                // this is ann empty series, so just delete it
+                // this is an empty series, so just delete it
 
                 delete this.points[this.points.length - 1];
                 this.pointIndex--;
@@ -472,12 +483,12 @@ export class Track extends Model {
     /**
      * if not securely saved then makes a post to /savetrack.php
      *
-     * This should be intercepted by a service worker, which could write the object to indexeddb
-     * A successful save (local or to server) will result in a json response containing the object
-     * and also the state of persistence. After a save to the server the points list may be cleared,
+     * This should be intercepted by a service worker, which could write the object to indexedDb.
+     * A successful save (local or to server) will result in a JSON response containing the object
+     * and also the state of persistence. After a save to the server, the points-list may be cleared,
      * but pointIndex will be maintained so that tracking can resume.
      *
-     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * If saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the object directly to indexeddb
      *
      * Must test indexeddb for this eventuality after the save has returned.
@@ -567,7 +578,7 @@ export class Track extends Model {
      *      pointIndex: string,
      *      points: string | Array<PointSeries>,
      *      }} descriptor
-     * @param {string|Array<PointSeries>} descriptor.points JSON-serialized Array<PointSeries> or native array
+     * @param {string|Array<PointSeries>} descriptor.points JSON-serialised Array<PointSeries> or native array
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
@@ -631,9 +642,9 @@ export class Track extends Model {
 
         if (!this._surveyOccurrencesChangeListenerHandle) {
             this._surveyOccurrencesChangeListenerHandle = survey.addListener(SURVEY_EVENT_OCCURRENCES_CHANGED, () => {
-                // if occurrences have changed, then worth ensuring that tracking is up-to-date
+                // If occurrences have changed, then worth ensuring that tracking is up to date.
 
-                this.isPristine = false; // probably not required, but safety fallback to ensure survey is saved
+                this.isPristine = false; // probably not required, but safety fallback to ensure that the track is saved
 
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId && !this.isPristine && this.unsaved()) {
                     this.save().then(() => {

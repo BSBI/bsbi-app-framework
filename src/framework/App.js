@@ -11,7 +11,7 @@ import {Occurrence, OCCURRENCE_EVENT_MODIFIED} from "../models/Occurrence";
 import localforage from "localforage";
 import {MODEL_TYPE_IMAGE, OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
-import {uuid} from "../models/Model";
+import {Model, SAVE_STATE_SERVER, uuid} from "../models/Model";
 import {Track} from "../models/Track";
 import {
     APP_EVENT_ADD_SURVEY_USER_REQUEST,
@@ -1576,10 +1576,10 @@ export class App extends EventHarness {
                     if (survey.id !== currentSurveyId && survey.savedRemotely && (
                         (survey.modifiedStamp <= thresholdStamp) || (this.session?.userId && survey.userId && this.session.userId !== survey.userId)
                     )) {
-                        // survey hasn't been modified recently or belongs to a different user
+                        // The survey hasn't been modified recently or belongs to a different user
 
                         if (!(survey.attributes?.defaultCasual && survey.createdInCurrentYear() && survey.userId === this.userId)) {
-                            // survey isn't the set of casual records for the current year for the current user
+                            // The survey isn't the set of casual records for the current year for the current user
 
                             deletionCandidateKeys.survey.push(survey.id);
                         } else {
@@ -1596,63 +1596,103 @@ export class App extends EventHarness {
                         preservedKeys.survey.push(survey.id);
                     }
                 })
-                // .catch((reason) => {
-                //     console.error({'survey pre-purge failed reason' : reason});
-                // })
             );
         }
 
-        // at this point all surveys will have been checked by the time the next thenables are processed
+        const occurrenceMetaData = [];
+
         for (let occurrenceKey of storedObjectKeys.occurrence) {
-            purgePromise = purgePromise.then(() => Occurrence.retrieveFromLocal(occurrenceKey, new Occurrence))
-                .then((/** Occurrence */ occurrence) => {
-
-                    if (!occurrence.deleted) {
-                        // See if the occurrence belongs to one of the threshold recent surveys.
-                        // If so, then the survey is non-empty, so should be kept (so removed from the imperilled recent list)
-
-                        //if (recentSurveyKeys.has(occurrence.surveyId)) {
-                            recentSurveyKeys.delete(occurrence.surveyId);
-                        //}
-
-                        // const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
-                        // if (recentIndex !== -1) {
-                        //     delete recentSurveyKeys[recentIndex];
-                        // }
-                    }
-
-                    if (occurrence.unsaved()) {
-                        // unsaved locally or remotely
-                        if (deletionCandidateKeys.survey.includes(occurrence.surveyId)) {
-                            throw new PurgeInconsistencyError(`Occurrence ${occurrence.id} from deletable survey ${occurrence.surveyId} is unsaved.`);
-                        } else {
-                            preservedKeys.occurrence.push(occurrence.id);
-                        }
-
-                        if (occurrence.deleted) {
-                            // as special-case check for unsaved occurrences newly deleted offline on the recent list
-                            // which should cause a survey to be retained
-
-                            //if (recentSurveyKeys.has(occurrence.surveyId)) {
-                                recentSurveyKeys.delete(occurrence.surveyId);
-                            //}
-
-                            // const recentIndex = recentSurveyKeys.indexOf(occurrence.surveyId);
-                            // if (recentIndex !== -1) {
-                            //     delete recentSurveyKeys[recentIndex];
-                            // }
-                        }
-                    } else if (deletionCandidateKeys.survey.includes(occurrence.surveyId) || occurrence.deleted) {
-                        deletionCandidateKeys.occurrence.push(occurrence.id);
-                    } else if (!preservedKeys.survey.includes(occurrence.surveyId)) {
-                        // have an orphaned occurrence
-                        console.log(`Queueing purge of orphaned occurrence id ${occurrence.id}`);
-                        deletionCandidateKeys.occurrence.push(occurrence.id);
-                    } else {
-                        preservedKeys.occurrence.push(occurrence.id);
-                    }
+            purgePromise = purgePromise.then(() => Model.retrieveRawFromLocal(occurrenceKey, 'occurrence'))
+                .then((occurrenceDescriptor) => {
+                    occurrenceMetaData[occurrenceMetaData.length] = {
+                        id : occurrenceDescriptor.id,
+                        surveyId : occurrenceDescriptor.surveyId,
+                        deleted : occurrenceDescriptor.deleted,
+                        modifiedStamp :  occurrenceDescriptor.modifiedStamp,
+                        saveState : occurrenceDescriptor.saveState,
+                    };
                 });
         }
+
+        purgePromise = purgePromise.then(() => {
+            // first pass removes any surveys as deletion candidates if they include occurrences from within the current timeframe
+            // (regardless of whether saved or not)
+            for (let occurrenceDescriptor of occurrenceMetaData) {
+                // occurrence has been modified within the retained window (or is unsaved)
+                // then keep the associated survey even if the survey itself is unmodified
+                if (
+                    ((occurrenceDescriptor.modifiedStamp > thresholdStamp && !occurrenceDescriptor.deleted)
+                        || occurrenceDescriptor.saveState !== SAVE_STATE_SERVER)
+                    && deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId)
+                ) {
+                    delete deletionCandidateKeys.survey[occurrenceDescriptor.surveyId];
+
+                    if (!preservedKeys.survey.includes(occurrenceDescriptor.surveyId)) {
+                        preservedKeys.survey.push(occurrenceDescriptor.surveyId);
+                    }
+                }
+
+                if (recentSurveyKeys.has(occurrenceDescriptor.surveyId) && !(occurrenceDescriptor.deleted && occurrenceDescriptor.saveState === SAVE_STATE_SERVER)) {
+                    // If the occurrence belongs to one of the threshold recent surveys
+                    // and hasn't been persistently deleted already, then the survey is not empty so should be retained.
+                    //
+                    recentSurveyKeys.delete(occurrenceDescriptor.surveyId);
+                }
+            }
+
+            // having pruned the survey deletion candidates list, mark occurrences from surveys that are still on the deletion list.
+            for (let occurrenceDescriptor of occurrenceMetaData) {
+                if (deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId) || (occurrenceDescriptor.deleted && occurrenceDescriptor.saveState === SAVE_STATE_SERVER)) {
+                    deletionCandidateKeys.occurrence.push(occurrenceDescriptor.id);
+                } else {
+                    preservedKeys.occurrence.push(occurrenceDescriptor.id);
+                }
+            }
+
+            // add remaining recentish surveys that have no records to the purge list
+            deletionCandidateKeys.survey.push(...recentSurveyKeys);
+
+            // allow garbage collection
+            occurrenceMetaData.length = 0;
+        });
+
+        // // at this point all surveys will have been checked by the time the next thenables are processed
+        // for (let occurrenceKey of storedObjectKeys.occurrence) {
+        //     purgePromise = purgePromise.then(() => Model.retrieveRawFromLocal(occurrenceKey, 'occurrence'))
+        //         .then((occurrenceDescriptor) => {
+        //
+        //             if (!occurrenceDescriptor.deleted) {
+        //                 // See if the occurrence belongs to one of the threshold recent surveys.
+        //                 // If so, then the survey is non-empty, so should be kept (so removed from the imperilled recent list)
+        //                 recentSurveyKeys.delete(occurrenceDescriptor.surveyId);
+        //             }
+        //
+        //             if (occurrenceDescriptor.saveState !== SAVE_STATE_SERVER) {
+        //                 // unsaved remotely
+        //                 if (deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId)) {
+        //                     throw new PurgeInconsistencyError(`Occurrence ${occurrenceDescriptor.id} from deletable survey ${occurrenceDescriptor.surveyId} is unsaved.`);
+        //                 } else {
+        //                     preservedKeys.occurrence.push(occurrenceDescriptor.id);
+        //                 }
+        //
+        //                 if (occurrenceDescriptor.deleted) {
+        //                     // as special-case check for unsaved occurrences newly deleted offline on the recent list
+        //                     // which should cause a survey to be retained
+        //
+        //                     recentSurveyKeys.delete(occurrenceDescriptor.surveyId);
+        //
+        //                 }
+        //             } else if (deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId) || occurrenceDescriptor.deleted) {
+        //                 deletionCandidateKeys.occurrence.push(occurrenceDescriptor.id);
+        //             } else if (!preservedKeys.survey.includes(occurrenceDescriptor.surveyId)) {
+        //                 // have an orphaned occurrence
+        //                 console.log(`Queueing purge of orphaned occurrence id ${occurrenceDescriptor.id}`);
+        //                 deletionCandidateKeys.occurrence.push(occurrenceDescriptor.id);
+        //             } else {
+        //                 preservedKeys.occurrence.push(occurrenceDescriptor.id);
+        //             }
+        //         });
+        // }
 
         for(let imageKey of storedObjectKeys.image) {
             purgePromise = purgePromise.then(() => OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
@@ -1715,14 +1755,14 @@ export class App extends EventHarness {
             );
         }
 
-        purgePromise = purgePromise.then(() => {
-            // add remaining recent surveys that have no records to the purge list
-            deletionCandidateKeys.survey.push(...recentSurveyKeys);
-        });
+        // purgePromise = purgePromise.then(() => {
+        //     // add remaining recent surveys that have no records to the purge list
+        //     deletionCandidateKeys.survey.push(...recentSurveyKeys);
+        // });
 
         purgePromise = purgePromise.then(
             () => {
-                //console.log({'Purging' : deletionCandidateKeys});
+                // console.log({'Purging' : deletionCandidateKeys});
 
                 return this._applyPurge(deletionCandidateKeys);
             },
@@ -1730,9 +1770,8 @@ export class App extends EventHarness {
                 console.error({'purge failed reason' : reason});
                 console.log({'would have purged' : deletionCandidateKeys});
 
-                // noinspection JSIgnoredPromiseFromCall
-                Logger.logError({'Purge failed': reason});
-                return Promise.reject(`Purge failed: ${JSON.stringify(reason)}`)
+                return Logger.logError(`Purge failed: ${JSON.stringify(reason)}`)
+                    .then(() => Promise.reject(`Purge failed: ${JSON.stringify(reason)}`));
             });
 
         return purgePromise;
@@ -2390,8 +2429,8 @@ export class App extends EventHarness {
 
                     return imageFetchingPromise;
                 } else {
-                    Logger.logError(`Failed to retrieve survey id '${surveyId}' from local set in _restoreSurveyFromLocal().`);
-                    return Promise.reject(`Failed to restore survey id '${surveyId}' from local set.`);
+                    return Logger.logError(`Failed to retrieve survey id '${surveyId}' from local set in _restoreSurveyFromLocal().`)
+                        .then(() => Promise.reject(`Failed to restore survey id '${surveyId}' from local set.`));
                 }
 
                 // if the target survey belonged to a different user then could be undefined here
