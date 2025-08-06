@@ -1115,6 +1115,11 @@ export class App extends EventHarness {
 
         this._doingPurge = true;
 
+        const thresholdDays = this.getOption('retentionTime');
+        if (thresholdDays >= 1 && thresholdDays <= OCCURRENCE_MAXIMUM_RETENTION_LIMIT_DAYS) {
+            this.staleThreshold = thresholdDays * 3600 * 24;
+        }
+
         const promise = this.seekKeys(storedObjectKeys)
             .then((storedObjectKeys) => {
                 return this._purgeLocal(storedObjectKeys)
