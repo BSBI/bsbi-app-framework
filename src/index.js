@@ -1,7 +1,7 @@
 export {AppController} from './controllers/AppController';
 export {StaticContentController} from './controllers/StaticContentController';
 export {SurveyPickerController} from './controllers/SurveyPickerController';
-export {App} from './framework/App';
+export {App, OCCURRENCE_MAXIMUM_RETENTION_LIMIT_DAYS} from './framework/App';
 export {EventHarness} from './framework/EventHarness';
 export {Model, UUID_REGEX, uuid, MODEL_EVENT_SAVED_REMOTELY, MODEL_EVENT_DESTROYED} from './models/Model';
 export {Occurrence, OCCURRENCE_EVENT_MODIFIED, MODEL_TYPE_OCCURRENCE} from './models/Occurrence';

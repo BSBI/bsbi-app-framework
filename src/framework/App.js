@@ -36,6 +36,13 @@ import {DeviceType} from "../utils/DeviceType";
 import {schedulerYield} from "../utils/schedulerYield";
 
 /**
+ * never retain longer than 14 days
+ *
+ * @type {number}
+ */
+export const OCCURRENCE_MAXIMUM_RETENTION_LIMIT_DAYS = 14;
+
+/**
  * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
  * @typedef {import('bsbi-app-framework-view').Layout} Layout
  */
@@ -927,7 +934,7 @@ export class App extends EventHarness {
      *
      * @param {Array.<string>} surveyIds
      * @param {boolean} specifiedSurveysOnly if set then don't return a full extended refresh, only the specified surveys
-     * @param {number|null} maxAge maximum age of surveys to retrieve (excluding specified ids, which are unconstrained), applicable only if a userid is provided, default null
+     * @param {number|null} maxAge maximum age (in seconds) of surveys to retrieve (excluding specified ids, which are unconstrained), applicable only if a user id is provided, default null
      * @return {Promise}
      */
     refreshFromServer(surveyIds, specifiedSurveysOnly = false, maxAge = null) {
@@ -943,6 +950,14 @@ export class App extends EventHarness {
 
         if (this.session?.userId) {
             formData.append('userId', this.session.userId);
+
+            if (!maxAge) {
+                const retentionDays = this.getOption('retentionTime');
+
+                if (retentionDays && retentionDays <= OCCURRENCE_MAXIMUM_RETENTION_LIMIT_DAYS) {
+                    maxAge = retentionDays * 3600 * 24; // convert from days to seconds
+                }
+            }
 
             // relevant only if a user is logged in
             if (maxAge) {

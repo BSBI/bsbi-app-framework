@@ -245,42 +245,46 @@ export class Track extends Model {
                         Track.applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey);
                     }
                 });
+
+                Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
+                    Track.startTracking();
+                });
+
+                Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
+
+                    if (Track.trackingIsActive) {
+                        /**
+                         * @type {Track|null}
+                         */
+                        const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
+
+                        if (track) {
+                            track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
+
+                            track.save(true).then(() => {
+                                console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
+                            });
+                        }
+
+                        Track._currentlyTrackedSurveyId = null;
+                        Track._currentlyTrackedDeviceId = null;
+                        Track.trackingIsActive = false;
+                    }
+                });
+                Track._staticListenersRegistered = true;
             }
+        }
+    }
 
-            Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
-                const survey = Track._app.currentSurvey;
+    static startTracking() {
+        const survey = Track._app.currentSurvey;
 
-                if (survey) {
-                    if (!survey.attributes?.casual && survey.isToday()) {
-                        // Resume existing tracking, or start a new track.
-                        Track._trackSurvey(survey);
-                        Track.trackingIsActive = true;
-                    }
-                }
-            });
-
-            Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
-
-                if (Track.trackingIsActive) {
-                    /**
-                     * @type {Track|null}
-                     */
-                    const track = Track._tracks.get(Track._currentlyTrackedSurveyId)?.get?.(Track._currentlyTrackedDeviceId);
-
-                    if (track) {
-                        track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
-
-                        track.save(true).then(() => {
-                            console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
-                        });
-                    }
-
-                    Track._currentlyTrackedSurveyId = null;
-                    Track._currentlyTrackedDeviceId = null;
-                    Track.trackingIsActive = false;
-                }
-            });
-            Track._staticListenersRegistered = true;
+        if (survey) {
+            if (!survey.attributes?.casual && survey.isToday()) {
+                // Resume existing tracking, or start a new track.
+                Track._trackSurvey(survey);
+                Track.trackingIsActive = true;
+            }
         }
     }
 
@@ -348,6 +352,8 @@ export class Track extends Model {
         }
 
         track.registerSurvey(survey);
+
+        Track.clearGeowatchThrottle(); // for the new track, we want a starting point without any delay
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -417,7 +423,6 @@ export class Track extends Model {
             // no change since last point
             return false;
         } else {
-
             series[0][l] = [
                 position.coords.longitude,
                 position.coords.latitude,
@@ -500,7 +505,7 @@ export class Track extends Model {
      * @returns {Promise}
      */
     save(forceSave = false, isSync = false, params) {
-        if (forceSave || this.unsaved()) {
+        if ((forceSave || this.unsaved()) && (this.points?.length > 0 || this.deleted)) {
             if (!this.surveyId) {
                 throw new Error(`Survey id must be set before saving a track.`);
             }
@@ -672,5 +677,14 @@ export class Track extends Model {
 
         survey?.removeListener?.(MODEL_EVENT_DESTROYED, this._surveyDestroyedListenerHandle);
         this._surveyDestroyedListenerHandle = undefined;
+    }
+
+    static _geoWatchTimerFlag = null;
+
+    static clearGeowatchThrottle() {
+        if (Track._geoWatchTimerFlag) {
+            clearTimeout(Track._geoWatchTimerFlag);
+            Track._geoWatchTimerFlag = null;
+        }
     }
 }

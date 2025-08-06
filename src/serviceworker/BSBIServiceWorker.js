@@ -280,20 +280,19 @@ export class BSBIServiceWorker {
      * also used for images, as part of general re-sync
      * attempts remote save first then caches locally
      *
-     * @param {FetchEvent} evt
+     * @param {FetchEvent} fetchEvent
      * @param {boolean} isSync set if this is called as part of a re-sync rather than as a first-time save
      */
-    handle_post(evt, isSync = false) {
+    handle_post(fetchEvent, isSync = false) {
         let clonedRequest;
         try {
-            clonedRequest = evt.request.clone();
+            clonedRequest = fetchEvent.request.clone();
         } catch (e) {
-            console.log('Failed to clone request.');
-            console.log({'Cloning error': e});
-            return e;
+            console.log({'Failed to clone request': e});
+            throw e;
         }
 
-        evt.respondWith(fetch(evt.request)
+        fetchEvent.respondWith(fetch(fetchEvent.request)
             .then((response) => {
                 // would get here if the server responds at all, but need to check that the response is OK (not a server error)
                 if (response.ok) {
@@ -336,7 +335,15 @@ export class BSBIServiceWorker {
                         // We don't need to store locally (as will already be present) and response is not needed,
                         // so reject.
 
-                        return Promise.reject({'remote failed' : true, isSync, remoteReason});
+                        // return Promise.reject({'remote sync failed' : true, isSync, remoteReason});
+
+                        let returnedToClient = {
+                            error: 'remote sync failed',
+                            errorHelp: 'During a sync request your internet connection may have failed (or there could be a problem with the server). ' +
+                                `Error was: ${JSON.stringify(remoteReason)}`
+                        };
+
+                        return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
                     } else {
 
                         // /**
@@ -363,7 +370,7 @@ export class BSBIServiceWorker {
                                                     `Error was: ${JSON.stringify(reason)}`
                                             };
 
-                                            return Promise.reject(packageClientResponse(returnedToClient));
+                                            return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
                                         });
                                 }, (reason) => {
                                     console.log({'failed to read form data locally': reason});
@@ -380,7 +387,7 @@ export class BSBIServiceWorker {
                                             `Error was: ${JSON.stringify(remoteReason)}`
                                     };
 
-                                    return Promise.reject(packageClientResponse(returnedToClient));
+                                    return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
                                 }
                             );
                     }
@@ -402,13 +409,15 @@ export class BSBIServiceWorker {
         try {
             clonedRequest = event.request.clone();
         } catch (e) {
-            console.log('Failed to clone request.');
-            console.log({'Cloning error': e});
+            //console.log('Failed to clone request.');
+            console.log({'Failed to clone image request': e});
+            throw (e);
         }
 
         // send back a quick response to the client from local storage (before the server request completes)
         event.respondWith(
-            clonedRequest.formData()
+            clonedRequest
+                .formData()
                 .then((formData) => {
                         //console.log({'got to image form data handler' : formData});
 
@@ -433,7 +442,7 @@ export class BSBIServiceWorker {
                                                         // save the response locally
                                                         // before returning it to the client
 
-                                                        return response.clone().json();
+                                                        return response.clone().json(); // clone is required here as the original unmolested response object is still needed for the client
                                                     })
                                                     .then((jsonResponseData) => {
                                                         // Use event.handled (which is a promise that resolves once the original fetch event has returned to the client)
@@ -447,45 +456,32 @@ export class BSBIServiceWorker {
                                                     .catch((error) => {
                                                         // for some reason, local storage failed, after a successful server save
                                                         console.error({'local storage store of image failed' : error});
-
-                                                        //return Promise.resolve(response); // pass through the server response
                                                     });
                                             } else {
                                                 console.log('posted image to server in waitUntil part of fetch cycle: got Error response');
-
-                                                // /**
-                                                //  * simulated result of post, returned as JSON body
-                                                //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                                                //  */
-                                                // let returnedToClient = {
-                                                //     error: 'Failed to save posted response data. (internal error)',
-                                                //     errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                                //         'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                                //         'Please try to re-establish a network connection and try again.'
-                                                // };
-                                                //
-                                                // return packageClientResponse(returnedToClient);
                                             }
                                         }, (reason) => {
                                             console.log({'Rejected image post fetch from server - implies network is down' : reason});
                                             // return Promise.reject({'Rejected image post fetch from server - implies network is down' : reason});
                                         }
-                                    ));
+                                    )
+                                );
 
                                 return response;
                             });
                     }, (reason) => {
                         console.log({'failed to read form data locally' : reason});
 
+                        // in error state, still try to post the image to the server
+                        event.waitUntil(fetch(event.request));
+
                         /**
                          * simulated result of post, returned as JSON body
                          * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
                          */
                         let returnedToClient = {
-                            error: 'Failed to process posted response data. (internal error)',
-                            errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                'It wasn\'t possible to save a temporary copy on your device. (an unexpected error occurred) ' +
-                                'Please try to re-establish a network connection and try again.'
+                            error: 'Failed to store image data locally data. (internal error)',
+                            errorHelp: 'A save to server will still be attempted, but image saving should be retried.'
                         };
 
                         return packageClientResponse(returnedToClient);

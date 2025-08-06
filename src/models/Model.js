@@ -242,7 +242,7 @@ export class Model extends EventHarness {
     /**
      * Makes a post to <this.SAVE_ENDPOINT>.
      *
-     * This may be intercepted by a service worker, which for non-sync requests will attempt to write to indexedDb.
+     * This should be intercepted by a service worker, which for non-sync requests will attempt to write to indexedDb.
      *
      * @private
      * @param {FormData} formData
@@ -250,63 +250,73 @@ export class Model extends EventHarness {
      * @returns {Promise}
      */
     _post(formData, isSync = false) {
-        return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            if (response.ok) {
-                // need to find out whether this was a local store in indexedDb by the service worker
-                // or a server-side save
+        try {
+            return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    // need to find out whether this was a local store in indexedDb by the service worker
+                    // or a server-side save
 
-                // to do that, need to decode the JSON response
-                // which can only be done once, so need to clone first
-                const clonedResponse = response.clone();
-                return clonedResponse.json().then((responseData) => {
-                    /** @param {{saveState : string, created : number, modified : number}} responseData */
+                    // // to do that, need to decode the JSON response
+                    // // which can only be done once, so need to clone first
+                    // const clonedResponse = response.clone();
+                    // return clonedResponse.json().then((responseData) => {
 
-                    //console.log({'returned to client after save' : responseData});
+                    return response.json().then((responseData) => {
+                        /** @param {{saveState : string, created : number, modified : number}} responseData */
 
-                    if (responseData.modified >= this.modifiedStamp) {
-                        switch (responseData.saveState) {
-                            case SAVE_STATE_SERVER:
-                                this._savedLocally = true;
-                                this.savedRemotely = true;
-                                break;
+                        //console.log({'returned to client after save' : responseData});
 
-                            case SAVE_STATE_LOCAL:
-                                this._savedLocally = true;
-                                this.savedRemotely = false;
-                                break;
+                        if (responseData.modified >= this.modifiedStamp) {
+                            switch (responseData.saveState) {
+                                case SAVE_STATE_SERVER:
+                                    this._savedLocally = true;
+                                    this.savedRemotely = true;
+                                    break;
 
-                            default:
-                                console.log(`Unrecognised save state '${responseData.saveState}'`);
+                                case SAVE_STATE_LOCAL:
+                                    this._savedLocally = true;
+                                    this.savedRemotely = false;
+                                    break;
+
+                                default:
+                                    console.log(`Unrecognised save state '${responseData.saveState}'`);
+                            }
+
+                            this.createdStamp = parseInt(responseData.created, 10);
+                            this.modifiedStamp = parseInt(responseData.modified, 10);
+                        } else {
+                            console.log(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
                         }
 
-                        this.createdStamp = parseInt(responseData.created, 10);
-                        this.modifiedStamp = parseInt(responseData.modified, 10);
-                    } else {
-                        console.log(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
-                    }
+                        return responseData;
 
-                    // return the JSON version of the original response as a promise
-                    return response.json(); // assign a JSON type to the response
-                }, reason => {
-                    console.error({'fetch error' : reason});
-                    return Promise.reject(reason);
-                });
-            } else {
-                console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
+                        // // return the JSON version of the original response as a promise
+                        // return response.json(); // assign a JSON type to the response
+                    }, reason => {
+                        console.error({'fetch error (at JSON decoding stage)': reason});
+                        return Promise.reject({'fetch error (at JSON decoding stage)': reason});
+                    });
+                } else {
+                    console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
 
-                // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
-                // this._savedLocally = false;
-                // this.savedRemotely = false;
+                    // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
+                    // this._savedLocally = false;
+                    // this.savedRemotely = false;
 
-                return Promise.reject(isSync ?
-                    `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
-                    :
-                    `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
-            }
-        });
+                    return Promise.reject(isSync ?
+                        `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
+                        :
+                        `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                }
+            }, (error) => {
+                return Promise.reject({'fetch error': error});
+            });
+        } catch (e) {
+            return Promise.reject({'fetch exception': e});
+        }
     }
 
     /**
