@@ -5,7 +5,9 @@
  */
 export function schedulerYield () {
     // Use scheduler.yield if it exists:
+    // noinspection JSUnresolvedReference
     if ('scheduler' in globalThis && 'yield' in scheduler) {
+        // noinspection JSUnresolvedReference
         return scheduler.yield();
     }
 

@@ -59,7 +59,7 @@ export class LoggingResponse extends LocalResponse {
     storeLocally(remoteSuccess = true) {
         if (remoteSuccess) {
             // log has been sent to the server so no need to save locally
-            return this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient);
+            return Promise.resolve(this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient));
         } else {
             return super.storeLocally(remoteSuccess);
         }

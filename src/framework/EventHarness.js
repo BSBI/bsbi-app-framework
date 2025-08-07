@@ -26,7 +26,7 @@ export class EventHarness {
 
     /**
      *
-     * @type {Array<{element: Element, type: string, handler: EventListenerOrEventListenerObject, options: AddEventListenerOptions}|null>}
+     * @type {Array<{element: Node, type: string, handler: EventListenerOrEventListenerObject, options: AddEventListenerOptions}|null>}
      * @private
      */
     _domEventListeners = [];
@@ -36,10 +36,10 @@ export class EventHarness {
     // noinspection JSUnusedGlobalSymbols
     /**
      *
-     * @param {Element} element
+     * @param {Node} element
      * @param {string} type
      * @param {EventListenerOrEventListenerObject} handler
-     * @param {AddEventListenerOptions} options
+     * @param {AddEventListenerOptions=} options
      * @returns {number}
      */
     addDomEventListener(element, type, handler, options) {

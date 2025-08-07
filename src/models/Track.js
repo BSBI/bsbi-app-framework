@@ -205,6 +205,7 @@ export class Track extends Model {
                 app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, (/** {newSurvey : Survey|null}|null */ params) => {
                     //const survey = Track._app.currentSurvey;
                     const survey = params?.newSurvey;
+                    // noinspection JSValidateTypes
                     params = null;
 
                     if (!survey || Track._currentlyTrackedSurveyId !== survey.id) {
