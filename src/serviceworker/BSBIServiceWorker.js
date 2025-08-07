@@ -289,7 +289,15 @@ export class BSBIServiceWorker {
             clonedRequest = fetchEvent.request.clone();
         } catch (e) {
             console.log({'Failed to clone request': e});
-            throw e;
+
+            let returnedToClient = {
+                error: 'Failed to clone post request',
+                errorHelp: 'Post failed as the request object could not be cloned.' +
+                    `Error was: ${e?.message}`
+            };
+
+            fetchEvent.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
+            return;
         }
 
         fetchEvent.respondWith(fetch(fetchEvent.request)
@@ -411,7 +419,14 @@ export class BSBIServiceWorker {
         } catch (e) {
             //console.log('Failed to clone request.');
             console.log({'Failed to clone image request': e});
-            throw (e);
+            let returnedToClient = {
+                error: 'Failed to clone image post request',
+                errorHelp: 'Image post failed as the request object could not be cloned.' +
+                    `Error was: ${e?.message}`
+            };
+
+            event.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
+            return;
         }
 
         // send back a quick response to the client from local storage (before the server request completes)
@@ -530,7 +545,7 @@ export class BSBIServiceWorker {
         return caches.open(cacheName).then((cache) => {
             //console.log('cache is open');
 
-            return cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)}).then((cachedResponse) => {
+            return cache.match(request, {ignoreVary : true, ignoreSearch : /\.css|\.mjs/.test(request.url)}).then((cachedResponse) => {
                 console.log(cachedResponse ?
                     `cache matched ${request.url}`
                     :
@@ -702,7 +717,7 @@ export class BSBIServiceWorker {
                 if (response.ok) {
                     console.info(`(re-)caching ${request.url}`);
                     return cache.put(request, response)
-                        .then(() => cache.match(request, {ignoreVary : true, ignoreSearch : request.url.match(/\.css|\.mjs/)}));
+                        .then(() => cache.match(request, {ignoreVary : true, ignoreSearch : /\.css|\.mjs/.test(request.url)}));
                 } else {
                     console.error(`Request during cache update failed for ${request.url}`);
                     console.error({'failed cache response': response});

@@ -5,22 +5,12 @@
 // this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
-import {Model, MODEL_EVENT_DESTROYED, SAVE_STATE_LOCAL, SAVE_STATE_SERVER, uuid} from "./Model";
+import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 import {SURVEY_EVENT_MODIFIED, SURVEY_EVENT_DELETED} from "../framework/AppEvents";
-import {OCCURRENCE_EVENT_MODIFIED} from "./Occurrence";
 import {Logger} from "../utils/Logger";
-
-// /**
-//   * fired on Survey when one of its occurrences has been modified, added, deleted or reloaded
-//   *
-//   * no parameters
-//   *
-//   * @type {string}
-//   */
-// export const SURVEY_EVENT_OCCURRENCES_CHANGED = 'occurrenceschanged';
 
 /**
  * fired on Survey when one of its occurrences has been added, deleted or reloaded
@@ -229,6 +219,7 @@ export class Survey extends Model {
      */
     currentTetradSubunit = '';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Get a summarised geo-ref from the survey geo-reference, based on the survey unit type and precision
      * If the user has explicitly specified a centroid-based survey then the result will instead be a centroid
@@ -393,10 +384,12 @@ export class Survey extends Model {
         return yearString === (new Date).toISOString().slice(0,4);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     get place() {
         return this.attributes.place || '';
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
      * read new values
@@ -408,6 +401,7 @@ export class Survey extends Model {
         console.log('Survey change handler invoked.');
 
         const form = params.form;
+        // noinspection JSValidateTypes
         params = null;
 
         form.updateModelFromContent().then(() => {
@@ -426,6 +420,7 @@ export class Survey extends Model {
         });
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Used for special-case setting of a custom attribute
      * (i.e. not usually one linked to a form)
@@ -555,6 +550,10 @@ export class Survey extends Model {
         return formData;
     }
 
+    /**
+     *
+     * @returns {Promise<void>}
+     */
     storeLocally() {
         return this._storeLocalData({
             id : this.id,
@@ -571,6 +570,7 @@ export class Survey extends Model {
         });
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Low-level deletion of the survey.
      * Does not test whether there are extant occurrences.
@@ -586,6 +586,7 @@ export class Survey extends Model {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @param {{summarySquarePrecision : number, summarizeTetrad : boolean}} options
      * @returns {string} an html-safe string based on the locality and creation date
@@ -681,6 +682,7 @@ export class Survey extends Model {
      */
     extantOccurrenceKeys = new Set();
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @todo need to exclude deleted records
      * @returns {number}
@@ -709,7 +711,11 @@ export class Survey extends Model {
         this._baseSurveyId = descriptor.baseSurveyId;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
+     *
+     * @param {{}} newAttributes
+     * @param {{}} properties
      * @returns {Survey}
      */
     duplicate(newAttributes = {}, properties = {}) {

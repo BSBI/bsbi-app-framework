@@ -1,6 +1,10 @@
 import {PartyError} from "../utils/exceptions/PartyError";
 import {escapeHTML} from "../utils/escapeHTML";
 
+export const PARTY_TYPE_PERSON = 'p';
+export const PARTY_TYPE_ORGANISATION = 'u';
+export const PARTY_TYPE_UNKNOWN = '?';
+
 export const PARTY_NAME_INDEX = 0;
 export const PARTY_SURNAME_INDEX = 2;
 export const PARTY_FORENAMES_INDEX = 3;
@@ -55,17 +59,18 @@ export class Party {
      */
     static rawParties = [];
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @type {string|null}
      */
     static loadedUserId = null;
 
-    static TYPE_PERSON = 'p';
-    static TYPE_ORGANISATION = 'u';
-    static TYPE_UNKNOWN = '?';
+    // static TYPE_PERSON = PARTY_TYPE_PERSON;
+    // static TYPE_ORGANISATION = PARTY_TYPE_ORGANISATION;
+    // static TYPE_UNKNOWN = PARTY_TYPE_UNKNOWN;
 
-    static USER_PARTIES_URL = '/';
+    // static USER_PARTIES_URL = '/';
 
     /**
      * @type {string}
@@ -102,18 +107,21 @@ export class Party {
      */
     type = '';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @type {string}
      */
     prefix = '';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @type {string}
      */
     suffix = '';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @type {string}
@@ -124,6 +132,7 @@ export class Party {
     //     Party.rawParties = parties;
     // }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {Array.<RawParty>} parties
@@ -140,6 +149,7 @@ export class Party {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     static clearUserParties() {
         Party.rawParties = Party._baseParties;
     }
@@ -167,6 +177,7 @@ export class Party {
 
     static additionalPartiesUrl = 'https://database.bsbi.org/js/appuserpartylist.mjs.php?user=';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {string} userId
@@ -183,7 +194,7 @@ export class Party {
             if (newParties?.length) {
                 /**
                  *
-                 * @type {Map<string, array<RawParty>>}
+                 * @type {Map<string, RawParty>}
                  */
                 const unique = new Map;
 
@@ -245,40 +256,16 @@ export class Party {
     //     return party;
     // }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @returns {string}
      */
     formattedHTML() {
 
-        return this.type === Party.TYPE_PERSON ?
+        return this.type === PARTY_TYPE_PERSON ?
             escapeHTML(`${this.firstName} ${this.surnameName}`)
             :
             escapeHTML(this.orgName);
-
-        // if (Taxon.showVernacular) {
-        //     if (vernacularMatched) {
-        //         return (acceptedTaxon) ?
-        //             `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>` +
-        //             ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
-        //             :
-        //             `<q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q><wbr> <span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
-        //             ;
-        //     } else {
-        //         return (acceptedTaxon) ?
-        //             `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''
-        //             } = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
-        //             :
-        //             `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>${this.vernacular ? ` <wbr><q class="taxon-vernacular">${escapeHTML(this.vernacular)}</q>` : ''}`
-        //             ;
-        //     }
-        // } else {
-        //     return (acceptedTaxon) ?
-        //         `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${this.authority}</span>` +
-        //         ` = <span class="italictaxon">${acceptedTaxon.nameString}${acceptedTaxon.qualifier ? ` <span class="taxon-qualifier">${acceptedTaxon.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(acceptedTaxon.authority)}</span>`
-        //         :
-        //         `<span class="italictaxon">${this.nameString}${this.qualifier ? ` <span class="taxon-qualifier">${this.qualifier}</span>` : ''}</span> <span class="taxauthority">${escapeHTML(this.authority)}</span>`
-        //         ;
-        // }
     }
 }

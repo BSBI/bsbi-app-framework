@@ -103,7 +103,7 @@ export class OccurrenceImage extends Model {
         }
 
         if (!this.deleted && !this.file) {
-            throw new Error(`Cannot save image id '${this.id}' with no local image data.`);
+            return Promise.reject(`Cannot save image id '${this.id}' with no local image data.`);
         }
 
         // kludge to avoid historical instances of corrupted surveyId

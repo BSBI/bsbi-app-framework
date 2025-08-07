@@ -9,6 +9,9 @@ import {APP_EVENT_CONTROLLER_CHANGED} from "../framework/AppEvents";
  * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
  */
 
+/**
+ * @abstract
+ */
 export class AppController extends EventHarness {
 
     /**
@@ -65,6 +68,7 @@ export class AppController extends EventHarness {
 
     static _handleIndex = 0;
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @type {function}
      */
@@ -157,6 +161,7 @@ export class AppController extends EventHarness {
         window.requestIdleCallback?.(yieldCallback, {timeout: 500}) ?? setTimeout(yieldCallback);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * If the controller currently allows a dynamic survey change to happen (triggered by GPS) then return true
      *

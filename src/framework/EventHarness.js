@@ -26,18 +26,31 @@ export class EventHarness {
 
     /**
      *
-     * @type {Array<{element: Element, type: string, handler: Function, options}|null>}
+     * @type {Array<{element: Element, type: string, handler: EventListenerOrEventListenerObject, options: AddEventListenerOptions}|null>}
      * @private
      */
     _domEventListeners = [];
 
     static STOP_PROPAGATION = 'STOP_PROPAGATION';
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {Element} element
+     * @param {string} type
+     * @param {EventListenerOrEventListenerObject} handler
+     * @param {AddEventListenerOptions} options
+     * @returns {number}
+     */
     addDomEventListener(element, type, handler, options) {
         element.addEventListener(type, handler, options);
         return this._domEventListeners.push({element, type, handler, options}) - 1;
     }
 
+    /**
+     *
+     * @param {number} handle
+     */
     removeDomEventListener(handle) {
         if (this._domEventListeners[handle]) {
             const listener = this._domEventListeners[handle];
@@ -48,10 +61,24 @@ export class EventHarness {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {Array<number>} handles
+     */
     removeDomEventListeners(handles) {
         handles.forEach(this.removeDomEventListener.bind(this));
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {string} eventName
+     * @param {{}} handlerObject
+     * @param {string} handlerMethodName
+     * @param {*=} constructionParam
+     * @returns {number}
+     */
     addWeakListener (eventName, handlerObject, handlerMethodName, constructionParam = {}) {
         //this._eventListeners = this._eventListeners || [];
 
@@ -155,6 +182,7 @@ export class EventHarness {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {{}} staticTarget
@@ -194,6 +222,12 @@ export class EventHarness {
         return undefined;
     }
 
+    /**
+     *
+     * @param {{}} staticTarget
+     * @param {string} eventName
+     * @param {number} handle
+     */
     static staticRemoveListener(staticTarget, eventName, handle) {
         const eventListeners = EventHarness._staticEventListeners.get(staticTarget);
 
@@ -256,6 +290,7 @@ export class EventHarness {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @param {{}} staticTarget
      * @param {string} eventName

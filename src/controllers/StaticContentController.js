@@ -61,6 +61,7 @@ export class StaticContentController extends AppController {
         this.view.display();
     }
 
+    // noinspection JSUnusedGlobalSymbols
     backHandler() {
         // backHandler may still be attached to other inactive controllers
         // need to check that only the current one takes effect

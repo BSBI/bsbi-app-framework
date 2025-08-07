@@ -33,6 +33,10 @@ export const RAW_TAXON_BRC_CODE = 18;
 export const RAW_TAXON_NOT_FOR_NEW_RECORDING = 19
 export const RAW_TAXON_ATLAS_DOCS = 20;
 
+export const TAXON_GR_PRESENCE_KEY = 21;
+export const TAXON_RPR_KEY = 22;
+export const TAXON_VC_PRESENCE_KEY = 23;
+
 export class Taxon {
     /**
      * @typedef RawTaxon
@@ -65,11 +69,11 @@ export class Taxon {
      * @property {{}} [23] Presence in county (top-level object is keyed by vc code string, including prefix)
      */
 
-    static PARENT_IDS_KEY = 10;
+    // static PARENT_IDS_KEY = 10;
 
-    static GR_PRESENCE_KEY = 21;
-    static RPR_KEY = 22;
-    static VC_PRESENCE_KEY = 23;
+    // static GR_PRESENCE_KEY = 21;
+    // static RPR_KEY = 22;
+    // static VC_PRESENCE_KEY = 23;
 
     /**
      *
@@ -227,6 +231,7 @@ export class Taxon {
      */
     static showVernacular = true;
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {Object.<string, RawTaxon>} taxa
@@ -235,6 +240,7 @@ export class Taxon {
         Taxon.rawTaxa = taxa;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {Object.<string, RawTaxon>} taxa
@@ -308,15 +314,16 @@ export class Taxon {
             IE: raw[16] || null
         };
 
-        taxon.rprStatus = raw[Taxon.RPR_KEY] || null;
+        taxon.rprStatus = raw[TAXON_RPR_KEY] || null;
 
-        taxon.occurrenceCoverage = raw[Taxon.GR_PRESENCE_KEY] || null;
+        taxon.occurrenceCoverage = raw[TAXON_GR_PRESENCE_KEY] || null;
 
-        taxon.vcPresence = raw[Taxon.VC_PRESENCE_KEY] || null;
+        taxon.vcPresence = raw[TAXON_VC_PRESENCE_KEY] || null;
 
         return taxon;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {number} maxSortOrder lowest matching rank to accept
@@ -346,7 +353,7 @@ export class Taxon {
                 for (let parentId of taxon.parentIds) {
                     try {
                         parentStack[parentStack.length] = Taxon.fromId(parentId);
-                    } catch {
+                    } catch (error) {
                         // occasionally, taxon not found errors might end up here
                         console.error(error);
                     }
@@ -357,6 +364,7 @@ export class Taxon {
         return null;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {boolean} vernacularMatched
@@ -410,6 +418,7 @@ export class Taxon {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @returns boolean
      */

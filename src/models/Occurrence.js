@@ -61,13 +61,7 @@ export class Occurrence extends Model {
 
     TYPE = MODEL_TYPE_OCCURRENCE;
 
-    // /**
-    //  * fired from Occurrence when the object's contents have been modified
-    //  *
-    //  * @type {string}
-    //  */
-    // static EVENT_MODIFIED = OCCURRENCE_EVENT_MODIFIED;
-
+    // noinspection JSUnusedGlobalSymbols
     /**
      * set if this is a new entry (before user has moved on to the next entry)
      * influences whether form validation errors are displayed
@@ -76,6 +70,7 @@ export class Occurrence extends Model {
      */
     isNew = false;
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @returns {(Taxon|null)} returns null for unmatched taxa specified by name
@@ -91,6 +86,7 @@ export class Occurrence extends Model {
         }
     };
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true or false based on occurrence date compatibility of *this* occurrence,
      * or null if individual occurrences are not dated (i.e. part of a dated survey)
@@ -103,6 +99,7 @@ export class Occurrence extends Model {
         return date === '' ? null : (date === (new Date).toISOString().slice(0,10));
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * called after the form has changed, before the values have been read back in to the occurrence
      *
@@ -112,6 +109,7 @@ export class Occurrence extends Model {
         console.log('Occurrence change handler invoked.');
 
         const form = params.form;
+        // noinspection JSValidateTypes
         params = null;
 
         // read new values
@@ -129,6 +127,7 @@ export class Occurrence extends Model {
         this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId: this.id});
     }
 
+    // noinspection JSUnusedGlobalSymbols
     delete() {
         if (!this.deleted) {
             this.touch();
@@ -160,7 +159,7 @@ export class Occurrence extends Model {
     save(forceSave = false, isSync = false, params) {
         if (this.unsaved() || forceSave) {
             if (!this.surveyId) {
-                throw new Error(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
+                return Promise.reject(`Survey id must be set before saving an occurrence. Failed for occ id '${this.id}'`);
             }
 
             //const formData = this.formData();
@@ -223,6 +222,7 @@ export class Occurrence extends Model {
         this.surveyId = descriptor.surveyId;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
      *

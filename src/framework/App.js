@@ -14,19 +14,19 @@ import {Logger} from "../utils/Logger";
 import {Model, SAVE_STATE_SERVER, uuid} from "../models/Model";
 import {Track} from "../models/Track";
 import {
-    APP_EVENT_ADD_SURVEY_USER_REQUEST,
+    //APP_EVENT_ADD_SURVEY_USER_REQUEST,
     APP_EVENT_ALL_SYNCED_TO_SERVER,
-    APP_EVENT_CURRENT_OCCURRENCE_CHANGED,
+    //APP_EVENT_CURRENT_OCCURRENCE_CHANGED,
     APP_EVENT_CURRENT_SURVEY_CHANGED,
     APP_EVENT_NEW_SURVEY,
     APP_EVENT_OCCURRENCE_ADDED,
     APP_EVENT_OCCURRENCE_LOADED,
-    APP_EVENT_RESET_SURVEYS,
+    //APP_EVENT_RESET_SURVEYS,
     APP_EVENT_SURVEY_LOADED,
     APP_EVENT_SURVEYS_CHANGED,
     APP_EVENT_SYNC_ALL_FAILED,
-    APP_EVENT_USER_LOGIN,
-    APP_EVENT_USER_LOGOUT,
+    //APP_EVENT_USER_LOGIN,
+    //APP_EVENT_USER_LOGOUT,
     APP_EVENT_OPTIONS_RESTORED,
     SURVEY_EVENT_MODIFIED,
     SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_DELETED
@@ -238,6 +238,7 @@ export class App extends EventHarness {
         App.LOCAL_OPTIONS_KEY_NAME,
     ];
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @type {boolean}
@@ -300,6 +301,7 @@ export class App extends EventHarness {
         return this.session?.userId;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @returns {Promise<{}>}
@@ -311,7 +313,8 @@ export class App extends EventHarness {
             return localforage.getItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`)
                 .then((options) => {
                     if (options) {
-                        this._options = options;
+                        // apply user's options over the top of a copy of the defaults
+                        this._options = Object.assign(JSON.parse(JSON.stringify(this.constructor.DEFAULT_OPTIONS)), options);
                     } else {
                         this._options = JSON.parse(JSON.stringify(this.constructor.DEFAULT_OPTIONS));
                     }
@@ -324,14 +327,24 @@ export class App extends EventHarness {
                     return clonedOptions;
                 });
         } else {
-            throw new Error('User ID unset when restoring options.');
+            return Promise.reject('User ID unset when restoring options.');
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     */
     clearOptions() {
         this._options = null;
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {{}} rawOptions
+     * @returns {Promise<Record<string, number|string|{}>>}
+     */
     setOptions(rawOptions) {
         const userId = this.userId;
 
@@ -344,10 +357,17 @@ export class App extends EventHarness {
 
             return localforage.setItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`, this._options);
         } else {
-            throw new Error(`User ID unset when setting options.`);
+            return Promise.reject(`User ID unset when setting options.`);
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {string} key
+     * @param value
+     * @returns {Promise<Record<string, number|string|{}>>}
+     */
     setOption(key, value) {
         const userId = this.userId;
 
@@ -356,7 +376,7 @@ export class App extends EventHarness {
 
             return localforage.setItem(`${App.LOCAL_OPTIONS_KEY_NAME}.${userId}`, this._options);
         } else {
-            throw new Error(`User ID unset when setting option '${key}'.`);
+            return Promise.reject(`User ID unset when setting option '${key}'.`);
         }
     }
 
@@ -369,6 +389,7 @@ export class App extends EventHarness {
         return this._options?.hasOwnProperty?.(key) ? JSON.parse(JSON.stringify(this._options[key])) : undefined;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {string} key
@@ -378,6 +399,7 @@ export class App extends EventHarness {
         return this._options?.hasOwnProperty?.(key) || false;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @return Promise<string>
      */
@@ -411,6 +433,7 @@ export class App extends EventHarness {
         return this._deviceId;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {string} key
@@ -421,6 +444,7 @@ export class App extends EventHarness {
         return localforage.setItem(key, value);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {string} key
@@ -473,6 +497,7 @@ export class App extends EventHarness {
      */
     layout;
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {string} name
@@ -483,6 +508,7 @@ export class App extends EventHarness {
         });
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Try to enable persistent storage if installed and running on mobile.
      *
@@ -568,6 +594,7 @@ export class App extends EventHarness {
         return this.clearLastSurveyId();
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * see https://github.com/krasimir/navigo
      * @param {PatchedNavigo} router
@@ -584,6 +611,11 @@ export class App extends EventHarness {
         return this._router;
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {string} containerId
+     */
     set containerId(containerId) {
         const el = document.getElementById(containerId);
         if (!el) {
@@ -593,10 +625,12 @@ export class App extends EventHarness {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     get container() {
         return this._containerEl;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {AppController} controller
@@ -637,8 +671,8 @@ export class App extends EventHarness {
         });
 
         this._router.hooks({
-            //before: function(done, params) { ... },
-            after: (params) => {
+            //before: (done, params) => { ... },
+            after: () => {
                 // generic 'after' handler for all routes
                 if (this.afterFirstNavigationHandler) {
                     try {
@@ -672,26 +706,22 @@ export class App extends EventHarness {
         });
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns a promise that resolves after the initial navigation completes
      *
      * @returns {Promise<void>}
      */
     display() {
-        //console.log('App display');
-        //this._router.resolve();
-
-        // it's opportune at this point to try to ping the server again to save anything left outstanding
-        // this.syncAll(true).then(() => {
-        //     this._router.resolve();
-        // });
-
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.afterFirstNavigationHandler = resolve;
             this._router.resolve();
         });
     }
 
+    /**
+     *
+     */
     saveRoute() {
         const lastRoute = this._router.lastRouteResolved();
         if (this.routeHistory.length) {
@@ -737,6 +767,7 @@ export class App extends EventHarness {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {Layout} layout
@@ -838,6 +869,7 @@ export class App extends EventHarness {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * tests whether occurrences have been defined, excluding any that have been deleted
      *
@@ -1092,6 +1124,7 @@ export class App extends EventHarness {
         });
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Purge local entries that are older than the threshold or orphaned and which have been saved externally
      *
@@ -1178,6 +1211,10 @@ export class App extends EventHarness {
      */
     static syncAllInterval = 15 * 60 * 1000;
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     */
     registerSyncAllOnVisibleListener () {
         document.addEventListener('visibilitychange',  () => {
             if (document.visibilityState === "visible"
@@ -1265,6 +1302,7 @@ export class App extends EventHarness {
         return fastReturn ? Promise.resolve() : promise;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @param queryFilters
      * @param {boolean} [queryFilters.structuredSurvey]
@@ -1365,7 +1403,7 @@ export class App extends EventHarness {
      *
      * @param {{survey : Array<string>, occurrence : Array<string>, image : Array<string>, [track] : Array<string>}} storedObjectKeys
      * @param {boolean} fastReturn default false
-     * @returns {Promise<{savedCount : Object<string, number>, errors : null|Object<string,Array<{key: string, reason: string}>>, savedFlag : boolean}|void>}
+     * @returns {Promise<{savedCount : {survey: number, occurrence: number, occurrenceimage: number, track: number}, errors : null|Object<string,Array<{key: string, reason: string}>>, savedFlag : boolean}|void>}
      * @private
      */
     _syncLocalUnsaved(storedObjectKeys, fastReturn = false) {
@@ -1386,7 +1424,7 @@ export class App extends EventHarness {
 
         /**
          *
-         * @type {{image: number, survey: number, occurrenceimage: number, track: number}}
+         * @type {{survey: number, occurrence: number, occurrenceimage: number, track: number}}
          */
         const savedCount = {
             survey : 0,
@@ -1529,17 +1567,10 @@ export class App extends EventHarness {
             });
 
         if (fastReturn) {
-            return Promise.resolve('Fast return before syncLocalUnsaved completed.');
-            // // this will return near instantaneously as there is an already resolved promise at the head of the array
-            // // the other promises will continue to resolve
-            // //return Promise.race(promises);
-            // return Promise.race([
-            //     Promise.resolve(true), // as shortcut queue an already resolved promise, so that later Promise.race returns immediately.
-            //     syncPromise
-            // ]);
+            return Promise.resolve();
         } else {
             return syncPromise.then(() => {
-                //console.log('got to 1148');
+
                 return {
                     savedCount,
                     errors: null,
@@ -1811,7 +1842,7 @@ export class App extends EventHarness {
             purgePromise = purgePromise.then(() => {
                     // re-check for the current survey amongst the deletion ids, in case the survey has changed since the purge process started.
                     if (this._currentSurvey?.id && deletionIds.survey.includes(this._currentSurvey.id)) {
-                        throw new Error(`Cannot purge current survey, '${this._currentSurvey.id}'`);
+                        return Promise.reject(`Cannot purge current survey, '${this._currentSurvey.id}'`);
                     }
 
                     for (let key of deletionIds.survey) {
@@ -1907,14 +1938,14 @@ export class App extends EventHarness {
                     if (lastSurveyId) {
                         return this._restoreOccurrenceImp(lastSurveyId, neverAddBlank, setCurrentSurvey, localOnly, false /* specifiedSurveyOnly can't apply */).catch(() => {
                             console.log(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
-                            // noinspection JSIgnoredPromiseFromCall
-                            Logger.logError(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
+                            // // noinspection JSIgnoredPromiseFromCall
+                            // Logger.logError(`Failed to retrieve lastSurveyId ${lastSurveyId}. Resetting current survey and retrying.`);
                             this.currentSurvey = null;
                             return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey, false, false);
                         });
                     } else {
-                        // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError('Failed to retrieve lastSurveyId.');
+                        // // noinspection JSIgnoredPromiseFromCall
+                        // Logger.logError('Failed to retrieve lastSurveyId.');
                         return this._restoreOccurrenceImp('', neverAddBlank, setCurrentSurvey, false, false);
                     }
                 },
@@ -1929,13 +1960,16 @@ export class App extends EventHarness {
      * @return Promise<void>
      */
     static logMemoryUsage(contextMessage) {
+        // noinspection JSUnresolvedReference
         if (navigator.storage?.estimate || performance?.measureUserAgentSpecificMemory) {
             let memory, storage, promise;
 
             promise = Promise.resolve();
 
+            // noinspection JSUnresolvedReference
             if (performance?.measureUserAgentSpecificMemory) {
                 promise = promise.then(() => {
+                    // noinspection JSUnresolvedReference
                     return performance.measureUserAgentSpecificMemory().then(memorySpec => {
                         memory = memorySpec;
                     });
@@ -1983,8 +2017,8 @@ export class App extends EventHarness {
                 // clear occurrences from the previous survey.
 
                 if (setCurrentSurvey && localSurvey.id !== this._currentSurvey?.id) {
-                    // noinspection JSIgnoredPromiseFromCall
-                    Logger.logError(`Switching to pristine survey ${targetSurveyId}.`);
+                    // // noinspection JSIgnoredPromiseFromCall
+                    // Logger.logError(`Switching to pristine survey ${targetSurveyId}.`);
 
                     return this.clearCurrentSurvey().then(() => {
                         this.currentSurvey = localSurvey;
@@ -2244,6 +2278,7 @@ export class App extends EventHarness {
         Track.applyChangedSurveyTrackingResumption(newSurvey);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Add and set a *new* survey
      *
@@ -2254,8 +2289,11 @@ export class App extends EventHarness {
         this.fireEvent(APP_EVENT_NEW_SURVEY);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * specialised surveys might return an HTML <img> tag string
+     *
+     * @abstract
      * @param {Survey} survey
      * @returns {string}
      */
@@ -2263,6 +2301,7 @@ export class App extends EventHarness {
         return '';
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Note that if attributes are set here, then the occurrence is regarded as changed and unsaved, rather than pristine
      * i.e. attributes setting here is *not* intended as a way to set defaults
@@ -2299,7 +2338,7 @@ export class App extends EventHarness {
         }
 
         if (pristineAttributes && Object.keys(pristineAttributes).length) {
-            // unlike above, setting these doesn't affect the modified state of the object
+            // unlike above, setting these attributes doesn't affect the modified state of the object
             occurrence.attributes = {...occurrence.attributes, ...pristineAttributes};
         }
 

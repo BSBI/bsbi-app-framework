@@ -9,7 +9,7 @@ import {Logger} from "../utils/Logger";
 import {
     APP_EVENT_ADD_SURVEY_USER_REQUEST,
     APP_EVENT_RESET_SURVEYS,
-    APP_EVENT_SURVEYS_CHANGED
+    // APP_EVENT_SURVEYS_CHANGED
 } from "../framework/AppEvents";
 import {App} from "../framework/App";
 
@@ -21,7 +21,7 @@ import {App} from "../framework/App";
 export class SurveyPickerController extends AppController {
     route = '/survey/:action/:id';
 
-    static EVENT_BACK = 'back';
+    // static EVENT_BACK = 'back';
 
     title = 'Survey picker';
 
@@ -239,7 +239,7 @@ export class SurveyPickerController extends AppController {
         // hide the left panel before loading, otherwise there can be a confusing delay
         this.view.hideLeftPanel();
 
-        this.app.restoreOccurrences(surveyId, false, true, false, true)
+        return this.app.restoreOccurrences(surveyId, false, true, false, true)
             .then(() => {
                 this.app.markAllNotPristine();
 
@@ -273,7 +273,7 @@ export class SurveyPickerController extends AppController {
     }
 
     /**
-     * Placeholder hook for login, overriden in descendants as required
+     * Placeholder hook for login, overridden in descendants as required
      *
      * @param done
      * @param params

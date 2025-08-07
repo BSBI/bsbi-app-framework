@@ -328,7 +328,7 @@ export class Model extends EventHarness {
     static retrieveRawFromLocal(key, type) {
         if (!key || key === 'undefined') {
             // bad key or literal string 'undefined'
-            throw new Error(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
+            return Promise.reject(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
         }
 
         return localforage.getItem(`${type}.${key}`)
@@ -356,7 +356,7 @@ export class Model extends EventHarness {
     static retrieveFromLocal(key, modelObject) {
         if (!key || key === 'undefined') {
             // bad key or literal string 'undefined'
-            throw new Error(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
+            return Promise.reject(`Cannot retrieve empty or 'undefined' key from local '${key}', type '${typeof key}'.`);
         }
 
         return localforage.getItem(`${modelObject.TYPE}.${key}`)
@@ -459,6 +459,7 @@ export class Model extends EventHarness {
         this.savedRemotely = false;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {Object.<string,{field: typeof FormField, [validator]: function, attributes: {label: string, helpText: string, placeholder: string, autocomplete: string}}>} formSectionProperties
@@ -503,6 +504,7 @@ export class Model extends EventHarness {
 
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @abstract
      * @returns {Promise}

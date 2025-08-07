@@ -507,11 +507,11 @@ export class Track extends Model {
     save(forceSave = false, isSync = false, params) {
         if ((forceSave || this.unsaved()) && (this.points?.length > 0 || this.deleted)) {
             if (!this.surveyId) {
-                throw new Error(`Survey id must be set before saving a track.`);
+                return Promise.reject(`Survey id must be set before saving a track.`);
             }
 
             if (!this.deviceId) {
-                throw new Error(`Device id must be set before saving a track.`);
+                return Promise.reject(`Device id must be set before saving a track.`);
             }
 
             //const formData = this.formData();
