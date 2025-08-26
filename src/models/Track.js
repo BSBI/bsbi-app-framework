@@ -7,11 +7,12 @@ import {
     SURVEY_EVENT_MODIFIED,
     SURVEY_EVENT_OCCURRENCES_CHANGED
 } from "../framework/AppEvents";
+import {Logger} from "../utils/Logger";
 
 //import {App} from "../framework/App";
 
 /**
- * Used for saving current survey track that is still open
+ * Used for saving the current survey track that is still open
  * @type {number}
  */
 const TRACK_END_REASON_SURVEY_OPEN = 0;
@@ -97,6 +98,13 @@ export class Track extends Model {
      * @type {App}
      */
     static _app;
+
+    /**
+     * If set then user options allow tracking, (even if it is not currently active)
+     *
+     * @type {boolean}
+     */
+    static trackingIsEnabled = false;
 
     /**
      * Tracking is active if GPS watching is turned on,
@@ -247,9 +255,11 @@ export class Track extends Model {
                     }
                 });
 
-                Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
-                    Track.startTracking();
-                });
+                // Track._app.addListener(APP_EVENT_WATCH_GPS_USER_REQUEST, () => {
+                //     if (Track.trackingIsActive) {
+                //         Track.startTracking();
+                //     }
+                // });
 
                 Track._app.addListener(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, () => {
 
@@ -278,13 +288,17 @@ export class Track extends Model {
     }
 
     static startTracking() {
-        const survey = Track._app.currentSurvey;
+        Track.refreshTrackingEnabledState();
 
-        if (survey) {
-            if (!survey.attributes?.casual && survey.isToday()) {
-                // Resume existing tracking, or start a new track.
-                Track._trackSurvey(survey);
-                Track.trackingIsActive = true;
+        if (Track.trackingIsEnabled) {
+            const survey = Track._app.currentSurvey;
+
+            if (survey) {
+                if (!survey.attributes?.casual && survey.isToday()) {
+                    // Resume existing tracking, or start a new track.
+                    Track._trackSurvey(survey);
+                    Track.trackingIsActive = true;
+                }
             }
         }
     }
@@ -295,41 +309,55 @@ export class Track extends Model {
      * @param {?Survey} previouslyTrackedSurvey
      */
     static applyChangedSurveyTrackingResumption(survey, previouslyTrackedSurvey = null) {
-        // Tracking should only resume automatically if the survey change was an automatic switch
-        // to a new square and tracking was previously active.
+        Track.refreshTrackingEnabledState();
 
-        // otherwise, there is a risk that a survey switch will lead to spurious new points
-        if (survey &&
-            !survey.attributes?.casual &&
-            survey.isToday() !== false &&
-            survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId
-        ) {
-            // Resume existing tracking or start a new track.
-
-            console.log('continuing tracking for survey with common baseSurvey')
-            Track._trackSurvey(survey);
+        if (Track.trackingIsEnabled && survey && !survey.attributes?.casual && survey.isToday() !== false) {
             Track.trackingIsActive = true;
-        } else if (survey && !survey.attributes?.casual && survey.isToday() !== false) {
-            // Dependent on user preferences may restart tracking
-            const trackingLocation = Track._app.getOption('trackLocation')  && DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE;
-
-            if (trackingLocation) {
-                // start tracking
-
-                console.log('start tracking for survey based on user preference')
-                Track._trackSurvey(survey);
-                Track.trackingIsActive = true;
-                Track._app.fireEvent(APP_EVENT_WATCH_GPS_USER_REQUEST, {auto: true});
-            } else {
-                Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
-            }
-        } else {
-            Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+            Track._trackSurvey(survey);
         }
+
+        // // Tracking should only resume automatically if the survey change was an automatic switch
+        // // to a new square and tracking was previously active.
+        //
+        // // otherwise, there is a risk that a survey switch will lead to spurious new points
+        // if (survey &&
+        //     !survey.attributes?.casual &&
+        //     survey.isToday() !== false &&
+        //     survey.baseSurveyId === previouslyTrackedSurvey?.baseSurveyId
+        // ) {
+        //     // Resume existing tracking or start a new track.
+        //
+        //     console.log('continuing tracking for survey with common baseSurvey')
+        //     Track._trackSurvey(survey);
+        //     Track.trackingIsActive = true;
+        // } else if (survey && !survey.attributes?.casual && survey.isToday() !== false) {
+        //     // Dependent on user preferences may restart tracking
+        //     // const trackingLocation = Track._app.getOption('trackLocation')  && DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE;
+        //
+        //
+        //
+        //     if (Track.trackingIsEnabled) {
+        //         // start tracking
+        //
+        //         console.log('start tracking for survey based on user preference')
+        //         Track._trackSurvey(survey);
+        //         Track.trackingIsActive = true;
+        //         Track._app.fireEvent(APP_EVENT_WATCH_GPS_USER_REQUEST, {auto: true});
+        //     } else {
+        //         Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+        //     }
+        // } else {
+        //     Track._app.fireEvent(APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST, {auto : true});
+        // }
+    }
+
+    static refreshTrackingEnabledState() {
+        Track.trackingIsEnabled = Track._app.getOption('trackLocation')  && DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE;
     }
 
     /**
-     * Resume existing tracking, or start a new track.
+     * Resume existing tracking or start a new track.
+     * (should already have tested that the survey is valid to track)
      *
      * @param {Survey} survey
      * @private
@@ -347,6 +375,8 @@ export class Track extends Model {
 
         if (surveyTracks.has(deviceId)) {
             track = surveyTracks.get(deviceId);
+            // noinspection JSIgnoredPromiseFromCall
+            // Logger.logErrorDev(`Resuming tracking of survey id '${survey.id}'`);
         } else {
             track = survey.initialiseNewTracker(Track._app);
             surveyTracks.set(deviceId, track);
@@ -375,7 +405,7 @@ export class Track extends Model {
             if (changed) {
                 const currentSurvey = Track._app?.currentSurvey;
 
-                // survey must be saved first
+                // The survey must be saved first
                 if (currentSurvey?.unsaved?.()) {
                     if (!currentSurvey.isPristine) {
                         currentSurvey.save().then(() => track.save());
@@ -682,10 +712,18 @@ export class Track extends Model {
 
     static _geoWatchTimerFlag = null;
 
+    /**
+     * If true, then are probably at a gridsquare transition and want a new position reading immediately,
+     * overriding the usual time and distance constraints.
+     * @type {boolean}
+     */
+    static wantImmediateNewReading = false;
+
     static clearGeowatchThrottle() {
         if (Track._geoWatchTimerFlag) {
             clearTimeout(Track._geoWatchTimerFlag);
             Track._geoWatchTimerFlag = null;
+            Track.wantImmediateNewReading = true;
         }
     }
 }

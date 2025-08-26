@@ -11,6 +11,12 @@ export class Logger {
      */
     static bsbiAppVersion;
 
+    static _serialNumber = 0;
+
+    static get serialNumber() {
+        return Logger._serialNumber++;
+    }
+
     /**
      * For test builds reports a JavaScript error, otherwise is a no-op
      *
@@ -24,6 +30,21 @@ export class Logger {
     static logErrorDev(message, url = '', line= '', column = null, errorObj = null) {
         return (Logger?.app?.isTestBuild) ?
             Logger.logError(message, url, line, column, errorObj)
+            :
+            Promise.resolve();
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * For test builds reports a JavaScript error, otherwise is a no-op
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @returns {Promise<void>}
+     */
+    static logMessageDev(message, url = '') {
+        return (Logger?.app?.isTestBuild) ?
+            Logger.logMessage(message, url)
             :
             Promise.resolve();
     }
@@ -69,6 +90,8 @@ export class Logger {
 
         const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
         const errorEl = doc.createElement('error');
+
+        errorEl.setAttribute('n', Logger.serialNumber);
 
         if (line !== null && line !== undefined) {
             errorEl.setAttribute('line', line);
@@ -133,7 +156,82 @@ export class Logger {
 
             return Promise.resolve();
         }
-    };
+    }
+
+    /**
+     * remote-logs a message
+     *
+     * @param {string} message
+     * @param {string|null} [url]
+     * @returns {Promise<void>} a fulfilled promise (even if logging fails)
+     */
+    static logMessage(message, url = '') {
+        console.log(message);
+
+        if (!url) {
+            url = window?.location?.href;
+        }
+
+        if (console.trace) {
+            console.trace('Trace');
+        }
+
+        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
+        const messageEl = doc.createElement('message');
+
+        messageEl.setAttribute('n', Logger.serialNumber);
+
+        if (url !== null && url !== undefined && url !== '') {
+            messageEl.setAttribute('url', url);
+        }
+
+
+
+        if (window?.location?.search) {
+            messageEl.setAttribute('urlquery', window.location.search);
+        }
+
+        if (window?.location?.hash) {
+            messageEl.setAttribute('urlhash', window.location.hash);
+        }
+
+        if (Logger.app?.session?.userId) {
+            messageEl.setAttribute('userid', Logger.app.session.userId);
+        }
+
+        // noinspection PlatformDetectionJS,JSDeprecatedSymbols
+        messageEl.setAttribute('browser', navigator.appName);
+        // noinspection JSDeprecatedSymbols
+        messageEl.setAttribute('browserv', navigator.appVersion);
+        messageEl.setAttribute('userAgent', navigator.userAgent);
+        messageEl.setAttribute('versions', Logger.bsbiAppVersion);
+
+        messageEl.appendChild(doc.createTextNode(message));
+
+        doc.documentElement.appendChild(messageEl);
+
+        if (navigator.onLine) {
+            return fetch('/javascriptErrorLog.php', {
+                method: "POST", // *GET, POST, PUT, DELETE, etc.
+                mode: "cors", // no-cors, *cors, same-origin
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "include", // include, *same-origin, omit
+                headers: {
+                    "Content-Type": "text/xml",
+                },
+                redirect: "follow", // manual, *follow, error
+                referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                body: (new XMLSerializer()).serializeToString(doc),
+            }).catch((reason) => {
+                console.info({'Remote message logging failed': reason});
+                // don't reject here, as the promise chain should continue, even after a failed log
+            });
+        } else {
+            console.info({'Offline, report not sent': doc});
+
+            return Promise.resolve();
+        }
+    }
 }
 
 /**

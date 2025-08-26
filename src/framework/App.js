@@ -2271,7 +2271,7 @@ export class App extends EventHarness {
         }
 
         // Important: don't set this.currentSurvey until default attributes have been set,
-        // as currentSurvey setter fires an event that may depend on these attributes
+        // as the currentSurvey setter fires an event that may depend on these attributes
         this.currentSurvey = this.addSurvey(newSurvey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
 
