@@ -1,8 +1,8 @@
 // a Survey captures the currentSurvey meta-data
 // i.e. it captures site details (name, location); user details (name, email)
 //
-// if a user were to submit multiple surveys then they would end up in the contact database multiple times
-// this is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
+// If a user were to submit multiple surveys, then they could end up in the contact database multiple times.
+// This is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
 import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER, uuid} from "./Model";
@@ -114,7 +114,7 @@ export class Survey extends Model {
     attributes = {};
 
     /**
-     * if set then provide default values (e.g. GPS look-up of current geo-reference)
+     * if set, then provide default values (e.g. GPS look-up of current geo-reference)
      *
      * @type {boolean}
      */
@@ -213,7 +213,7 @@ export class Survey extends Model {
     }
 
     /**
-     * Set for tetrad structured surveys, where user may be working within a monad subdivision
+     * Set for tetrad-structured surveys, where the user may be working within a monad subdivision
      *
      * @type {string}
      */
@@ -221,11 +221,11 @@ export class Survey extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Get a summarised geo-ref from the survey geo-reference, based on the survey unit type and precision
-     * If the user has explicitly specified a centroid-based survey then the result will instead be a centroid
+     * Get a summarised geo-ref from the survey geo-reference, based on the survey unit type and precision.
+     * If the user has explicitly specified a centroid-based survey, then the result will instead be a centroid.
      *
-     * For structured tetrad surveys squareReference will return the currently selected monad within the tetrad (or tetrad if 2km scale selected)
-     * For monad or 100m square surveys will return grid-ref at that resolution
+     * For structured tetrad surveys squareReference will return the currently selected monad within the tetrad (or tetrad if 2 km scale selected)
+     * For monad or 100 m square surveys will return grid-ref at that resolution
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null)}|null)}
      */
@@ -345,7 +345,7 @@ export class Survey extends Model {
     }
 
     /**
-     * returns survey date string, with special formatting for 'today' and 'yesterday'
+     * returns the survey date string, with special formatting for 'today' and 'yesterday'
      *
      * @returns {string}
      */
@@ -391,7 +391,7 @@ export class Survey extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * called after the form has changed, before the values have been read back in to the occurrence
+     * called after the form has changed, before the values have been read back in to the occurrence.
      * read new values
      * validate
      * then fire its own change event (Survey.EVENT_MODIFIED)
@@ -415,7 +415,7 @@ export class Survey extends Model {
             this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId: this.id});
         })
         .catch((error) => {
-            // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want survey to save
+            // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want the survey to save
             console.log({"In survey form handler promise rejected (probably normal cancellation of dialogue box)" : error});
         });
     }
@@ -439,7 +439,7 @@ export class Survey extends Model {
     }
 
     /**
-     * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
+     * returns interpreted grid-ref / vc summary, used to look up meta-data for the taxon list
      *
      * @return {{
      *     hectad : string,
@@ -599,7 +599,7 @@ export class Survey extends Model {
     }) {
 
         if (this.attributes.casual) {
-            // special-case treatment of surveys with 'casual' attribute (which won't have a locality or date as part of the survey)
+            // special-case treatment of surveys with the 'casual' attribute (which won't have a locality or date as part of the survey)
 
             return this.attributes.surveyName ?
                 escapeHTML(this.attributes.surveyName)
@@ -628,7 +628,7 @@ export class Survey extends Model {
     }
 
     /**
-     * if survey has specified grid-unit then use that instead of the fallBackPrecision option
+     * if the survey has a specified grid-unit, then use that instead of the fallBackPrecision option
      *
      * @param {number|null} fallBackPrecision
      * @returns {string}
@@ -638,7 +638,7 @@ export class Survey extends Model {
         if (this.attributes.georef?.gridRef) {
             let sampleUnit;
 
-            // '<' replacement used simplistically to sanitize against script injection
+            // '<' replacement used simplistically to sanitise against script injection
             const rawGridRef = this.attributes.georef.gridRef.replace(/[<&\s]/g, '');
 
             if (this.attributes.sampleUnit) {
@@ -754,7 +754,7 @@ export class Survey extends Model {
         track.surveyId = this.id;
         track.deviceId = app.deviceId;
 
-        // In some cases more than one project id may be in use (e.g. RecordingApp v's NYPH)
+        // In some cases more than one project id may be in use (e.g. RecordingApp v's NYPH),
         // so use the survey rather than app project id as the source-of-truth
         track.projectId = this.projectId;
         //track.projectId = app.projectId;
@@ -764,7 +764,7 @@ export class Survey extends Model {
         track.registerSurvey(this);
 
         // noinspection JSIgnoredPromiseFromCall
-        Logger.logErrorDev(`Starting tracking of survey id '${this.id}'`);
+        Logger.logMessageDev(`Starting tracking of survey id '${this.id}'`);
 
         return track;
     }
@@ -797,7 +797,6 @@ export class Survey extends Model {
         }
 
         if (!(this.isPristine || this._savedLocally)) {
-            //throw new Error(`Cannot merge with unsaved local survey, for survey id ${this._id}`);
             console.error(`Dangerous merge with unsaved local survey, for survey id ${this._id}`);
             // noinspection JSIgnoredPromiseFromCall
             Logger.logError(`Dangerous merge with unsaved local survey, for survey id ${this._id}`);

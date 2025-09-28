@@ -224,7 +224,7 @@ export class Occurrence extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * returns interpreted grid-ref / vc summary, used to look-up meta-data for the taxon list
+     * returns interpreted grid-ref / vc summary, used to look up meta-data for the taxon list
      *
      * @return {{
      *     hectad : string,

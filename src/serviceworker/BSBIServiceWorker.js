@@ -152,7 +152,7 @@ export class BSBIServiceWorker {
                     .then((cacheNames) => {
                         return Promise.all(
                             cacheNames.map((cacheName) => {
-                                // test for 'version' prefix to avoid deleting mapbox tiles
+                                // test for a 'version' prefix to avoid deleting mapbox tiles
                                 if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
                                     console.log(`[ServiceWorker] Deleting old code cache: ${cacheName}`);
                                     return caches.delete(cacheName);
