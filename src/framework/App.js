@@ -91,6 +91,15 @@ export class App extends EventHarness {
     _doingPurge = false;
 
     /**
+     * Set if the app should potentially allow tracking (if enabled by the user and supported by the device etc.)
+     *
+     * true for RecordingApp, false for PlantAlert
+     *
+     * @type {boolean}
+     */
+    supportsTracking = false;
+
+    /**
      *
      * @param {number|null} handle
      */
@@ -2184,6 +2193,11 @@ export class App extends EventHarness {
                                 // this could have happened in an invalid survey id was provided as a targetSurveyId
                                 console.log(`Failed to retrieve survey id '${targetSurveyId}'`);
                                 return Promise.reject(new Error(`Failed to retrieve survey id '${targetSurveyId}'`));
+                            } else if (!this.currentSurvey && !neverAddBlank && setCurrentSurvey) {
+                                // survey doesn't exist
+                                // this could have happened in an invalid survey id was provided as a targetSurveyId
+                                console.log(`Setting a new survey as current`);
+                                this.setNewSurvey();
                             }
 
                             if (this.currentSurvey?.deleted) {
@@ -2200,7 +2214,7 @@ export class App extends EventHarness {
                                 }
                             }
 
-                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // current survey should be set now, so menu needs refresh
+                            this.fireEvent(APP_EVENT_SURVEYS_CHANGED); // the current survey should be set now, so the menu needs refreshing
                             this.currentSurvey?.fireEvent?.(SURVEY_EVENT_OCCURRENCES_CHANGED);
                             this.currentSurvey?.fireEvent?.(SURVEY_EVENT_LIST_LENGTH_CHANGED);
                         });
@@ -2275,7 +2289,9 @@ export class App extends EventHarness {
         this.currentSurvey = this.addSurvey(newSurvey);
         this.fireEvent(APP_EVENT_NEW_SURVEY);
 
-        Track.applyChangedSurveyTrackingResumption(newSurvey);
+        if (this.supportsTracking) {
+            Track.applyChangedSurveyTrackingResumption(newSurvey);
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
