@@ -614,8 +614,10 @@ export class Survey extends Model {
                 place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
             } else if (this.attributes.georef?.gridRef) {
                 place = this._summarySquareString(options.summarySquarePrecision);
+            } else if (this.attributes.area?.areaName) {
+                place = this.attributes.area?.areaName; // @todo consider appending area type suffix
             } else {
-                place = '(unlocalized)';
+                place = '(unlocalised)';
             }
 
             let surveyName = '';
