@@ -615,7 +615,7 @@ export class Survey extends Model {
             } else if (this.attributes.georef?.gridRef) {
                 place = this._summarySquareString(options.summarySquarePrecision);
             } else if (this.attributes.area?.areaName) {
-                place = this.attributes.area?.areaName; // @todo consider appending area type suffix
+                place = `${this.attributes.area?.areaName}${this.attributes.area?.subunitNumber === null || this.attributes.area?.subunitNumber === undefined ? '' : ` (unit ${this.attributes.area?.subunitNumber})`}`; // @todo consider appending area type suffix
             } else {
                 place = '(unlocalised)';
             }
