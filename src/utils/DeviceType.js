@@ -1,10 +1,15 @@
 import {EventHarness} from "../framework/EventHarness";
 
+export const DEVICE_TYPE_UNKNOWN = 'unknown';
+export const DEVICE_TYPE_UNCHECKED = 'unchecked';
+export const DEVICE_TYPE_MOBILE = 'mobile';
+export const DEVICE_TYPE_IMMOBILE = 'immobile';
+
 export class DeviceType extends EventHarness {
-	static DEVICE_TYPE_UNKNOWN = 'unknown';
-	static DEVICE_TYPE_UNCHECKED = 'unchecked';
-	static DEVICE_TYPE_MOBILE = 'mobile';
-	static DEVICE_TYPE_IMMOBILE = 'immobile';
+	// static DEVICE_TYPE_UNKNOWN = DEVICE_TYPE_UNKNOWN;
+	// static DEVICE_TYPE_UNCHECKED = DEVICE_TYPE_UNCHECKED;
+	// static DEVICE_TYPE_MOBILE = DEVICE_TYPE_MOBILE;
+	// static DEVICE_TYPE_IMMOBILE = DEVICE_TYPE_IMMOBILE;
 
 	/**
 	 * global flag affecting the behaviour of some GPS functionality,
@@ -13,7 +18,7 @@ export class DeviceType extends EventHarness {
 	 *
 	 * @type {string}
 	 */
-	static _deviceType = DeviceType.DEVICE_TYPE_UNCHECKED;
+	static _deviceType = DEVICE_TYPE_UNCHECKED;
 
 	/**
 	 * @type {App}
@@ -24,13 +29,13 @@ export class DeviceType extends EventHarness {
 	 * @returns {string}
 	 */
 	static getDeviceType() {
-		if (DeviceType._deviceType === DeviceType.DEVICE_TYPE_UNCHECKED) {
+		if (DeviceType._deviceType === DEVICE_TYPE_UNCHECKED) {
 			const override = DeviceType?.app?.getOption?.('mobileOverride');
 
 			if (override === 'mobile') {
-				DeviceType._deviceType = DeviceType.DEVICE_TYPE_MOBILE;
+				DeviceType._deviceType = DEVICE_TYPE_MOBILE;
 			} else if (override === 'immobile') {
-				DeviceType._deviceType = DeviceType.DEVICE_TYPE_IMMOBILE;
+				DeviceType._deviceType = DEVICE_TYPE_IMMOBILE;
 			} else {
 				DeviceType._deviceType = DeviceType.getDeviceTypeUncached();
 			}
@@ -45,7 +50,7 @@ export class DeviceType extends EventHarness {
 	 */
 	static reevaluate() {
 		const previous = DeviceType._deviceType;
-		DeviceType._deviceType = DeviceType.DEVICE_TYPE_UNCHECKED; // reset
+		DeviceType._deviceType = DEVICE_TYPE_UNCHECKED; // reset
 		DeviceType._deviceType = DeviceType.getDeviceType();
 
 		return previous !== DeviceType._deviceType;
@@ -99,23 +104,23 @@ export class DeviceType extends EventHarness {
 		// noinspection JSUnresolvedReference
 		if (navigator.userAgentData && "mobile" in navigator.userAgentData) {
 			return navigator.userAgentData.mobile ?
-				DeviceType.DEVICE_TYPE_MOBILE : DeviceType.DEVICE_TYPE_IMMOBILE;
+				DEVICE_TYPE_MOBILE : DEVICE_TYPE_IMMOBILE;
 			// console.log(`Evaluated device using mobile flag, result: ${DeviceType._deviceType}`);
 		} else if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
 			// see https://javascript.plainenglish.io/how-to-detect-a-mobile-device-with-javascript-1c26e0002b31
 			//console.log(`Detected mobile via use-agent string: ${navigator.userAgent}`);
-			return DeviceType.DEVICE_TYPE_MOBILE;
+			return DEVICE_TYPE_MOBILE;
 		} else if (navigator.platform && /iPhone|iPad/.test(navigator.platform)) {
 			// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
 			//console.log(`Detected mobile via platform string: ${navigator.platform}`);
-			return DeviceType.DEVICE_TYPE_MOBILE;
+			return DEVICE_TYPE_MOBILE;
 		} else if (navigator.platform && /Win32|^Mac/.test(navigator.platform)) {
 			// see https://stackoverflow.com/questions/19877924/what-is-the-list-of-possible-values-for-navigator-platform-as-of-today
 			//console.log(`Detected immobility via platform string: ${navigator.platform}`);
-			return DeviceType.DEVICE_TYPE_IMMOBILE;
+			return DEVICE_TYPE_IMMOBILE;
 		} else {
 			//console.log('Flagging device type as unknown.');
-			return DeviceType.DEVICE_TYPE_UNKNOWN;
+			return DEVICE_TYPE_UNKNOWN;
 		}
 	}
 }

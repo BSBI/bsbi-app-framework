@@ -527,7 +527,7 @@ export class App extends EventHarness {
     tryPersistStorage(always = false) {
         if ((always || (window.matchMedia('(display-mode: standalone)').matches) &&
             navigator?.storage?.persist && navigator?.storage?.persisted &&
-            DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE)
+            DeviceType.getDeviceType() !== DEVICE_TYPE_IMMOBILE)
         ) {
             return navigator.storage.persisted().then((persistent) => {
                 if (persistent) {

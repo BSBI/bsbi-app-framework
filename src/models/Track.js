@@ -1,5 +1,5 @@
 import {Model, MODEL_EVENT_DESTROYED, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
-import {DeviceType} from "../utils/DeviceType";
+import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
     APP_EVENT_CURRENT_SURVEY_CHANGED,
@@ -209,7 +209,7 @@ export class Track extends Model {
     static registerStaticListeners() {
         if (!Track._staticListenersRegistered) {
             const app = Track._app;
-            if (DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE) {
+            if (DeviceType.getDeviceType() !== DEVICE_TYPE_IMMOBILE) {
                 app.addListener(APP_EVENT_CURRENT_SURVEY_CHANGED, (/** {newSurvey : Survey|null}|null */ params) => {
                     //const survey = Track._app.currentSurvey;
                     const survey = params?.newSurvey;
@@ -352,7 +352,7 @@ export class Track extends Model {
     }
 
     static refreshTrackingEnabledState() {
-        Track.trackingIsEnabled = Track._app.getOption('trackLocation')  && DeviceType.getDeviceType() !== DeviceType.DEVICE_TYPE_IMMOBILE;
+        Track.trackingIsEnabled = Track._app.getOption('trackLocation')  && DeviceType.getDeviceType() !== DEVICE_TYPE_IMMOBILE;
     }
 
     /**
