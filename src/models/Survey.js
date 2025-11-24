@@ -22,11 +22,15 @@ import {Logger} from "../utils/Logger";
 export const SURVEY_EVENT_LIST_LENGTH_CHANGED = 'listlengthchanged';
 
 /**
- * parameter is {currentHectadSubunit : string}
+ * parameter is {currentHectadSubunit: string}
  *
  * @type {string}
  */
 export const SURVEY_EVENT_TETRAD_SUBUNIT_CHANGED = 'tetradsubunitchanged';
+
+export const SAMPLE_UNIT_CENTROID = 'centroid';
+export const SAMPLE_UNIT_OTHER = 'other';
+export const SAMPLE_UNIT_AREA = 'area';
 
 // /**
 //  * fired from Survey when the object's contents have been modified
@@ -109,6 +113,13 @@ export class Survey extends Model {
      *     [vc] : {selection : Array<string>, inferred: (boolean|null)}|null,
      *     [nulllist] : boolean,
      *     [listname] : string,
+     *     [area] : {
+     *          areaName: string,
+     *          areaId: string,
+     *          areaType: string,
+     *          [subunitId]: string,
+     *          [subunitNumber]: number|null
+ *          },
      * }}
      */
     attributes = {};
@@ -170,6 +181,8 @@ export class Survey extends Model {
             precision: null
         };
     };
+
+
 
     /**
      * @returns {string}
@@ -252,7 +265,7 @@ export class Survey extends Model {
                 const gridRef = GridRef.fromString(ref.gridRef);
 
                 if (gridRef && gridRef.length <= n) {
-                    const newRef = gridRef.gridCoords.toGridRef(n);
+                    const newRef = gridRef.gridCoords.toGridRefString(n);
 
                     if (n === 2000) {
                         this.currentTetradSubunit = newRef;
@@ -450,6 +463,7 @@ export class Survey extends Model {
      *     interleavedGridRef : string,
      *     [surveyGridUnit] : number,
      *     [hectare] : string,
+     *     [areaId] : string,
      * }}
      */
     getGeoContext() {
@@ -463,10 +477,19 @@ export class Survey extends Model {
             result.vc = [];
         }
 
-        const surveyGridUnit = parseInt(this.attributes.sampleUnit?.selection?.[0], 10) || null;
+        const sampleUnit = this.attributes.sampleUnit?.selection?.[0];
+        const surveyGridUnit = parseInt(sampleUnit, 10) || null;
 
         if (surveyGridUnit) {
             result.surveyGridUnit = surveyGridUnit;
+        }
+
+        if (sampleUnit === SAMPLE_UNIT_AREA) {
+            const areaId = this.attributes?.area?.areaId;
+
+            if (areaId) {
+                result.areaId = areaId;
+            }
         }
 
         if (geoRef?.gridRef) {
@@ -476,21 +499,21 @@ export class Survey extends Model {
                 result.precision = gridRef.length;
 
                 if (gridRef.length <= 100 && surveyGridUnit && surveyGridUnit <= 100) {
-                    result.hectare = gridRef.gridCoords.toGridRef(100);
+                    result.hectare = gridRef.gridCoords.toGridRefString(100);
                 }
 
                 if (gridRef.length <= 1000 && surveyGridUnit && surveyGridUnit <= 1000) {
-                    result.monad = gridRef.gridCoords.toGridRef(1000);
+                    result.monad = gridRef.gridCoords.toGridRefString(1000);
                 }
 
                 if (gridRef.length <= 2000) {
-                    result.tetrad = gridRef.gridCoords.toGridRef(2000);
+                    result.tetrad = gridRef.gridCoords.toGridRefString(2000);
                 }
 
                 result.country = gridRef.country;
             }
 
-            result.hectad = gridRef.gridCoords.toGridRef(10000);
+            result.hectad = gridRef.gridCoords.toGridRefString(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
@@ -652,7 +675,7 @@ export class Survey extends Model {
             if (precision) {
                 const gridRef = GridRef.fromString(rawGridRef);
 
-                return gridRef?.gridCoords?.toGridRef?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
+                return gridRef?.gridCoords?.toGridRefString?.(gridRef.length <= precision ? precision : gridRef.length) || this.attributes.georef.gridRef;
             } else {
                 return rawGridRef;
             }

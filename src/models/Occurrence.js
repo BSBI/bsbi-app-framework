@@ -1,6 +1,7 @@
 import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
+import {GEOREF_SOURCE_UNKNOWN} from "../utils/constants";
 
 /**
  * @typedef {import('bsbi-app-framework-view').Form} Form
@@ -251,17 +252,17 @@ export class Occurrence extends Model {
 
             if (gridRef) {
                 if (gridRef.length <= 1000) {
-                    result.monad = gridRef.gridCoords.toGridRef(1000);
+                    result.monad = gridRef.gridCoords.toGridRefString(1000);
                 }
 
                 if (gridRef.length <= 2000) {
-                    result.tetrad = gridRef.gridCoords.toGridRef(2000);
+                    result.tetrad = gridRef.gridCoords.toGridRefString(2000);
                 }
 
                 result.country = gridRef.country;
             }
 
-            result.hectad = gridRef.gridCoords.toGridRef(10000);
+            result.hectad = gridRef.gridCoords.toGridRefString(10000);
 
             result.interleavedGridRef = GridRef.interleave(geoRef.gridRef);
         }
@@ -270,16 +271,37 @@ export class Occurrence extends Model {
     }
 
     /**
+     * For Occurrences that use a single grid-reference this returns the 'georef' (singular) attribute
+     * For Occurrences allowing one or more geo-references, this returns the first geo-reference in the set
      *
      * @returns {({rawString: string, precision: number|null, source: string|null, gridRef: string, latLng: ({lat: number, lng: number}|null), [defaultSurveyGridRef]: string, [defaultSurveyPrecision]: number}|null)}
      */
     get geoReference() {
-        return this.attributes.georef || {
-            gridRef: '',
-            rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-            source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
-            latLng: null,
-            precision: null
-        };
-    };
+        if (this.attributes.georefs && this.attributes.georefs.length > 0) {
+            return this.attributes.georefs[0];
+        } else {
+            return this.attributes.georef || {
+                gridRef: '',
+                rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                source: GEOREF_SOURCE_UNKNOWN,
+                latLng: null,
+                precision: null
+            };
+        }
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    hasDefaultSurveyGeoreference() {
+        return this.attributes?.surveyGeoRef?.gridRef !== null;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {string} surveyGridRef
+     * @param {number|null} surveyPrecision diameter of centroid or square dimension
+     */
+    applySurveyGeoreference(surveyGridRef, surveyPrecision = null) {
+        this.attributes.surveyGeoRef = {gridRef: surveyGridRef, precision: surveyPrecision};
+    }
 }
