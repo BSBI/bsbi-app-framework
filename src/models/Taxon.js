@@ -270,7 +270,7 @@ export class Taxon {
      */
     static fromId (id) {
         if (!Taxon.rawTaxa) {
-            throw new TaxonError(`Taxon.fromId() called before taxon list has been initialized.`);
+            throw new TaxonError(`Taxon.fromId() called before taxon list has been initialised.`);
         }
 
         if (!Taxon.rawTaxa.hasOwnProperty(id)) {
@@ -279,11 +279,6 @@ export class Taxon {
         }
 
         const raw = Taxon.rawTaxa[id];
-
-        // if (raw[0] === 'Poa annua') {
-        //     console.log('got Poa annua');
-        // }
-
         const taxon = new Taxon;
 
         taxon.id = id;

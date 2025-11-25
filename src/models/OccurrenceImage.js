@@ -160,12 +160,12 @@ export class OccurrenceImage extends Model {
         return formData;
     }
 
-    /**
-     * fired from Occurrence when the object's contents have been modified
-     *
-     * @type {string}
-     */
-    static EVENT_MODIFIED = 'modified';
+    // /**
+    //  * fired from Occurrence when the object's contents have been modified
+    //  *
+    //  * @type {string}
+    //  */
+    // static EVENT_MODIFIED = 'modified';
 
     /**
      *

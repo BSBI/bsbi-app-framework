@@ -3,6 +3,8 @@
  */
 import {Logger} from "../utils/Logger";
 
+export const EVENT_HARNESS_STOP_PROPAGATION = 'STOP_PROPAGATION';
+
 export class EventHarness {
     /**
      *
@@ -31,7 +33,7 @@ export class EventHarness {
      */
     _domEventListeners = [];
 
-    static STOP_PROPAGATION = 'STOP_PROPAGATION';
+    // static STOP_PROPAGATION = EVENT_HARNESS_STOP_PROPAGATION;
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -272,7 +274,7 @@ export class EventHarness {
         if (this._eventListeners) {
             for (let f in this._eventListeners[eventName]) {
                 try {
-                    if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EventHarness.STOP_PROPAGATION) {
+                    if (this._eventListeners[eventName][f](this, eventName, arguments[1]) === EVENT_HARNESS_STOP_PROPAGATION) {
                         break;
                     }
                 } catch (exception) {
@@ -303,7 +305,7 @@ export class EventHarness {
         if (eventListeners) {
             for (let f in eventListeners[eventName]) {
                 try {
-                    if (eventListeners[eventName][f](this, eventName, arguments[2]) === EventHarness.STOP_PROPAGATION) {
+                    if (eventListeners[eventName][f](this, eventName, arguments[2]) === EVENT_HARNESS_STOP_PROPAGATION) {
                         break;
                     }
                 } catch (exception) {
