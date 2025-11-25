@@ -1,3 +1,8 @@
+export const PROJECT_ID_PLANT_ALERT = 1;
+export const PROJECT_ID_NYPH = 2;
+export const PROJECT_ID_RECORDING_APP = 4;
+export const PROJECT_ID_SCM = 5;
+
 export const GEOREF_SOURCE_UNKNOWN = 'unknown';
 export const  GEOREF_SOURCE_GRIDREF = 'gridref';
 export const  GEOREF_SOURCE_MAP = 'map';

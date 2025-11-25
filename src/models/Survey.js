@@ -11,6 +11,7 @@ import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 import {SURVEY_EVENT_MODIFIED, SURVEY_EVENT_DELETED} from "../framework/AppEvents";
 import {Logger} from "../utils/Logger";
+import {GEOREF_SOURCE_AREA, GEOREF_SOURCE_UNKNOWN, PROJECT_ID_SCM} from "../utils/constants";
 
 /**
  * fired on Survey when one of its occurrences has been added, deleted or reloaded
@@ -176,7 +177,7 @@ export class Survey extends Model {
         return this.attributes.georef || {
             gridRef: '',
             rawString: '', // the string provided by the user to generate this grid-ref (might be a postcode or placename)
-            source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+            source: GEOREF_SOURCE_UNKNOWN,
             latLng: null,
             precision: null
         };
@@ -255,7 +256,7 @@ export class Survey extends Model {
                     return {
                         gridRef: this.currentTetradSubunit,
                         rawString: this.currentTetradSubunit,
-                        source: 'unknown',
+                        source: GEOREF_SOURCE_UNKNOWN,
                         latLng: null,
                         precision: /[A-Z]$/.test(this.currentTetradSubunit) ? 2000 : 1000
                     }
@@ -276,7 +277,7 @@ export class Survey extends Model {
                     return {
                         gridRef: newRef,
                         rawString: newRef,
-                        source: 'unknown',
+                        source: GEOREF_SOURCE_UNKNOWN,
                         latLng: null,
                         precision: n
                     }
@@ -284,25 +285,36 @@ export class Survey extends Model {
                     return {
                         gridRef: '',
                         rawString: '',
-                        source: 'unknown',
+                        source: GEOREF_SOURCE_UNKNOWN,
                         latLng: null,
                         precision: null
                     }
                 }
             } else {
                 switch (this.attributes.sampleUnit.selection[0]) {
-                    case 'centroid':
-                        const georef = this.geoReference; // avoid calling getter repeatedly
+                    case SAMPLE_UNIT_CENTROID:
+                        const centroidGeoref = this.geoReference; // avoid calling getter repeatedly
 
                         return {
-                            gridRef: georef.gridRef,
+                            gridRef: centroidGeoref.gridRef,
                             rawString: '',
-                            source: 'unknown',
-                            latLng: georef.latLng,
+                            source: GEOREF_SOURCE_UNKNOWN,
+                            latLng: centroidGeoref.latLng,
                             precision: this.attributes.sampleUnit.precision || 1000
                         };
 
-                    case 'other':
+                    case SAMPLE_UNIT_AREA:
+                        const areaGeoref = this.geoReference; // avoid calling getter repeatedly
+
+                        return {
+                            gridRef: areaGeoref.gridRef,
+                            rawString: '',
+                            source: GEOREF_SOURCE_AREA,
+                            latLng: areaGeoref.latLng,
+                            precision: areaGeoref.precision
+                        };
+
+                    case SAMPLE_UNIT_OTHER:
                         return this._infer_square_ref_from_survey_ref();
 
                     default:
@@ -334,7 +346,7 @@ export class Survey extends Model {
             return {
                 gridRef: newRef,
                 rawString: newRef,
-                source: 'unknown',
+                source: GEOREF_SOURCE_UNKNOWN,
                 latLng: null,
                 precision: this.attributes.georef.precision
             }
@@ -342,7 +354,7 @@ export class Survey extends Model {
             return {
                 gridRef: '',
                 rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
-                source: 'unknown', //TextGeorefField.GEOREF_SOURCE_UNKNOWN,
+                source: GEOREF_SOURCE_UNKNOWN,
                 latLng: null,
                 precision: null
             }
@@ -631,16 +643,24 @@ export class Survey extends Model {
         } else {
             let place;
 
-            if (this.attributes.place) {
-                let summaryGridRef = this._summarySquareString(options.summarySquarePrecision);
-
-                place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
-            } else if (this.attributes.georef?.gridRef) {
-                place = this._summarySquareString(options.summarySquarePrecision);
-            } else if (this.attributes.area?.areaName) {
-                place = `${this.attributes.area?.areaName}${this.attributes.area?.subunitNumber === null || this.attributes.area?.subunitNumber === undefined ? '' : ` (unit ${this.attributes.area?.subunitNumber})`}`; // @todo consider appending area type suffix
+            if (this.projectId === PROJECT_ID_SCM) {
+                if (this.attributes.area?.areaName) {
+                    place = `${this.attributes.area?.areaName}${this.attributes.area?.subunitNumber === null || this.attributes.area?.subunitNumber === undefined ? '' : ` (unit ${this.attributes.area?.subunitNumber})`}`; // @todo consider appending area type suffix
+                } else {
+                    place = '(unlocalised)';
+                }
             } else {
-                place = '(unlocalised)';
+                if (this.attributes.place) {
+                    let summaryGridRef = this._summarySquareString(options.summarySquarePrecision);
+
+                    place = `${this.attributes.place}${summaryGridRef ? ` ${summaryGridRef}` : ''}`;
+                } else if (this.attributes.georef?.gridRef) {
+                    place = this._summarySquareString(options.summarySquarePrecision);
+                } else if (this.attributes.area?.areaName) {
+                    place = `${this.attributes.area?.areaName}${this.attributes.area?.subunitNumber === null || this.attributes.area?.subunitNumber === undefined ? '' : ` (unit ${this.attributes.area?.subunitNumber})`}`; // @todo consider appending area type suffix
+                } else {
+                    place = '(unlocalised)';
+                }
             }
 
             let surveyName = '';

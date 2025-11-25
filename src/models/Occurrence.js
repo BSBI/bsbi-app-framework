@@ -292,7 +292,7 @@ export class Occurrence extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     hasDefaultSurveyGeoreference() {
-        return this.attributes?.surveyGeoRef?.gridRef !== null;
+        return !!this.attributes?.surveyGeoRef?.gridRef;
     }
 
     // noinspection JSUnusedGlobalSymbols
