@@ -1,4 +1,4 @@
-import {PartyError} from "../utils/exceptions/PartyError";
+//import {PartyError} from "../utils/exceptions/PartyError";
 import {escapeHTML} from "../utils/escapeHTML";
 
 export const PARTY_TYPE_PERSON = 'p';
@@ -232,7 +232,7 @@ export class Party {
     //  */
     // static fromId (id) {
     //     if (!Party.rawParties) {
-    //         throw new PartyError(`Party.fromId() called before list has been initialized.`);
+    //         throw new PartyError(`Party.fromId() called before list has been initialised.`);
     //     }
     //
     //     if (!Party.rawParties.hasOwnProperty(id)) {
