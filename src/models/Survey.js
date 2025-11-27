@@ -476,6 +476,7 @@ export class Survey extends Model {
      *     [surveyGridUnit] : number,
      *     [hectare] : string,
      *     [areaId] : string,
+     *     [subunitId] : string,
      * }}
      */
     getGeoContext() {
@@ -499,8 +500,13 @@ export class Survey extends Model {
         if (sampleUnit === SAMPLE_UNIT_AREA) {
             const areaId = this.attributes?.area?.areaId;
 
+            // both areaId and subunitId are needed separately
             if (areaId) {
                 result.areaId = areaId;
+
+                if (this.attributes?.area?.subunitId) {
+                    result.subunitId = this.attributes?.area?.subunitId;
+                }
             }
         }
 
