@@ -64,7 +64,7 @@ export class Occurrence extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * set if this is a new entry (before user has moved on to the next entry)
+     * set if this is a new entry (before the user has moved on to the next entry)
      * influences whether form validation errors are displayed
      *
      * @type {boolean}
@@ -139,13 +139,13 @@ export class Occurrence extends Model {
     }
 
     /**
-     * If not securely saved then makes a post to /saveoccurrence.php
+     * If not securely saved, then makes a post to /saveoccurrence.php
      *
      * This should be intercepted by a service worker, which could write the object to indexeddb
-     * A successful save (local or to server) will result in a json response containing the object
+     * A successful save (local or to server) will result in a JSON response containing the object
      * and also the state of persistence.
      *
-     * If saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * If saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the object directly to indexeddb
      *
      * Must test indexeddb for this eventuality after the save has returned.

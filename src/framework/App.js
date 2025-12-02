@@ -32,7 +32,7 @@ import {
     SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_DELETED
 } from './AppEvents';
 import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
-import {DeviceType} from "../utils/DeviceType";
+import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {schedulerYield} from "../utils/schedulerYield";
 
 /**
