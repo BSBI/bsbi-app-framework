@@ -37,6 +37,10 @@ export const TAXON_GR_PRESENCE_KEY = 21;
 export const TAXON_RPR_KEY = 22;
 export const TAXON_VC_PRESENCE_KEY = 23;
 
+export const NATIONAL_STATUS_SCHEME_STATUS_NATIVE = 'n';
+export const NATIONAL_STATUS_SCHEME_STATUS_ENDEMIC = 'v';
+export const NATIONAL_STATUS_SCHEME_STATUS_NEOPHYTE = 'e';
+
 export class Taxon {
     /**
      * @typedef RawTaxon
@@ -359,13 +363,17 @@ export class Taxon {
         return null;
     }
 
+    get qualifiedNameString() {
+        return `${this.nameString}${this.qualifier ? ` ${this.qualifier}` : ''}`;
+    }
+
     // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {boolean} vernacularMatched
      * @returns {string}
      */
-    formattedHTML(vernacularMatched) {
+    formattedHTML(vernacularMatched = false) {
         let acceptedTaxon;
 
         try {

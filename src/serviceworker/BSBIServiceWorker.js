@@ -1,6 +1,6 @@
 // service worker for BSBI app
 
-// based around the 'Cache and update' recipe along with many modifications
+// Based around the 'Cache and update' recipe, along with many modifications.
 // see https://serviceworke.rs
 
 import localforage from 'localforage';
@@ -149,33 +149,32 @@ export class BSBIServiceWorker {
                     });
                     console.log('[ServiceWorker] Matching clients:', urls.join(', '));
                 }).then(() => caches.keys())
-                    .then((cacheNames) => {
-                        return Promise.all(
-                            cacheNames.map((cacheName) => {
-                                // test for a 'version' prefix to avoid deleting mapbox tiles
-                                if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
-                                    console.log(`[ServiceWorker] Deleting old code cache: ${cacheName}`);
-                                    return caches.delete(cacheName);
-                                }
+                .then((cacheNames) => {
+                    return Promise.all(
+                        cacheNames.map((cacheName) => {
+                            // test for a 'version' prefix to avoid deleting mapbox tiles
+                            if (cacheName.startsWith('version') && cacheName !== this.CACHE_VERSION) {
+                                console.log(`[ServiceWorker] Deleting old code cache: ${cacheName}`);
+                                return caches.delete(cacheName);
+                            }
 
-                                if (cacheName.startsWith('bsbi-data') && cacheName !== this.DATA_CACHE_VERSION) {
-                                    console.log(`[ServiceWorker] Deleting old data cache: ${cacheName}`);
-                                    return caches.delete(cacheName);
-                                }
+                            if (cacheName.startsWith('bsbi-data') && cacheName !== this.DATA_CACHE_VERSION) {
+                                console.log(`[ServiceWorker] Deleting old data cache: ${cacheName}`);
+                                return caches.delete(cacheName);
+                            }
 
-                                if (cacheName.startsWith('bsbi-images') && cacheName !== this.IMAGE_CACHE_VERSION) {
-                                    console.log(`[ServiceWorker] Deleting old image cache: ${cacheName}`);
-                                    return caches.delete(cacheName);
-                                }
-                            })
-                        );
-                    }).then(() => {
-                        console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
-                        return self.clients.claim();
-                    })
-                );
-            });
-
+                            if (cacheName.startsWith('bsbi-images') && cacheName !== this.IMAGE_CACHE_VERSION) {
+                                console.log(`[ServiceWorker] Deleting old image cache: ${cacheName}`);
+                                return caches.delete(cacheName);
+                            }
+                        })
+                    );
+                }).then(() => {
+                    console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
+                    return self.clients.claim();
+                })
+            );
+        });
 
         // // see https://davidwalsh.name/background-sync
         // // https://developers.google.com/web/updates/2015/12/background-sync
@@ -194,10 +193,10 @@ export class BSBIServiceWorker {
                 //console.log(`Got a post request`);
 
                 if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
-                    //console.log(`Passing through whitelisted post request for: ${evt.request.url}`);
+                    //console.log(`Passing through whitelisted post-request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-                    //console.log(`Passing through nocache list post request for: ${evt.request.url}`);
+                    //console.log(`Passing through nocache list post-request for: ${evt.request.url}`);
                     evt.respondWith(fetch(evt.request));
                 } else {
                     const isSync = /issync/.test(evt.request.url);
@@ -316,11 +315,27 @@ export class BSBIServiceWorker {
                         .then((jsonResponseData) => {
                             //console.log('Following successful remote post, about to save locally.');
 
-                            return ResponseFactory
-                                .fromPostResponse(jsonResponseData)
+                            return ResponseFactory.fromPostResponse(jsonResponseData)
                                 .setPrebuiltResponse(response)
                                 .populateLocalSave()
-                                .storeLocally(true);
+                                .storeLocally(true)
+                                .then((returnedToClient) => {
+                                    if (jsonResponseData.type === 'image') {
+                                        return self.clients.get(fetchEvent.clientId)
+                                            .then((client) => {
+                                                // post a message to the client to indicate that the image has been saved remotely
+                                                client.postMessage({
+                                                    reason : 'imageSavedRemotely',
+                                                    imageId : jsonResponseData.id || jsonResponseData.imageId,
+                                                });
+
+                                                console.log('Sent image saved message to client from non-interactive post path.');
+                                            })
+                                            .then(() => returnedToClient);
+                                    } else {
+                                        return returnedToClient;
+                                    }
+                                });
                         })
                         .catch((error) => {
                             // for some reason, local storage failed, after a successful server save
@@ -337,15 +352,14 @@ export class BSBIServiceWorker {
                     console.log({'post fetch failed (probably no network)': remoteReason});
 
                     // would get here if the network is down
-                    // or if got invalid response from the server
+                    // or if got an invalid response from the server
 
                     if (isSync) {
                         // We don't need to store locally (as will already be present) and response is not needed,
                         // so reject.
 
-                        // return Promise.reject({'remote sync failed' : true, isSync, remoteReason});
-
                         let returnedToClient = {
+                            isSync,
                             error: 'remote sync failed',
                             errorHelp: 'During a sync request your internet connection may have failed (or there could be a problem with the server). ' +
                                 `Error was: ${JSON.stringify(remoteReason)}`
@@ -466,7 +480,15 @@ export class BSBIServiceWorker {
                                                         return event.handled.then(() => ResponseFactory.fromPostResponse(jsonResponseData)
                                                             .setPrebuiltResponse(response)
                                                             .populateLocalSave()
-                                                            .storeLocally());
+                                                            .storeLocally())
+                                                            .then(() => self.clients.get(event.clientId))
+                                                            .then((client) => {
+                                                                // post a message to the client to indicate that the image has been saved remotely
+                                                                client.postMessage({
+                                                                    reason : 'imageSavedRemotely',
+                                                                    imageId : jsonResponseData.id || jsonResponseData.imageId,
+                                                                });
+                                                            });
                                                     })
                                                     .catch((error) => {
                                                         // for some reason, local storage failed, after a successful server save
@@ -477,7 +499,6 @@ export class BSBIServiceWorker {
                                             }
                                         }, (reason) => {
                                             console.log({'Rejected image post fetch from server - implies network is down' : reason});
-                                            // return Promise.reject({'Rejected image post fetch from server - implies network is down' : reason});
                                         }
                                     )
                                 );
@@ -570,13 +591,13 @@ export class BSBIServiceWorker {
     /**
      * A special-case response for images.
      * Attempts to serve from the local cache first.
-     * If that fails then go out to the network.
+     * If that fails, then go out to the network.
      * Finally, see if there is an image in indexeddb.
      *
      * @param {FetchEvent} evt
      */
     handleImageFetch(evt) {
-        // tryRemoteFallback is set to false, to ensure a rapid response to client when bad network, at the cost of no access to remotely compressed image
+        // tryRemoteFallback is set to false to ensure a rapid response to the client when the network is down, at the cost of no access to remotely compressed image
 
         evt.respondWith(this.fromCache(evt.request, true, 5000)
             .then((response) => {
@@ -674,7 +695,7 @@ export class BSBIServiceWorker {
     }
 
     /**
-     * Update consists in opening the cache, performing a network request and
+     * Update consists of opening the cache, performing a network request, and
      * storing the new response data.
      *
      * @param {Request} request

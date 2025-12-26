@@ -78,7 +78,7 @@ export class OccurrenceImage extends Model {
      * a successful save will result in a JSON response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
      *
-     * if saving fails then the expectation is that there is no service worker, in which case should attempt to write
+     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
      * the image directly to indexeddb
      *
      * must test indexeddb for this eventuality after the save has returned
@@ -114,6 +114,10 @@ export class OccurrenceImage extends Model {
 
         if (forceSave || this.unsaved()) {
             // const formData = this.formData();
+
+            if (!OccurrenceImage.imageCache.has(this.id)) {
+                OccurrenceImage.imageCache.set(this.id, this);
+            }
 
             console.log(`queueing image post, image id ${this.id}`);
             return this.queuePost(isSync);

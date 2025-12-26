@@ -409,6 +409,17 @@ export class Survey extends Model {
         return yearString === (new Date).toISOString().slice(0,4);
     }
 
+    /**
+     * Returns true or false based on date compatibility or null if the survey is undated (e.g. ongoing casual)
+     *
+     * @returns {boolean}
+     */
+    createdInCurrentOrFutureYear() {
+        const surveyYear = parseInt(new Date(this.createdStamp * 1000).toISOString().slice(0,4), 10);
+
+        return surveyYear >= parseInt((new Date).toISOString().slice(0,4), 10);
+    }
+
     // noinspection JSUnusedGlobalSymbols
     get place() {
         return this.attributes.place || '';
@@ -470,8 +481,9 @@ export class Survey extends Model {
      *     hectad : string,
      *     tetrad : string,
      *     monad : string,
-     *     country : string,
-     *     vc : number[],
+     *     hectare : string,
+     *     country : 'GB'|'IE'|'CI'|'',
+     *     vc : string[],
      *     interleavedGridRef : string,
      *     [surveyGridUnit] : number,
      *     [hectare] : string,

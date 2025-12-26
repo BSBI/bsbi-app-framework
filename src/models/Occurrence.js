@@ -2,6 +2,7 @@ import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
 import {GEOREF_SOURCE_UNKNOWN} from "../utils/constants";
+import {SURVEY_EVENT_MODIFIED} from "../framework/AppEvents";
 
 /**
  * @typedef {import('bsbi-app-framework-view').Form} Form
@@ -13,6 +14,30 @@ import {GEOREF_SOURCE_UNKNOWN} from "../utils/constants";
  * @type {string}
  */
 export const OCCURRENCE_EVENT_MODIFIED = 'modified';
+
+/**
+ * fired from Occurrence when the object's contents may need redisplay, e.g. because image remote save state has changed
+ * The content of the occurrence hasn't changed, so this shouldn't trigger a new save.
+ * @type {string}
+ */
+export const OCCURRENCE_EVENT_NEEDS_REFRESH = 'needsrefresh';
+
+/**
+ * set as a taxon context attribute if the name was selected based on a PlantNet identification
+ *
+ * @type {string}
+ */
+export const OCCURRENCE_TAXON_CONTEXT_PLANTNET = 'plantnet';
+
+export const OCCURRENCE_TAXON_ROLE_DETERMINATION = 'determination';
+export const OCCURRENCE_TAXON_ROLE_CONFIRMATION = 'confirmation';
+
+/**
+ * fired on occurrence after a taxon name or determiner have been revised based on a PlantNet id
+ *
+ * @type {string}
+ */
+export const OCCURRENCE_EVENT_OUTOFBAND_TAXON_CHANGE = 'taxonchange';
 
 export const MODEL_TYPE_OCCURRENCE = 'occurrence';
 
@@ -89,6 +114,61 @@ export class Occurrence extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
+     * This should be used only for out-of-band updates to the taxon, e.g. from PlantNet.
+     *
+     * @param {string} taxonId
+     * @param {{[context] : string, [plantnetId] : string, [score] : number}|null} params
+     * @return {string|null} role string or null if no update was needed
+     */
+    updateTaxon(taxonId, params = null) {
+        const taxon = Taxon.fromId(taxonId);
+
+        if (taxon) {
+
+            if (params?.context) {
+                let change = false;
+
+                if (params.context === OCCURRENCE_TAXON_CONTEXT_PLANTNET) {
+                    
+                    if (this.attributes?.taxon?.taxonId !== taxonId) {
+                        this.attributes.taxon = {
+                            taxonId,
+                            taxonName : taxon.nameString + (taxon.qualifier ? ` ${taxon.qualifier}` : ''),
+                            context : params.context, // Only apply context if this was a primary determination.
+                            plantnetId : params.plantnetId,
+                            vernacularMatch : false,
+                            role : OCCURRENCE_TAXON_ROLE_DETERMINATION,
+                        };
+
+                        if (params.score) {
+                            this.attributes.taxon.score = params.score;
+                        }
+                        
+                        change = true;
+                    } else if (this.attributes.taxon?.context !== OCCURRENCE_TAXON_CONTEXT_PLANTNET) {
+                        this.attributes.taxon.role = OCCURRENCE_TAXON_ROLE_CONFIRMATION;
+                        this.attributes.taxon.plantnetId = params.plantnetId;
+                        if (params.score) {
+                            this.attributes.taxon.score = params.score;
+                        }
+                        change = true;
+                    }
+                }
+
+                if (change) {
+                    this.touch();
+                    this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId : this.id});
+                    this.fireEvent(OCCURRENCE_EVENT_OUTOFBAND_TAXON_CHANGE, {newTaxonValue: this.attributes.taxon});
+
+                    return this.attributes.taxon.role;
+                }
+            }
+        }
+        return null;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
      * Returns true or false based on occurrence date compatibility of *this* occurrence,
      * or null if individual occurrences are not dated (i.e. part of a dated survey)
      *
@@ -107,7 +187,7 @@ export class Occurrence extends Model {
      * @param {{form: Form}} params
      */
     formChangedHandler(params) {
-        console.log('Occurrence change handler invoked.');
+        //console.log('Occurrence change handler invoked.');
 
         const form = params.form;
         // noinspection JSValidateTypes

@@ -7,7 +7,7 @@ import {
     SURVEY_EVENT_LIST_LENGTH_CHANGED,
 } from "../models/Survey";
 import {InternalAppError} from "../utils/exceptions/InternalAppError";
-import {Occurrence, OCCURRENCE_EVENT_MODIFIED} from "../models/Occurrence";
+import {Occurrence, OCCURRENCE_EVENT_MODIFIED, OCCURRENCE_EVENT_NEEDS_REFRESH} from "../models/Occurrence";
 import localforage from "localforage";
 import {MODEL_TYPE_IMAGE, OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
@@ -98,6 +98,8 @@ export class App extends EventHarness {
      * @type {boolean}
      */
     supportsTracking = false;
+
+    static supportEmail = 'feedback@bsbi.app';
 
     /**
      *
@@ -2544,6 +2546,32 @@ export class App extends EventHarness {
                     })
                 )
             );
+    }
+
+    /**
+     *
+     * @param {MessageEvent} event
+     */
+    handleServiceWorkerMessage(event) {
+        switch (event.data.reason) {
+            case 'imageSavedRemotely':
+                if (OccurrenceImage.imageCache.has(event.data.imageId)) {
+                    const image = OccurrenceImage.imageCache.get(event.data.imageId);
+                    image.savedRemotely = true; // this will trigger a MODEL_EVENT_SAVED_REMOTELY event
+
+                    // need to refresh entries on the occurrence list, e.g. so that PlantNet buttons become available and possible image url changes take effect.
+                    if (image.occurrenceId) {
+                        const occurrence = this.occurrences.get(image.occurrenceId);
+
+                        if (occurrence) {
+                            occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
+                        }
+                    }
+                }
+                break;
+            default:
+                Logger.logError(`Unknown service worker message reason: ${event.data.reason}`);
+        }
     }
 }
 
