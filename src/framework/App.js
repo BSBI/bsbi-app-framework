@@ -2481,6 +2481,18 @@ export class App extends EventHarness {
 
                                         if (occurrenceImage.surveyId === surveyId) {
                                             OccurrenceImage.imageCache.set(occurrenceImageKey, occurrenceImage);
+
+                                            // image loading may be slow, so the occurrence list may already have been built
+                                            // need to refresh entries on the occurrence list, e.g. so that PlantNet buttons become available and possible image url changes take effect.
+                                            schedulerYield().then(() => {
+                                                if (occurrenceImage.occurrenceId) {
+                                                    const occurrence = this.occurrences.get(occurrenceImage.occurrenceId);
+
+                                                    if (occurrence) {
+                                                        occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
+                                                    }
+                                                }
+                                            });
                                         }
                                     }, (reason) => {
                                         console.error({'Failed to retrieve an image': reason});

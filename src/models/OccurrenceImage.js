@@ -180,6 +180,7 @@ export class OccurrenceImage extends Model {
         let placeholderObject = new OccurrenceImage;
         //placeholderObject._id = id;
         placeholderObject.id = id; // should use setter, to enforce validation
+        placeholderObject.isPlaceholder = true;
 
         OccurrenceImage.imageCache.set(id, placeholderObject);
 
@@ -251,13 +252,19 @@ export class OccurrenceImage extends Model {
             :
             `height="${height}"`;
 
-        // Try sized images first, before falling back to an unsized JPEG, that may match an offline cache.
-        return `<picture>` +
-    //<source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=avif" type="image/avif">
-    `<source srcset="/image.php?imageid=${id}&amp;height=${width}&amp;format=webp" type="image/webp">
+        // should try the other options only if the image has been saved to the server
+        const image = OccurrenceImage.imageCache.get(id);
+        if (image && image.savedRemotely) {
+            // Try sized images first, before falling back to an unsized JPEG, that may match an offline cache.
+            return `<picture>` +
+                //<source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=avif" type="image/avif">
+                `<source srcset="/image.php?imageid=${id}&amp;height=${width}&amp;format=webp" type="image/webp">
     <source srcset="/image.php?imageid=${id}&amp;width=${width}&amp;format=jpeg" type="image/jpeg">
     <img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">
     </picture>`;
+        } else {
+            return `<img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">`;
+        }
     }
 
     storeLocally() {
