@@ -26,6 +26,9 @@ export class OccurrenceResponse extends LocalResponse {
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
         this.returnedToClient.userId = this.toSaveLocally.userId || '';
+        this.returnedToClient.draftExpiry = this.toSaveLocally.draftExpiry ? parseInt(this.toSaveLocally.draftExpiry, 10) : 0;
+        this.returnedToClient.draftNotes = this.toSaveLocally.draftNotes || null;
+        this.returnedToClient.extendedDraft = (this.toSaveLocally.extendedDraft === true || this.toSaveLocally.extendedDraft === 'true');
         return this;
     }
 
@@ -46,6 +49,9 @@ export class OccurrenceResponse extends LocalResponse {
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
         this.toSaveLocally.userId = this.returnedToClient.userId || '';
+        this.toSaveLocally.draftExpiry = this.returnedToClient.draftExpiry ? parseInt(this.returnedToClient.draftExpiry, 10) : 0;
+        this.toSaveLocally.draftNotes = this.returnedToClient.draftNotes || null;
+        this.toSaveLocally.extendedDraft = (this.returnedToClient.extendedDraft === true || this.returnedToClient.extendedDraft === 'true');
         return this;
     }
 

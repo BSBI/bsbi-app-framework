@@ -156,7 +156,7 @@ export class Model extends EventHarness {
      */
     set id(newId) {
 
-        if (!newId.match(UUID_REGEX)) {
+        if (!newId?.match?.(UUID_REGEX)) {
             throw new Error(`Cannot set malformed object id '${newId}'.`);
         } else {
             // only allow an id to be set if not present already

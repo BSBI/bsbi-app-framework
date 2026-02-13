@@ -68,20 +68,24 @@ export class Occurrence extends Model {
      */
     userId = '';
 
-    // /**
-    //  * set if the image has been posted to the server
-    //  * (a local copy might still exist, which may have been reduced to thumbnail resolution)
-    //  *
-    //  * @type {boolean}
-    //  */
-    // _savedRemotely = false;
+    /**
+     *
+     * @type {number}
+     */
+    draftExpiry = 0;
 
-    // /**
-    //  * set if the image has been added to a temporary store (e.g. indexedDb)
-    //  *
-    //  * @type {boolean}
-    //  */
-    // _savedLocally = false;
+    /**
+     *
+     * @type {string|null}
+     */
+    draftNotes = null;
+
+    /**
+     * set if a longer draft period was applied explicitly
+     *
+     * @type {boolean}
+     */
+    extendedDraft = false;
 
     SAVE_ENDPOINT = '/saveoccurrence.php';
 
@@ -265,6 +269,9 @@ export class Occurrence extends Model {
             deleted : this.deleted,
             projectId : this.projectId,
             userId : this.userId,
+            draftExpiry : this.draftExpiry,
+            draftNotes : this.draftNotes,
+            extendedDraft : this.extendedDraft,
         });
     }
 
@@ -285,6 +292,14 @@ export class Occurrence extends Model {
         formData.append('created', this.createdStamp?.toString?.() || '');
         formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
+        if (this.draftExpiry && this.draftExpiry > Date.now() / 1000) {
+            formData.append('draftExpiry', this.draftExpiry.toString());
+            if (this.draftNotes) {
+                formData.append('draftNotes', this.draftNotes);
+            }
+            formData.append('extendedDraft', this.extendedDraft.toString());
+        }
+
         if (this.userId) {
             formData.append('userId', this.userId);
         }
@@ -296,11 +311,39 @@ export class Occurrence extends Model {
 
     /**
      *
-     * @param {{id : string, saveState: string, userId : string?, attributes: Object.<string, *>, deleted: boolean|string, created: number, modified: number, projectId: number, surveyId: string}} descriptor
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      userId : string?,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: number,
+     *      modified: number,
+     *      projectId: number,
+     *      surveyId: string,
+     *      [draftExpiry]: number,
+     *      [draftNotes]: string|null,
+     *      [extendedDraft]: boolean,
+     *      }} descriptor
      */
     _parseDescriptor(descriptor) {
         super._parseDescriptor(descriptor);
         this.surveyId = descriptor.surveyId;
+
+        if (descriptor.draftExpiry && descriptor.draftExpiry > Date.now() / 1000) {
+            this.draftExpiry = descriptor.draftExpiry;
+            this.draftNotes = descriptor.draftNotes || null;
+
+            if (descriptor.extendedDraft && descriptor.extendedDraft !== true) {
+                console.error(`extendedDraft must be a boolean, not '${descriptor.extendedDraft}'`);
+            }
+
+            this.extendedDraft = descriptor.extendedDraft || false;
+        } else {
+            this.draftExpiry = 0;
+            this.draftNotes = null;
+            this.extendedDraft = false;
+        }
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -362,7 +405,7 @@ export class Occurrence extends Model {
         } else {
             return this.attributes.georef || {
                 gridRef: '',
-                rawString: '', // what was provided by the user to generate this grid-ref (might be a postcode or placename)
+                rawString: '', // the string that was provided by the user to generate this grid-ref (might be a postcode or placename)
                 source: GEOREF_SOURCE_UNKNOWN,
                 latLng: null,
                 precision: null

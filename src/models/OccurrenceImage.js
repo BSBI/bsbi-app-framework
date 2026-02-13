@@ -72,16 +72,16 @@ export class OccurrenceImage extends Model {
     }
 
     /**
-     * if not securely saved then makes a post to /saveimage.php
+     * If not securely saved, then makes a post to /saveimage.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexeddb
-     * a successful save will result in a JSON response containing the uri from which the image may be retrieved
-     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline)
+     * This may be intercepted by a service worker, which could write the image to indexeddb.
+     * A successful save will result in a JSON response containing the uri from which the image may be retrieved
+     * and also the state of persistence (whether or not the image was intercepted by a service worker while offline).
      *
-     * if saving fails, then the expectation is that there is no service worker, in which case should attempt to write
-     * the image directly to indexeddb
+     * If saving fails, then the expectation is that there is no service worker, in which case should attempt to write
+     * the image directly to indexeddb.
      *
-     * must test indexeddb for this eventuality after the save has returned
+     * Must test indexeddb for this eventuality after the save has returned.
      *
      * @param {boolean} forceSave
      * @param {boolean} [isSync]
@@ -154,6 +154,8 @@ export class OccurrenceImage extends Model {
         } else {
             formData.append('occurrenceId', this.occurrenceId);
         }
+
+        // Note that image attributes are saved as part of the associated image field data rather than with the image.
 
         if (this.userId) {
             formData.append('userId', this.userId);
@@ -254,8 +256,9 @@ export class OccurrenceImage extends Model {
 
         // should try the other options only if the image has been saved to the server
         const image = OccurrenceImage.imageCache.get(id);
+
         if (image && image.savedRemotely) {
-            // Try sized images first, before falling back to an unsized JPEG, that may match an offline cache.
+            // Try sized images first, before falling back to an unsized JPEG that may match an offline cache.
             return `<picture>` +
                 //<source srcset="/image.php?imageid=${id}&amp;height=128&amp;format=avif" type="image/avif">
                 `<source srcset="/image.php?imageid=${id}&amp;height=${width}&amp;format=webp" type="image/webp">
@@ -263,7 +266,8 @@ export class OccurrenceImage extends Model {
     <img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">
     </picture>`;
         } else {
-            return `<img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="photo">`;
+            // use empty alt text to hide broken images
+            return `<img${attributesString} src="/image.php?imageid=${id}&amp;format=jpeg" ${renderingConstraint} alt="">`;
         }
     }
 
