@@ -9,14 +9,14 @@
   "module": "dist/esm/index.js",
   "sideEffects": false,
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-commonjs": "^29.0.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
-    "rollup": "^4.53.3",
+    "rollup": "^4.59.0",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-string": "^3.0.0",
-    "@rollup/plugin-terser": "^0.4.4"
+    "@rollup/plugin-terser": "^1.0.0"
   },
   "dependencies": {
     "localforage": "^1.10.0"
