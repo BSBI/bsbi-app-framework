@@ -118,8 +118,8 @@ export class Survey extends Model {
      *          areaName: string,
      *          areaId: string,
      *          areaType: string,
-     *          [subunitId]: string,
-     *          [subunitNumber]: number|null
+     *          [unitId]: string,
+     *          [unitNumber]: number|null
  *          },
      * }}
      */
@@ -488,7 +488,7 @@ export class Survey extends Model {
      *     [surveyGridUnit] : number,
      *     [hectare] : string,
      *     [areaId] : string,
-     *     [subunitId] : string,
+     *     [unitId] : string,
      * }}
      */
     getGeoContext() {
@@ -512,12 +512,12 @@ export class Survey extends Model {
         if (sampleUnit === SAMPLE_UNIT_AREA) {
             const areaId = this.attributes?.area?.areaId;
 
-            // both areaId and subunitId are needed separately
+            // both areaId and unitId are needed separately
             if (areaId) {
                 result.areaId = areaId;
 
-                if (this.attributes?.area?.subunitId) {
-                    result.subunitId = this.attributes?.area?.subunitId;
+                if (this.attributes?.area?.unitId) {
+                    result.unitId = this.attributes?.area?.unitId;
                 }
             }
         }
@@ -663,7 +663,7 @@ export class Survey extends Model {
 
             if (this.projectId === PROJECT_ID_SCM) {
                 if (this.attributes.area?.areaName) {
-                    place = `${this.attributes.area?.areaName}${this.attributes.area?.subunitNumber === null || this.attributes.area?.subunitNumber === undefined ? '' : ` (unit ${this.attributes.area?.subunitNumber})`}`; // @todo consider appending area type suffix
+                    place = `${this.attributes.area?.areaName}${this.attributes.area?.unitNumber === null || this.attributes.area?.unitNumber === undefined ? '' : ` (unit ${this.attributes.area?.unitNumber})`}`; // @todo consider appending area type suffix
                 } else {
                     place = '(unlocalised)';
                 }
@@ -675,7 +675,7 @@ export class Survey extends Model {
                 } else if (this.attributes.georef?.gridRef) {
                     place = this._summarySquareString(options.summarySquarePrecision);
                 } else if (this.attributes.area?.areaName) {
-                    place = `${this.attributes.area?.areaName}${this.attributes.area?.subunitNumber === null || this.attributes.area?.subunitNumber === undefined ? '' : ` (unit ${this.attributes.area?.subunitNumber})`}`; // @todo consider appending area type suffix
+                    place = `${this.attributes.area?.areaName}${this.attributes.area?.unitNumber === null || this.attributes.area?.unitNumber === undefined ? '' : ` (unit ${this.attributes.area?.unitNumber})`}`; // @todo consider appending area type suffix
                 } else {
                     place = '(unlocalised)';
                 }
