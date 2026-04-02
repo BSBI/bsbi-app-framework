@@ -104,6 +104,8 @@ export class BSBIServiceWorker {
             name: configuration.forageName
         });
 
+        //self.onerror = Logger.serviceWorkerLogError;
+
         self.addEventListener("message", (event) => {
                 console.log({"Message received": event.data});
 

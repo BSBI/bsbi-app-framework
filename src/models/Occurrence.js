@@ -50,17 +50,22 @@ export class Occurrence extends Model {
      */
     static className = 'Occurrence';
 
-    /**
-     *
-     * @type {Object.<string, *>}
-     */
-    attributes = {
-        // taxon: {
-        //     taxonId: '',
-        //     taxonName: '',
-        //     vernacularMatch: false
-        // }
-    };
+    // /**
+    //  *
+    //  * @type {Object.<string, *>}
+    //  */
+    // attributes = {
+    //     // taxon: {
+    //     //     taxonId: '',
+    //     //     taxonName: '',
+    //     //     vernacularMatch: false
+    //     // }
+    // };
+
+    // set attributes(value) {
+    //     console.log({'setting attribute' : value});
+    //     super.attributes = value;
+    // }
 
     /**
      *
