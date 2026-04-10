@@ -294,8 +294,8 @@ export class Track extends Model {
             const survey = Track._app.currentSurvey;
 
             if (survey) {
-                if (!survey.attributes?.casual && survey.isToday()) {
-                    // Resume existing tracking, or start a new track.
+                if (!survey.attributes?.casual && survey.isToday() !== false) {
+                    // Resume existing tracking or start a new track.
                     Track._trackSurvey(survey);
                     Track.trackingIsActive = true;
                 }
@@ -375,14 +375,11 @@ export class Track extends Model {
 
         if (surveyTracks.has(deviceId)) {
             track = surveyTracks.get(deviceId);
-            // noinspection JSIgnoredPromiseFromCall
-            // Logger.logErrorDev(`Resuming tracking of survey id '${survey.id}'`);
+            track.registerSurvey(survey);
         } else {
             track = survey.initialiseNewTracker(Track._app);
             surveyTracks.set(deviceId, track);
         }
-
-        track.registerSurvey(survey);
 
         Track.clearGeowatchThrottle(); // for the new track, we want a starting point without any delay
     }
