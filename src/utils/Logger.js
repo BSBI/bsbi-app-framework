@@ -1,4 +1,6 @@
 
+const JS_LOG_PATH = '/jsLog.php';
+
 export class Logger {
 
     /**
@@ -49,105 +51,6 @@ export class Logger {
             Promise.resolve();
     }
 
-    // static serviceWorkerLogError(message, url = '', line= '', column = null, errorObj = null) {
-    //
-    //
-    //     //console.error(message, url, line, errorObj);
-    //
-    //     if (!errorObj) {
-    //         // on V8 construction of PlaceholderError will capture a stack trace automatically
-    //         errorObj = new _PlaceholderError(message);
-    //
-    //         // otherwise may need to throw and catch the error
-    //         if (!Error.captureStackTrace) {
-    //             try {
-    //                 // thrown just to generate a stack trace
-    //                 // noinspection ExceptionCaughtLocallyJS
-    //                 throw errorObj;
-    //             } catch (error) {
-    //
-    //             }
-    //         }
-    //     }
-    //
-    //     // if (!url) {
-    //     //     url = window?.location?.href;
-    //     // }
-    //
-    //     // if (console.trace) {
-    //     //     console.trace('Trace');
-    //     // }
-    //
-    //     const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
-    //     const errorEl = doc.createElement('error');
-    //
-    //     errorEl.setAttribute('n', Logger.serialNumber);
-    //
-    //     if (line !== null && line !== undefined) {
-    //         errorEl.setAttribute('line', line);
-    //     }
-    //
-    //     if (errorObj && ('stack' in errorObj)) {
-    //         errorEl.setAttribute('stack', errorObj.stack);
-    //     }
-    //
-    //     if (url !== null && url !== undefined && url !== '') {
-    //         errorEl.setAttribute('url', url);
-    //     }
-    //
-    //     if (window?.location?.href) {
-    //         errorEl.setAttribute('referrer', window.location.href);
-    //     }
-    //
-    //     if (window?.location?.search) {
-    //         errorEl.setAttribute('urlquery', window.location.search);
-    //     }
-    //
-    //     if (window?.location?.hash) {
-    //         errorEl.setAttribute('urlhash', window.location.hash);
-    //     }
-    //
-    //     if (Logger.app?.session?.userId) {
-    //         errorEl.setAttribute('userid', Logger.app.session.userId);
-    //     }
-    //
-    //     // noinspection PlatformDetectionJS,JSDeprecatedSymbols
-    //     errorEl.setAttribute('browser', navigator.appName);
-    //     // noinspection JSDeprecatedSymbols
-    //     errorEl.setAttribute('browserv', navigator.appVersion);
-    //     errorEl.setAttribute('userAgent', navigator.userAgent);
-    //     errorEl.setAttribute('versions', Logger.bsbiAppVersion);
-    //
-    //     errorEl.appendChild(doc.createTextNode(message));
-    //
-    //     doc.documentElement.appendChild(errorEl);
-    //
-    //     if (navigator.onLine) {
-    //         return fetch('/javascriptErrorLog.php', {
-    //             method: "POST", // *GET, POST, PUT, DELETE, etc.
-    //             mode: "cors", // no-cors, *cors, same-origin
-    //             cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-    //             credentials: "include", // include, *same-origin, omit
-    //             headers: {
-    //                 "Content-Type": "text/xml",
-    //             },
-    //             redirect: "follow", // manual, *follow, error
-    //             referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-    //             body: (new XMLSerializer()).serializeToString(doc),
-    //         }).catch((reason) => {
-    //             console.info({'Remote error logging failed': reason});
-    //             // don't reject here, as the promise chain should continue, even after a failed log
-    //         }).finally(() => {
-    //             //window.onerror = Logger.logError; // turn on error handling again
-    //         });
-    //     } else {
-    //         console.info({'Offline, report not sent': doc});
-    //         //window.onerror = Logger.logError; // turn on error handling again
-    //
-    //         return Promise.resolve();
-    //     }
-    // }
-
     /**
      * reports a JavaScript error
      *
@@ -159,101 +62,101 @@ export class Logger {
      * @returns {Promise<void>} a fulfilled promise (even if logging fails)
      */
     static logError(message, url = '', line= '', column = null, errorObj = null) {
-        window.onerror = null;
+        try {
+            console.error(message, url, line, errorObj);
 
-        console.error(message, url, line, errorObj);
+            if (!errorObj) {
+                // on V8 construction of PlaceholderError will capture a stack trace automatically
+                errorObj = new _PlaceholderError(message);
 
-        if (!errorObj) {
-            // on V8 construction of PlaceholderError will capture a stack trace automatically
-            errorObj = new _PlaceholderError(message);
+                // otherwise may need to throw and catch the error
+                if (!Error.captureStackTrace) {
+                    try {
+                        // thrown just to generate a stack trace
+                        // noinspection ExceptionCaughtLocallyJS
+                        throw errorObj;
+                    } catch (error) {
 
-            // otherwise may need to throw and catch the error
-            if (!Error.captureStackTrace) {
-                try {
-                    // thrown just to generate a stack trace
-                    // noinspection ExceptionCaughtLocallyJS
-                    throw errorObj;
-                } catch (error) {
-
+                    }
                 }
             }
-        }
 
-        if (!url) {
-            url = window?.location?.href;
-        }
+            if (!url) {
+                url = window?.location?.href;
+            }
 
-        if (console.trace) {
-            console.trace('Trace');
-        }
+            if (console.trace) {
+                console.trace('Trace');
+            }
 
-        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
-        const errorEl = doc.createElement('error');
+            const doc = {error: {}};
+            const errorDescriptor = doc.error;
 
-        errorEl.setAttribute('n', Logger.serialNumber);
+            errorDescriptor.n = Logger.serialNumber;
 
-        if (line !== null && line !== undefined) {
-            errorEl.setAttribute('line', line);
-        }
+            if (line !== null && line !== undefined) {
+                errorDescriptor.line = line;
+            }
 
-        if (errorObj && ('stack' in errorObj)) {
-            errorEl.setAttribute('stack', errorObj.stack);
-        }
+            if (errorObj && ('stack' in errorObj)) {
+                errorDescriptor.stack = errorObj.stack;
+            }
 
-        if (url !== null && url !== undefined && url !== '') {
-            errorEl.setAttribute('url', url);
-        }
+            if (url !== null && url !== undefined && url !== '') {
+                errorDescriptor.url = url;
+            }
 
-        if (window?.location?.href) {
-            errorEl.setAttribute('referrer', window.location.href);
-        }
+            if (window?.location?.href) {
+                errorDescriptor.referrer = window.location.href;
+            }
 
-        if (window?.location?.search) {
-            errorEl.setAttribute('urlquery', window.location.search);
-        }
+            if (window?.location?.search) {
+                errorDescriptor.urlquery = window.location.search;
+            }
 
-        if (window?.location?.hash) {
-            errorEl.setAttribute('urlhash', window.location.hash);
-        }
+            if (window?.location?.hash) {
+                errorDescriptor.urlhash = window.location.hash;
+            }
 
-        if (Logger.app?.session?.userId) {
-            errorEl.setAttribute('userid', Logger.app.session.userId);
-        }
+            if (Logger.app?.session?.userId) {
+                errorDescriptor.userid = Logger.app.session.userId;
+            }
 
-        // noinspection PlatformDetectionJS,JSDeprecatedSymbols
-        errorEl.setAttribute('browser', navigator.appName);
-        // noinspection JSDeprecatedSymbols
-        errorEl.setAttribute('browserv', navigator.appVersion);
-        errorEl.setAttribute('userAgent', navigator.userAgent);
-        errorEl.setAttribute('versions', Logger.bsbiAppVersion);
+            if (navigator) {
+                // noinspection PlatformDetectionJS,JSDeprecatedSymbols
+                errorDescriptor.browser = navigator.appName;
+                // noinspection JSDeprecatedSymbols
+                errorDescriptor.browserv = navigator.appVersion;
+                errorDescriptor.userAgent = navigator.userAgent;
+            }
 
-        errorEl.appendChild(doc.createTextNode(message));
+            errorDescriptor.versions = Logger.bsbiAppVersion;
 
-        doc.documentElement.appendChild(errorEl);
+            errorDescriptor.message = message;
 
-        if (navigator.onLine) {
-            return fetch('/javascriptErrorLog.php', {
-                method: "POST", // *GET, POST, PUT, DELETE, etc.
-                mode: "cors", // no-cors, *cors, same-origin
-                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-                credentials: "include", // include, *same-origin, omit
-                headers: {
-                    "Content-Type": "text/xml",
-                },
-                redirect: "follow", // manual, *follow, error
-                referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: (new XMLSerializer()).serializeToString(doc),
-            }).catch((reason) => {
-                console.info({'Remote error logging failed': reason});
-                // don't reject here, as the promise chain should continue, even after a failed log
-            }).finally(() => {
-                window.onerror = Logger.logError; // turn on error handling again
-            });
-        } else {
-            console.info({'Offline, report not sent': doc});
-            window.onerror = Logger.logError; // turn on error handling again
+            if (navigator.onLine) {
+                return fetch(JS_LOG_PATH, {
+                    method: "POST", // *GET, POST, PUT, DELETE, etc.
+                    mode: "cors", // no-cors, *cors, same-origin
+                    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                    credentials: "include", // include, *same-origin, omit
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    redirect: "follow", // manual, *follow, error
+                    referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                    body: JSON.stringify(doc),
+                }).catch((reason) => {
+                    console.info({'Remote error logging failed': reason});
+                    // don't reject here, as the promise chain should continue, even after a failed log
+                });
+            } else {
+                console.info({'Offline, report not sent': doc});
 
-            return Promise.resolve();
+                return Promise.resolve();
+            }
+        } catch (error) {
+            console.error({'error in error handler' : error});
         }
     }
 
@@ -275,58 +178,54 @@ export class Logger {
             console.trace('Trace');
         }
 
-        const doc = document.implementation.createDocument('', 'response', null); // create blank XML response document
-        const messageEl = doc.createElement('message');
+        const doc = {descriptor: {}};
+        const messageDescriptor = doc.descriptor;
 
-        messageEl.setAttribute('n', Logger.serialNumber);
+        messageDescriptor.n = Logger.serialNumber;
 
         if (url !== null && url !== undefined && url !== '') {
-            messageEl.setAttribute('url', url);
+            messageDescriptor.url = url;
         }
 
-
-
         if (window?.location?.search) {
-            messageEl.setAttribute('urlquery', window.location.search);
+            messageDescriptor.urlquery = window.location.search;
         }
 
         if (window?.location?.hash) {
-            messageEl.setAttribute('urlhash', window.location.hash);
+            messageDescriptor.urlhash = window.location.hash;
         }
 
         if (Logger.app?.session?.userId) {
-            messageEl.setAttribute('userid', Logger.app.session.userId);
+            messageDescriptor.userid = Logger.app.session.userId;
         }
 
         // noinspection PlatformDetectionJS,JSDeprecatedSymbols
-        messageEl.setAttribute('browser', navigator.appName);
+        messageDescriptor.browser = navigator.appName;
         // noinspection JSDeprecatedSymbols
-        messageEl.setAttribute('browserv', navigator.appVersion);
-        messageEl.setAttribute('userAgent', navigator.userAgent);
-        messageEl.setAttribute('versions', Logger.bsbiAppVersion);
+        messageDescriptor.browserv = navigator.appVersion;
+        messageDescriptor.userAgent = navigator.userAgent;
+        messageDescriptor.versions = Logger.bsbiAppVersion;
 
-        messageEl.appendChild(doc.createTextNode(message));
-
-        doc.documentElement.appendChild(messageEl);
+        messageDescriptor.message = message;
 
         if (navigator.onLine) {
-            return fetch('/javascriptErrorLog.php', {
+            return fetch(JS_LOG_PATH, {
                 method: "POST", // *GET, POST, PUT, DELETE, etc.
                 mode: "cors", // no-cors, *cors, same-origin
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
                 credentials: "include", // include, *same-origin, omit
                 headers: {
-                    "Content-Type": "text/xml",
+                    "Content-Type": "application/json",
                 },
                 redirect: "follow", // manual, *follow, error
                 referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: (new XMLSerializer()).serializeToString(doc),
+                body: JSON.stringify(doc),
             }).catch((reason) => {
                 console.info({'Remote message logging failed': reason});
                 // don't reject here, as the promise chain should continue, even after a failed log
             });
         } else {
-            console.info({'Offline, report not sent': doc});
+            console.info({'Offline, message report not sent': doc});
 
             return Promise.resolve();
         }
