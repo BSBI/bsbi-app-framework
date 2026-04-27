@@ -171,39 +171,38 @@ export class SurveyPickerController extends AppController {
     }
 
     /**
-     * called after user has confirmed add new survey dialogue box
-     *
+     * called after the user has confirmed the add new survey dialogue box
+     * @returns {Promise<void>}
      */
     addNewSurveyHandler() {
         console.log("reached addNewSurveyHandler");
         this.app.currentControllerHandle = this.handle; // when navigate back need to list need to ensure full view refresh
 
         // it's opportune at this point to try to ping the server again to save anything left outstanding
-        this.app.syncAll(true).finally(() => {
+        return this.app.syncAll(true).finally(() => {
 
             // the app's occurrences should only relate to the current survey
-            // (the reset are remote or in IndexedDb)
-            this.app.clearCurrentSurvey().then(() => {
-
-                this.app.setNewSurvey();
-
-                this.app.router.pause();
-                this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
-                this.app.router.resolve();
-            });
+            // (the reset surveys are remote or in IndexedDb)
+            return this.app.clearCurrentSurvey()
+                .then(() => this.app.setNewSurvey())
+                .then(() => {
+                    this.app.router.pause();
+                    this.app.router.navigate('/list/survey/about').resume(); // jump straight into the survey rather than to welcome stage
+                    this.app.router.resolve();
+                });
         });
     }
 
     /**
-     * called after user has confirmed reset surveys dialogue box
+     * called after the user has confirmed reset surveys dialogue box
+     *
+     * @returns {Promise<void>}
      */
     resetSurveysHandler() {
-        App.deleteCacheByPrefix('bsbi-images')
+        return App.deleteCacheByPrefix('bsbi-images')
             .then(() => this.app.clearLocalForage())
             .then(() => this.app.reset())
-            .finally(() => {
-                this.addNewSurveyHandler();
-            });
+            .finally(() => this.addNewSurveyHandler());
     }
 
     /**

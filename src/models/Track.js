@@ -3,11 +3,11 @@ import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
     APP_EVENT_CURRENT_SURVEY_CHANGED,
-    APP_EVENT_WATCH_GPS_USER_REQUEST,
+    //APP_EVENT_WATCH_GPS_USER_REQUEST,
     SURVEY_EVENT_MODIFIED,
     SURVEY_EVENT_OCCURRENCES_CHANGED
 } from "../framework/AppEvents";
-import {Logger} from "../utils/Logger";
+//import {Logger} from "../utils/Logger";
 
 //import {App} from "../framework/App";
 
