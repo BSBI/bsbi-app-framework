@@ -150,7 +150,12 @@ export class Occurrence extends Model {
                         };
 
                         if (params.score) {
-                            this.attributes.taxon.score = params.score;
+                            if (typeof params.score !== 'number') {
+                                // score has come through as a string
+                                this.attributes.taxon.score = parseFloat(params.score) || null;
+                            } else {
+                                this.attributes.taxon.score = params.score;
+                            }
                         }
                         
                         change = true;
@@ -158,7 +163,12 @@ export class Occurrence extends Model {
                         this.attributes.taxon.role = OCCURRENCE_TAXON_ROLE_CONFIRMATION;
                         this.attributes.taxon.plantnetId = params.plantnetId;
                         if (params.score) {
-                            this.attributes.taxon.score = params.score;
+                            if (typeof params.score !== 'number') {
+                                // score has come through as a string
+                                this.attributes.taxon.score = parseFloat(params.score) || null;
+                            } else {
+                                this.attributes.taxon.score = params.score;
+                            }
                         }
                         change = true;
                     }

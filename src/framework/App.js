@@ -488,7 +488,7 @@ export class App extends EventHarness {
      * @returns {Promise<{major: number, minor : number} | null>}
      */
     getStoredAppVersion() {
-        return localforage.getItem(App.LAST_APP_VERSION_KEY_NAME);
+        return localforage.getItem(App.LAST_APP_VERSION_KEY_NAME).then((version) => (version ? { major: parseInt(version.major, 10), minor: parseInt(version.minor, 10) } : null));
     }
 
     // noinspection JSUnusedGlobalSymbols
