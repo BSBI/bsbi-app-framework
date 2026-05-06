@@ -134,6 +134,8 @@ export class Logger {
 
             errorDescriptor.message = message;
 
+            errorDescriptor.stamp = Date.now();
+
             if (navigator.onLine) {
                 return fetch(JS_LOG_PATH, {
                     method: "POST", // *GET, POST, PUT, DELETE, etc.
@@ -207,6 +209,7 @@ export class Logger {
         messageDescriptor.versions = Logger.bsbiAppVersion;
 
         messageDescriptor.message = message;
+        messageDescriptor.stamp = Date.now();
 
         if (navigator.onLine) {
             return fetch(JS_LOG_PATH, {

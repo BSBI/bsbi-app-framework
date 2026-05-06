@@ -69,6 +69,13 @@ export const APP_EVENT_CURRENT_SURVEY_CHANGED = 'currentsurveychanged';
 export const APP_EVENT_SURVEYS_CHANGED = 'surveyschanged';
 
 /**
+ * Fired if the survey definitions list has been updated (as a survey has been added, removed or changed)
+ *
+ * @type {string}
+ */
+export const APP_EVENT_SURVEY_DEFINITIONS_CHANGED = 'surveydefinitionschanged';
+
+/**
  * Fired after fully-successful sync-all
  * (or if sync-all resolved with nothing to send)
  *
@@ -129,8 +136,23 @@ export const SURVEY_EVENT_DELETED = 'surveydeleted';
 /**
  * fired from Survey when the object's contents have been modified
  *
- * parameter is {surveyId : string}
+ * The parameter is {surveyId : string}
  *
  * @type {string}
  */
 export const SURVEY_EVENT_MODIFIED = 'modified';
+
+/**
+ *
+ * @type {string}
+ */
+export const SURVEY_DEFINITION_EVENT_DELETED = 'surveydefinitiondeleted';
+
+/**
+ * fired from Survey when the object's contents have been modified
+ *
+ * The parameter is {surveyDefinitionId : string}
+ *
+ * @type {string}
+ */
+export const SURVEY_DEFINITION_EVENT_MODIFIED = 'surveydefinitionmodified';

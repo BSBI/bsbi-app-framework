@@ -423,7 +423,7 @@ export class Taxon {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * @returns boolean
+     * @returns {boolean}
      */
     isAggregate() {
         return (this.qualifier === 's.l.' || this.qualifier === 'agg.');

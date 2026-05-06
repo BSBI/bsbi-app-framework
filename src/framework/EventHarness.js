@@ -209,7 +209,7 @@ export class EventHarness {
      *
      * @param {string} eventName
      * @param {number} handle
-     * @returns undefined
+     * @returns {undefined}
      */
     removeListener(eventName, handle) {
         if (this._eventListeners[eventName]?.[handle]) {
@@ -268,7 +268,7 @@ export class EventHarness {
      *
      * @param {string} eventName
      * @param {Object=} param optional parameter to pass on to listener
-     * @return void
+     * @returns {void}
      */
     fireEvent (eventName, param) {
         if (this._eventListeners) {
@@ -297,7 +297,7 @@ export class EventHarness {
      * @param {{}} staticTarget
      * @param {string} eventName
      * @param {Object=} param optional parameter to pass on to listener
-     * @return void
+     * @returns {void}
      */
     static staticFireEvent (staticTarget, eventName, param) {
         const eventListeners = EventHarness._staticEventListeners.get(staticTarget);

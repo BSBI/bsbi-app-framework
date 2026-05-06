@@ -3,7 +3,7 @@
  * @param {string} separator
  * @param {string} finalSeparator
  * @param {Array.<string>} list
- * @return string
+ * @returns {string}
  */
 export function formattedImplode(separator, finalSeparator, list) {
     if (list.length > 2) {

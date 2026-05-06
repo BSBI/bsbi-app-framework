@@ -450,7 +450,7 @@ export class App extends EventHarness {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * @return Promise<string>
+     * @returns {Promise<string>}
      */
     initialiseDeviceId() {
         if (!this._deviceId) {
@@ -872,11 +872,12 @@ export class App extends EventHarness {
         if (this.surveys.has(survey.id)) {
             const previousSurvey = this.surveys.get(survey.id);
 
-            if (previousSurvey.modifiedStamp !== this.modifiedStamp) {
+            if (previousSurvey.modifiedStamp !== survey.modifiedStamp) {
                 changes = true;
+                survey = previousSurvey.mergeUpdate(survey);
+            } else {
+                survey = previousSurvey;
             }
-
-            survey = previousSurvey.mergeUpdate(survey);
         } else {
             this.surveys.set(survey.id, survey);
             changes = true;
@@ -2028,7 +2029,7 @@ export class App extends EventHarness {
     /**
      *
      * @param {string} contextMessage
-     * @return Promise<void>
+     * @returns {Promise<void>}
      */
     static logMemoryUsage(contextMessage) {
         // noinspection JSUnresolvedReference

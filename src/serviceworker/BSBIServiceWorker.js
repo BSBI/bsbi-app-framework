@@ -13,6 +13,7 @@ import {OccurrenceImage} from "../models/OccurrenceImage";
 import {Model} from "../models/Model";
 import {TrackResponse} from "./responses/TrackResponse";
 import {Logger} from "../utils/Logger";
+import {SurveyDefinitionResponse} from "./responses/SurveyDefinitionResponse";
 
 export class BSBIServiceWorker {
 
@@ -73,6 +74,7 @@ export class BSBIServiceWorker {
         SurveyResponse.register();
         OccurrenceResponse.register();
         TrackResponse.register();
+        SurveyDefinitionResponse.register();
 
         this.CACHE_VERSION = `version-BSBI_APP_VERSION-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
@@ -428,7 +430,7 @@ export class BSBIServiceWorker {
     handle_image_post(event) {
         let clonedRequest;
 
-        console.log('posting image for quick response');
+        //console.log('posting image for quick response');
 
         try {
             clonedRequest = event.request.clone();

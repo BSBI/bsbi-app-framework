@@ -409,6 +409,7 @@ export class Survey extends Model {
         return yearString === (new Date).toISOString().slice(0,4);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true or false based on date compatibility or null if the survey is undated (e.g. ongoing casual)
      *
@@ -427,7 +428,7 @@ export class Survey extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * called after the form has changed, before the values have been read back in to the occurrence.
+     * called after the form has changed, before the values have been read back in to the object.
      * read new values
      * validate
      * then fire its own change event (Survey.EVENT_MODIFIED)
@@ -554,7 +555,7 @@ export class Survey extends Model {
     /**
      * if not securely saved, then makes a post to /savesurvey.php
      *
-     * this may be intercepted by a service worker, which could write the image to indexeddb
+     * this will be intercepted by a service worker,
      * a successful save will result in a JSON response containing the uri from which the object may be retrieved
      * and also the state of persistence (whether or not the object was intercepted by a service worker while offline)
      *
@@ -886,6 +887,4 @@ export class Survey extends Model {
         this.hasAppModifiedListener = false;
         this.hasDeleteListener = false;
     }
-
-
 }

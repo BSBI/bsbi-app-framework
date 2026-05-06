@@ -303,13 +303,21 @@ export class Model extends EventHarness {
                     console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
 
                     // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
-                    // this._savedLocally = false;
-                    // this.savedRemotely = false;
 
-                    return Promise.reject(isSync ?
-                        `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
-                        :
-                        `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                    // see if a json error message is available in the response
+                    return response.json().then((responseData) => {
+                        return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
+                    }, () => {
+                        return Promise.reject(isSync ?
+                            `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
+                            :
+                            `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                    });
+
+                    // return Promise.reject(isSync ?
+                    //     `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
+                    //     :
+                    //     `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
                 }
             }, (error) => {
                 return Promise.reject({'fetch error': error});
