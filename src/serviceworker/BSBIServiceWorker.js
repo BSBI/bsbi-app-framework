@@ -769,8 +769,11 @@ export class BSBIServiceWorker {
                     return cache.put(request, response)
                         .then(() => cache.match(request, {ignoreVary : true, ignoreSearch : /\.css|\.mjs/.test(request.url)}));
                 } else {
-                    console.error(`Request during cache update failed for ${request.url}`);
-                    console.error({'failed cache response': response});
+                    console.error(`Request during cache update failed for ${request.url} (${response.status})`);
+
+                    if (response.status !== 404) {
+                        console.error({'failed cache response': response});
+                    }
                     return Promise.reject('Request during cache update failed, not caching.');
                 }
             }).catch((error) => {
@@ -779,7 +782,7 @@ export class BSBIServiceWorker {
                     timeoutId = null;
                 }
 
-                console.log(`Cache attempt failed for ${request.url}: error was ${error}`);
+                console.error(`Cache attempt failed for ${request.url}: error was ${error}`);
                 return Promise.reject(`Cache attempt failed for ${request.url}: error was ${error}`);
             });
         });
