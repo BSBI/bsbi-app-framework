@@ -1851,7 +1851,7 @@ export class App extends EventHarness {
         for(let trackKey of storedObjectKeys.track) {
             purgePromise = purgePromise.then(() => Track.retrieveFromLocal(trackKey, new Track)
                 .then((/** Track */ track) => {
-                    // use trackKey rather track.id as keys for tracks are expressed as id.deviceId
+                    // use trackKey rather than track.id as keys for tracks are expressed as id.deviceId
 
                     if (!track.deviceId || track.deviceId === 'undefined') {
                         console.log(`Queueing purge of corrupt track id ${track.id} with no device.`);
@@ -1893,7 +1893,7 @@ export class App extends EventHarness {
                 console.log({'would have purged' : deletionCandidateKeys});
 
                 return Logger.logError(`Purge failed: ${JSON.stringify(reason)}`)
-                    .then(() => Promise.reject(`Purge failed: ${JSON.stringify(reason)}`));
+                    .then(() => Promise.reject(`Purge failed: ${JSON.stringify(reason)}, would have purged: ${JSON.stringify(deletionCandidateKeys)}`));
             });
 
         return purgePromise;

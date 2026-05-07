@@ -320,7 +320,7 @@ export class Model extends EventHarness {
                     //     `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
                 }
             }, (error) => {
-                return Promise.reject({'fetch error': error});
+                return Promise.reject({'fetch network or permissions error': error});
             });
         } catch (e) {
             return Promise.reject({'fetch exception': e});

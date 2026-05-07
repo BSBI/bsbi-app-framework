@@ -348,12 +348,21 @@ export class BSBIServiceWorker {
                             return Promise.resolve(response); // pass through the server response
                         });
                 } else {
-                    console.log(`Failed to save, moving on to attempt IndexedDb`);
-                    return Promise.reject(`Failed to save to server. (${response.status})`);
+                    if (isSync) {
+                        console.log(`Failed to save for sync`);
+                    } else {
+                        console.log(`Failed to save, moving on to attempt IndexedDb`);
+                    }
+
+                    return response.json().then((jsonError) => {
+                        return Promise.reject(`Failed to save to server. (${response.status}) error ${JSON.stringify(jsonError)}`);
+                    }, () => {
+                        return Promise.reject(`Failed to save to server. (${response.status}) with no json response.`);
+                    });
                 }
             })
             .catch( (remoteReason) => {
-                    console.log({'post fetch failed (probably no network)': remoteReason});
+                    console.log({'post fetch failed (possibly no network)': remoteReason});
 
                     // would get here if the network is down
                     // or if got an invalid response from the server
@@ -499,7 +508,11 @@ export class BSBIServiceWorker {
                                                         console.error({'local storage store of image failed' : error});
                                                     });
                                             } else {
-                                                console.log('posted image to server in waitUntil part of fetch cycle: got Error response');
+                                                response.json().then(jsonError => {
+                                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+                                                }, error => {
+                                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+                                                });
                                             }
                                         }, (reason) => {
                                             console.log({'Rejected image post fetch from server - implies network is down' : reason});
@@ -510,10 +523,22 @@ export class BSBIServiceWorker {
                                 return response;
                             });
                     }, (reason) => {
-                        console.log({'failed to read form data locally' : reason});
+                        console.error({'in image post failed to read form data locally' : reason});
 
                         // in error state, still try to post the image to the server
-                        event.waitUntil(fetch(event.request));
+                        event.waitUntil(fetch(event.request).then(response => {
+                            if (response.ok) {
+                                console.log('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
+                            } else {
+                                response.json().then(jsonError => {
+                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+                                }, error => {
+                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+                                });
+                            }
+                        }, error => {
+                            console.error({'subsequent postponed image post to server failed with network error' : error});
+                        }));
 
                         /**
                          * simulated result of post, returned as JSON body
