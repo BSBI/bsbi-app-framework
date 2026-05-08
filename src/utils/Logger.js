@@ -54,7 +54,7 @@ export class Logger {
     /**
      * reports a JavaScript error
      *
-     * @param {string} message
+     * @param {string|object} message
      * @param {string|null} [url]
      * @param {string|number|null} [line]
      * @param {number|null} [column]
@@ -82,7 +82,7 @@ export class Logger {
             }
 
             if (!url) {
-                url = window?.location?.href;
+                url = globalThis.window?.location?.href;
             }
 
             if (console.trace) {
@@ -106,15 +106,15 @@ export class Logger {
                 errorDescriptor.url = url;
             }
 
-            if (window?.location?.href) {
+            if (globalThis.window?.location?.href) {
                 errorDescriptor.referrer = window.location.href;
             }
 
-            if (window?.location?.search) {
+            if (globalThis.window?.location?.search) {
                 errorDescriptor.urlquery = window.location.search;
             }
 
-            if (window?.location?.hash) {
+            if (globalThis.window?.location?.hash) {
                 errorDescriptor.urlhash = window.location.hash;
             }
 
@@ -122,7 +122,7 @@ export class Logger {
                 errorDescriptor.userid = Logger.app.session.userId;
             }
 
-            if (navigator) {
+            if (globalThis.navigator) {
                 // noinspection PlatformDetectionJS,JSDeprecatedSymbols
                 errorDescriptor.browser = navigator.appName;
                 // noinspection JSDeprecatedSymbols
@@ -136,7 +136,7 @@ export class Logger {
 
             errorDescriptor.stamp = Date.now();
 
-            if (navigator.onLine) {
+            if (globalThis.navigator?.onLine) {
                 return fetch(JS_LOG_PATH, {
                     method: "POST", // *GET, POST, PUT, DELETE, etc.
                     mode: "cors", // no-cors, *cors, same-origin
@@ -165,7 +165,7 @@ export class Logger {
     /**
      * remote-logs a message
      *
-     * @param {string} message
+     * @param {string|object} message
      * @param {string|null} [url]
      * @returns {Promise<void>} a fulfilled promise (even if logging fails)
      */
@@ -173,7 +173,7 @@ export class Logger {
         console.log(message);
 
         if (!url) {
-            url = window?.location?.href;
+            url = globalThis.window?.location?.href;
         }
 
         if (console.trace) {
@@ -189,11 +189,11 @@ export class Logger {
             messageDescriptor.url = url;
         }
 
-        if (window?.location?.search) {
+        if (globalThis.window?.location?.search) {
             messageDescriptor.urlquery = window.location.search;
         }
 
-        if (window?.location?.hash) {
+        if (globalThis.window?.location?.hash) {
             messageDescriptor.urlhash = window.location.hash;
         }
 
@@ -202,16 +202,16 @@ export class Logger {
         }
 
         // noinspection PlatformDetectionJS,JSDeprecatedSymbols
-        messageDescriptor.browser = navigator.appName;
+        messageDescriptor.browser = navigator?.appName;
         // noinspection JSDeprecatedSymbols
-        messageDescriptor.browserv = navigator.appVersion;
-        messageDescriptor.userAgent = navigator.userAgent;
+        messageDescriptor.browserv = navigator?.appVersion;
+        messageDescriptor.userAgent = navigator?.userAgent;
         messageDescriptor.versions = Logger.bsbiAppVersion;
 
         messageDescriptor.message = message;
         messageDescriptor.stamp = Date.now();
 
-        if (navigator.onLine) {
+        if (globalThis.navigator?.onLine) {
             return fetch(JS_LOG_PATH, {
                 method: "POST", // *GET, POST, PUT, DELETE, etc.
                 mode: "cors", // no-cors, *cors, same-origin

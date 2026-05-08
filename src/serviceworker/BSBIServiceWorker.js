@@ -287,6 +287,9 @@ export class BSBIServiceWorker {
      * @param {boolean} isSync set if this is called as part of a re-sync rather than as a first-time save
      */
     handle_post(fetchEvent, isSync = false) {
+        /**
+         * @type {Request}
+         */
         let clonedRequest;
         try {
             clonedRequest = fetchEvent.request.clone();
@@ -307,15 +310,11 @@ export class BSBIServiceWorker {
             .then((response) => {
                 // would get here if the server responds at all, but need to check that the response is OK (not a server error)
                 if (response.ok) {
-                    return Promise.resolve(response)
-                        .then((response) => {
-                            // save the response locally
-                            // before returning it to the client
+                    //fetchEvent.waitUntil(Logger.logMessage('Testing got OK post response in service worker.'));
 
-                            //console.log('About to clone the JSON response.')
-
-                            return response.clone().json();
-                        })
+                    // clone the response and save it locally
+                    // before returning it to the client
+                    return response.clone().json()
                         .then((jsonResponseData) => {
                             //console.log('Following successful remote post, about to save locally.');
 
@@ -325,27 +324,26 @@ export class BSBIServiceWorker {
                                 .storeLocally(true)
                                 .then((returnedToClient) => {
                                     if (jsonResponseData.type === 'image') {
-                                        return self.clients.get(fetchEvent.clientId)
+                                        fetchEvent.waitUntil(self.clients.get(fetchEvent.clientId)
                                             .then((client) => {
                                                 // post a message to the client to indicate that the image has been saved remotely
                                                 client.postMessage({
-                                                    reason : 'imageSavedRemotely',
-                                                    imageId : jsonResponseData.id || jsonResponseData.imageId,
+                                                    reason: 'imageSavedRemotely',
+                                                    imageId: jsonResponseData.id || jsonResponseData.imageId,
                                                 });
 
                                                 console.log('Sent image saved message to client from non-interactive post path.');
-                                            })
-                                            .then(() => returnedToClient);
-                                    } else {
-                                        return returnedToClient;
+                                            }));
                                     }
+                                    return returnedToClient;
                                 });
                         })
                         .catch((error) => {
                             // for some reason, local storage failed, after a successful server save
                             console.log({'local storage failed' : error});
 
-                            return Promise.resolve(response); // pass through the server response
+                            // log error and then pass through the server response
+                            return Logger.logError(`In SW handle_post local storage failed: ${JSON.stringify(error)}`).then(() => response);
                         });
                 } else {
                     if (isSync) {
@@ -355,14 +353,18 @@ export class BSBIServiceWorker {
                     }
 
                     return response.json().then((jsonError) => {
-                        return Promise.reject(`Failed to save to server. (${response.status}) error ${JSON.stringify(jsonError)}`);
+                        const stringMessage = `Failed to save to server. (${response.status}) error ${JSON.stringify(jsonError)}`;
+                        return Logger.logError(stringMessage).then(() => Promise.reject(stringMessage));
                     }, () => {
-                        return Promise.reject(`Failed to save to server. (${response.status}) with no json response.`);
+                        const stringMessage = `Failed to save to server. (${response.status}) with no json response.`;
+                        return Logger.logError(stringMessage).then(() => Promise.reject(stringMessage));
                     });
                 }
             })
             .catch( (remoteReason) => {
                     console.log({'post fetch failed (possibly no network)': remoteReason});
+
+                    fetchEvent.waitUntil(Logger.logError(`In SW handle_post remote fetch failed, sync=${isSync ? 'true' : 'false'} error: ${JSON.stringify(remoteReason)}`));
 
                     // would get here if the network is down
                     // or if got an invalid response from the server
@@ -509,13 +511,22 @@ export class BSBIServiceWorker {
                                                     });
                                             } else {
                                                 response.json().then(jsonError => {
-                                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+                                                    return Logger.logError(`JSON error response to image post to server in waitUntil part of fetch cycle: ${JSON.stringify(jsonError)}`)
+                                                        .then(() => {
+                                                            console.error({'JSON error response to image post to server in waitUntil part of fetch cycle': jsonError});
+                                                        });
                                                 }, error => {
-                                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+                                                    return Logger.logError(`Error response to image post to server in waitUntil part of fetch cycle: ${JSON.stringify(error)}`)
+                                                        .then(() => {
+                                                            console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+                                                        });
                                                 });
                                             }
                                         }, (reason) => {
-                                            console.log({'Rejected image post fetch from server - implies network is down' : reason});
+                                            return Logger.logError(`Rejected image post fetch from server: ${JSON.stringify(reason)}`)
+                                                .then(() => {
+                                                    console.error({'Rejected image post fetch from server - implies network is down': reason});
+                                                });
                                         }
                                     )
                                 );
@@ -528,16 +539,19 @@ export class BSBIServiceWorker {
                         // in error state, still try to post the image to the server
                         event.waitUntil(fetch(event.request).then(response => {
                             if (response.ok) {
-                                console.log('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
+                                return Logger.logMessage('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
+                                //console.log('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
                             } else {
                                 response.json().then(jsonError => {
-                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+                                    return Logger.logError({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+                                    //console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
                                 }, error => {
-                                    console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+                                    return Logger.logError({'Error response to image post to server in waitUntil part of fetch cycle': error});
+                                    //console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
                                 });
                             }
                         }, error => {
-                            console.error({'subsequent postponed image post to server failed with network error' : error});
+                            return Logger.logError({'subsequent postponed image post to server failed with network error' : error});
                         }));
 
                         /**

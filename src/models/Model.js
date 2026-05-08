@@ -242,7 +242,7 @@ export class Model extends EventHarness {
     /**
      * Makes a post to <this.SAVE_ENDPOINT>.
      *
-     * This should be intercepted by a service worker, which for non-sync requests will attempt to write to indexedDb.
+     * This should be intercepted by a serviceworker that, for non-sync requests, will attempt to write to indexedDb.
      *
      * @private
      * @param {FormData} formData

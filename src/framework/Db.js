@@ -25,7 +25,7 @@ export class Db extends EventHarness {
      */
     open(name, version) {
         return new Promise((resolve, reject) => {
-            const openRequest = window.indexedDB.open(name, version);
+            const openRequest = globalThis.indexedDB.open(name, version);
 
             // Register two event handlers to act on the database being opened successfully, or not
             openRequest.onerror = () => {
@@ -40,7 +40,7 @@ export class Db extends EventHarness {
 
             // This event handles the event whereby a new version of the database needs to be created
             // Either one has not been created before, or a new version number has been submitted via the
-            // window.indexedDB.open line above
+            // indexedDB.open line above
             // it is only implemented in recent browsers
             openRequest.onupgradeneeded = (event) => {
                 this.db = event.target.result;
