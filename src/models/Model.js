@@ -206,7 +206,7 @@ export class Model extends EventHarness {
                 return this._post(this.formData(), isSync)
                     .catch((reason) => {
                         // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError(`Failed to post '${JSON.stringify(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+                        Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
 
                         return Promise.reject(reason);
                     })

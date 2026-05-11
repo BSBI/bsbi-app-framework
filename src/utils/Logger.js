@@ -51,6 +51,17 @@ export class Logger {
             Promise.resolve();
     }
 
+    static stringifyObject(obj) {
+        if (typeof obj !== 'object') {
+            return obj.toString();
+        } else if (obj instanceof Error) {
+            return `Error (${obj.name}): ${obj.message}\nStack: ${obj.stack}`;
+        } else {
+            const stringified = JSON.stringify(obj, null, 2);
+            return stringified === '{}' ? obj.toString() : stringified;
+        }
+    }
+
     /**
      * reports a JavaScript error
      *
@@ -131,6 +142,10 @@ export class Logger {
             }
 
             errorDescriptor.versions = Logger.bsbiAppVersion;
+
+            if (message instanceof Error) {
+                message = Logger.stringifyObject(message);
+            }
 
             errorDescriptor.message = message;
 

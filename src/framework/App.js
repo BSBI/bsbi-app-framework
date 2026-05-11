@@ -1238,7 +1238,7 @@ export class App extends EventHarness {
                     });
             }, (failedResult) => {
                 console.error({'Failed to purge': failedResult});
-                Logger.logError(`Failed to purge: ${JSON.stringify(failedResult)}`)
+                Logger.logError(`Failed to purge: ${Logger.stringifyObject(failedResult)}`)
                     .finally(() => {
                         // cope with the pervasive Safari crash
                         // see https://bugs.webkit.org/show_bug.cgi?id=197050
@@ -1892,8 +1892,8 @@ export class App extends EventHarness {
                 console.error({'purge failed reason' : reason});
                 console.log({'would have purged' : deletionCandidateKeys});
 
-                return Logger.logError(`Purge failed: ${JSON.stringify(reason)}`)
-                    .then(() => Promise.reject(`Purge failed: ${JSON.stringify(reason)}, would have purged: ${JSON.stringify(deletionCandidateKeys)}`));
+                return Logger.logError(`Purge failed: ${Logger.stringifyObject(reason)}`)
+                    .then(() => Promise.reject(`Purge failed: ${Logger.stringifyObject(reason)}, would have purged: ${JSON.stringify(deletionCandidateKeys)}`));
             });
 
         return purgePromise;

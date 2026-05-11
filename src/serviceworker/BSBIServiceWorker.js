@@ -343,7 +343,7 @@ export class BSBIServiceWorker {
                             console.log({'local storage failed' : error});
 
                             // log error and then pass through the server response
-                            return Logger.logError(`In SW handle_post local storage failed: ${JSON.stringify(error)}`).then(() => response);
+                            return Logger.logError(`In SW handle_post local storage failed: ${Logger.stringifyObject(error)}`).then(() => response);
                         });
                 } else {
                     if (isSync) {
@@ -364,7 +364,7 @@ export class BSBIServiceWorker {
             .catch( (remoteReason) => {
                     console.log({'post fetch failed (possibly no network)': remoteReason});
 
-                    fetchEvent.waitUntil(Logger.logError(`In SW handle_post remote fetch failed, sync=${isSync ? 'true' : 'false'} error: ${JSON.stringify(remoteReason)}`));
+                    fetchEvent.waitUntil(Logger.logError(`In SW handle_post remote fetch failed, sync=${isSync ? 'true' : 'false'} error: ${Logger.stringifyObject(remoteReason)}`));
 
                     // would get here if the network is down
                     // or if got an invalid response from the server
@@ -377,7 +377,7 @@ export class BSBIServiceWorker {
                             isSync,
                             error: 'remote sync failed',
                             errorHelp: 'During a sync request your internet connection may have failed (or there could be a problem with the server). ' +
-                                `Error was: ${JSON.stringify(remoteReason)}`
+                                `Error was: ${Logger.stringifyObject(remoteReason)}`
                         };
 
                         return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
@@ -404,7 +404,7 @@ export class BSBIServiceWorker {
                                                 errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
                                                     'It wasn\'t possible to save a temporary copy on your device. (an unexpected saving error occurred) ' +
                                                     'Please try to re-establish a network connection and try again.' +
-                                                    `Error was: ${JSON.stringify(reason)}`
+                                                    `Error was: ${Logger.stringifyObject(reason)}`
                                             };
 
                                             return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
@@ -421,7 +421,7 @@ export class BSBIServiceWorker {
                                         errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
                                             'It wasn\'t possible to save a temporary copy on your device. (an unexpected decoding error occurred) ' +
                                             'Please try to re-establish a network connection and try again.' +
-                                            `Error was: ${JSON.stringify(remoteReason)}`
+                                            `Error was: ${Logger.stringifyObject(remoteReason)}`
                                     };
 
                                     return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
@@ -516,14 +516,14 @@ export class BSBIServiceWorker {
                                                             console.error({'JSON error response to image post to server in waitUntil part of fetch cycle': jsonError});
                                                         });
                                                 }, error => {
-                                                    return Logger.logError(`Error response to image post to server in waitUntil part of fetch cycle: ${JSON.stringify(error)}`)
+                                                    return Logger.logError(`Error response to image post to server in waitUntil part of fetch cycle: ${Logger.stringifyObject(error)}`)
                                                         .then(() => {
                                                             console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
                                                         });
                                                 });
                                             }
                                         }, (reason) => {
-                                            return Logger.logError(`Rejected image post fetch from server: ${JSON.stringify(reason)}`)
+                                            return Logger.logError(`Rejected image post fetch from server: ${Logger.stringifyObject(reason)}`)
                                                 .then(() => {
                                                     console.error({'Rejected image post fetch from server - implies network is down': reason});
                                                 });
