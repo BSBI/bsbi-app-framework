@@ -187,6 +187,15 @@ export class Model extends EventHarness {
     static _tasks = [];
 
     /**
+     * @param {number} modifiedStampWhenQueued
+     * @returns {boolean}
+     * @protected
+     */
+    _cannotSkipAsObsolete(modifiedStampWhenQueued) {
+        return true;
+    }
+
+    /**
      * Add a post request to the queue
      * Requests run in sequence.
      * Returns a promise that resolves once the queued request completes
@@ -197,20 +206,28 @@ export class Model extends EventHarness {
      * @returns {Promise}
      */
     queuePost(isSync = false) {
+        const modifiedStampWhenQueued = this.modifiedStamp;
+
         return new Promise((resolve, reject) => {
             /**
              * @returns {Promise}
              */
             const task = () => {
-                //console.log({'posting form data': formData});
-                return this._post(this.formData(), isSync)
-                    .catch((reason) => {
-                        // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
 
-                        return Promise.reject(reason);
-                    })
-                    .then(resolve, reject);
+                //if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
+                    //console.log({'posting form data': formData});
+                    return this._post(this.formData(), isSync)
+                        .catch((reason) => {
+                            // noinspection JSIgnoredPromiseFromCall
+                            Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+
+                            return Promise.reject(reason);
+                        })
+                        .then(resolve, reject);
+                // } else {
+                //     reject(`Skipped queued save as superseded.`);
+                //     return new Promise.resolve();
+                // }
             };
 
             Model._tasks.push(task);
@@ -253,7 +270,8 @@ export class Model extends EventHarness {
         try {
             return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                // keepalive: true, // can't use keepalive, as it limits the quest's size to 64kb
             }).then(response => {
                 if (response.ok) {
                     // need to find out whether this was a local store in indexedDb by the service worker
@@ -288,16 +306,13 @@ export class Model extends EventHarness {
                             this.createdStamp = parseInt(responseData.created, 10);
                             this.modifiedStamp = parseInt(responseData.modified, 10);
                         } else {
-                            console.log(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
+                            console.info(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
                         }
 
                         return responseData;
-
-                        // // return the JSON version of the original response as a promise
-                        // return response.json(); // assign a JSON type to the response
                     }, reason => {
                         console.error({'fetch error (at JSON decoding stage)': reason});
-                        return Promise.reject({'fetch error (at JSON decoding stage)': reason});
+                        return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
                     });
                 } else {
                     console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
@@ -307,11 +322,11 @@ export class Model extends EventHarness {
                     // see if a json error message is available in the response
                     return response.json().then((responseData) => {
                         return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
-                    }, () => {
+                    }, (error) => {
                         return Promise.reject(isSync ?
-                            `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
+                            `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
                             :
-                            `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                            `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
                     });
 
                     // return Promise.reject(isSync ?
@@ -320,10 +335,10 @@ export class Model extends EventHarness {
                     //     `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
                 }
             }, (error) => {
-                return Promise.reject({'fetch network or permissions error': error});
+                return Promise.reject(`fetch network or permissions error: ${Logger.stringifyObject(error)}`);
             });
         } catch (e) {
-            return Promise.reject({'fetch exception': e});
+            return Promise.reject(`fetch exception: ${Logger.stringifyObject(e)}`);
         }
     }
 

@@ -74,7 +74,7 @@ export class OccurrenceImage extends Model {
     /**
      * If not securely saved, then makes a post to /saveimage.php
      *
-     * This may be intercepted by a service worker, which could write the image to indexeddb.
+     * This will be intercepted by a service worker that will write the image to IndexedDB.
      * A successful save will result in a JSON response containing the uri from which the image may be retrieved
      * and also the state of persistence (whether or not the image was intercepted by a service worker while offline).
      *

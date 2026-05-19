@@ -15,6 +15,13 @@ export class Logger {
 
     static _serialNumber = 0;
 
+    /**
+     * Used only if the Logger is running in a service worker context, otherwise use Logger.app.session.userId
+     *
+     * @type {string}
+     */
+    static userId;
+
     static get serialNumber() {
         return Logger._serialNumber++;
     }
@@ -129,8 +136,8 @@ export class Logger {
                 errorDescriptor.urlhash = window.location.hash;
             }
 
-            if (Logger.app?.session?.userId) {
-                errorDescriptor.userid = Logger.app.session.userId;
+            if (Logger.app?.session?.userId || Logger.userId) {
+                errorDescriptor.userid = Logger.app?.session?.userId || Logger.userId;
             }
 
             if (globalThis.navigator) {
@@ -212,8 +219,8 @@ export class Logger {
             messageDescriptor.urlhash = window.location.hash;
         }
 
-        if (Logger.app?.session?.userId) {
-            messageDescriptor.userid = Logger.app.session.userId;
+        if (Logger.app?.session?.userId || Logger.userId) {
+            messageDescriptor.userid = Logger.app?.session?.userId || Logger.userId;
         }
 
         // noinspection PlatformDetectionJS,JSDeprecatedSymbols

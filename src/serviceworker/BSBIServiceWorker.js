@@ -115,6 +115,10 @@ export class BSBIServiceWorker {
                     case 'recache':
                         event.waitUntil(this.handleRecacheMessage(event.data.url));
                         break;
+
+                    case 'userchange':
+                        event.waitUntil(this.handleUserChangeMessage(event.data.userId));
+                        break;
                 }
             }
         );
@@ -708,8 +712,8 @@ export class BSBIServiceWorker {
                     "statusText": "OK image response from IndexedDb"
                 });
             } else {
-                console.error(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
-                return Promise.reject(`No local file object associated with retrieved image '${imageId}' from indexeddb.`);
+                console.error(`No local file object associated with retrieved image '${imageId}' from IndexedDB.`);
+                return Promise.reject(`No local file object associated with retrieved image '${imageId}' from IndexedDB.`);
             }
         });
     }
@@ -735,6 +739,11 @@ export class BSBIServiceWorker {
             console.error({'Precache failed result' : error});
             return Promise.resolve();
         });
+    }
+
+    handleUserChangeMessage(userId) {
+        Logger.userId = userId;
+        return Promise.resolve();
     }
 
     /**

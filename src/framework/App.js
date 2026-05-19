@@ -291,7 +291,7 @@ export class App extends EventHarness {
      * @returns {Promise}
      */
     setCurrentSurvey(survey) {
-        if (this._currentSurvey !== survey) {
+        if (this._currentSurvey?.id !== survey?.id) {
             this._currentSurvey = survey || null;
 
             if (survey) {
@@ -905,9 +905,14 @@ export class App extends EventHarness {
             survey.addListener(
                 SURVEY_EVENT_MODIFIED,
                 () => {
-                    survey.save().finally(() => {
-                        this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
-                    });
+                    // survey.save().finally(() => {
+                    //     this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                    // });
+
+                    // no need for promise chaining here as the save is queued
+                    // noinspection JSIgnoredPromiseFromCall
+                    survey.save();
+                    this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
                 }
             );
         }
@@ -1013,14 +1018,17 @@ export class App extends EventHarness {
                         survey.save(true);
                     }
 
-                    // // against a backdrop where surveys are somehow going unsaved, always force a survey re-save
-                    // // @todo need to watch if this is creating a mess of identical survey revisions
-                    // // noinspection JSIgnoredPromiseFromCall
-                    // survey.save(true);
-
-                    schedulerYield().then(() => occurrence.save()).finally(() => {
-                        survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
+                    schedulerYield().then(() => {
+                        // noinspection JSIgnoredPromiseFromCall
+                        occurrence.save().finally(() => {
+                            // the event refreshes the 'saved' css marker state, so needs to happen after the save completes
+                            survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
+                        });
                     });
+
+                    //.finally(() => {
+                    //     survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
+                    //});
                 }
             });
 
@@ -1524,8 +1532,8 @@ export class App extends EventHarness {
                 return () => {
                     //console.log({'queueing sync': {key: objectKey, type: classLowerName}});
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
-                        .then((/** Model */ model) => {
-                            if (model.TYPE === MODEL_TYPE_IMAGE && !model.deleted && !model.file) {
+                        .then((/** Model|OccurrenceImage */ model) => {
+                            if (model.TYPE === MODEL_TYPE_IMAGE && !model.deleted && (!model.file || model.file?.size === 0)) {
                                 // special case where image data is no longer in local storage (but not flagged as deleted)
                                 // (assume that image has already been saved)
 
@@ -1819,7 +1827,7 @@ export class App extends EventHarness {
         for(let imageKey of storedObjectKeys.image) {
             purgePromise = purgePromise.then(() => OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
                 .then((/** OccurrenceImage */ image) => {
-                    if (image.unsaved()) {
+                    if (image.unsaved() && (image.file || image.deleted)) {
                         if (deletionCandidateKeys.survey.includes(image.surveyId)) {
                             throw new PurgeInconsistencyError(`Image ${image.id} from deletable survey ${image.surveyId} is unsaved.`);
                         } else if (deletionCandidateKeys.occurrence.includes(image.occurrenceId)) {

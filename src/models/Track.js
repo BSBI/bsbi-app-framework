@@ -400,12 +400,22 @@ export class Track extends Model {
             Track.lastPingStamp = position.timestamp;
 
             if (changed) {
+                /**
+                 *
+                 * @type {(Survey|null)}
+                 */
                 const currentSurvey = Track._app?.currentSurvey;
 
                 // The survey must be saved first
                 if (currentSurvey?.unsaved?.()) {
                     if (!currentSurvey.isPristine) {
-                        currentSurvey.save().then(() => track.save());
+                        // adds to a save queue so promises don't need to be chained
+
+                        // noinspection JSIgnoredPromiseFromCall
+                        currentSurvey.save();
+
+                        // noinspection JSIgnoredPromiseFromCall
+                        track.save();
                     }
                 } else {
                     // noinspection JSIgnoredPromiseFromCall
@@ -413,6 +423,20 @@ export class Track extends Model {
                 }
             }
         }
+    }
+
+    /**
+     * @param {number} modifiedStampWhenQueued
+     * @returns {boolean}
+     * @protected
+     */
+    _cannotSkipAsObsolete(modifiedStampWhenQueued) {
+        if ((!this.unsaved()) || this.modifiedStamp > modifiedStampWhenQueued) {
+            // track has been updated since, so can skip saving an earlier iteration
+            console.info('Track._cannotSkipAsObsolete: skipping save due to update');
+            return false;
+        }
+        return true;
     }
 
     /**

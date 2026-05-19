@@ -808,6 +808,20 @@ export class Survey extends Model {
         return newSurvey;
     }
 
+    // /**
+    //  * @param {number} modifiedStampWhenQueued
+    //  * @returns {boolean}
+    //  * @protected
+    //  */
+    // _cannotSkipAsObsolete(modifiedStampWhenQueued) {
+    //     if (this._savedLocally && this.modifiedStamp > modifiedStampWhenQueued) {
+    //         // track has been updated since, so can skip saving an earlier iteration
+    //         console.info('Survey._cannotSkipAsObsolete: skipping save due to later update');
+    //         return false;
+    //     }
+    //     return true;
+    // }
+
     /**
      *
      * @param {App} app
