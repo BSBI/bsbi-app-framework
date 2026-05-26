@@ -156,3 +156,5 @@ export const SURVEY_DEFINITION_EVENT_DELETED = 'surveydefinitiondeleted';
  * @type {string}
  */
 export const SURVEY_DEFINITION_EVENT_MODIFIED = 'surveydefinitionmodified';
+
+export const APP_EVENT_SERVICE_WORKER_CHANGED = 'serviceworkerchanged';

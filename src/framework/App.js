@@ -29,7 +29,8 @@ import {
     //APP_EVENT_USER_LOGOUT,
     APP_EVENT_OPTIONS_RESTORED,
     SURVEY_EVENT_MODIFIED,
-    SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_DELETED
+    SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_DELETED,
+    APP_EVENT_SERVICE_WORKER_CHANGED
 } from './AppEvents';
 import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
 import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
@@ -474,6 +475,10 @@ export class App extends EventHarness {
         }
     }
 
+    /**
+     * 
+     * @returns {string}
+     */
     get deviceId() {
         if (!this._deviceId) {
             throw new Error("Device ID has not been initialised.");
@@ -2653,6 +2658,11 @@ export class App extends EventHarness {
                             occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
                         }
                     }
+                }
+                break;
+            case 'versionChanged':
+                if (event.data.upgrading) {
+                    this.fireEvent(APP_EVENT_SERVICE_WORKER_CHANGED, event.data.upgrading);
                 }
                 break;
             default:

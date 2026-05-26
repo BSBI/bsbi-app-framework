@@ -44,6 +44,8 @@ export class BSBIServiceWorker {
 
     SERVICE_WORKER_IMAGE_URL_MATCHES = /\/image.php/;
 
+    versionSpec;
+
     /**
      *
      * @param {{
@@ -59,7 +61,8 @@ export class BSBIServiceWorker {
      *  indexUrl : string,
      *  urlCacheSet : Array.<string>,
      *  version : string,
-     *  [dataVersion] : string
+     *  [dataVersion] : string,
+     *  upgrading : {},
      * }} configuration
      */
     initialise(configuration) {
@@ -91,6 +94,8 @@ export class BSBIServiceWorker {
         const SERVICE_WORKER_PASS_THROUGH_NO_CACHE = configuration.passThroughNoCache;
 
         this.SERVICE_WORKER_DATA_URL_MATCHES = configuration.dataUrlMatches || /^NO_MATCHING$/;
+
+        this.versionSpec = configuration.upgrading;
 
         /**
          * Urls that should be cached, with no need for automatic refresh
@@ -179,7 +184,13 @@ export class BSBIServiceWorker {
                     );
                 }).then(() => {
                     console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
-                    return self.clients.claim();
+                    return self.clients.claim()
+                        .then(() => self.clients.matchAll({type: 'all'}))
+                        .then(clients => {
+                            for (const client of clients) {
+                                client.postMessage({reason: 'versionChanged', upgrading: this.versionSpec});
+                            }
+                        });
                 })
             );
         });
