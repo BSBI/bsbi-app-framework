@@ -186,6 +186,22 @@ export class Model extends EventHarness {
      */
     static _tasks = [];
 
+    saveSnapshotStamp = 0;
+
+    /**
+     * ms stamp of last queued change
+     * set when a post is queued
+     * @type {number}
+     */
+    lastQueuedPostAbsoluteStamp = 0;
+
+    /**
+     * ms stamp of last save snapshot
+     * set when form data is prepared for saving
+     * @type {number}
+     */
+    saveSnapshotAbsoluteStamp = 0;
+
     /**
      * @param {number} modifiedStampWhenQueued
      * @returns {boolean}
@@ -207,6 +223,7 @@ export class Model extends EventHarness {
      */
     queuePost(isSync = false) {
         const modifiedStampWhenQueued = this.modifiedStamp;
+        this.lastQueuedPostAbsoluteStamp = Date.now();
 
         return new Promise((resolve, reject) => {
             /**
@@ -214,7 +231,10 @@ export class Model extends EventHarness {
              */
             const task = () => {
 
-                //if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
+                if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
+                    this.saveSnapshotAbsoluteStamp = Date.now();
+                    this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
+
                     //console.log({'posting form data': formData});
                     return this._post(this.formData(), isSync)
                         .catch((reason) => {
@@ -223,11 +243,12 @@ export class Model extends EventHarness {
 
                             return Promise.reject(reason);
                         })
-                        .then(resolve, reject);
-                // } else {
-                //     reject(`Skipped queued save as superseded.`);
-                //     return new Promise.resolve();
-                // }
+                        .then((result) => resolve(result), (reason) => reject(reason));
+                } else {
+                    console.log(`Skipped queued save as superseded, for ${this.constructor.className} id ${this.id}`);
+                    resolve(`Skipped queued save as superseded.`);
+                    return Promise.resolve();
+                }
             };
 
             Model._tasks.push(task);
@@ -236,7 +257,9 @@ export class Model extends EventHarness {
                 console.log(`Added post request to the queue.`);
             } else {
                 console.log(`No pending tasks, starting post request immediately.`);
-                task().finally(Model._next);
+                task().finally(() => {
+                    Model._next();
+                });
             }
         });
     }
@@ -287,7 +310,7 @@ export class Model extends EventHarness {
 
                         //console.log({'returned to client after save' : responseData});
 
-                        if (responseData.modified >= this.modifiedStamp) {
+                        if (responseData.modified >= this.modifiedStamp && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp) {
                             switch (responseData.saveState) {
                                 case SAVE_STATE_SERVER:
                                     this._savedLocally = true;

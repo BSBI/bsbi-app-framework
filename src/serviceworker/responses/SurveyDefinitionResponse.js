@@ -25,6 +25,7 @@ export class SurveyDefinitionResponse extends LocalResponse {
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = this.toSaveLocally.projectId;
         this.returnedToClient.userId = this.toSaveLocally.userId || '';
+        this.returnedToClient.surveyType = this.toSaveLocally.surveyType;
         return this;
     }
 
@@ -44,6 +45,7 @@ export class SurveyDefinitionResponse extends LocalResponse {
         this.toSaveLocally.deleted = this.returnedToClient.deleted;
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
         this.toSaveLocally.userId = this.returnedToClient.userId || '';
+        this.toSaveLocally.surveyType = this.returnedToClient.surveyType;
         return this;
     }
 

@@ -431,6 +431,11 @@ export class Track extends Model {
      * @protected
      */
     _cannotSkipAsObsolete(modifiedStampWhenQueued) {
+        if (this.modifiedStamp >= this.saveSnapshotStamp) {
+            //console.log('Track._cannotSkipAsObsolete: allow save as previous save was prior');
+            return true;
+        }
+
         if ((!this.unsaved()) || this.modifiedStamp > modifiedStampWhenQueued) {
             // track has been updated since, so can skip saving an earlier iteration
             console.info('Track._cannotSkipAsObsolete: skipping save due to update');

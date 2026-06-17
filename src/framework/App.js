@@ -84,12 +84,12 @@ export class App extends EventHarness {
     _currentControllerHandle = null;
 
     /**
-     * Set while a purge is in progress, to prevent overlapping conflicting purge operations
+     * Set while a purge is in progress, to prevent overlapping conflicting purge operations.
      *
      * @type {boolean}
      * @private
      */
-    _doingPurge = false;
+    static _doingPurge = false;
 
     /**
      * Set if the app should potentially allow tracking (if enabled by the user and supported by the device etc.)
@@ -134,6 +134,24 @@ export class App extends EventHarness {
         return this._currentControllerHandle;
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @returns {string|null}
+     */
+    get currentControllerName() {
+        return this.controllers[this._currentControllerHandle].constructor.className;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @returns {number|null}
+     */
+    get currentProjectId() {
+        return this.controllers[this._currentControllerHandle].constructor.projectId || null;
+    }
+
     /**
      *
      * @type {Array.<{url : string}>}
@@ -162,6 +180,13 @@ export class App extends EventHarness {
      * @type {Map.<string,Survey>}
      */
     surveys= new Map();
+
+    /**
+     * keyed by survey definition id (a UUID string)
+     * @type {Map<string, SurveyDefinition>}
+     */
+    surveyDefinitions = new Map();
+
 
     /**
      * @type {?Survey}
@@ -476,7 +501,7 @@ export class App extends EventHarness {
     }
 
     /**
-     * 
+     *
      * @returns {string}
      */
     get deviceId() {
@@ -626,7 +651,7 @@ export class App extends EventHarness {
     reset() {
         this.surveys = new Map();
         Track.reset();
-        return this.clearCurrentSurvey().then(this.clearLastSurveyId);
+        return this.clearCurrentSurvey().then(() => this.clearLastSurveyId());
     }
 
     /**
@@ -1026,7 +1051,7 @@ export class App extends EventHarness {
                     schedulerYield().then(() => {
                         // noinspection JSIgnoredPromiseFromCall
                         occurrence.save().finally(() => {
-                            // the event refreshes the 'saved' css marker state, so needs to happen after the save completes
+                            // the event refreshes the 'saved' CSS marker state, so needs to happen after the save completes
                             survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
                         });
                     });
@@ -1120,11 +1145,11 @@ export class App extends EventHarness {
     }
 
     /**
-     * compare modified stamp of indexeddb and external objects and write external version locally if more recent
+     * compare modified stamp of indexeddb and external objects and write the external version locally if more recent
      *
      * @param {{id : string, type : string, modified : number, created : number, saveState : string, deleted : boolean}} externalVersion
-     * @returns {Promise}
-     * @private
+     * @returns {Promise<{}>} resolves with the current version, local or external
+     * @protected
      */
     _conditionallyReplaceObject(externalVersion) {
         const objectType = externalVersion.type;
@@ -1143,16 +1168,15 @@ export class App extends EventHarness {
 
                     if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
                         this.isTestBuild && console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
-                        return Promise.resolve();
+                        return localVersion;
                     }
                 } else {
-                    this.isTestBuild && console.info(`Adding new ${key} from server. (locally absent) `);
+                    this.isTestBuild && console.info(`Adding new ${key} from server. (locally absent)`);
                 }
 
-                // no local copy or stale copy
-                // so store response locally
-                //console.info(`Adding or replacing local copy of ${key}`);
-                return localforage.setItem(key, externalVersion);
+                // No local copy or a stale copy,
+                // so store response locally.
+                return localforage.setItem(key, externalVersion).then(() => externalVersion);
             });
     }
 
@@ -1168,16 +1192,13 @@ export class App extends EventHarness {
      *      }>}
      */
     seekKeys(storedObjectKeys = {survey: [], occurrence: [], image: [], track: []}) {
-        //console.log('starting seekKeys');
 
         return localforage.keys().then((keys) => {
-            //console.log({"in seekKeys: local forage keys" : keys});
 
             const reservedNamesRegex = new RegExp(`^(?:${App.RESERVED_KEY_NAMES.join('|')})\\b`);
 
             for (let key of keys) {
 
-                //if (!App.RESERVED_KEY_NAMES.includes(key)) {
                 if (!key.match(reservedNamesRegex)) {
                     let type, id, deviceId;
 
@@ -1195,12 +1216,13 @@ export class App extends EventHarness {
                                 storedObjectKeys[type].push(id);
                             }
                         }
-                    } else {
-                        // 'track' and 'log' records not always wanted here, but not an error
-                        if (type !== 'track' && type !== 'log') {
-                            console.error(`Unrecognised stored key type '${type}'.`);
-                        }
                     }
+                    // else {
+                    //     // 'track', 'log' and 'surveydefinition' records are not always wanted here, but not an error
+                    //     if (type !== 'track' && type !== 'log' && type !== 'surveydefinition') {
+                    //         console.error(`Unrecognised stored key type '${type}'.`);
+                    //     }
+                    // }
                 }
             }
 
@@ -1222,7 +1244,7 @@ export class App extends EventHarness {
             track : [],
         };
 
-        if (this._doingPurge) {
+        if (App._doingPurge) {
             console.error('Already doing a purge');
 
             // noinspection JSIgnoredPromiseFromCall
@@ -1230,7 +1252,7 @@ export class App extends EventHarness {
             return Promise.resolve();
         }
 
-        this._doingPurge = true;
+        App._doingPurge = true;
 
         const thresholdDays = this.getOption('retentionTime');
         if (thresholdDays >= 1 && thresholdDays <= OCCURRENCE_MAXIMUM_RETENTION_LIMIT_DAYS) {
@@ -1238,18 +1260,7 @@ export class App extends EventHarness {
         }
 
         const promise = this.seekKeys(storedObjectKeys)
-            .then((storedObjectKeys) => {
-                return this._purgeLocal(storedObjectKeys)
-                    .then((result) => {
-                        // if (!fastReturn) {
-                        //     // Can only trigger the event once the whole process is complete, rather than after
-                        //     // a short-cut fast return.
-                        //     this.fireEvent(APP_EVENT_PURGE);
-                        // }
-
-                        return result;
-                    });
-            }, (failedResult) => {
+            .then((storedObjectKeys) => this._purgeLocal(storedObjectKeys), (failedResult) => {
                 console.error({'Failed to purge': failedResult});
                 Logger.logError(`Failed to purge: ${Logger.stringifyObject(failedResult)}`)
                     .finally(() => {
@@ -1264,7 +1275,7 @@ export class App extends EventHarness {
                 //this.fireEvent(APP_EVENT_PURGE_FAILED);
                 return Promise.reject(failedResult);
             }).finally(() => {
-                this._doingPurge = false;
+                App._doingPurge = false;
             });
 
         return fastReturn ?
@@ -2314,10 +2325,10 @@ export class App extends EventHarness {
     }
 
     /**
-     * Adds surveys from local storage to the app's current list (if survey is compatible)
+     * Adds surveys from local storage to the app's current list (if the survey is compatible)
      * Does not affect the current survey or refresh any dependent occurrences etc.
      *
-     * Called as part of refresh following sync all (not used during app start-up, when current survey also needs to be set)
+     * Called as part of refresh following sync-all (not used during app start-up, when current the survey also needs to be set)
      *
      * @returns {Promise<void>}
      *
@@ -2459,8 +2470,8 @@ export class App extends EventHarness {
     }
 
     /**
-     * Test if user has the necessary admin rights for the given survey.
-     * May be overridden in child classes to cope with administration of specialized survey types
+     * Test if the user has the necessary admin rights for the given survey.
+     * May be overridden in child classes to cope with administration of specialised survey types
      *
      * @param {Survey} survey
      * @returns {boolean}
@@ -2639,6 +2650,7 @@ export class App extends EventHarness {
             );
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {MessageEvent} event

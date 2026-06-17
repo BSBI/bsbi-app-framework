@@ -296,10 +296,15 @@ export class Occurrence extends Model {
      * @protected
      */
     _cannotSkipAsObsolete(modifiedStampWhenQueued) {
+        if (this.modifiedStamp >= this.saveSnapshotStamp) {
+            //console.log('Occurrence._cannotSkipAsObsolete: allow save as previous save was prior');
+            return true;
+        }
 
         // skip if already saved or, if the object is not on its first save (i.e. created == modified), then skip if it has new modifications since the originally queued request that will be saved later in the queue.
         if ((!this.unsaved()) || (modifiedStampWhenQueued > this.createdStamp && this.modifiedStamp > modifiedStampWhenQueued)) {
-            // track has been updated since, so can skip saving an earlier iteration
+            // occurrence has been updated since, so can skip saving an earlier iteration
+
             console.info('Occurrence._cannotSkipAsObsolete: skipping save due to later update');
             return false;
         }

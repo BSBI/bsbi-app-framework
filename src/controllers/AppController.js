@@ -42,6 +42,8 @@ export class AppController extends EventHarness {
      */
     app;
 
+    static className = 'AppController';
+
     /**
      *
      * @type {function|null}

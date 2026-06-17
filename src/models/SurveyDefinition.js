@@ -30,6 +30,11 @@ export class SurveyDefinition extends Model {
     attributes = {};
 
     /**
+     * @type {string}
+     */
+    surveyType;
+
+    /**
      * if set, then provide default values (e.g. GPS look-up of current geo-reference)
      *
      * @type {boolean}
@@ -204,39 +209,24 @@ export class SurveyDefinition extends Model {
         }
     }
 
-    // /**
-    //  *
-    //  * @type {Set<string>}
-    //  *
-    //  */
-    // extantOccurrenceKeys = new Set();
-
-    // // noinspection JSUnusedGlobalSymbols
-    // /**
-    //  * @todo need to exclude deleted records
-    //  * @returns {number}
-    //  *
-    //  */
-    // countRecords() {
-    //     return this.extantOccurrenceKeys.size;
-    // }
-
-    // /**
-    //  *
-    //  * @param {{
-    //  *      id : string,
-    //  *      saveState: string,
-    //  *      userId: string,
-    //  *      attributes: Object.<string, *>,
-    //  *      deleted: boolean|string,
-    //  *      created: (number|string),
-    //  *      modified: (number|string),
-    //  *      projectId: (number|string),
-    //  *      }} descriptor
-    //  */
-    // _parseDescriptor(descriptor) {
-    //     super._parseDescriptor(descriptor);
-    // }
+    /**
+     *
+     * @param {{
+     *      id : string,
+     *      saveState: string,
+     *      userId: string,
+     *      attributes: Object.<string, *>,
+     *      deleted: boolean|string,
+     *      created: (number|string),
+     *      modified: (number|string),
+     *      projectId: (number|string),
+     *      surveyType: string,
+     *      }} descriptor
+     */
+    _parseDescriptor(descriptor) {
+        this.surveyType = descriptor.surveyType;
+        super._parseDescriptor(descriptor);
+    }
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -263,6 +253,7 @@ export class SurveyDefinition extends Model {
         this.modifiedStamp = newSurveyDefinition.modifiedStamp;
         this.projectId = newSurveyDefinition.projectId; // generally, this should be the same anyway
         this.isPristine = newSurveyDefinition.isPristine;
+        this.surveyType = newSurveyDefinition.surveyType;
 
         return this;
     }

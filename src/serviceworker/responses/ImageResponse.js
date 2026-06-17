@@ -53,7 +53,7 @@ export class ImageResponse extends LocalResponse {
         this.toSaveLocally.type = 'image';
         this.toSaveLocally.imageId = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
         this.toSaveLocally.id = this.returnedToClient.id ? this.returnedToClient.id : this.returnedToClient.imageId; // hedging
-        this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
+        this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10);
         this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
         this.toSaveLocally.saveState = SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = (this.returnedToClient.deleted === true || this.returnedToClient.deleted === 'true');

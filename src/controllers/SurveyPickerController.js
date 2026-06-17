@@ -129,7 +129,7 @@ export class SurveyPickerController extends AppController {
 
     beforeSaveAllHandler(done) {
 
-        if (navigator.onLine) {
+        if (navigator.onLine && !App._doingPurge) {
             // invoke sync of any/all unsaved data
             // show pop-ups on success and failure
             this.app.syncAll(false).then((result) => {
