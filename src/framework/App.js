@@ -43,6 +43,8 @@ import {schedulerYield} from "../utils/schedulerYield";
  */
 export const OCCURRENCE_MAXIMUM_RETENTION_LIMIT_DAYS = 14;
 
+export const OCCURRENCE_DEFAULT_RETENTION_LIMIT_DAYS = 14;
+
 /**
  * @typedef {import('bsbi-app-framework-view').PatchedNavigo} PatchedNavigo
  * @typedef {import('bsbi-app-framework-view').Layout} Layout
@@ -225,7 +227,7 @@ export class App extends EventHarness {
      *
      * @type {number}
      */
-    staleThreshold = 3600 * 24 * 14; // keep surveys for 14 days
+    staleThreshold = 3600 * 24 * OCCURRENCE_DEFAULT_RETENTION_LIMIT_DAYS; // keep surveys for 14 days
 
     /**
      * called to resolve display promise after the very first navigation happens

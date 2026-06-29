@@ -6,6 +6,11 @@ import {Logger} from "../utils/Logger";
  * @typedef {import('bsbi-app-framework-view').FormField} FormField
  */
 
+/**
+ *
+ * @param {number} [a]
+ * @returns {string}
+ */
 export function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,uuid)}
 
 /**
@@ -260,6 +265,38 @@ export class Model extends EventHarness {
                 task().finally(() => {
                     Model._next();
                 });
+            }
+        });
+    }
+
+    /**
+     * Post immediately (no queue).
+     * Returns a promise that resolves once the POST request completes.
+     *
+     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
+     * @returns {Promise}
+     */
+    postImmediately(isSync = false) {
+        const modifiedStampWhenQueued = this.modifiedStamp;
+        this.lastQueuedPostAbsoluteStamp = Date.now();
+
+        return new Promise((resolve, reject) => {
+            if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
+                this.saveSnapshotAbsoluteStamp = Date.now();
+                this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
+
+                //console.log({'posting form data': formData});
+                this._post(this.formData(), isSync)
+                    .catch((reason) => {
+                        // noinspection JSIgnoredPromiseFromCall
+                        Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+
+                        return Promise.reject(reason);
+                    })
+                    .then((result) => resolve(result), (reason) => reject(reason));
+            } else {
+                console.log(`Skipped immediate save as superseded, for ${this.constructor.className} id ${this.id}`);
+                resolve(`Skipped immediate save as superseded.`);
             }
         });
     }

@@ -86,10 +86,11 @@ export class OccurrenceImage extends Model {
      * @param {boolean} forceSave
      * @param {boolean} [isSync]
      * @param {{[surveyId] : string, [projectId] : number|null, [occurrenceId] : string}} [params]
+     * @param {boolean} [skipQueue] default FALSE, if set then skip the normal save queue (first attempts should skip as the image is needed for display quickly, syncs should be queued)
      *
      * @returns {Promise<{}>}
      */
-    save(forceSave = false, isSync = false, params) {
+    save(forceSave = false, isSync = false, params, skipQueue = false) {
         if (params?.surveyId) {
             this.surveyId = params.surveyId;
         }
@@ -120,7 +121,7 @@ export class OccurrenceImage extends Model {
             }
 
             console.log(`queueing image post, image id ${this.id}`);
-            return this.queuePost(isSync);
+            return skipQueue ? this.postImmediately(isSync) : this.queuePost(isSync);
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }

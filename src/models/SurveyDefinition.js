@@ -25,6 +25,8 @@ export class SurveyDefinition extends Model {
      *
      * @type {{
      *     [name] : string,
+     *     [route] : object,
+     *     [recorders] : Array<{}>|null,
      * }}
      */
     attributes = {};

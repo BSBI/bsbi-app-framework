@@ -108,6 +108,7 @@ export class Survey extends Model {
      *          },
      *     [date] : string|null,
      *     [place] : string|null,
+     *     [recorders] : Array<{}>|null,
      *     [surveyName] : string|null,
      *     [casual] : "1"|null,
      *     [defaultCasual] : true|null,
