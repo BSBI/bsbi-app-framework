@@ -35,6 +35,7 @@ import {
 import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
 import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {schedulerYield} from "../utils/schedulerYield";
+import {SurveyDefinition} from "../models/SurveyDefinition.js";
 
 /**
  * never retain longer than 14 days
@@ -183,6 +184,7 @@ export class App extends EventHarness {
      */
     surveys= new Map();
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * keyed by survey definition id (a UUID string)
      * @type {Map<string, SurveyDefinition>}
@@ -235,6 +237,12 @@ export class App extends EventHarness {
      * @type {function|null}
      */
     afterFirstNavigationHandler = null;
+
+    /**
+     *
+     * @type {Map<number, Array<string>>}
+     */
+    compatibleSurveyDefinitions = new Map();
 
     /**
      * Flags the occurrence of a pervasive Safari bug
@@ -1412,6 +1420,8 @@ export class App extends EventHarness {
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
      * @param {boolean} [queryFilters.defaultCasual]
+     * @param {number} [queryFilters.segmentNumber]
+     * @param {string} [queryFilters.requireBaseSurveyId]
      * @param {string|null} preferredBaseSurveyId
      * @returns {Array<Survey>}
      */
@@ -1429,6 +1439,14 @@ export class App extends EventHarness {
             }
 
             if (queryFilters.defaultCasual && !survey.attributes.defaultCasual) {
+                continue;
+            }
+
+            if (queryFilters.requireBaseSurveyId && survey.attributes.baseSurveyId !== queryFilters.requireBaseSurveyId) {
+                continue;
+            }
+
+            if (queryFilters.segmentNumber && survey.attributes.segmentNumber !== queryFilters.segmentNumber) {
                 continue;
             }
 
@@ -2008,7 +2026,6 @@ export class App extends EventHarness {
 
     /**
      * restore previous state, pulling back from local and external store
-     * @todo this needs a save phase, so that local changes are saved back to the server
      *
      * @param {string} [targetSurveyId] if specified then select this id as the current survey
      * @param {boolean} [neverAddBlank] if set then don't add a new blank survey if none available, default false
@@ -2185,7 +2202,7 @@ export class App extends EventHarness {
                                 if (!timer) {
                                     console.log('Adding surveys for late response to load surveys');
 
-                                    return this.app.addAllSurveysFromLocal();
+                                    return this.addAllSurveysFromLocal();
                                 }
                             })
                             .finally(() => {

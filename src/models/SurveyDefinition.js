@@ -27,6 +27,7 @@ export class SurveyDefinition extends Model {
      *     [name] : string,
      *     [route] : object,
      *     [recorders] : Array<{}>|null,
+     *     [segments] : Array<{}>|null,
      * }}
      */
     attributes = {};
@@ -170,6 +171,7 @@ export class SurveyDefinition extends Model {
         formData.append('deleted', this.deleted.toString());
         formData.append('created', this.createdStamp?.toString?.() || '');
         formData.append('userId', this.userId);
+        formData.append('surveyType', this.surveyType);
 
         formData.append('appVersion', Model.bsbiAppVersion);
 
@@ -209,6 +211,30 @@ export class SurveyDefinition extends Model {
                 this.fireEvent(SURVEY_DEFINITION_EVENT_DELETED, {surveyDefinitionId : this.id});
             });
         }
+    }
+
+    /**
+     *
+     * @param {number} segmentNumber
+     * @returns {Object|null}
+     */
+    getSegmentData(segmentNumber) {
+        if (!this.attributes?.segments?.[segmentNumber]) {
+            return null;
+        }
+
+        const meta = this.attributes.segments[segmentNumber];
+
+        meta.route = this.attributes.route[segmentNumber];
+        return meta;
+    }
+
+    /**
+     *
+     * @returns {Array<{}>|null}
+     */
+    getSegmentsMetaData() {
+        return this.attributes.segments;
     }
 
     /**
@@ -264,5 +290,12 @@ export class SurveyDefinition extends Model {
         super.destructor();
         this.hasAppModifiedListener = false;
         this.hasDeleteListener = false;
+    }
+
+    /**
+     * @return {string}
+     */
+    getTitle() {
+        return this.attributes.surveyName || this.attributes.place || `(untitled ${this.id})`;
     }
 }

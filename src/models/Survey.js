@@ -11,7 +11,7 @@ import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 import {SURVEY_EVENT_MODIFIED, SURVEY_EVENT_DELETED} from "../framework/AppEvents";
 import {Logger} from "../utils/Logger";
-import {GEOREF_SOURCE_AREA, GEOREF_SOURCE_UNKNOWN, PROJECT_ID_SCM} from "../utils/constants";
+import {GEOREF_SOURCE_AREA, GEOREF_SOURCE_UNKNOWN, PROJECT_ID_PHENOLOGY, PROJECT_ID_SCM} from "../utils/constants";
 
 /**
  * fired on Survey when one of its occurrences has been added, deleted or reloaded
@@ -122,6 +122,7 @@ export class Survey extends Model {
      *          [unitId]: string,
      *          [unitNumber]: number|null
  *          },
+ *          [surveyTemplate] : string,
      * }}
      */
     attributes = {};
@@ -901,5 +902,27 @@ export class Survey extends Model {
         super.destructor();
         this.hasAppModifiedListener = false;
         this.hasDeleteListener = false;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     *
+     * @param {SurveyDefinition} surveyDefinition
+     * @param {App} app
+     */
+    registerSurveyDefinition(surveyDefinition, app) {
+        const compatibleSurveyDefinitions = app.compatibleSurveyDefinitions.get(surveyDefinition.projectId);
+        if (compatibleSurveyDefinitions?.includes(surveyDefinition.surveyType)) {
+
+            if (this.attributes.surveyTemplate !== surveyDefinition.id) {
+                this.attributes.surveyTemplate = surveyDefinition.id;
+                this.touch();
+                this.save().then(() => {
+                    console.log(`Survey definition updated for survey id: ${this.id}`);
+                });
+            }
+        } else {
+            console.error(`Survey definition type '${surveyDefinition.surveyType}' not compatible with survey id: ${this.id}`);
+        }
     }
 }

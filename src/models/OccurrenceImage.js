@@ -150,9 +150,9 @@ export class OccurrenceImage extends Model {
         formData.append('created', this.createdStamp?.toString?.() || '');
         formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
-        if (this.context === IMAGE_CONTEXT_SURVEY) {
-            formData.append('context', this.context);
-        } else {
+        formData.append('context', this.context);
+
+        if (this.context === IMAGE_CONTEXT_OCCURRENCE) {
             formData.append('occurrenceId', this.occurrenceId);
         }
 
