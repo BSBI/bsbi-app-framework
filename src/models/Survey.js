@@ -646,13 +646,18 @@ export class Survey extends Model {
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * @param {{summarySquarePrecision : number, summarizeTetrad : boolean}} options
+     * @param {{
+     *      [summarySquarePrecision] : number,
+     *      [summarizeTetrad] : boolean
+     *      [includeSegment] : boolean
+     *      }} options
+     * @param {App|null} [app]
      * @returns {string} an html-safe string based on the locality and creation date
      */
     generateSurveyName(options = {
         summarySquarePrecision : 1000,
         summarizeTetrad : false,
-    }) {
+    }, app = null) {
 
         if (this.attributes.casual) {
             // special-case treatment of surveys with the 'casual' attribute (which won't have a locality or date as part of the survey)
@@ -669,6 +674,24 @@ export class Survey extends Model {
                     place = `${this.attributes.area?.areaName}${this.attributes.area?.unitNumber === null || this.attributes.area?.unitNumber === undefined ? '' : ` (unit ${this.attributes.area?.unitNumber})`}`; // @todo consider appending area type suffix
                 } else {
                     place = '(unlocalised)';
+                }
+            } else if (this.projectId === PROJECT_ID_PHENOLOGY) {
+                if (app) {
+                    const surveyTemplate = app.surveyDefinitions.get(this.attributes.surveyTemplate);
+                    if (surveyTemplate) {
+                        place = surveyTemplate.getTitle();
+
+                        if (options.includeSegment) {
+                            const segmentNumber = this.attributes.segmentNumber || 0;
+                            const segmentData = surveyTemplate.getSegmentsMetaData()?.[this.attributes.segmentNumber];
+
+                            place += ` segment ${segmentData.segmentName || (segmentNumber + 1)}`;
+                        }
+                    } else {
+                        place = `Phenology survey ${this.id}`;
+                    }
+                } else {
+                    place = `Phenology segment ${(this.attributes.segmentNumber || 0) + 1}`; // should rely on the survey template for pretty names
                 }
             } else {
                 if (this.attributes.place) {

@@ -58,6 +58,7 @@ export class OccurrenceImage extends Model {
 
     SAVE_ENDPOINT = '/saveimage.php';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {File} file
@@ -134,18 +135,13 @@ export class OccurrenceImage extends Model {
     formData() {
         const formData = new FormData;
 
+        const id = this.id;
+
         formData.append('type', this.TYPE);
         formData.append('surveyId', this.surveyId ? this.surveyId : ''); // avoid 'undefined'
         formData.append('projectId', this.projectId ? this.projectId : '');
-        formData.append('imageId', this.id);
-        formData.append('id', this.id);
-        if (!this.deleted) {
-            if (this.file) {
-                formData.append('image', this.file);
-            } else {
-                throw new Error(`While retrieving form data, cannot save image id '${this.id}' with no local image data.`);
-            }
-        }
+        formData.append('imageId', id); // this shouldn't be needed
+        formData.append('id', id);
         formData.append('deleted', this.deleted.toString());
         formData.append('created', this.createdStamp?.toString?.() || '');
         formData.append('modified', this.modifiedStamp?.toString?.() || '');
@@ -164,6 +160,14 @@ export class OccurrenceImage extends Model {
 
         formData.append('appVersion', Model.bsbiAppVersion);
 
+        if (!this.deleted) {
+            if (this.file) {
+                formData.append('image', this.file);
+            } else {
+                throw new Error(`While retrieving form data, cannot save image id '${this.id}' with no local image data.`);
+            }
+        }
+
         return formData;
     }
 
@@ -174,15 +178,15 @@ export class OccurrenceImage extends Model {
     //  */
     // static EVENT_MODIFIED = 'modified';
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
-     * @param id
+     * @param {string} id
      * @returns {OccurrenceImage}
      */
     static placeholder(id) {
         let placeholderObject = new OccurrenceImage;
-        //placeholderObject._id = id;
-        placeholderObject.id = id; // should use setter, to enforce validation
+        placeholderObject.id = id; // should use the setter, to enforce validation
         placeholderObject.isPlaceholder = true;
 
         OccurrenceImage.imageCache.set(id, placeholderObject);

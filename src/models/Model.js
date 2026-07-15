@@ -331,7 +331,7 @@ export class Model extends EventHarness {
             return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
                 method: 'POST',
                 body: formData,
-                // keepalive: true, // can't use keepalive, as it limits the quest's size to 64kb
+                // keepalive: true, // can't use keepalive, as it limits the request's size to 64kb
             }).then(response => {
                 if (response.ok) {
                     // need to find out whether this was a local store in indexedDb by the service worker

@@ -24,7 +24,8 @@ export class SurveyDefinition extends Model {
     /**
      *
      * @type {{
-     *     [name] : string,
+     *     [surveyName] : string,
+     *     [place] : string,
      *     [route] : object,
      *     [recorders] : Array<{}>|null,
      *     [segments] : Array<{}>|null,
@@ -36,6 +37,15 @@ export class SurveyDefinition extends Model {
      * @type {string}
      */
     surveyType;
+
+    /**
+     * Part of the saved survey definition record.
+     * Flags whether this survey definition is linked to any surveys. Once used for records, the route cannot be revised and
+     * the definition cannot be deleted.
+     *
+     * @type {boolean}
+     */
+    inUse = false;
 
     /**
      * if set, then provide default values (e.g. GPS look-up of current geo-reference)
@@ -87,7 +97,7 @@ export class SurveyDefinition extends Model {
      * @param {{form: Form}} params
      */
     formChangedHandler(params) {
-        console.log('Survey definition change handler invoked.');
+        //console.log('Survey definition change handler invoked.');
 
         const form = params.form;
         // noinspection JSValidateTypes
@@ -95,11 +105,12 @@ export class SurveyDefinition extends Model {
 
         form.updateModelFromContent().then(() => {
 
-            console.log('Survey Definition calling conditional validation.');
+            //console.log('Survey Definition calling conditional validation.');
 
             // refresh the form's validation state
             form.conditionallyValidateForm();
 
+            this.isNew = false;
             this.touch();
             this.fireEvent(SURVEY_DEFINITION_EVENT_MODIFIED, {surveyId: this.id});
         })
@@ -172,6 +183,7 @@ export class SurveyDefinition extends Model {
         formData.append('created', this.createdStamp?.toString?.() || '');
         formData.append('userId', this.userId);
         formData.append('surveyType', this.surveyType);
+        formData.append('inUse', this.inUse.toString());
 
         formData.append('appVersion', Model.bsbiAppVersion);
 
@@ -194,6 +206,7 @@ export class SurveyDefinition extends Model {
             deleted : this.deleted,
             projectId : this.projectId,
             userId : this.userId,
+            inUse : this.inUse,
         });
     }
 
@@ -213,25 +226,43 @@ export class SurveyDefinition extends Model {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {number} segmentNumber
-     * @returns {Object|null}
+     * @returns {{
+     *     uniqueId : string,
+     *     segmentName : string,
+     *     [notes] : string,
+     *     route : {
+     *          n: number,
+     *          id: string,
+     *          waypoints: Array<{lng: number, lat: number}>,
+     *          centre : {lng: number, lat: number},
+     *          radius : number
+     *          },
+     * }|null}
      */
     getSegmentData(segmentNumber) {
         if (!this.attributes?.segments?.[segmentNumber]) {
             return null;
         }
 
-        const meta = this.attributes.segments[segmentNumber];
+        // shallow clone so that 'route' doesn't get added as a property of the original object
+        const meta = Object.assign({}, this.attributes.segments[segmentNumber]);
 
         meta.route = this.attributes.route[segmentNumber];
         return meta;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
-     * @returns {Array<{}>|null}
+     * @returns {Array<{
+     *      uniqueId : string,
+     *      segmentName : string,
+     *      [notes] : string,
+     *     }>|null}
      */
     getSegmentsMetaData() {
         return this.attributes.segments;
@@ -249,10 +280,12 @@ export class SurveyDefinition extends Model {
      *      modified: (number|string),
      *      projectId: (number|string),
      *      surveyType: string,
+     *      inUse: boolean|string,
      *      }} descriptor
      */
     _parseDescriptor(descriptor) {
         this.surveyType = descriptor.surveyType;
+        this.inUse = (descriptor.inUse === true) || (descriptor.inUse === 'true'); // cast stringified boolean to true boolean
         super._parseDescriptor(descriptor);
     }
 
@@ -282,6 +315,7 @@ export class SurveyDefinition extends Model {
         this.projectId = newSurveyDefinition.projectId; // generally, this should be the same anyway
         this.isPristine = newSurveyDefinition.isPristine;
         this.surveyType = newSurveyDefinition.surveyType;
+        this.inUse = this.inUse || newSurveyDefinition.inUse;
 
         return this;
     }
@@ -292,10 +326,29 @@ export class SurveyDefinition extends Model {
         this.hasDeleteListener = false;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @return {string}
      */
     getTitle() {
         return this.attributes.surveyName || this.attributes.place || `(untitled ${this.id})`;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Returns a promise that resolves when the survey definition has saved.
+     * (proceed with caution as the save will be queued so may be slow to resolve)
+     * Promise resolves immediately if the survey definition is already flagged as in use.
+     *
+     * @returns {Promise<void>}
+     */
+    flagUse() {
+        if (!this.inUse) {
+            this.inUse = true;
+            this.touch();
+            return this.save();
+        } else {
+            return Promise.resolve();
+        }
     }
 }

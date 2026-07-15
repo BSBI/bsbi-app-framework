@@ -72,7 +72,7 @@ export class ImageResponse extends LocalResponse {
      * @returns {string}
      */
     localKey() {
-        return `image.${this.toSaveLocally.imageId}`;
+        return `image.${this.toSaveLocally.imageId || this.toSaveLocally.id}`; // shouldn't need to hedge this
     }
 
     static register() {

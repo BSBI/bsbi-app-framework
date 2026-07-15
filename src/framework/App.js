@@ -1420,7 +1420,7 @@ export class App extends EventHarness {
      * @param {string} [queryFilters.date]
      * @param {string} [queryFilters.excludeSurveyId]
      * @param {boolean} [queryFilters.defaultCasual]
-     * @param {number} [queryFilters.segmentNumber]
+     * @param {number} [queryFilters.segmentUniqueId]
      * @param {string} [queryFilters.requireBaseSurveyId]
      * @param {string|null} preferredBaseSurveyId
      * @returns {Array<Survey>}
@@ -1442,11 +1442,11 @@ export class App extends EventHarness {
                 continue;
             }
 
-            if (queryFilters.requireBaseSurveyId && survey.attributes.baseSurveyId !== queryFilters.requireBaseSurveyId) {
+            if (queryFilters.requireBaseSurveyId && survey.baseSurveyId !== queryFilters.requireBaseSurveyId) {
                 continue;
             }
 
-            if (queryFilters.segmentNumber && survey.attributes.segmentNumber !== queryFilters.segmentNumber) {
+            if (queryFilters.segmentUniqueId && survey.attributes.segmentUniqueId !== queryFilters.segmentUniqueId) {
                 continue;
             }
 
