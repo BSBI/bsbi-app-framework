@@ -207,8 +207,6 @@ export class BSBIServiceWorker {
         self.addEventListener('fetch', /** @param {FetchEvent} evt */ (evt) => {
             //console.log(`The service worker is serving: '${evt.request.url}'`);
 
-            evt.preventDefault();
-
             if (evt.request.method === 'POST') {
                 //console.log(`Got a post request`);
                 evt.respondWith(fetch(evt.request)); // pass through all post requests
@@ -240,6 +238,8 @@ export class BSBIServiceWorker {
                     !SERVICE_WORKER_IGNORE_URL_MATCHES.test(evt.request.url)
                 ) {
                     // serving single page app instead
+                    evt.preventDefault();
+
                     console.log(`redirecting to the root of the SPA for '${evt.request.url}'`);
                     let spaRequest = new Request(INDEX_URL);
                     evt.respondWith(this.fromCache(spaRequest));
@@ -247,18 +247,20 @@ export class BSBIServiceWorker {
                     // don't need to check for fresh, stale is fine here
                     //evt.waitUntil(this.update(spaRequest));
                 } else if (evt.request.url.match(GET_IMAGE_URL_MATCH)) {
+                    evt.preventDefault();
+
                     console.log(`request is for an image '${evt.request.url}'`);
                     this.handleImageFetch(evt);
                 } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
                     // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
-                    evt.respondWith(fetch(evt.request));
+                    //evt.respondWith(fetch(evt.request));
+                    return;
                 } else if (SERVICE_WORKER_STATIC_URL_MATCHES?.test(evt.request.url)) {
                     // typically for content that won't change
+                    evt.preventDefault();
                     evt.respondWith(this.fromCache(evt.request));
                 } else {
-                    // let isStale = null;
-
-                    //console.log(`request is for non-image '${evt.request.url}'`);
+                    evt.preventDefault();
 
                     // You can use `respondWith()` to answer immediately, without waiting for the
                     // network response to reach the service worker...
@@ -281,14 +283,6 @@ export class BSBIServiceWorker {
                             return response;
                         })
                     );
-
-                    // if (isStale) {
-                    //     // ...and `waitUntil()` to prevent the worker from being killed until the
-                    //     // cache is updated.
-                    //     evt.waitUntil(this.update(evt.request));
-                    // } else {
-                    //     //console.log(`Request for ${evt.request.url} is still fresh.`);
-                    // }
                 }
             }
         });

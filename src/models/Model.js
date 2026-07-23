@@ -336,9 +336,8 @@ export class Model extends EventHarness {
     }
 
     /**
-     * Makes a post to <this.SAVE_ENDPOINT>.
-     *
-     * This should be intercepted by a serviceworker that, for non-sync requests, will attempt to write to indexedDb.
+     * Makes a post to <this.SAVE_ENDPOINT> storing successful results locally.
+     * For failed remote posts, write locally if not already saved locally.
      *
      * @protected
      * @param {FormData} formData
@@ -386,10 +385,11 @@ export class Model extends EventHarness {
 
                             return responseData;
                         }, (reason) => {
-                            // failed to save locally
+                            // failed to save locally, after successful save to server
 
                             this._savedLocally = false;
-                            this.savedRemotely = false;
+                            this.savedRemotely = true;
+                            return Promise.reject(`failed to save locally, after successful save to server: ${Logger.stringifyObject(reason)}`);
                             }
                         ), reason => {
                             console.error({'fetch error (at JSON decoding stage)': reason});
@@ -399,8 +399,7 @@ export class Model extends EventHarness {
                                 .populateClientResponse()
                                 .storeLocally(false)
                                 .then(() => {
-                                    if (responseData.modified >= this.modifiedStamp
-                                        && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                    if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
                                         && this.saveSnapshotModifiedToken === this.modifiedToken
                                     ) {
                                         this.savedRemotely = false;
@@ -412,27 +411,52 @@ export class Model extends EventHarness {
                         }
                     );
                 } else {
-                    console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
+                    console.error(`Save failed (reason ${response.status} '${response.statusText}')`);
 
-                    // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
-
-                    // see if a json error message is available in the response
-                    return response.json().then((responseData) => {
-                        return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
-                    }, (error) => {
-                        return Promise.reject(isSync ?
-                            `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
-                            :
-                            `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
-                    });
-
-                    // return Promise.reject(isSync ?
-                    //     `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
-                    //     :
-                    //     `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                    return ResponseFactory
+                        .fromPostedData(formData)
+                        .populateClientResponse()
+                        .storeLocally(false)
+                        .then(() => {
+                            if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                && this.saveSnapshotModifiedToken === this.modifiedToken
+                            ) {
+                                this.savedRemotely = false;
+                                this._savedLocally = true;
+                            }
+                        }, (reason) => {
+                            console.error(`After failed save local save also failed.`);
+                            this._savedLocally = false;
+                        }).then(() => {
+                        // see if a json error message is available in the response
+                            return response.json().then((responseData) => {
+                                return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
+                            }, (error) => {
+                                return Promise.reject(isSync ?
+                                    `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
+                                    :
+                                    `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
+                            });
+                        });
                 }
             }, (error) => {
-                return Promise.reject(`fetch network or permissions error: ${Logger.stringifyObject(error)}`);
+                return ResponseFactory
+                    .fromPostedData(formData)
+                    .populateClientResponse()
+                    .storeLocally(false)
+                    .then(() => {
+                        if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                            && this.saveSnapshotModifiedToken === this.modifiedToken
+                        ) {
+                            this.savedRemotely = false;
+                            this._savedLocally = true;
+                        }
+                    }, (reason) => {
+                        console.error(`After failed network request local save also failed.`);
+                        this._savedLocally = false;
+                    }).then(() => {
+                        return Promise.reject(`fetch network or permissions error: ${Logger.stringifyObject(error)}`);
+                    })
             });
         } catch (e) {
             return Promise.reject(`fetch exception: ${Logger.stringifyObject(e)}`);
