@@ -211,24 +211,25 @@ export class BSBIServiceWorker {
 
             if (evt.request.method === 'POST') {
                 //console.log(`Got a post request`);
+                evt.respondWith(fetch(evt.request)); // pass through all post requests
 
-                if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
-                    //console.log(`Passing through whitelisted post-request for: ${evt.request.url}`);
-                    evt.respondWith(fetch(evt.request));
-                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-                    //console.log(`Passing through nocache list post-request for: ${evt.request.url}`);
-                    evt.respondWith(fetch(evt.request));
-                } else {
-                    const isSync = /issync/.test(evt.request.url);
-
-                    if (POST_IMAGE_URL_MATCH.test(evt.request.url) && !isSync) {
-                        //console.log(`Got an image post request: '${evt.request.url}'`);
-                        this.handle_image_post(evt);
-                    } else {
-                        //console.log(`Got post request: '${evt.request.url}'`);
-                        this.handle_post(evt, isSync);
-                    }
-                }
+                // if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
+                //     //console.log(`Passing through whitelisted post-request for: ${evt.request.url}`);
+                //     evt.respondWith(fetch(evt.request));
+                // } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
+                //     //console.log(`Passing through nocache list post-request for: ${evt.request.url}`);
+                //     evt.respondWith(fetch(evt.request));
+                // } else {
+                //     const isSync = /issync/.test(evt.request.url);
+                //
+                //     if (POST_IMAGE_URL_MATCH.test(evt.request.url) && !isSync) {
+                //         //console.log(`Got an image post request: '${evt.request.url}'`);
+                //         this.handle_image_post(evt);
+                //     } else {
+                //         //console.log(`Got post request: '${evt.request.url}'`);
+                //         this.handle_post(evt, isSync);
+                //     }
+                // }
             } else {
                 // test whether this is a direct link in to a page that should be substituted by
                 // the single page app
@@ -305,27 +306,6 @@ export class BSBIServiceWorker {
     handle_post(fetchEvent, isSync = false) {
         const url = fetchEvent.request.url;
         const clonedRequest = fetchEvent.request.clone();
-
-        //let clonedFormData;
-
-        // /**
-        //  * @type {Request}
-        //  */
-        // let clonedRequest;
-        // try {
-        //     clonedRequest = fetchEvent.request.clone();
-        // } catch (e) {
-        //     console.log({'Failed to clone request': e});
-        //
-        //     let returnedToClient = {
-        //         error: 'Failed to clone post request',
-        //         errorHelp: 'Post failed as the request object could not be cloned.' +
-        //             `Error was: ${e?.message}`
-        //     };
-        //
-        //     fetchEvent.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
-        //     return;
-        // }
 
         fetchEvent.respondWith(clonedRequest.formData().then((formData) => {
 

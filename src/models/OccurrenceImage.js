@@ -331,6 +331,7 @@ export class OccurrenceImage extends Model {
             return await fetch('/saveimagedirectly.php', {
                 method: 'POST',
                 body: this.formData(),
+                credentials: 'omit',
             });
         }
 
@@ -379,7 +380,8 @@ export class OccurrenceImage extends Model {
 
             response = await fetch(`/saveimagedirectly.php?chunk=${i}&chunksize=${chunkSize}${isSync ? '&issync' : ''}`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'omit',
             });
 
             if (!response.ok) {

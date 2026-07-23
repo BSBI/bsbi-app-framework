@@ -1,6 +1,7 @@
 import {EventHarness} from "../framework/EventHarness";
 import localforage from 'localforage';
 import {Logger} from "../utils/Logger";
+import {ResponseFactory} from "../serviceworker/responses/ResponseFactory.js";
 
 /**
  * @typedef {import('bsbi-app-framework-view').FormField} FormField
@@ -352,49 +353,64 @@ export class Model extends EventHarness {
                 // keepalive: true, // can't use keepalive, as it limits the request's size to 64kb
             }).then(response => {
                 if (response.ok) {
-                    // need to find out whether this was a local store in indexedDb by the service worker
-                    // or a server-side save
+                    return response.json()
+                        .then((jsonResponseData) => ResponseFactory.fromPostResponse(jsonResponseData)
+                        .setPrebuiltResponse(response)
+                        .populateLocalSave()
+                        .storeLocally(true)
+                        .then((responseData) => {
+                            if (responseData.modified >= this.modifiedStamp
+                                && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                && this.saveSnapshotModifiedToken === this.modifiedToken
+                            ) {
+                                switch (responseData.saveState) {
+                                    case SAVE_STATE_SERVER:
+                                        this._savedLocally = true;
+                                        this.savedRemotely = true;
+                                        break;
 
-                    // // to do that, need to decode the JSON response
-                    // // which can only be done once, so need to clone first
-                    // const clonedResponse = response.clone();
-                    // return clonedResponse.json().then((responseData) => {
+                                    case SAVE_STATE_LOCAL:
+                                        this._savedLocally = true;
+                                        this.savedRemotely = false;
+                                        break;
 
-                    return response.json().then((responseData) => {
-                        /** @param {{saveState : string, created : number, modified : number}} responseData */
+                                    default:
+                                        console.log(`Unrecognised save state '${responseData.saveState}'`);
+                                }
 
-                        //console.log({'returned to client after save' : responseData});
-
-                        if (responseData.modified >= this.modifiedStamp
-                            && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                            && this.saveSnapshotModifiedToken === this.modifiedToken
-                        ) {
-                            switch (responseData.saveState) {
-                                case SAVE_STATE_SERVER:
-                                    this._savedLocally = true;
-                                    this.savedRemotely = true;
-                                    break;
-
-                                case SAVE_STATE_LOCAL:
-                                    this._savedLocally = true;
-                                    this.savedRemotely = false;
-                                    break;
-
-                                default:
-                                    console.log(`Unrecognised save state '${responseData.saveState}'`);
+                                this.createdStamp = parseInt(responseData.created, 10);
+                                this.modifiedStamp = parseInt(responseData.modified, 10);
+                            } else {
+                                console.info(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
                             }
 
-                            this.createdStamp = parseInt(responseData.created, 10);
-                            this.modifiedStamp = parseInt(responseData.modified, 10);
-                        } else {
-                            console.info(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
-                        }
+                            return responseData;
+                        }, (reason) => {
+                            // failed to save locally
 
-                        return responseData;
-                    }, reason => {
-                        console.error({'fetch error (at JSON decoding stage)': reason});
-                        return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
-                    });
+                            this._savedLocally = false;
+                            this.savedRemotely = false;
+                            }
+                        ), reason => {
+                            console.error({'fetch error (at JSON decoding stage)': reason});
+
+                            ResponseFactory
+                                .fromPostedData(formData)
+                                .populateClientResponse()
+                                .storeLocally(false)
+                                .then(() => {
+                                    if (responseData.modified >= this.modifiedStamp
+                                        && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                        && this.saveSnapshotModifiedToken === this.modifiedToken
+                                    ) {
+                                        this.savedRemotely = false;
+                                        this._savedLocally = true;
+                                    }
+                                });
+
+                            return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
+                        }
+                    );
                 } else {
                     console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
 
