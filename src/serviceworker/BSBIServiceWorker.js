@@ -209,7 +209,8 @@ export class BSBIServiceWorker {
 
             if (evt.request.method === 'POST') {
                 //console.log(`Got a post request`);
-                evt.respondWith(fetch(evt.request)); // pass through all post requests
+                // evt.respondWith(fetch(evt.request)); // pass through all post requests
+                return; // pass through all post requests
 
                 // if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
                 //     //console.log(`Passing through whitelisted post-request for: ${evt.request.url}`);
