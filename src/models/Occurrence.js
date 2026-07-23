@@ -224,6 +224,7 @@ export class Occurrence extends Model {
 
     changeApplied() {
         this.touch();
+        this.isNew = false;
         this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId: this.id});
     }
 
@@ -232,6 +233,7 @@ export class Occurrence extends Model {
         if (!this.deleted) {
             this.touch();
             this.deleted = true;
+            this.isNew = false;
 
             this.fireEvent(OCCURRENCE_EVENT_MODIFIED, {occurrenceId : this.id});
         }

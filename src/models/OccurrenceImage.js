@@ -1,4 +1,6 @@
-import {Model} from "./Model";
+import {Model, uuid} from "./Model";
+import {ResponseFactory} from "../serviceworker/responses/ResponseFactory.js";
+import {Logger} from "../utils/Logger.js";
 
 export const IMAGE_CONTEXT_SURVEY = 'survey';
 export const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
@@ -26,6 +28,12 @@ export class OccurrenceImage extends Model {
      * @type {Map.<string, OccurrenceImage>}
      */
     static imageCache = new Map;
+
+    /**
+     *
+     * @type {App|null}
+     */
+    static app = null;
 
     TYPE = MODEL_TYPE_IMAGE;
 
@@ -122,7 +130,11 @@ export class OccurrenceImage extends Model {
             }
 
             console.log(`queueing image post, image id ${this.id}`);
-            return skipQueue ? this.postImmediately(isSync) : this.queuePost(isSync);
+            //return skipQueue ? this.postImmediately(isSync) : this.queuePost(isSync);
+
+            //skipQueue = false; // for testing of queued path
+
+            return skipQueue ? this.directSave() : this.queuePost(isSync);
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }
@@ -169,6 +181,293 @@ export class OccurrenceImage extends Model {
         }
 
         return formData;
+    }
+
+    dataForSaving() {
+        const id = this.id;
+
+        const modelData = {
+            type : this.TYPE,
+            surveyId : this.surveyId ? this.surveyId : '', // avoid 'undefined'
+            projectId : this.projectId ? this.projectId : '',
+            imageId : id, // this shouldn't be needed
+            id : id,
+            deleted : this.deleted.toString(),
+            created : this.createdStamp?.toString?.() || '',
+            modified : this.modifiedStamp?.toString?.() || '',
+            context : this.context,
+            appVersion : Model.bsbiAppVersion,
+        };
+
+        if (this.context === IMAGE_CONTEXT_OCCURRENCE) {
+            modelData.occurrenceId = this.occurrenceId;
+        }
+
+        // Note that image attributes are saved as part of the associated image field data rather than with the image.
+
+        if (this.userId) {
+            modelData.userId = this.userId;
+        }
+
+        if (!this.deleted) {
+            if (this.file) {
+                modelData.image = this.file;
+            } else {
+                throw new Error(`While retrieving model data, cannot save image id '${this.id}' with no local image data.`);
+            }
+        }
+
+        return modelData;
+    }
+
+    /**
+     * Saves to IndexedDB and then to the server.
+     * The promise returns after the initial IndexedDB save has completed.
+     *
+     * @returns {Promise<Response>}
+     */
+    directSave() {
+        //const modifiedStampWhenQueued = this.modifiedStamp;
+        this.lastQueuedPostAbsoluteStamp = Date.now();
+        this.saveSnapshotAbsoluteStamp = Date.now();
+        this.saveSnapshotModifiedToken = this.modifiedToken;
+        this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
+
+        // save to indexedDb first and then to server after promise has resolved
+        // mimics the service worker pattern but in the main thread, avoiding Safari issues with reading formData in the service worker
+
+        return ResponseFactory
+            .fromModelData(this.dataForSaving())
+            .populateClientResponse()
+            .storeLocally(false)
+            .then((response) => {
+                // Separately, send data to the server, but the initial local save has already completed.
+
+                // fetch('/saveimagedirectly.php', {
+                //         method: 'POST',
+                //         body: this.formData(),
+                //     })
+                this._postChunked()
+                    .then((response) => {
+                        console.log('posting image after local db save');
+
+                        // would get here if the server responds at all, but need to check that the response is OK (not a server error)
+                        if (response.ok) {
+                            console.log('posted image to server after local storage: got OK response');
+
+                            return Promise.resolve(response)
+                                .then((response) => response.json())
+                                .then((jsonResponseData) => {
+
+                                    return ResponseFactory.fromPostResponse(jsonResponseData)
+                                        .setPrebuiltResponse(response)
+                                        .populateLocalSave()
+                                        .storeLocally()
+                                        .then(() => {
+                                            // call back to indicate that the image has been saved remotely
+                                            OccurrenceImage.app?._handleImageSavedRemotely?.(this.id);
+                                        });
+                                })
+                                .catch((error) => {
+                                    // for some reason, local storage failed, after a successful server save
+                                    console.error({'local storage store of image failed': error});
+                                });
+                        } else {
+                            response.json().then(jsonError => {
+                                jsonError.imageId = this.id;
+                                jsonError.fileLength = this.file?.size;
+                                jsonError.fileType = this.file?.type;
+                                return Logger.logError(`JSON error response to image post to server after local storage: ${JSON.stringify(jsonError)}`)
+                                    .then(() => {
+                                        console.error({'JSON error response to image post to server after local storage': jsonError});
+                                    });
+                            }, error => {
+                                return Logger.logError(`Error response to image post to server after local storage: ${Logger.stringifyObject(error)}`)
+                                    .then(() => {
+                                        console.error({'Error response to image post to server after local storage': error});
+                                    });
+                            });
+                        }
+                    }, (reason) => {
+                        return Logger.logError(`Rejected image post fetch from server: ${Logger.stringifyObject(reason)}`)
+                            .then(() => {
+                                console.error({'Rejected image post fetch from server - implies network is down': reason});
+                            });
+                    });
+
+
+                return response; // immediate return from local save before server save has gone through
+            });
+    }
+
+    isIOS() {
+        const ua = globalThis?.navigator?.userAgent;
+
+        // 1. Direct check for iPhone, iPod, or legacy iPad strings
+        const standardMatch = /iPhone|iPad|iPod/i.test(ua);
+
+        // 2. Detect Modern iPads and iPhones running in "Desktop Mode"
+        // These masquerade as a "Macintosh" but natively support multi-touch points.
+        const isDesktopModeApple = /Macintosh/i.test(ua) &&
+            globalThis?.navigator?.maxTouchPoints > 1;
+
+        return standardMatch || isDesktopModeApple;
+    };
+
+    /**
+     *
+     * @param {boolean} isSync
+     * @returns {Promise<Response>}
+     * @private
+     */
+    async _postChunked(isSync = false) {
+        const chunkSize = this.isIOS() ? (400 * 1024) : (2 * 1024 * 900); // 400k for IOS or ~ 1800k slices for sane devices
+
+        // Strictly, only retrieving the form data now, may result in a discrepancy between what was
+        // previously saved locally. That's not going to happen for images, but the same approach can't be replicated
+        // for other object types that undergo rapid changes.
+
+        if (!this.file || this.file.size <= chunkSize) {
+            return await fetch('/saveimagedirectly.php', {
+                method: 'POST',
+                body: this.formData(),
+            });
+        }
+
+        const totalChunks = Math.ceil(this.file.size / chunkSize);
+
+        let response;
+
+        const transactionId = uuid(); // required to avoid conflict between simultaneous uploads of the same image
+
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, this.file.size);
+            const chunk = this.file.slice(start, end);
+
+            const formData = new FormData();
+            formData.append('fileChunk', chunk);
+            formData.append('chunkIndex', i.toString());
+            formData.append('totalChunks', totalChunks.toString());
+            formData.append('transactionId', transactionId);
+            formData.append('imageId', this.id);
+
+            if (i === totalChunks - 1) {
+                // for the final chunk, include the full metadata
+
+                formData.append('type', this.TYPE);
+                formData.append('surveyId', this.surveyId ? this.surveyId : ''); // avoid 'undefined'
+                formData.append('projectId', this.projectId ? this.projectId : '');
+                formData.append('deleted', this.deleted.toString());
+                formData.append('created', this.createdStamp?.toString?.() || '');
+                formData.append('modified', this.modifiedStamp?.toString?.() || '');
+
+                formData.append('context', this.context);
+
+                if (this.context === IMAGE_CONTEXT_OCCURRENCE) {
+                    formData.append('occurrenceId', this.occurrenceId);
+                }
+
+                // Note that image attributes are saved as part of the associated image field data rather than with the image.
+
+                if (this.userId) {
+                    formData.append('userId', this.userId);
+                }
+
+                formData.append('appVersion', Model.bsbiAppVersion);
+            }
+
+            response = await fetch(`/saveimagedirectly.php?chunk=${i}&chunksize=${chunkSize}${isSync ? '&issync' : ''}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                break;
+            }
+        }
+
+        return response;
+    }
+
+    /**
+     * Makes a post to saveimagedirectly.php largely bypassing the service worker
+     * *Does not save the original image to IndexedDB as this is intended to be used in a sync context*
+     * *Does save server acknowledgement, if received*
+     *
+     * @protected
+     * @param {FormData} formData
+     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
+     * @returns {Promise}
+     */
+    _post(formData, isSync = false) {
+
+        // save to server and update IndexedDB and the local copy.
+        // mimics the service worker sync pattern but in the main thread, avoiding Safari issues with reading formData in the service worker
+
+        // return fetch(`/saveimagedirectly.php${isSync ? '?issync' : ''}`, {
+        //             method: 'POST',
+        //             body: this.formData(),
+        //         })
+        return this._postChunked(isSync)
+                .then((response) => {
+                    console.log('posting image after local db save');
+
+                    // would get here if the server responds at all, but need to check that the response is OK (not a server error)
+                    if (response.ok) {
+                        console.log('posted image to server: got OK response');
+
+                        return Promise.resolve(response)
+                            .then((response) => response.json())
+                            .then((jsonResponseData) => {
+
+                                return ResponseFactory.fromPostResponse(jsonResponseData)
+                                    .setPrebuiltResponse(response)
+                                    .populateLocalSave()
+                                    .storeLocally()
+                                    .then(() => {
+                                        // call back to indicate that the image has been saved remotely
+                                        OccurrenceImage.app?._handleImageSavedRemotely?.(this.id);
+
+                                        // note that, as images don't undergo repeated updates, we can be sloppy here
+                                        // and not test whether a subsequent update has occurred.
+                                        this._savedLocally = true;
+                                        this.savedRemotely = true;
+
+                                        return jsonResponseData;
+                                    });
+                            })
+                            .catch((error) => {
+                                // for some reason, local storage failed, after a successful server save
+                                console.error({'local post storage store of image failed': error});
+                            });
+                    } else {
+                        return response.json().then(jsonError => {
+                            const errorString = `JSON error response to direct image post to server after local storage: ${JSON.stringify(jsonError)}`;
+
+                            return Logger.logError(errorString)
+                                .then(() => {
+                                    console.error({'JSON error response to direct image post to server': jsonError});
+                                })
+                                .then(() => Promise.reject(errorString));
+                        }, error => {
+                            const errorString = `Error response to direct image post to server after local storage: ${Logger.stringifyObject(error)}`;
+
+                            return Logger.logError(errorString)
+                                .then(() => {
+                                    console.error({'Error response to direct image post to server': error});
+                                })
+                                .then(() => Promise.reject(errorString));
+                        });
+                    }
+                }, (reason) => {
+                    const errorString = `Rejected image post fetch from server: ${Logger.stringifyObject(reason)}`;
+                    return Logger.logError(errorString)
+                        .then(() => {
+                            console.error({'Rejected image post fetch from server - implies network is down': reason});
+                        })
+                        .then(() => Promise.reject(errorString));
+                });
     }
 
     // /**
@@ -236,6 +535,7 @@ export class OccurrenceImage extends Model {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @param {string} id

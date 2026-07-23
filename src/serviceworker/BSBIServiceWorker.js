@@ -304,6 +304,7 @@ export class BSBIServiceWorker {
      */
     handle_post(fetchEvent, isSync = false) {
         const url = fetchEvent.request.url;
+        const clonedRequest = fetchEvent.request.clone();
 
         //let clonedFormData;
 
@@ -326,7 +327,7 @@ export class BSBIServiceWorker {
         //     return;
         // }
 
-        fetchEvent.respondWith(fetchEvent.request.formData().then((formData) => {
+        fetchEvent.respondWith(clonedRequest.formData().then((formData) => {
 
             return fetch(url, {
                 method: 'POST',
@@ -432,6 +433,22 @@ export class BSBIServiceWorker {
                         }
                     }
                 )
+        }, (reason) => {
+            fetchEvent.waitUntil(Logger.logError(`Failed to read posted form data. ${Logger.stringifyObject(reason)}`));
+
+            // as a fallback post the request directly to the server without local handling
+            return fetch(fetchEvent.request);
+
+            // /**
+            //  * simulated result of post, returned as JSON body
+            //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+            //  */
+            // let returnedToClient = {
+            //     error: 'Failed to read image form data. (internal error)',
+            //     errorHelp: 'Sorry, the image save has failed.'
+            // };
+            //
+            // return packageClientResponse(returnedToClient);
         }));
     }
 
@@ -446,6 +463,8 @@ export class BSBIServiceWorker {
         let clonedFormData;
 
         //console.log('posting image for quick response');
+
+        const clonedRequest = event.request.clone();
 
         // try {
         //     clonedRequest = event.request.clone();
@@ -466,14 +485,15 @@ export class BSBIServiceWorker {
         const headerValues = Array.from(event.request.headers.values());
 
         // send back a quick response to the client from local storage (before the server request completes)
-        event.respondWith(event.request.formData()
+        event.respondWith(clonedRequest.formData()
             .then(formData => {
+                try {
                     clonedFormData = formData;
 
                     return ResponseFactory
                         .fromPostedData(formData)
                         .populateClientResponse()
-                        .storeLocally()
+                        .storeLocally(false)
                         .then((response) => {
 
                                 // Separately, send data to the server, but the response has already gone to the client before this completes.
@@ -578,6 +598,34 @@ export class BSBIServiceWorker {
                                 return packageClientResponse(returnedToClient);
                             }
                         );
+                    } catch (e) {
+                        // an exception here implies that have form data but failed to prepare it for local saving
+                        // before the promise chain resumed.
+                        event.waitUntil(Logger.logError(`Failed to prepare image form data for local saving. ${Logger.stringifyObject(e)}`));
+
+                        let returnedToClient = {
+                            error: 'Failed to read image form data. (internal error)',
+                            errorHelp: 'Sorry, the image save has failed.'
+                        };
+
+                        return packageClientResponse(returnedToClient);
+                    }
+                }, (reason) => {
+                    event.waitUntil(Logger.logError(`Failed to read image form data. ${Logger.stringifyObject(reason)}`));
+
+                    // as a fallback post the request directly to the server without local handling
+                    return fetch(event.request);
+
+                    // /**
+                    //  * simulated result of post, returned as JSON body
+                    //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+                    //  */
+                    // let returnedToClient = {
+                    //     error: 'Failed to read image form data. (internal error)',
+                    //     errorHelp: 'Sorry, the image save has failed.'
+                    // };
+                    //
+                    // return packageClientResponse(returnedToClient);
                 }
             )
         );

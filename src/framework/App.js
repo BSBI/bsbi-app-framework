@@ -2669,6 +2669,22 @@ export class App extends EventHarness {
             );
     }
 
+    _handleImageSavedRemotely(imageId) {
+        if (OccurrenceImage.imageCache.has(imageId)) {
+            const image = OccurrenceImage.imageCache.get(imageId);
+            image.savedRemotely = true; // this will trigger a MODEL_EVENT_SAVED_REMOTELY event
+
+            // need to refresh entries on the occurrence list, e.g. so that PlantNet buttons become available and possible image url changes take effect.
+            if (image.occurrenceId) {
+                const occurrence = this.occurrences.get(image.occurrenceId);
+
+                if (occurrence) {
+                    occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
+                }
+            }
+        }
+    }
+
     // noinspection JSUnusedGlobalSymbols
     /**
      *
@@ -2677,19 +2693,20 @@ export class App extends EventHarness {
     handleServiceWorkerMessage(event) {
         switch (event.data.reason) {
             case 'imageSavedRemotely':
-                if (OccurrenceImage.imageCache.has(event.data.imageId)) {
-                    const image = OccurrenceImage.imageCache.get(event.data.imageId);
-                    image.savedRemotely = true; // this will trigger a MODEL_EVENT_SAVED_REMOTELY event
-
-                    // need to refresh entries on the occurrence list, e.g. so that PlantNet buttons become available and possible image url changes take effect.
-                    if (image.occurrenceId) {
-                        const occurrence = this.occurrences.get(image.occurrenceId);
-
-                        if (occurrence) {
-                            occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
-                        }
-                    }
-                }
+                this._handleImageSavedRemotely(event.data.imageId);
+                // if (OccurrenceImage.imageCache.has(event.data.imageId)) {
+                //     const image = OccurrenceImage.imageCache.get(event.data.imageId);
+                //     image.savedRemotely = true; // this will trigger a MODEL_EVENT_SAVED_REMOTELY event
+                //
+                //     // need to refresh entries on the occurrence list, e.g. so that PlantNet buttons become available and possible image url changes take effect.
+                //     if (image.occurrenceId) {
+                //         const occurrence = this.occurrences.get(image.occurrenceId);
+                //
+                //         if (occurrence) {
+                //             occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
+                //         }
+                //     }
+                // }
                 break;
             case 'versionChanged':
                 if (event.data.upgrading) {

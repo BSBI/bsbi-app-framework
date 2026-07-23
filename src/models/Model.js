@@ -53,6 +53,38 @@ export class Model extends EventHarness {
     attributes = {};
 
     /**
+     * ms stamp of last queued change
+     * set when a post is queued
+     * @type {number}
+     */
+    lastQueuedPostAbsoluteStamp = 0;
+
+    /**
+     * ms stamp of last save snapshot
+     * set when form data is prepared for saving
+     * @type {number}
+     */
+    saveSnapshotAbsoluteStamp = 0;
+
+    /**
+     * The state of the modified token at the point of the last save
+     * (a fine-grained way to catch changes between starting a post and marking the result as saved)
+     * (ms timestamps may be too course for this)
+     *
+     * @type {number}
+     */
+    saveSnapshotModifiedToken;
+
+    /**
+     * Random number set whenever the model is touched
+     *
+     * @type {number}
+     */
+    modifiedToken;
+
+    saveSnapshotStamp = 0;
+
+    /**
      * @return {string}
      */
     get localKey() {
@@ -191,22 +223,6 @@ export class Model extends EventHarness {
      */
     static _tasks = [];
 
-    saveSnapshotStamp = 0;
-
-    /**
-     * ms stamp of last queued change
-     * set when a post is queued
-     * @type {number}
-     */
-    lastQueuedPostAbsoluteStamp = 0;
-
-    /**
-     * ms stamp of last save snapshot
-     * set when form data is prepared for saving
-     * @type {number}
-     */
-    saveSnapshotAbsoluteStamp = 0;
-
     /**
      * @param {number} modifiedStampWhenQueued
      * @returns {boolean}
@@ -238,6 +254,7 @@ export class Model extends EventHarness {
 
                 if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
                     this.saveSnapshotAbsoluteStamp = Date.now();
+                    this.saveSnapshotModifiedToken = this.modifiedToken;
                     this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
 
                     //console.log({'posting form data': formData});
@@ -283,6 +300,7 @@ export class Model extends EventHarness {
         return new Promise((resolve, reject) => {
             if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
                 this.saveSnapshotAbsoluteStamp = Date.now();
+                this.saveSnapshotModifiedToken = this.modifiedToken;
                 this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
 
                 //console.log({'posting form data': formData});
@@ -321,7 +339,7 @@ export class Model extends EventHarness {
      *
      * This should be intercepted by a serviceworker that, for non-sync requests, will attempt to write to indexedDb.
      *
-     * @private
+     * @protected
      * @param {FormData} formData
      * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
@@ -347,7 +365,10 @@ export class Model extends EventHarness {
 
                         //console.log({'returned to client after save' : responseData});
 
-                        if (responseData.modified >= this.modifiedStamp && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp) {
+                        if (responseData.modified >= this.modifiedStamp
+                            && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                            && this.saveSnapshotModifiedToken === this.modifiedToken
+                        ) {
                             switch (responseData.saveState) {
                                 case SAVE_STATE_SERVER:
                                     this._savedLocally = true;
@@ -532,6 +553,8 @@ export class Model extends EventHarness {
      */
     touch() {
         this.modifiedStamp = Math.floor(Date.now() / 1000);
+
+        this.modifiedToken = Math.random();
 
         if (this.isPristine) {
             this.isPristine = false;

@@ -7,6 +7,7 @@ export class ResponseFactory {
      *
      * @param {FormData} formData
      * @returns {LocalResponse}
+     * @throws {Error}
      */
     static fromPostedData(formData) {
         /**
@@ -31,6 +32,26 @@ export class ResponseFactory {
             return new ResponseFactory.responses[toSaveLocally.type](toSaveLocally, {});
         } else {
             throw new Error(`Unrecognised post type '${toSaveLocally.type}'`);
+        }
+    }
+
+    /**
+     *
+     * @param {{}} modelData the object that will be saved to IndexedDb
+     * @returns {LocalResponse}
+     * @throws {Error}
+     */
+    static fromModelData(modelData) {
+        modelData.saveState = SAVE_STATE_LOCAL;
+
+        if (!modelData.type) {
+            throw new Error('Missing type in model data.');
+        }
+
+        if (ResponseFactory.responses.hasOwnProperty(modelData.type)) {
+            return new ResponseFactory.responses[modelData.type](modelData, {});
+        } else {
+            throw new Error(`Unrecognised post type '${modelData.type}'`);
         }
     }
 
