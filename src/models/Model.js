@@ -46,6 +46,21 @@ export class Model extends EventHarness {
     static bsbiAppVersion = '';
 
     /**
+     * Deadline (in milliseconds) applied to a save post, covering the whole request
+     * including reading the response body.
+     *
+     * Without this a stalled connection blocks indefinitely, as fetch() has no default timeout.
+     * A fully broken connection fails quickly, but a captive portal, or mobile data with a live
+     * radio but no throughput, can accept the connection and then hang, jamming the serial post
+     * queue behind it.
+     *
+     * Set to 0 to disable.
+     *
+     * @type {number}
+     */
+    static SAVE_POST_TIMEOUT_MS = 30000;
+
+    /**
      * mirrors constructor.name but doesn't get mangled by minification
      *
      * @type {string}
@@ -219,6 +234,70 @@ export class Model extends EventHarness {
     save(forceSave = false, isSync = false, params) {}
 
     /**
+     * Persist to local storage immediately, then queue a remote post that is deliberately *not* awaited.
+     *
+     * The returned promise settles once the object is durable on this device. The remote save
+     * continues in the background and announces itself through MODEL_EVENT_SAVED_REMOTELY.
+     *
+     * The local write is kept off Model._tasks on purpose. That queue exists to order *server*
+     * requests (survey before occurrence before image); local storage has no such dependency, as
+     * records are independent keyed puts. Leaving the local write in the queue meant that the
+     * hundredth record could not reach IndexedDb until the first record's post had settled, so a
+     * single stalled request put a whole session's work at risk.
+     *
+     * @protected
+     * @param {boolean} isSync set if this is part of a sync-all rather than a regular save
+     * @returns {Promise}
+     */
+    _saveLocalThenQueuePost(isSync = false) {
+        if (isSync) {
+            // Sync only ever runs over objects that are already in local storage, so there is
+            // nothing to pre-write. The caller (App._syncLocalUnsaved) also needs to know the
+            // outcome of the *remote* save, so the queued post stays awaited here.
+            return this.queuePost(true);
+        }
+
+        /**
+         * Retained so that the local failure can be reported after the remote post has been queued.
+         * @type {*}
+         */
+        let localFailure = null;
+
+        // Promise.resolve().then() so that a synchronous throw from storeLocally() (the localKey
+        // getters throw on incomplete objects) surfaces as a rejection rather than escaping save().
+        return Promise.resolve()
+            .then(() => this.storeLocally())
+            .then(
+                () => {
+                    this._savedLocally = true;
+                },
+                (reason) => {
+                    // Now that local storage is written first, this is the only step that can lose
+                    // the user's work outright, so it must be surfaced rather than swallowed.
+                    this._savedLocally = false;
+                    localFailure = reason;
+
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(`Failed to save ${this.constructor.className} id ${this.id} locally: ${Logger.stringifyObject(reason)}`);
+                }
+            )
+            .then(() => {
+                // Queued even if the local write failed: if local storage is full then the server
+                // is the only remaining place the record can survive.
+                this.queuePost(false)
+                    .catch((reason) => {
+                        // Remote failure is routine when offline. The object keeps savedRemotely false
+                        // and will be retried by App.syncAll() from local storage.
+                        console.info(`Deferred remote save pending for ${this.constructor.className} id ${this.id}: ${Logger.stringifyObject(reason)}`);
+                    });
+
+                if (localFailure) {
+                    return Promise.reject(localFailure);
+                }
+            });
+    }
+
+    /**
      *
      * @type {Array<function>}
      * @private
@@ -363,20 +442,64 @@ export class Model extends EventHarness {
     }
 
     /**
-     * Makes a post to <this.SAVE_ENDPOINT> storing successful results locally.
-     * For failed remote posts, write locally if not already saved locally.
+     * Makes a post to <this.SAVE_ENDPOINT>, storing the server's acknowledgement locally.
+     *
+     * The server's reply is parsed and written back to local storage because it does not always
+     * match what was sent (the server assigns the authoritative created/modified stamps, and may
+     * amend the record), so the local copy has to be reconciled with it.
+     *
+     * No local fallback is attempted on failure: callers reach this via _saveLocalThenQueuePost(),
+     * which has already written the record locally, or via sync, where it is already in local
+     * storage. A failure here simply leaves savedRemotely false for App.syncAll() to retry.
+     *
      * @protected
      * @param {FormData} formData
      * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
      * @returns {Promise}
      */
     _post(formData, isSync = false) {
+        /**
+         * set if the request was aborted by our own deadline rather than failing for another reason
+         * @type {boolean}
+         */
+        let timedOut = false;
+
+        let timeoutId = null;
+
+        /**
+         * Cleared only once the whole chain has settled, rather than when the response headers
+         * arrive, so that a stalled *body* is covered too (fetch resolves on headers, and
+         * response.json() can then hang indefinitely).
+         */
+        const clearPostTimeout = () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
+
         try {
-            return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, {
+            const fetchOptions = {
                 method: 'POST',
                 body: formData,
                 // keepalive: true, // can't use keepalive, as it limits the request's size to 64kb
-            }).then(response => {
+            };
+
+            // feature-detected, as aborting is an optimisation rather than a requirement
+            if (Model.SAVE_POST_TIMEOUT_MS && typeof AbortController !== 'undefined') {
+                const signalController = new AbortController();
+                fetchOptions.signal = signalController.signal;
+
+                timeoutId = setTimeout(() => {
+                    timeoutId = null;
+                    timedOut = true;
+
+                    console.log(`Save post deadline of ${Model.SAVE_POST_TIMEOUT_MS} ms expired for ${this.constructor.className} id ${this.id}, aborting request.`);
+                    signalController.abort();
+                }, Model.SAVE_POST_TIMEOUT_MS);
+            }
+
+            return fetch(`${this.SAVE_ENDPOINT}${isSync ? '?issync' : ''}`, fetchOptions).then(response => {
                 if (response.ok) {
                     return response.json()
                         .then((jsonResponseData) => {
@@ -416,88 +539,34 @@ export class Model extends EventHarness {
                                     }
                                 );
                         }, reason => {
+                            // An OK status but an unreadable body. The server may or may not have
+                            // stored the record, so leave it flagged for re-sync.
                             console.error({'fetch error (at JSON decoding stage)': reason});
 
-                            if (!this._savedLocally) {
-                                return ResponseFactory
-                                    .fromPostedData(formData)
-                                    .populateClientResponse()
-                                    .storeLocally(false)
-                                    .then(() => {
-                                        if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                                            && this.saveSnapshotModifiedToken === this.modifiedToken
-                                        ) {
-                                            this.savedRemotely = false;
-                                            this._savedLocally = true;
-                                        }
-                                    }).then(() => {
-                                        if (isSync) {
-                                            return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
-                                        }
-                                    });
-                            } else {
-                                return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
-                            }
+                            return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
                         }
                     );
                 } else {
-                    if (!this._savedLocally) {
-                        console.error(`Remote save failed (reason ${response.status} '${response.statusText}')`);
-                        return ResponseFactory
-                            .fromPostedData(formData)
-                            .populateClientResponse()
-                            .storeLocally(false)
-                            .then(() => {
-                                if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                                    && this.saveSnapshotModifiedToken === this.modifiedToken
-                                ) {
-                                    this.savedRemotely = false;
-                                    this._savedLocally = true;
-                                }
-                            }, (reason) => {
-                                //console.error(`After failed save local save also failed.`);
-                                this._savedLocally = false;
-                                return Promise.reject(`After failed save local save also failed. '${JSON.stringify(reason)}'`);
-                            }).then(() => {
-                                // see if a json error message is available in the response
-                                return response.json().then((responseData) => {
-                                    return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
-                                }, (error) => {
-                                    return Promise.reject(isSync ?
-                                        `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
-                                        :
-                                        `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
-                                });
-                            });
-                    } else {
-                        return Promise.reject(`Remote save failed (skipping local save as saved already) (reason ${response.status} '${response.statusText}')`);
-                    }
+                    console.error(`Remote save failed (reason ${response.status} '${response.statusText}')`);
+
+                    // see if a json error message is available in the response
+                    return response.json().then((responseData) => {
+                        return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
+                    }, (error) => {
+                        return Promise.reject(isSync ?
+                            `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
+                            :
+                            `Save failed. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
+                    });
                 }
             }, (error) => {
-                if (!this._savedLocally) {
-                    return ResponseFactory
-                        .fromPostedData(formData)
-                        .populateClientResponse()
-                        .storeLocally(false)
-                        .then(() => {
-                            if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                                && this.saveSnapshotModifiedToken === this.modifiedToken
-                            ) {
-                                this.savedRemotely = false;
-                                this._savedLocally = true;
-                            }
-                        }, (reason) => {
-                            //console.error(`After failed network request local save also failed.`);
-                            this._savedLocally = false;
-                            return Promise.reject(`After failed network request local save also failed. ${Logger.stringifyObject(reason)}`);
-                        }).then(() => {
-                            return Promise.reject(`fetch network or permissions error: ${Logger.stringifyObject(error)}`);
-                        });
-                } else {
-                    return Promise.reject(`Failed network request, skipping local save as already locally saved`);
-                }
-            });
+                return Promise.reject(timedOut ?
+                    `Save post timed out after ${Model.SAVE_POST_TIMEOUT_MS} ms when saving ${this.constructor.className}, isSync: ${isSync ? 'true' : 'false'}.`
+                    :
+                    `fetch network or permissions error: ${Logger.stringifyObject(error)}`);
+            }).finally(clearPostTimeout);
         } catch (e) {
+            clearPostTimeout();
             return Promise.reject(`fetch exception: ${Logger.stringifyObject(e)}`);
         }
     }
@@ -715,9 +784,6 @@ export class Model extends EventHarness {
         return localforage.setItem(this.localKey, data)
             .then(() => {
                     console.log(`Stored object ${this.localKey} locally`);
-                    if (this.saveState !== SAVE_STATE_SERVER) {
-                        this.saveState = SAVE_STATE_LOCAL;
-                    }
                 },
                 (reason) => {
                     console.log({[`Failed to store object ${this.localKey} locally`] : reason});

@@ -159,10 +159,7 @@ export class SurveyDefinition extends Model {
      */
     save(forceSave = false, isSync = false, params) {
         if (forceSave || this.unsaved()) {
-            //const formData = this.formData();
-
-            console.log(`queueing survey definition post ${this.id}`);
-            return this.queuePost(isSync);
+            return this._saveLocalThenQueuePost(isSync);
         } else {
             return Promise.reject(`Survey definition ${this.id} has already been saved.`);
         }
@@ -203,7 +200,7 @@ export class SurveyDefinition extends Model {
             attributes : this.attributes,
             created : this.createdStamp,
             modified : this.modifiedStamp,
-            saveState : this.saveState === SAVE_STATE_SERVER ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL,
+            saveState : this._savedRemotely ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL, // derived from the flag; there is no saveState property
             deleted : this.deleted,
             projectId : this.projectId,
             userId : this.userId,

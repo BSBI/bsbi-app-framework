@@ -572,10 +572,7 @@ export class Track extends Model {
                 return Promise.reject(`Device id must be set before saving a track.`);
             }
 
-            //const formData = this.formData();
-
-            console.log('queueing Track post');
-            return this.queuePost(isSync);
+            return this._saveLocalThenQueuePost(isSync);
         } else {
             return Promise.resolve();
             //return Promise.reject(`Track for survey ${this.surveyId} has already been saved.`);
@@ -590,7 +587,7 @@ export class Track extends Model {
             attributes : this.attributes,
             created : this.createdStamp,
             modified : this.modifiedStamp,
-            saveState : this.saveState === SAVE_STATE_SERVER ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL,
+            saveState : this._savedRemotely ? SAVE_STATE_SERVER : SAVE_STATE_LOCAL, // derived from the flag; there is no saveState property
             deleted : this.deleted,
             projectId : this.projectId,
             userId : this.userId,

@@ -11,7 +11,7 @@ import {Occurrence, OCCURRENCE_EVENT_MODIFIED, OCCURRENCE_EVENT_NEEDS_REFRESH} f
 import localforage from "localforage";
 import {MODEL_TYPE_IMAGE, OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
-import {Model, uuid} from "../models/Model";
+import {Model, MODEL_EVENT_SAVED_REMOTELY, uuid} from "../models/Model";
 import {Track} from "../models/Track";
 import {
     //APP_EVENT_ADD_SURVEY_USER_REQUEST,
@@ -1087,7 +1087,9 @@ export class App extends EventHarness {
                     schedulerYield().then(() => {
                         // noinspection JSIgnoredPromiseFromCall
                         occurrence.save().finally(() => {
-                            // the event refreshes the 'saved' CSS marker state, so needs to happen after the save completes
+                            // Resolves once the occurrence is durable locally; the remote save
+                            // continues in the background and refreshes the marker separately
+                            // (see the MODEL_EVENT_SAVED_REMOTELY listener below).
                             survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
                         });
                     });
@@ -1098,7 +1100,41 @@ export class App extends EventHarness {
                 }
             });
 
+        // The 'unsaved' marker means 'not yet on the server', but occurrence.save() now resolves as
+        // soon as the record is durable locally, so the marker has to be refreshed again when the
+        // background post completes.
+        // The marker sheet is updated directly rather than by re-firing SURVEY_EVENT_OCCURRENCES_CHANGED,
+        // as that event also drives track, taxon-search and view refreshes that aren't wanted here.
+        occurrence.addListener(MODEL_EVENT_SAVED_REMOTELY, () => this._scheduleUnsavedMarkerUpdate());
+
         this.fireEvent(APP_EVENT_OCCURRENCE_LOADED, {occurrence: occurrence});
+    }
+
+    /**
+     * set while a marker refresh is already pending
+     *
+     * @type {boolean}
+     * @private
+     */
+    _unsavedMarkerUpdateScheduled = false;
+
+    /**
+     * Coalesces marker refreshes, as _updateUnsavedMarkerCss() rebuilds a stylesheet from the whole
+     * occurrence set and remote saves can complete in rapid bursts (particularly during a sync-all).
+     *
+     * @protected
+     */
+    _scheduleUnsavedMarkerUpdate() {
+        if (this._unsavedMarkerUpdateScheduled) {
+            return;
+        }
+
+        this._unsavedMarkerUpdateScheduled = true;
+
+        schedulerYield().then(() => {
+            this._unsavedMarkerUpdateScheduled = false;
+            this._updateUnsavedMarkerCss();
+        });
     }
 
     /**
