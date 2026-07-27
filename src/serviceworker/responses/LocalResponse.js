@@ -1,5 +1,4 @@
 import localforage from "localforage";
-import {packageClientResponse} from "../packageClientResponse";
 import {Logger} from "../../utils/Logger.js";
 
 export class LocalResponse {
@@ -59,10 +58,6 @@ export class LocalResponse {
                 console.log({reason});
 
                 return Promise.reject(`Failed to store object ${this.localKey()} locally: ${Logger.stringifyObject(reason)}`);
-                // this.returnedToClient.error = this.failureErrorMessage;
-                // this.returnedToClient.errorHelp = this.failureErrorHelp;
-                //
-                // return packageClientResponse(this.returnedToClient);
             }
         );
     }

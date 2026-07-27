@@ -386,7 +386,7 @@ export class Model extends EventHarness {
                                 && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
                                 && this.saveSnapshotModifiedToken === this.modifiedToken
                             ) {
-                                this.savedRemotely = true;
+                                this.savedRemotely = (jsonResponseData.saveState === SAVE_STATE_SERVER);
 
                                 this.createdStamp = parseInt(jsonResponseData.created, 10);
                                 this.modifiedStamp = parseInt(jsonResponseData.modified, 10);

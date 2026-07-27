@@ -65,7 +65,7 @@ export class OccurrenceImage extends Model {
         throw new Error('OccurrenceImage getUrl() not implemented.')
     }
 
-    SAVE_ENDPOINT = '/saveimage.php';
+    SAVE_ENDPOINT = '/saveimagedirectly.php';
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -330,7 +330,7 @@ export class OccurrenceImage extends Model {
         // for other object types that undergo rapid changes.
 
         if (!this.file || this.file.size <= chunkSize) {
-            return await fetch('/saveimagedirectly.php', {
+            return await fetch(this.SAVE_ENDPOINT, {
                 method: 'POST',
                 body: this.formData(),
             });
@@ -379,7 +379,7 @@ export class OccurrenceImage extends Model {
                 formData.append('appVersion', Model.bsbiAppVersion);
             }
 
-            response = await fetch(`/saveimagedirectly.php?chunk=${i}&chunksize=${chunkSize}${isSync ? '&issync' : ''}`, {
+            response = await fetch(`${this.SAVE_ENDPOINT}?chunk=${i}&chunksize=${chunkSize}${isSync ? '&issync' : ''}`, {
                 method: 'POST',
                 body: formData
             });
