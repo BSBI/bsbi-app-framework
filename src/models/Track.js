@@ -533,7 +533,7 @@ export class Track extends Model {
             } else {
                 // this is an empty series, so just delete it
 
-                delete this.points[this.points.length - 1];
+                this.points.splice(this.points.length - 1, 1); // use splice, as delete leaves a hole without updating the array length
                 this.pointIndex--;
             }
         } else {
@@ -609,12 +609,12 @@ export class Track extends Model {
         formData.append('surveyId', this.surveyId);
         formData.append('deviceId', this.deviceId);
         formData.append('id', `${this.surveyId}.${this.deviceId}`);
-        formData.append('projectId', this.projectId.toString());
+        formData.append('projectId', this.projectId?.toString?.() || '');
         formData.append('pointIndex', this.pointIndex.toString());
         formData.append('points', JSON.stringify(this.points));
         formData.append('attributes', JSON.stringify(this.attributes));
-        formData.append('created', this.createdStamp?.toString() || '');
-        formData.append('modified', this.modifiedStamp?.toString() || '');
+        formData.append('created', this.createdStamp?.toString?.() || '');
+        formData.append('modified', this.modifiedStamp?.toString?.() || '');
 
         if (this.userId) {
             formData.append('userId', this.userId);

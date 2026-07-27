@@ -250,7 +250,7 @@ export class BSBIServiceWorker {
                 } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
                     // typically for external content that can't/shouldn't be cached, e.g. MapBox tiles (which mapbox stores directly in the cache itself)
                     evt.respondWith(fetch(evt.request));
-                } else if (SERVICE_WORKER_STATIC_URL_MATCHES?.test(evt.request.url)) {
+                } else if (SERVICE_WORKER_STATIC_URL_MATCHES?.test?.(evt.request.url)) {
                     // typically for content that won't change
                     evt.respondWith(this.fromCache(evt.request));
                 } else {

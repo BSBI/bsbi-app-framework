@@ -593,7 +593,7 @@ export class Survey extends Model {
         formData.append('type', this.TYPE);
         formData.append('surveyId', this.id);
         formData.append('id', this.id); // this is incorrect duplication
-        formData.append('projectId', this.projectId.toString());
+        formData.append('projectId', this.projectId?.toString?.() || '');
         formData.append('attributes', JSON.stringify(this.attributes));
         formData.append('deleted', this.deleted.toString());
         formData.append('created', this.createdStamp?.toString?.() || '');
@@ -936,7 +936,7 @@ export class Survey extends Model {
      */
     registerSurveyDefinition(surveyDefinition, app) {
         const compatibleSurveyDefinitions = app.compatibleSurveyDefinitions.get(surveyDefinition.projectId);
-        if (compatibleSurveyDefinitions?.includes(surveyDefinition.surveyType)) {
+        if (compatibleSurveyDefinitions?.includes?.(surveyDefinition.surveyType)) {
 
             if (this.attributes.surveyTemplate !== surveyDefinition.id) {
                 this.attributes.surveyTemplate = surveyDefinition.id;

@@ -324,7 +324,7 @@ export class Occurrence extends Model {
         formData.append('surveyId', this.surveyId);
         formData.append('occurrenceId', this.id);
         formData.append('id', this.id); // this is incorrect duplication
-        formData.append('projectId', this.projectId.toString());
+        formData.append('projectId', this.projectId?.toString?.() || '');
         formData.append('attributes', JSON.stringify(this.attributes));
         formData.append('deleted', this.deleted.toString());
         formData.append('created', this.createdStamp?.toString?.() || '');

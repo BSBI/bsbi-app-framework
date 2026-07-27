@@ -152,7 +152,7 @@ export class OccurrenceImage extends Model {
 
         formData.append('type', this.TYPE);
         formData.append('surveyId', this.surveyId ? this.surveyId : ''); // avoid 'undefined'
-        formData.append('projectId', this.projectId ? this.projectId : '');
+        formData.append('projectId', this.projectId?.toString?.() || '');
         formData.append('imageId', id); // this shouldn't be needed
         formData.append('id', id);
         formData.append('deleted', this.deleted.toString());

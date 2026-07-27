@@ -641,9 +641,9 @@ export class App extends EventHarness {
      * @returns {Promise<void>|Promise<boolean>}
      */
     tryPersistStorage(always = false) {
-        if ((always || (window.matchMedia('(display-mode: standalone)').matches) &&
+        if ((always || window.matchMedia('(display-mode: standalone)').matches) &&
             navigator?.storage?.persist && navigator?.storage?.persisted &&
-            DeviceType.getDeviceType() !== DEVICE_TYPE_IMMOBILE)
+            DeviceType.getDeviceType() !== DEVICE_TYPE_IMMOBILE
         ) {
             return navigator.storage.persisted().then((persistent) => {
                 if (persistent) {
@@ -1794,7 +1794,7 @@ export class App extends EventHarness {
                         id : occurrenceDescriptor.id,
                         surveyId : occurrenceDescriptor.surveyId,
                         deleted : occurrenceDescriptor.deleted,
-                        modifiedStamp :  occurrenceDescriptor.modified,
+                        modifiedStamp :  occurrenceDescriptor.modified, // note occurrenceDescriptor 'modified' not 'modifiedStamp'
                         saveState : occurrenceDescriptor.saveState,
                     };
                 });
@@ -1811,7 +1811,8 @@ export class App extends EventHarness {
                         || occurrenceDescriptor.saveState !== SAVE_STATE_SERVER)
                     && deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId)
                 ) {
-                    delete deletionCandidateKeys.survey[deletionCandidateKeys.survey.indexOf(occurrenceDescriptor.surveyId)];
+                    //delete deletionCandidateKeys.survey[deletionCandidateKeys.survey.indexOf(occurrenceDescriptor.surveyId)];
+                    deletionCandidateKeys.survey.splice(deletionCandidateKeys.survey.indexOf(occurrenceDescriptor.surveyId), 1); // use splice rather than delete to avoid a hole in the array
 
                     if (!preservedKeys.survey.includes(occurrenceDescriptor.surveyId)) {
                         preservedKeys.survey.push(occurrenceDescriptor.surveyId);
@@ -1829,7 +1830,11 @@ export class App extends EventHarness {
             // having pruned the survey deletion candidates list, mark occurrences from surveys that are still on the deletion list.
             for (let occurrenceDescriptor of occurrenceMetaData) {
                 if (deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId) || (occurrenceDescriptor.deleted && occurrenceDescriptor.saveState === SAVE_STATE_SERVER)) {
-                    deletionCandidateKeys.occurrence.push(occurrenceDescriptor.id);
+
+                    // I think this final guard is probably not needed, but added for safety
+                    if (occurrenceDescriptor.saveState === SAVE_STATE_SERVER) {
+                        deletionCandidateKeys.occurrence.push(occurrenceDescriptor.id);
+                    }
                 } else {
                     // at this stage, mostly preserving occurrence keys, except for any saved occurrences
                     // belonging to the current default casual survey that are more than 30 days old
@@ -2116,7 +2121,7 @@ export class App extends EventHarness {
 
             if (navigator.storage?.estimate) {
                 promise = promise.then(() => {
-                    return navigator.storage?.estimate().then(storageSpec => {
+                    return navigator.storage.estimate().then(storageSpec => {
                         storage = storageSpec;
                     });
                 });

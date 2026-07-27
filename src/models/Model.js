@@ -289,9 +289,16 @@ export class Model extends EventHarness {
                 console.log(`Added post request to the queue.`);
             } else {
                 console.log(`No pending tasks, starting post request immediately.`);
-                task().finally(() => {
+
+                try {
+                    task().finally(() => {
+                        Model._next();
+                    });
+                } catch (error) {
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(`Catch in queuePost. ${Logger.stringifyObject(error)}`);
                     Model._next();
-                });
+                }
             }
         });
     }
@@ -446,7 +453,13 @@ export class Model extends EventHarness {
      *
      * @param {string} key
      * @param {string} type
-     * @returns {Promise<{}>}
+     * @returns {Promise<{
+     *      id : string,
+     *      deleted : boolean,
+     *      modified : int, // note 'modified' not modifiedStamp
+     *      saveState : string,
+     *      [surveyId] : string, // occurrences only
+     *      }>}
      */
     static retrieveRawFromLocal(key, type) {
         if (!key || key === 'undefined') {

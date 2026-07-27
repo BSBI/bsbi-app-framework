@@ -19,8 +19,8 @@ export class TrackResponse extends LocalResponse {
         this.returnedToClient.deviceId = this.toSaveLocally.deviceId;
         this.returnedToClient.type = 'track';
         this.returnedToClient.attributes = this.toSaveLocally.attributes;
-        this.returnedToClient.created = this.toSaveLocally.created; // stamps from server always take precedence
-        this.returnedToClient.modified = this.toSaveLocally.modified;
+        this.returnedToClient.created = parseInt(this.toSaveLocally.created, 10); // stamps from server always take precedence
+        this.returnedToClient.modified = parseInt(this.toSaveLocally.modified, 10);
         this.returnedToClient.saveState = SAVE_STATE_LOCAL;
         this.returnedToClient.deleted = this.toSaveLocally.deleted || '';
         this.returnedToClient.projectId = this.toSaveLocally.projectId;
