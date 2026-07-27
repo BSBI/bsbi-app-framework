@@ -11,7 +11,7 @@ import {Occurrence, OCCURRENCE_EVENT_MODIFIED, OCCURRENCE_EVENT_NEEDS_REFRESH} f
 import localforage from "localforage";
 import {MODEL_TYPE_IMAGE, OccurrenceImage} from "../models/OccurrenceImage";
 import {Logger} from "../utils/Logger";
-import {Model, SAVE_STATE_SERVER, uuid} from "../models/Model";
+import {Model, uuid} from "../models/Model";
 import {Track} from "../models/Track";
 import {
     //APP_EVENT_ADD_SURVEY_USER_REQUEST,
@@ -36,6 +36,7 @@ import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyErr
 import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {schedulerYield} from "../utils/schedulerYield";
 import {SurveyDefinition} from "../models/SurveyDefinition.js";
+import {SAVE_STATE_SERVER} from "../utils/constants.js";
 
 /**
  * never retain longer than 14 days

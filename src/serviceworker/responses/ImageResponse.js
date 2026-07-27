@@ -1,6 +1,6 @@
 import {ResponseFactory} from "./ResponseFactory";
 import {LocalResponse} from "./LocalResponse";
-import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../models/Model";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../utils/constants";
 import {IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY} from "../../models/OccurrenceImage";
 
 export class ImageResponse extends LocalResponse {

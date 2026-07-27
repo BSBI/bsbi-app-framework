@@ -1,5 +1,6 @@
 import localforage from "localforage";
 import {packageClientResponse} from "../packageClientResponse";
+import {Logger} from "../../utils/Logger.js";
 
 export class LocalResponse {
     /**
@@ -43,24 +44,25 @@ export class LocalResponse {
     }
 
     /**
-     * @todo without the service worker complexity, this probably doesn't need to return a Response
      *
      * @param {boolean} remoteSuccess set if the object has been saved remotely
-     * @returns {Promise<Response>}
+     * @returns {Promise<>}
      */
     storeLocally(remoteSuccess = true) {
         return localforage.setItem(this.localKey(), this.toSaveLocally)
             .then(() => {
                 console.log(`Stored object ${this.localKey()} locally`);
-                return this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient);
+                //return this.prebuiltResponse ? this.prebuiltResponse : packageClientResponse(this.returnedToClient);
             },
             (reason) => {
                 console.log(`Failed to store object ${this.localKey()} locally`);
                 console.log({reason});
-                this.returnedToClient.error = this.failureErrorMessage;
-                this.returnedToClient.errorHelp = this.failureErrorHelp;
 
-                return packageClientResponse(this.returnedToClient);
+                return Promise.reject(`Failed to store object ${this.localKey()} locally: ${Logger.stringifyObject(reason)}`);
+                // this.returnedToClient.error = this.failureErrorMessage;
+                // this.returnedToClient.errorHelp = this.failureErrorHelp;
+                //
+                // return packageClientResponse(this.returnedToClient);
             }
         );
     }

@@ -1,8 +1,9 @@
 // A Survey Definition defines the common characteristics of a repeatable structured survey.
 
-import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER, uuid} from "./Model";
+import {Model, uuid} from "./Model";
 import {SURVEY_DEFINITION_EVENT_MODIFIED, SURVEY_DEFINITION_EVENT_DELETED} from "../framework/AppEvents";
 import {Logger} from "../utils/Logger";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../utils/constants";
 
 /**
  * @typedef {import('bsbi-app-framework-view').Form} Form

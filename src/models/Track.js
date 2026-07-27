@@ -1,4 +1,4 @@
-import {Model, MODEL_EVENT_DESTROYED, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
+import {Model, MODEL_EVENT_DESTROYED} from "./Model";
 import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {
     APP_EVENT_CANCEL_WATCHED_GPS_USER_REQUEST,
@@ -7,6 +7,7 @@ import {
     SURVEY_EVENT_MODIFIED,
     SURVEY_EVENT_OCCURRENCES_CHANGED
 } from "../framework/AppEvents";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../utils/constants";
 //import {Logger} from "../utils/Logger";
 
 //import {App} from "../framework/App";

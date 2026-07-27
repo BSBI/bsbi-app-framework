@@ -1,7 +1,7 @@
-import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "./Model";
+import {Model} from "./Model";
 import {Taxon} from "./Taxon";
 import {GridRef} from 'british-isles-gridrefs'
-import {GEOREF_SOURCE_UNKNOWN} from "../utils/constants";
+import {GEOREF_SOURCE_UNKNOWN, SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../utils/constants";
 //import {SURVEY_EVENT_MODIFIED} from "../framework/AppEvents";
 
 /**

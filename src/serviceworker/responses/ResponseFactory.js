@@ -1,4 +1,4 @@
-import {SAVE_STATE_LOCAL} from "../../models/Model";
+import {SAVE_STATE_LOCAL} from "../../utils/constants";
 
 export class ResponseFactory {
     static responses = {};

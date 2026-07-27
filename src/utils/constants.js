@@ -26,3 +26,6 @@ export const  GEOREF_SOURCE_PLACE = 'place';
  * @type {string}
  */
 export const GEOREF_SOURCE_AREA = 'area';
+
+export const SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
+export const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';

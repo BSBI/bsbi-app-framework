@@ -5,13 +5,15 @@
 // This is probably unavoidable. Not worth the effort and risk of automatic de-duplication. Email preferences would be
 // shared, keyed by email.
 
-import {Model, SAVE_STATE_LOCAL, SAVE_STATE_SERVER, uuid} from "./Model";
+import {Model, uuid} from "./Model";
 import {escapeHTML} from "../utils/escapeHTML";
 import {GridRef} from 'british-isles-gridrefs'
 import {Track} from "./Track";
 import {SURVEY_EVENT_MODIFIED, SURVEY_EVENT_DELETED} from "../framework/AppEvents";
 import {Logger} from "../utils/Logger";
-import {GEOREF_SOURCE_AREA, GEOREF_SOURCE_UNKNOWN, PROJECT_ID_PHENOLOGY, PROJECT_ID_SCM} from "../utils/constants";
+import {GEOREF_SOURCE_AREA, GEOREF_SOURCE_UNKNOWN,
+    PROJECT_ID_PHENOLOGY, PROJECT_ID_SCM,
+    SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../utils/constants";
 
 /**
  * fired on Survey when one of its occurrences has been added, deleted or reloaded

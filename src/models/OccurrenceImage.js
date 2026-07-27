@@ -259,6 +259,7 @@ export class OccurrenceImage extends Model {
                             return Promise.resolve(response)
                                 .then((response) => response.json())
                                 .then((jsonResponseData) => {
+                                    // can assume that OK response with JSON data means a successful server save
 
                                     return ResponseFactory.fromPostResponse(jsonResponseData)
                                         .setPrebuiltResponse(response)
@@ -422,6 +423,8 @@ export class OccurrenceImage extends Model {
                         return Promise.resolve(response)
                             .then((response) => response.json())
                             .then((jsonResponseData) => {
+
+                                // can assume that OK response with JSON data means a successful server save
 
                                 return ResponseFactory.fromPostResponse(jsonResponseData)
                                     .setPrebuiltResponse(response)

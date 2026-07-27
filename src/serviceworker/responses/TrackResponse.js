@@ -1,6 +1,6 @@
 import {ResponseFactory} from "./ResponseFactory";
 import {LocalResponse} from "./LocalResponse";
-import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../models/Model";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../utils/constants";
 
 export class TrackResponse extends LocalResponse {
     failureErrorMessage = 'Failed to store tracking data.';

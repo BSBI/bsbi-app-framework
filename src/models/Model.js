@@ -2,6 +2,7 @@ import {EventHarness} from "../framework/EventHarness";
 import localforage from 'localforage';
 import {Logger} from "../utils/Logger";
 import {ResponseFactory} from "../serviceworker/responses/ResponseFactory.js";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../utils/constants";
 
 /**
  * @typedef {import('bsbi-app-framework-view').FormField} FormField
@@ -20,8 +21,8 @@ export function uuid(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-
  */
 export const UUID_REGEX = /^[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$/;
 
-export const SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
-export const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
+//export const SAVE_STATE_LOCAL = 'SAVED_LOCALLY';
+//export const SAVE_STATE_SERVER = 'SAVED_TO_SERVER';
 
 export const MODEL_EVENT_SAVED_REMOTELY = 'savedremotely';
 
@@ -379,71 +380,66 @@ export class Model extends EventHarness {
                 if (response.ok) {
                     return response.json()
                         .then((jsonResponseData) => {
-                                return ResponseFactory.fromPostResponse(jsonResponseData)
-                                    .populateLocalSave()
-                                    .storeLocally(true)
-                                    .then(() => {
-                                            //const data = jsonResponseData; // packagedResponse.toSaveLocally;
+                            // given an OK response from the server, with a JSON body, we can assume a successful server save.
 
-                                            if (jsonResponseData.modified >= this.modifiedStamp
-                                                && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                                                && this.saveSnapshotModifiedToken === this.modifiedToken
-                                            ) {
-                                                switch (jsonResponseData.saveState) {
-                                                    case SAVE_STATE_SERVER:
-                                                        this._savedLocally = true;
-                                                        this.savedRemotely = true;
-                                                        break;
+                            if (jsonResponseData.modified >= this.modifiedStamp
+                                && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                && this.saveSnapshotModifiedToken === this.modifiedToken
+                            ) {
+                                this.savedRemotely = true;
 
-                                                    case SAVE_STATE_LOCAL:
-                                                        this._savedLocally = true;
-                                                        this.savedRemotely = false;
-                                                        break;
-
-                                                    default:
-                                                        console.log(`Unrecognised save state '${jsonResponseData.saveState}'`);
-                                                }
-
-                                                this.createdStamp = parseInt(jsonResponseData.created, 10);
-                                                this.modifiedStamp = parseInt(jsonResponseData.modified, 10);
-                                            } else {
-                                                console.info(`Object ${this.localKey} has been modified since post request, post stamp ${jsonResponseData.modified} < ${this.modifiedStamp}.`)
-                                            }
-
-                                            return jsonResponseData;
-                                        }, (reason) => {
-                                            // failed to save locally, after successful save to server
-
-                                            this._savedLocally = false;
-                                            this.savedRemotely = true;
-                                            return Promise.reject(`failed to save locally, after successful save to server: ${Logger.stringifyObject(reason)}`);
-                                        }
-                                    )
-                            }, reason => {
-                                console.error({'fetch error (at JSON decoding stage)': reason});
-
-                                if (!this._savedLocally) {
-                                    return ResponseFactory
-                                        .fromPostedData(formData)
-                                        .populateClientResponse()
-                                        .storeLocally(false)
-                                        .then(() => {
-                                            if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                                                && this.saveSnapshotModifiedToken === this.modifiedToken
-                                            ) {
-                                                this.savedRemotely = false;
-                                                this._savedLocally = true;
-                                            }
-                                        }).then(() => {
-                                            if (isSync) {
-                                                return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
-                                            }
-                                        });
-                                } else {
-                                    return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
-                                }
+                                this.createdStamp = parseInt(jsonResponseData.created, 10);
+                                this.modifiedStamp = parseInt(jsonResponseData.modified, 10);
                             }
-                        );
+
+                            return ResponseFactory.fromPostResponse(jsonResponseData)
+                                .populateLocalSave()
+                                .storeLocally(true)
+                                .then(() => {
+                                        //const data = jsonResponseData; // packagedResponse.toSaveLocally;
+
+                                        if (jsonResponseData.modified >= this.modifiedStamp
+                                            && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                            && this.saveSnapshotModifiedToken === this.modifiedToken
+                                        ) {
+                                            this._savedLocally = true;
+                                        } else {
+                                            console.info(`Object ${this.localKey} has been modified since post request, post stamp ${jsonResponseData.modified} < ${this.modifiedStamp}.`)
+                                        }
+
+                                        return jsonResponseData;
+                                    }, (reason) => {
+                                        // failed to save locally, after successful save to server
+
+                                        this._savedLocally = false;
+                                        return Promise.reject(`failed to save locally, after successful save to server: ${Logger.stringifyObject(reason)}`);
+                                    }
+                                );
+                        }, reason => {
+                            console.error({'fetch error (at JSON decoding stage)': reason});
+
+                            if (!this._savedLocally) {
+                                return ResponseFactory
+                                    .fromPostedData(formData)
+                                    .populateClientResponse()
+                                    .storeLocally(false)
+                                    .then(() => {
+                                        if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                            && this.saveSnapshotModifiedToken === this.modifiedToken
+                                        ) {
+                                            this.savedRemotely = false;
+                                            this._savedLocally = true;
+                                        }
+                                    }).then(() => {
+                                        if (isSync) {
+                                            return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
+                                        }
+                                    });
+                            } else {
+                                return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
+                            }
+                        }
+                    );
                 } else {
                     if (!this._savedLocally) {
                         console.error(`Remote save failed (reason ${response.status} '${response.statusText}')`);

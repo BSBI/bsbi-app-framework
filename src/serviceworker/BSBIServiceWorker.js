@@ -271,342 +271,342 @@ export class BSBIServiceWorker {
     }
 
 
-    /**
-     * used to handle small posts (not initial posts of images that require rapid return)
-     * but is used for images as part of general re-sync
-     * attempts remote save first then caches locally
-     *
-     * @param {FetchEvent} fetchEvent
-     * @param {boolean} isSync set if this is called as part of a re-sync rather than as a first-time save
-     */
-    handle_post(fetchEvent, isSync = false) {
-        const url = fetchEvent.request.url;
-        const clonedRequest = fetchEvent.request.clone();
+    // /**
+    //  * used to handle small posts (not initial posts of images that require rapid return)
+    //  * but is used for images as part of general re-sync
+    //  * attempts remote save first then caches locally
+    //  *
+    //  * @param {FetchEvent} fetchEvent
+    //  * @param {boolean} isSync set if this is called as part of a re-sync rather than as a first-time save
+    //  */
+    // handle_post(fetchEvent, isSync = false) {
+    //     const url = fetchEvent.request.url;
+    //     const clonedRequest = fetchEvent.request.clone();
+    //
+    //     //let clonedFormData;
+    //
+    //     // /**
+    //     //  * @type {Request}
+    //     //  */
+    //     // let clonedRequest;
+    //     // try {
+    //     //     clonedRequest = fetchEvent.request.clone();
+    //     // } catch (e) {
+    //     //     console.log({'Failed to clone request': e});
+    //     //
+    //     //     let returnedToClient = {
+    //     //         error: 'Failed to clone post request',
+    //     //         errorHelp: 'Post failed as the request object could not be cloned.' +
+    //     //             `Error was: ${e?.message}`
+    //     //     };
+    //     //
+    //     //     fetchEvent.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
+    //     //     return;
+    //     // }
+    //
+    //     fetchEvent.respondWith(clonedRequest.formData().then((formData) => {
+    //
+    //         return fetch(url, {
+    //             method: 'POST',
+    //             body: formData
+    //         }).then((response) => {
+    //                 // would get here if the server responds at all, but need to check that the response is OK (not a server error)
+    //                 if (response.ok) {
+    //                     //fetchEvent.waitUntil(Logger.logMessage('Testing got OK post response in service worker.'));
+    //
+    //                     // clone the response and save it locally
+    //                     // before returning it to the client
+    //                     return response.clone().json()
+    //                         .then((jsonResponseData) => {
+    //                             //console.log('Following successful remote post, about to save locally.');
+    //
+    //                             return ResponseFactory.fromPostResponse(jsonResponseData)
+    //                                 .setPrebuiltResponse(response)
+    //                                 .populateLocalSave()
+    //                                 .storeLocally(true)
+    //                                 .then((returnedToClient) => {
+    //                                     if (jsonResponseData.type === 'image') {
+    //                                         fetchEvent.waitUntil(self.clients.get(fetchEvent.clientId)
+    //                                             .then((client) => {
+    //                                                 // post a message to the client to indicate that the image has been saved remotely
+    //                                                 client.postMessage({
+    //                                                     reason: 'imageSavedRemotely',
+    //                                                     imageId: jsonResponseData.id || jsonResponseData.imageId,
+    //                                                 });
+    //
+    //                                                 console.log('Sent image saved message to client from non-interactive post path.');
+    //                                             }));
+    //                                     }
+    //                                     return returnedToClient;
+    //                                 });
+    //                         })
+    //                         .catch((error) => {
+    //                             // for some reason, local storage failed, after a successful server save
+    //                             console.log({'local storage failed' : error});
+    //
+    //                             // log error and then pass through the server response
+    //                             return Logger.logError(`In SW handle_post local storage failed: ${Logger.stringifyObject(error)}`).then(() => response);
+    //                         });
+    //                 } else {
+    //                     if (isSync) {
+    //                         console.log(`Failed to save for sync`);
+    //                     } else {
+    //                         console.log(`Failed to save, moving on to attempt IndexedDb`);
+    //                     }
+    //
+    //                     return response.json().then((jsonError) => {
+    //                         const stringMessage = `Failed to save to server. (${response.status}) error ${JSON.stringify(jsonError)}`;
+    //                         return Logger.logError(stringMessage).then(() => Promise.reject(stringMessage));
+    //                     }, () => {
+    //                         const stringMessage = `Failed to save to server. (${response.status}) with no json response.`;
+    //                         return Logger.logError(stringMessage).then(() => Promise.reject(stringMessage));
+    //                     });
+    //                 }
+    //             })
+    //             .catch( (remoteReason) => {
+    //                     console.log({'post fetch failed (possibly no network)': remoteReason});
+    //
+    //                     fetchEvent.waitUntil(Logger.logError(`In SW handle_post remote fetch failed, sync=${isSync ? 'true' : 'false'} error: ${Logger.stringifyObject(remoteReason)}`));
+    //
+    //                     // would get here if the network is down
+    //                     // or if got an invalid response from the server
+    //
+    //                     if (isSync) {
+    //                         // We don't need to store locally (as will already be present) and response is not needed,
+    //                         // so reject.
+    //
+    //                         let returnedToClient = {
+    //                             isSync,
+    //                             error: 'remote sync failed',
+    //                             errorHelp: 'During a sync request your internet connection may have failed (or there could be a problem with the server). ' +
+    //                                 `Error was: ${Logger.stringifyObject(remoteReason)}`
+    //                         };
+    //
+    //                         return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
+    //                     } else {
+    //
+    //                         // /**
+    //                         //  * simulated result of post, returned as JSON body
+    //                         //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
+    //                         //  */
+    //                         // let returnedToClient = {};
+    //
+    //                         console.log('got to form data handler, after failed remote store');
+    //                         return ResponseFactory
+    //                             .fromPostedData(formData)
+    //                             .populateClientResponse()
+    //                             .storeLocally(false)
+    //                             .catch((reason) => {
+    //                                 let returnedToClient = {
+    //                                     error: 'Store posted data locally after failed remote save. (internal error: local store)',
+    //                                     errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
+    //                                         'It wasn\'t possible to save a temporary copy on your device. (an unexpected saving error occurred) ' +
+    //                                         'Please try to re-establish a network connection and try again.' +
+    //                                         `Error was: ${Logger.stringifyObject(reason)}`
+    //                                 };
+    //
+    //                                 return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
+    //                             });
+    //                     }
+    //                 }
+    //             )
+    //     }, (reason) => {
+    //         fetchEvent.waitUntil(Logger.logError(`Failed to read posted form data. ${Logger.stringifyObject(reason)}`));
+    //
+    //         // as a fallback post the request directly to the server without local handling
+    //         return fetch(fetchEvent.request);
+    //
+    //         // /**
+    //         //  * simulated result of post, returned as JSON body
+    //         //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+    //         //  */
+    //         // let returnedToClient = {
+    //         //     error: 'Failed to read image form data. (internal error)',
+    //         //     errorHelp: 'Sorry, the image save has failed.'
+    //         // };
+    //         //
+    //         // return packageClientResponse(returnedToClient);
+    //     }));
+    // }
 
-        //let clonedFormData;
-
-        // /**
-        //  * @type {Request}
-        //  */
-        // let clonedRequest;
-        // try {
-        //     clonedRequest = fetchEvent.request.clone();
-        // } catch (e) {
-        //     console.log({'Failed to clone request': e});
-        //
-        //     let returnedToClient = {
-        //         error: 'Failed to clone post request',
-        //         errorHelp: 'Post failed as the request object could not be cloned.' +
-        //             `Error was: ${e?.message}`
-        //     };
-        //
-        //     fetchEvent.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
-        //     return;
-        // }
-
-        fetchEvent.respondWith(clonedRequest.formData().then((formData) => {
-
-            return fetch(url, {
-                method: 'POST',
-                body: formData
-            }).then((response) => {
-                    // would get here if the server responds at all, but need to check that the response is OK (not a server error)
-                    if (response.ok) {
-                        //fetchEvent.waitUntil(Logger.logMessage('Testing got OK post response in service worker.'));
-
-                        // clone the response and save it locally
-                        // before returning it to the client
-                        return response.clone().json()
-                            .then((jsonResponseData) => {
-                                //console.log('Following successful remote post, about to save locally.');
-
-                                return ResponseFactory.fromPostResponse(jsonResponseData)
-                                    .setPrebuiltResponse(response)
-                                    .populateLocalSave()
-                                    .storeLocally(true)
-                                    .then((returnedToClient) => {
-                                        if (jsonResponseData.type === 'image') {
-                                            fetchEvent.waitUntil(self.clients.get(fetchEvent.clientId)
-                                                .then((client) => {
-                                                    // post a message to the client to indicate that the image has been saved remotely
-                                                    client.postMessage({
-                                                        reason: 'imageSavedRemotely',
-                                                        imageId: jsonResponseData.id || jsonResponseData.imageId,
-                                                    });
-
-                                                    console.log('Sent image saved message to client from non-interactive post path.');
-                                                }));
-                                        }
-                                        return returnedToClient;
-                                    });
-                            })
-                            .catch((error) => {
-                                // for some reason, local storage failed, after a successful server save
-                                console.log({'local storage failed' : error});
-
-                                // log error and then pass through the server response
-                                return Logger.logError(`In SW handle_post local storage failed: ${Logger.stringifyObject(error)}`).then(() => response);
-                            });
-                    } else {
-                        if (isSync) {
-                            console.log(`Failed to save for sync`);
-                        } else {
-                            console.log(`Failed to save, moving on to attempt IndexedDb`);
-                        }
-
-                        return response.json().then((jsonError) => {
-                            const stringMessage = `Failed to save to server. (${response.status}) error ${JSON.stringify(jsonError)}`;
-                            return Logger.logError(stringMessage).then(() => Promise.reject(stringMessage));
-                        }, () => {
-                            const stringMessage = `Failed to save to server. (${response.status}) with no json response.`;
-                            return Logger.logError(stringMessage).then(() => Promise.reject(stringMessage));
-                        });
-                    }
-                })
-                .catch( (remoteReason) => {
-                        console.log({'post fetch failed (possibly no network)': remoteReason});
-
-                        fetchEvent.waitUntil(Logger.logError(`In SW handle_post remote fetch failed, sync=${isSync ? 'true' : 'false'} error: ${Logger.stringifyObject(remoteReason)}`));
-
-                        // would get here if the network is down
-                        // or if got an invalid response from the server
-
-                        if (isSync) {
-                            // We don't need to store locally (as will already be present) and response is not needed,
-                            // so reject.
-
-                            let returnedToClient = {
-                                isSync,
-                                error: 'remote sync failed',
-                                errorHelp: 'During a sync request your internet connection may have failed (or there could be a problem with the server). ' +
-                                    `Error was: ${Logger.stringifyObject(remoteReason)}`
-                            };
-
-                            return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
-                        } else {
-
-                            // /**
-                            //  * simulated result of post, returned as JSON body
-                            //  * @type {{surveyId: string, occurrenceId: string, imageId: string, saveState: string, [error]: string, [errorHelp]: string}}
-                            //  */
-                            // let returnedToClient = {};
-
-                            console.log('got to form data handler, after failed remote store');
-                            return ResponseFactory
-                                .fromPostedData(formData)
-                                .populateClientResponse()
-                                .storeLocally(false)
-                                .catch((reason) => {
-                                    let returnedToClient = {
-                                        error: 'Store posted data locally after failed remote save. (internal error: local store)',
-                                        errorHelp: 'Your internet connection may have failed (or there could be a problem with the server). ' +
-                                            'It wasn\'t possible to save a temporary copy on your device. (an unexpected saving error occurred) ' +
-                                            'Please try to re-establish a network connection and try again.' +
-                                            `Error was: ${Logger.stringifyObject(reason)}`
-                                    };
-
-                                    return packageClientResponse(returnedToClient); // presence of error field will give the response a 500 status code
-                                });
-                        }
-                    }
-                )
-        }, (reason) => {
-            fetchEvent.waitUntil(Logger.logError(`Failed to read posted form data. ${Logger.stringifyObject(reason)}`));
-
-            // as a fallback post the request directly to the server without local handling
-            return fetch(fetchEvent.request);
-
-            // /**
-            //  * simulated result of post, returned as JSON body
-            //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-            //  */
-            // let returnedToClient = {
-            //     error: 'Failed to read image form data. (internal error)',
-            //     errorHelp: 'Sorry, the image save has failed.'
-            // };
-            //
-            // return packageClientResponse(returnedToClient);
-        }));
-    }
-
-    /**
-     * Used to handle image posts, which need to respond quickly even if the network is slow.
-     * Stores to the local cache first, then saves out to the network.
-     *
-     * @param {FetchEvent} event
-     */
-    handle_image_post(event) {
-        //let clonedRequest;
-        let clonedFormData;
-
-        //console.log('posting image for quick response');
-
-        const clonedRequest = event.request.clone();
-
-        // try {
-        //     clonedRequest = event.request.clone();
-        //
-        // } catch (e) {
-        //     //console.log('Failed to clone request.');
-        //     console.log({'Failed to clone image request': e});
-        //     let returnedToClient = {
-        //         error: 'Failed to clone image post request',
-        //         errorHelp: 'Image post failed as the request object could not be cloned.' +
-        //             `Error was: ${e?.message}`
-        //     };
-        //
-        //     event.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
-        //     return;
-        // }
-
-        const headerValues = Array.from(event.request.headers.values());
-
-        // send back a quick response to the client from local storage (before the server request completes)
-        event.respondWith(clonedRequest.formData()
-            .then(formData => {
-                try {
-                    clonedFormData = formData;
-
-                    return ResponseFactory
-                        .fromPostedData(formData)
-                        .populateClientResponse()
-                        .storeLocally(false)
-                        .then((response) => {
-
-                                // Separately, send data to the server, but the response has already gone to the client before this completes.
-                                // The return from the waitUntil is discarded.
-                                event.waitUntil(fetch('/saveimage.php', {
-                                        method: 'POST',
-                                        body: clonedFormData
-                                    })
-                                        .then((response) => {
-                                                console.log('posting image to server in waitUntil part of fetch cycle');
-
-                                                // would get here if the server responds at all, but need to check that the response is OK (not a server error)
-                                                if (response.ok) {
-                                                    console.log('posted image to server in waitUntil part of fetch cycle: got OK response');
-
-                                                    return Promise.resolve(response)
-                                                        .then((response) => {
-                                                            // save the response locally
-                                                            // before returning it to the client
-
-                                                            return response.clone().json(); // clone is required here as the original unmolested response object is still needed for the client
-                                                        })
-                                                        .then((jsonResponseData) => {
-                                                            // Use event.handled (which is a promise that resolves once the original fetch event has returned to the client)
-                                                            // to delay the update to local storage until after the original update has completed.
-                                                            // This probably isn't critical but may add some safety.
-                                                            return event.handled.then(() => ResponseFactory.fromPostResponse(jsonResponseData)
-                                                                .setPrebuiltResponse(response)
-                                                                .populateLocalSave()
-                                                                .storeLocally())
-                                                                .then(() => self.clients.get(event.clientId))
-                                                                .then((client) => {
-                                                                    // post a message to the client to indicate that the image has been saved remotely
-                                                                    client.postMessage({
-                                                                        reason: 'imageSavedRemotely',
-                                                                        imageId: jsonResponseData.id || jsonResponseData.imageId,
-                                                                    });
-                                                                });
-                                                        })
-                                                        .catch((error) => {
-                                                            // for some reason, local storage failed, after a successful server save
-                                                            console.error({'local storage store of image failed': error});
-                                                        });
-                                                } else {
-                                                    response.json().then(jsonError => {
-                                                        jsonError.requestHeaders = headerValues;
-                                                        return Logger.logError(`JSON error response to image post to server in waitUntil part of fetch cycle: ${JSON.stringify(jsonError)}`)
-                                                            .then(() => {
-                                                                console.error({'JSON error response to image post to server in waitUntil part of fetch cycle': jsonError});
-                                                            });
-                                                    }, error => {
-                                                        error.requestHeaders = headerValues;
-                                                        return Logger.logError(`Error response to image post to server in waitUntil part of fetch cycle: ${Logger.stringifyObject(error)}`)
-                                                            .then(() => {
-                                                                console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
-                                                            });
-                                                    });
-                                                }
-                                            }, (reason) => {
-                                                return Logger.logError(`Rejected image post fetch from server: ${Logger.stringifyObject(reason)}`)
-                                                    .then(() => {
-                                                        console.error({'Rejected image post fetch from server - implies network is down': reason});
-                                                    });
-                                            }
-                                        )
-                                );
-
-                                return response;
-                            }, (reason) => {
-                                console.error({'in image post failed to store form data locally': reason});
-
-                                // in error state, still try to post the image to the server
-                                event.waitUntil(fetch('/saveimage.php', {
-                                    method: 'POST',
-                                    body: clonedFormData
-                                }).then(response => {
-                                    if (response.ok) {
-                                        return Logger.logMessage('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
-                                        //console.log('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
-                                    } else {
-                                        response.json().then(jsonError => {
-                                            return Logger.logError({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
-                                            //console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
-                                        }, error => {
-                                            return Logger.logError({'Error response to image post to server in waitUntil part of fetch cycle': error});
-                                            //console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
-                                        });
-                                    }
-                                }, error => {
-                                    return Logger.logError({'subsequent postponed image post to server failed with network error': error});
-                                }));
-
-                                /**
-                                 * simulated result of post, returned as JSON body
-                                 * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                                 */
-                                let returnedToClient = {
-                                    error: 'Failed to store image data locally data. (internal error)',
-                                    errorHelp: 'A save to server will still be attempted, but image saving should be retried.'
-                                };
-
-                                return packageClientResponse(returnedToClient);
-                            }
-                        );
-                    } catch (e) {
-                        // an exception here implies that have form data but failed to prepare it for local saving
-                        // before the promise chain resumed.
-                        event.waitUntil(Logger.logError(`Failed to prepare image form data for local saving. ${Logger.stringifyObject(e)}`));
-
-                        let returnedToClient = {
-                            error: 'Failed to read image form data. (internal error)',
-                            errorHelp: 'Sorry, the image save has failed.'
-                        };
-
-                        return packageClientResponse(returnedToClient);
-                    }
-                }, (reason) => {
-                    event.waitUntil(Logger.logError(`Failed to read image form data. ${Logger.stringifyObject(reason)}`));
-
-                    // as a fallback post the request directly to the server without local handling
-                    return fetch(event.request);
-
-                    // /**
-                    //  * simulated result of post, returned as JSON body
-                    //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
-                    //  */
-                    // let returnedToClient = {
-                    //     error: 'Failed to read image form data. (internal error)',
-                    //     errorHelp: 'Sorry, the image save has failed.'
-                    // };
-                    //
-                    // return packageClientResponse(returnedToClient);
-                }
-            )
-        );
-    }
+    // /**
+    //  * Used to handle image posts, which need to respond quickly even if the network is slow.
+    //  * Stores to the local cache first, then saves out to the network.
+    //  *
+    //  * @param {FetchEvent} event
+    //  */
+    // handle_image_post(event) {
+    //     //let clonedRequest;
+    //     let clonedFormData;
+    //
+    //     //console.log('posting image for quick response');
+    //
+    //     const clonedRequest = event.request.clone();
+    //
+    //     // try {
+    //     //     clonedRequest = event.request.clone();
+    //     //
+    //     // } catch (e) {
+    //     //     //console.log('Failed to clone request.');
+    //     //     console.log({'Failed to clone image request': e});
+    //     //     let returnedToClient = {
+    //     //         error: 'Failed to clone image post request',
+    //     //         errorHelp: 'Image post failed as the request object could not be cloned.' +
+    //     //             `Error was: ${e?.message}`
+    //     //     };
+    //     //
+    //     //     event.respondWith(packageClientResponse(returnedToClient)); // presence of error field will give the response a 500 status code
+    //     //     return;
+    //     // }
+    //
+    //     const headerValues = Array.from(event.request.headers.values());
+    //
+    //     // send back a quick response to the client from local storage (before the server request completes)
+    //     event.respondWith(clonedRequest.formData()
+    //         .then(formData => {
+    //             try {
+    //                 clonedFormData = formData;
+    //
+    //                 return ResponseFactory
+    //                     .fromPostedData(formData)
+    //                     .populateClientResponse()
+    //                     .storeLocally(false)
+    //                     .then((response) => {
+    //
+    //                             // Separately, send data to the server, but the response has already gone to the client before this completes.
+    //                             // The return from the waitUntil is discarded.
+    //                             event.waitUntil(fetch('/saveimage.php', {
+    //                                     method: 'POST',
+    //                                     body: clonedFormData
+    //                                 })
+    //                                     .then((response) => {
+    //                                             console.log('posting image to server in waitUntil part of fetch cycle');
+    //
+    //                                             // would get here if the server responds at all, but need to check that the response is OK (not a server error)
+    //                                             if (response.ok) {
+    //                                                 console.log('posted image to server in waitUntil part of fetch cycle: got OK response');
+    //
+    //                                                 return Promise.resolve(response)
+    //                                                     .then((response) => {
+    //                                                         // save the response locally
+    //                                                         // before returning it to the client
+    //
+    //                                                         return response.clone().json(); // clone is required here as the original unmolested response object is still needed for the client
+    //                                                     })
+    //                                                     .then((jsonResponseData) => {
+    //                                                         // Use event.handled (which is a promise that resolves once the original fetch event has returned to the client)
+    //                                                         // to delay the update to local storage until after the original update has completed.
+    //                                                         // This probably isn't critical but may add some safety.
+    //                                                         return event.handled.then(() => ResponseFactory.fromPostResponse(jsonResponseData)
+    //                                                             .setPrebuiltResponse(response)
+    //                                                             .populateLocalSave()
+    //                                                             .storeLocally())
+    //                                                             .then(() => self.clients.get(event.clientId))
+    //                                                             .then((client) => {
+    //                                                                 // post a message to the client to indicate that the image has been saved remotely
+    //                                                                 client.postMessage({
+    //                                                                     reason: 'imageSavedRemotely',
+    //                                                                     imageId: jsonResponseData.id || jsonResponseData.imageId,
+    //                                                                 });
+    //                                                             });
+    //                                                     })
+    //                                                     .catch((error) => {
+    //                                                         // for some reason, local storage failed, after a successful server save
+    //                                                         console.error({'local storage store of image failed': error});
+    //                                                     });
+    //                                             } else {
+    //                                                 response.json().then(jsonError => {
+    //                                                     jsonError.requestHeaders = headerValues;
+    //                                                     return Logger.logError(`JSON error response to image post to server in waitUntil part of fetch cycle: ${JSON.stringify(jsonError)}`)
+    //                                                         .then(() => {
+    //                                                             console.error({'JSON error response to image post to server in waitUntil part of fetch cycle': jsonError});
+    //                                                         });
+    //                                                 }, error => {
+    //                                                     error.requestHeaders = headerValues;
+    //                                                     return Logger.logError(`Error response to image post to server in waitUntil part of fetch cycle: ${Logger.stringifyObject(error)}`)
+    //                                                         .then(() => {
+    //                                                             console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+    //                                                         });
+    //                                                 });
+    //                                             }
+    //                                         }, (reason) => {
+    //                                             return Logger.logError(`Rejected image post fetch from server: ${Logger.stringifyObject(reason)}`)
+    //                                                 .then(() => {
+    //                                                     console.error({'Rejected image post fetch from server - implies network is down': reason});
+    //                                                 });
+    //                                         }
+    //                                     )
+    //                             );
+    //
+    //                             return response;
+    //                         }, (reason) => {
+    //                             console.error({'in image post failed to store form data locally': reason});
+    //
+    //                             // in error state, still try to post the image to the server
+    //                             event.waitUntil(fetch('/saveimage.php', {
+    //                                 method: 'POST',
+    //                                 body: clonedFormData
+    //                             }).then(response => {
+    //                                 if (response.ok) {
+    //                                     return Logger.logMessage('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
+    //                                     //console.log('posted image to server in waitUntil part of fetch cycle: got OK response after failed local store');
+    //                                 } else {
+    //                                     response.json().then(jsonError => {
+    //                                         return Logger.logError({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+    //                                         //console.error({'Error response to image post to server in waitUntil part of fetch cycle': jsonError});
+    //                                     }, error => {
+    //                                         return Logger.logError({'Error response to image post to server in waitUntil part of fetch cycle': error});
+    //                                         //console.error({'Error response to image post to server in waitUntil part of fetch cycle': error});
+    //                                     });
+    //                                 }
+    //                             }, error => {
+    //                                 return Logger.logError({'subsequent postponed image post to server failed with network error': error});
+    //                             }));
+    //
+    //                             /**
+    //                              * simulated result of post, returned as JSON body
+    //                              * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+    //                              */
+    //                             let returnedToClient = {
+    //                                 error: 'Failed to store image data locally data. (internal error)',
+    //                                 errorHelp: 'A save to server will still be attempted, but image saving should be retried.'
+    //                             };
+    //
+    //                             return packageClientResponse(returnedToClient);
+    //                         }
+    //                     );
+    //                 } catch (e) {
+    //                     // an exception here implies that have form data but failed to prepare it for local saving
+    //                     // before the promise chain resumed.
+    //                     event.waitUntil(Logger.logError(`Failed to prepare image form data for local saving. ${Logger.stringifyObject(e)}`));
+    //
+    //                     let returnedToClient = {
+    //                         error: 'Failed to read image form data. (internal error)',
+    //                         errorHelp: 'Sorry, the image save has failed.'
+    //                     };
+    //
+    //                     return packageClientResponse(returnedToClient);
+    //                 }
+    //             }, (reason) => {
+    //                 event.waitUntil(Logger.logError(`Failed to read image form data. ${Logger.stringifyObject(reason)}`));
+    //
+    //                 // as a fallback post the request directly to the server without local handling
+    //                 return fetch(event.request);
+    //
+    //                 // /**
+    //                 //  * simulated result of post, returned as JSON body
+    //                 //  * @type {{[surveyId]: string, [occurrenceId]: string, [imageId]: string, [saveState]: string, [error]: string, [errorHelp]: string}}
+    //                 //  */
+    //                 // let returnedToClient = {
+    //                 //     error: 'Failed to read image form data. (internal error)',
+    //                 //     errorHelp: 'Sorry, the image save has failed.'
+    //                 // };
+    //                 //
+    //                 // return packageClientResponse(returnedToClient);
+    //             }
+    //         )
+    //     );
+    // }
 
     /**
      * Open a cache and use `addAll()` with an array of assets to add all of them

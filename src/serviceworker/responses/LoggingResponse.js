@@ -1,6 +1,6 @@
 import {ResponseFactory} from "./ResponseFactory";
 import {LocalResponse} from "./LocalResponse";
-import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../models/Model";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../utils/constants";
 import {packageClientResponse} from "../packageClientResponse";
 
 export class LoggingResponse extends LocalResponse {
