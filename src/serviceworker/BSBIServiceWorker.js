@@ -209,31 +209,7 @@ export class BSBIServiceWorker {
             //console.log(`The service worker is serving: '${evt.request.url}'`);
 
             if (evt.request.method === 'POST') {
-                //console.log(`Got a post request`);
-
-                if (POST_PASS_THROUGH_WHITELIST.test(evt.request.url)) {
-                    //console.log(`Passing through whitelisted post-request for: ${evt.request.url}`);
-                    //evt.respondWith(fetch(evt.request));
-
-                    return; // rely on the default behaviour
-                } else if (SERVICE_WORKER_PASS_THROUGH_NO_CACHE.test(evt.request.url)) {
-                    //console.log(`Passing through nocache list post-request for: ${evt.request.url}`);
-                    //evt.respondWith(fetch(evt.request));
-
-                    return; // rely on the default behaviour
-                } else {
-                    evt.preventDefault();
-
-                    const isSync = /issync/.test(evt.request.url);
-
-                    if (POST_IMAGE_URL_MATCH.test(evt.request.url) && !isSync) {
-                        //console.log(`Got an image post request: '${evt.request.url}'`);
-                        this.handle_image_post(evt);
-                    } else {
-                        //console.log(`Got post request: '${evt.request.url}'`);
-                        this.handle_post(evt, isSync);
-                    }
-                }
+                return; // rely on the default behaviour
             } else {
                 // test whether this is a direct link in to a page that should be substituted by
                 // the single page app

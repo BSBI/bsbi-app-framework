@@ -1,6 +1,7 @@
 import {EventHarness} from "../framework/EventHarness";
 import localforage from 'localforage';
 import {Logger} from "../utils/Logger";
+import {ResponseFactory} from "../serviceworker/responses/ResponseFactory.js";
 
 /**
  * @typedef {import('bsbi-app-framework-view').FormField} FormField
@@ -303,38 +304,38 @@ export class Model extends EventHarness {
         });
     }
 
-    /**
-     * Post immediately (no queue).
-     * Returns a promise that resolves once the POST request completes.
-     *
-     * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
-     * @returns {Promise}
-     */
-    postImmediately(isSync = false) {
-        const modifiedStampWhenQueued = this.modifiedStamp;
-        this.lastQueuedPostAbsoluteStamp = Date.now();
-
-        return new Promise((resolve, reject) => {
-            if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
-                this.saveSnapshotAbsoluteStamp = Date.now();
-                this.saveSnapshotModifiedToken = this.modifiedToken;
-                this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
-
-                //console.log({'posting form data': formData});
-                this._post(this.formData(), isSync)
-                    .catch((reason) => {
-                        // noinspection JSIgnoredPromiseFromCall
-                        Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
-
-                        return Promise.reject(reason);
-                    })
-                    .then((result) => resolve(result), (reason) => reject(reason));
-            } else {
-                console.log(`Skipped immediate save as superseded, for ${this.constructor.className} id ${this.id}`);
-                resolve(`Skipped immediate save as superseded.`);
-            }
-        });
-    }
+    // /**
+    //  * Post immediately (no queue).
+    //  * Returns a promise that resolves once the POST request completes.
+    //  *
+    //  * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
+    //  * @returns {Promise}
+    //  */
+    // postImmediately(isSync = false) {
+    //     const modifiedStampWhenQueued = this.modifiedStamp;
+    //     this.lastQueuedPostAbsoluteStamp = Date.now();
+    //
+    //     return new Promise((resolve, reject) => {
+    //         if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
+    //             this.saveSnapshotAbsoluteStamp = Date.now();
+    //             this.saveSnapshotModifiedToken = this.modifiedToken;
+    //             this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
+    //
+    //             //console.log({'posting form data': formData});
+    //             this._post(this.formData(), isSync)
+    //                 .catch((reason) => {
+    //                     // noinspection JSIgnoredPromiseFromCall
+    //                     Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+    //
+    //                     return Promise.reject(reason);
+    //                 })
+    //                 .then((result) => resolve(result), (reason) => reject(reason));
+    //         } else {
+    //             console.log(`Skipped immediate save as superseded, for ${this.constructor.className} id ${this.id}`);
+    //             resolve(`Skipped immediate save as superseded.`);
+    //         }
+    //     });
+    // }
 
     /**
      *
@@ -361,10 +362,8 @@ export class Model extends EventHarness {
     }
 
     /**
-     * Makes a post to <this.SAVE_ENDPOINT>.
-     *
-     * This should be intercepted by a serviceworker that, for non-sync requests, will attempt to write to indexedDb.
-     *
+     * Makes a post to <this.SAVE_ENDPOINT> storing successful results locally.
+     * For failed remote posts, write locally if not already saved locally.
      * @protected
      * @param {FormData} formData
      * @param {boolean} isSync default false, set if request is part of sync all rather than a regular save
@@ -378,71 +377,129 @@ export class Model extends EventHarness {
                 // keepalive: true, // can't use keepalive, as it limits the request's size to 64kb
             }).then(response => {
                 if (response.ok) {
-                    // need to find out whether this was a local store in indexedDb by the service worker
-                    // or a server-side save
+                    return response.json()
+                        .then((jsonResponseData) => {
+                                return ResponseFactory.fromPostResponse(jsonResponseData)
+                                    .populateLocalSave()
+                                    .storeLocally(true)
+                                    .then(() => {
+                                            //const data = jsonResponseData; // packagedResponse.toSaveLocally;
 
-                    // // to do that, need to decode the JSON response
-                    // // which can only be done once, so need to clone first
-                    // const clonedResponse = response.clone();
-                    // return clonedResponse.json().then((responseData) => {
+                                            if (jsonResponseData.modified >= this.modifiedStamp
+                                                && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                                && this.saveSnapshotModifiedToken === this.modifiedToken
+                                            ) {
+                                                switch (jsonResponseData.saveState) {
+                                                    case SAVE_STATE_SERVER:
+                                                        this._savedLocally = true;
+                                                        this.savedRemotely = true;
+                                                        break;
 
-                    return response.json().then((responseData) => {
-                        /** @param {{saveState : string, created : number, modified : number}} responseData */
+                                                    case SAVE_STATE_LOCAL:
+                                                        this._savedLocally = true;
+                                                        this.savedRemotely = false;
+                                                        break;
 
-                        //console.log({'returned to client after save' : responseData});
+                                                    default:
+                                                        console.log(`Unrecognised save state '${jsonResponseData.saveState}'`);
+                                                }
 
-                        if (responseData.modified >= this.modifiedStamp
-                            && this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
-                            && this.saveSnapshotModifiedToken === this.modifiedToken
-                        ) {
-                            switch (responseData.saveState) {
-                                case SAVE_STATE_SERVER:
-                                    this._savedLocally = true;
-                                    this.savedRemotely = true;
-                                    break;
+                                                this.createdStamp = parseInt(jsonResponseData.created, 10);
+                                                this.modifiedStamp = parseInt(jsonResponseData.modified, 10);
+                                            } else {
+                                                console.info(`Object ${this.localKey} has been modified since post request, post stamp ${jsonResponseData.modified} < ${this.modifiedStamp}.`)
+                                            }
 
-                                case SAVE_STATE_LOCAL:
-                                    this._savedLocally = true;
-                                    this.savedRemotely = false;
-                                    break;
+                                            return jsonResponseData;
+                                        }, (reason) => {
+                                            // failed to save locally, after successful save to server
 
-                                default:
-                                    console.log(`Unrecognised save state '${responseData.saveState}'`);
+                                            this._savedLocally = false;
+                                            this.savedRemotely = true;
+                                            return Promise.reject(`failed to save locally, after successful save to server: ${Logger.stringifyObject(reason)}`);
+                                        }
+                                    )
+                            }, reason => {
+                                console.error({'fetch error (at JSON decoding stage)': reason});
+
+                                if (!this._savedLocally) {
+                                    return ResponseFactory
+                                        .fromPostedData(formData)
+                                        .populateClientResponse()
+                                        .storeLocally(false)
+                                        .then(() => {
+                                            if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                                && this.saveSnapshotModifiedToken === this.modifiedToken
+                                            ) {
+                                                this.savedRemotely = false;
+                                                this._savedLocally = true;
+                                            }
+                                        }).then(() => {
+                                            if (isSync) {
+                                                return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
+                                            }
+                                        });
+                                } else {
+                                    return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
+                                }
                             }
-
-                            this.createdStamp = parseInt(responseData.created, 10);
-                            this.modifiedStamp = parseInt(responseData.modified, 10);
-                        } else {
-                            console.info(`Object ${this.localKey} has been modified since post request, post stamp ${responseData.modified} < ${this.modifiedStamp}.`)
-                        }
-
-                        return responseData;
-                    }, reason => {
-                        console.error({'fetch error (at JSON decoding stage)': reason});
-                        return Promise.reject(`fetch error (at JSON decoding stage): ${Logger.stringifyObject(reason)}`);
-                    });
+                        );
                 } else {
-                    console.error(`Save failed (reason ${response.status} '${response.statusText}'), presumably service worker is missing and there is no network connection.`);
-
-                    // don't update the saved status flags as don't know if the return is out of sequence or whether a subsequent save request has gone through.
-
-                    // see if a json error message is available in the response
-                    return response.json().then((responseData) => {
-                        return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
-                    }, (error) => {
-                        return Promise.reject(isSync ?
-                            `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
-                            :
-                            `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
-                    });
-
-                    // return Promise.reject(isSync ?
-                    //     `Sync save failed, probably no network connection. (${response.status}) when saving ${this.constructor.className}`
-                    //     :
-                    //     `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}`);
+                    if (!this._savedLocally) {
+                        console.error(`Remote save failed (reason ${response.status} '${response.statusText}')`);
+                        return ResponseFactory
+                            .fromPostedData(formData)
+                            .populateClientResponse()
+                            .storeLocally(false)
+                            .then(() => {
+                                if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                    && this.saveSnapshotModifiedToken === this.modifiedToken
+                                ) {
+                                    this.savedRemotely = false;
+                                    this._savedLocally = true;
+                                }
+                            }, (reason) => {
+                                //console.error(`After failed save local save also failed.`);
+                                this._savedLocally = false;
+                                return Promise.reject(`After failed save local save also failed. '${JSON.stringify(reason)}'`);
+                            }).then(() => {
+                                // see if a json error message is available in the response
+                                return response.json().then((responseData) => {
+                                    return Promise.reject(`${isSync ? 'Sync save' : 'Save'} failed (reason ${response.status} '${response.statusText}') when saving ${this.constructor.className}, '${JSON.stringify(responseData)}'`);
+                                }, (error) => {
+                                    return Promise.reject(isSync ?
+                                        `Sync save failed, possibly no network connection. (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`
+                                        :
+                                        `Save failed, (??no service worker). (${response.status}) when saving ${this.constructor.className}, error: ${Logger.stringifyObject(error)}`);
+                                });
+                            });
+                    } else {
+                        return Promise.reject(`Remote save failed (skipping local save as saved already) (reason ${response.status} '${response.statusText}')`);
+                    }
                 }
             }, (error) => {
-                return Promise.reject(`fetch network or permissions error: ${Logger.stringifyObject(error)}`);
+                if (!this._savedLocally) {
+                    return ResponseFactory
+                        .fromPostedData(formData)
+                        .populateClientResponse()
+                        .storeLocally(false)
+                        .then(() => {
+                            if (this.saveSnapshotAbsoluteStamp >= this.lastQueuedPostAbsoluteStamp
+                                && this.saveSnapshotModifiedToken === this.modifiedToken
+                            ) {
+                                this.savedRemotely = false;
+                                this._savedLocally = true;
+                            }
+                        }, (reason) => {
+                            //console.error(`After failed network request local save also failed.`);
+                            this._savedLocally = false;
+                            return Promise.reject(`After failed network request local save also failed. ${Logger.stringifyObject(reason)}`);
+                        }).then(() => {
+                            return Promise.reject(`fetch network or permissions error: ${Logger.stringifyObject(error)}`);
+                        });
+                } else {
+                    return Promise.reject(`Failed network request, skipping local save as already locally saved`);
+                }
             });
         } catch (e) {
             return Promise.reject(`fetch exception: ${Logger.stringifyObject(e)}`);

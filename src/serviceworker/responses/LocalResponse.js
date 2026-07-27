@@ -43,6 +43,8 @@ export class LocalResponse {
     }
 
     /**
+     * @todo without the service worker complexity, this probably doesn't need to return a Response
+     *
      * @param {boolean} remoteSuccess set if the object has been saved remotely
      * @returns {Promise<Response>}
      */
