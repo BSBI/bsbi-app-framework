@@ -597,6 +597,7 @@ export class Survey extends Model {
         formData.append('attributes', JSON.stringify(this.attributes));
         formData.append('deleted', this.deleted.toString());
         formData.append('created', this.createdStamp?.toString?.() || '');
+        formData.append('modified', this.modifiedStamp?.toString?.() || '');
         formData.append('baseSurveyId', this.baseSurveyId || this.id);
 
         if (this.userId) {

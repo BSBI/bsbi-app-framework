@@ -306,6 +306,12 @@ export class App extends EventHarness {
      */
     static _DATA_CACHE_VERSION;
 
+    /**
+     *
+     * @private
+     */
+    static _IMAGE_DATA_CACHE_VERSION;
+
     static set DATA_CACHE_VERSION(version) {
         App._DATA_CACHE_VERSION = `bsbi-data-${version}`;
     }
@@ -315,6 +321,17 @@ export class App extends EventHarness {
             throw new Error('DATA_CACHE_VERSION has not been initialized');
         }
         return App._DATA_CACHE_VERSION;
+    }
+
+    static set IMAGE_DATA_CACHE_VERSION(version) {
+        App._IMAGE_DATA_CACHE_VERSION = `bsbi-images-${version}`;
+    }
+
+    static get IMAGE_DATA_CACHE_VERSION() {
+        if (!App._IMAGE_DATA_CACHE_VERSION) {
+            throw new Error('IMAGE_DATA_CACHE_VERSION has not been initialized');
+        }
+        return App._IMAGE_DATA_CACHE_VERSION;
     }
 
     constructor() {
@@ -963,11 +980,11 @@ export class App extends EventHarness {
             survey.addListener(
                 SURVEY_EVENT_DELETED,
                 () => {
-                    const promise = Promise.resolve();
+                    let promise = Promise.resolve();
 
                     // do this slightly more safely via ids, in case surveys somehow refer to different objects
                     if (this.currentSurvey?.id === survey.id) {
-                        promise.then(() => this.setCurrentSurvey(null));
+                        promise = promise.then(() => this.setCurrentSurvey(null));
                     }
 
                     promise.then(() => {
@@ -1155,7 +1172,7 @@ export class App extends EventHarness {
     }
 
     /**
-     * compare modified stamp of indexeddb and external objects and write the external version locally if more recent
+     * compare modified stamp of indexedDb and external objects and write the external version locally if more recent
      *
      * @param {{id : string, type : string, modified : number, created : number, saveState : string, deleted : boolean}} externalVersion
      * @returns {Promise<{}>} resolves with the current version, local or external
@@ -1744,7 +1761,10 @@ export class App extends EventHarness {
                     )) {
                         // The survey hasn't been modified recently or belongs to a different user
 
-                        if (!(survey.attributes?.defaultCasual && survey.createdInCurrentYear() && survey.userId === this.userId)) {
+                        if (!(survey.attributes?.defaultCasual &&
+                            survey.createdInCurrentYear() &&
+                            survey.userId === this.userId)
+                        ) {
                             // The survey isn't the set of casual records for the current year for the current user
 
                             deletionCandidateKeys.survey.push(survey.id);
@@ -1774,7 +1794,7 @@ export class App extends EventHarness {
                         id : occurrenceDescriptor.id,
                         surveyId : occurrenceDescriptor.surveyId,
                         deleted : occurrenceDescriptor.deleted,
-                        modifiedStamp :  occurrenceDescriptor.modifiedStamp,
+                        modifiedStamp :  occurrenceDescriptor.modified,
                         saveState : occurrenceDescriptor.saveState,
                     };
                 });
@@ -1791,7 +1811,7 @@ export class App extends EventHarness {
                         || occurrenceDescriptor.saveState !== SAVE_STATE_SERVER)
                     && deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId)
                 ) {
-                    delete deletionCandidateKeys.survey[occurrenceDescriptor.surveyId];
+                    delete deletionCandidateKeys.survey[deletionCandidateKeys.survey.indexOf(occurrenceDescriptor.surveyId)];
 
                     if (!preservedKeys.survey.includes(occurrenceDescriptor.surveyId)) {
                         preservedKeys.survey.push(occurrenceDescriptor.surveyId);
@@ -1811,6 +1831,9 @@ export class App extends EventHarness {
                 if (deletionCandidateKeys.survey.includes(occurrenceDescriptor.surveyId) || (occurrenceDescriptor.deleted && occurrenceDescriptor.saveState === SAVE_STATE_SERVER)) {
                     deletionCandidateKeys.occurrence.push(occurrenceDescriptor.id);
                 } else {
+                    // at this stage, mostly preserving occurrence keys, except for any saved occurrences
+                    // belonging to the current default casual survey that are more than 30 days old
+
                     preservedKeys.occurrence.push(occurrenceDescriptor.id);
                 }
             }
@@ -2001,7 +2024,7 @@ export class App extends EventHarness {
      * @private
      */
     _purgeCachedImages(imageIds) {
-        const cacheName = App.DATA_CACHE_VERSION;
+        const cacheName = App.IMAGE_DATA_CACHE_VERSION;
 
         return caches.open(cacheName)
             .then((cache) => {

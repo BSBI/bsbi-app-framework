@@ -252,24 +252,34 @@ export class Model extends EventHarness {
              */
             const task = () => {
 
-                if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
-                    this.saveSnapshotAbsoluteStamp = Date.now();
-                    this.saveSnapshotModifiedToken = this.modifiedToken;
-                    this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp  / 1000); // any new changes from this point on will be saved without skipping
+                try {
+                    if (isSync || this._cannotSkipAsObsolete(modifiedStampWhenQueued)) {
+                        this.saveSnapshotAbsoluteStamp = Date.now();
+                        this.saveSnapshotModifiedToken = this.modifiedToken;
+                        this.saveSnapshotStamp = Math.floor(this.saveSnapshotAbsoluteStamp / 1000); // any new changes from this point on will be saved without skipping
 
-                    //console.log({'posting form data': formData});
-                    return this._post(this.formData(), isSync)
-                        .catch((reason) => {
-                            // noinspection JSIgnoredPromiseFromCall
-                            Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
+                        //console.log({'posting form data': formData});
+                        return this._post(this.formData(), isSync)
+                            .catch((reason) => {
+                                // noinspection JSIgnoredPromiseFromCall
+                                Logger.logError(`Failed to post '${Logger.stringifyObject(reason)}' for ${this.constructor.className} id ${this.id} isSync: ${isSync ? 'true' : 'false'}.`);
 
-                            return Promise.reject(reason);
-                        })
-                        .then((result) => resolve(result), (reason) => reject(reason));
-                } else {
-                    console.log(`Skipped queued save as superseded, for ${this.constructor.className} id ${this.id}`);
-                    resolve(`Skipped queued save as superseded.`);
-                    return Promise.resolve();
+                                return Promise.reject(reason);
+                            })
+                            .then((result) => resolve(result), (reason) => reject(reason));
+                    } else {
+                        console.log(`Skipped queued save as superseded, for ${this.constructor.className} id ${this.id}`);
+                        resolve(`Skipped queued save as superseded.`);
+                        return Promise.resolve();
+                    }
+                } catch (error) {
+                    // should never get here
+                    // this is an emergency catch to ensure that resolve or reject is always called so that the queue does not jamb
+
+                    // noinspection JSIgnoredPromiseFromCall
+                    Logger.logError(`Catch in queue post outer loop: ${Logger.stringifyObject(error)}`);
+                    reject(`Catch in queuepost outer loop: ${Logger.stringifyObject(error)}`);
+                    return Promise.reject(error);
                 }
             };
 
@@ -321,7 +331,7 @@ export class Model extends EventHarness {
 
     /**
      *
-     * @returns {Promise}
+     * @returns {Promise|void}
      * @private
      */
     static _next() {
@@ -330,7 +340,16 @@ export class Model extends EventHarness {
         if (Model._tasks.length) {
             // run the next task
             //console.log('Running the next task.');
-            return Model._tasks[0]().finally(Model._next);
+
+            try {
+                return Model._tasks[0]().finally(Model._next);
+            } catch (error) {
+                // this should never be reached
+
+                // noinspection JSIgnoredPromiseFromCall
+                Logger.logError(`Outer catch in _next(). ${Logger.stringifyObject(error)}`);
+                return Model._next();
+            }
         }
     }
 

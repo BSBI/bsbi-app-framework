@@ -63,6 +63,7 @@ export class BSBIServiceWorker {
      *  urlCacheSet : Array.<string>,
      *  version : string,
      *  [dataVersion] : string,
+     *  [imageVersion] : string,
      *  upgrading : {},
      * }} configuration
      */
@@ -82,7 +83,7 @@ export class BSBIServiceWorker {
 
         this.CACHE_VERSION = `version-BSBI_APP_VERSION-${configuration.version}`;
         this.DATA_CACHE_VERSION = `bsbi-data-${configuration.dataVersion || configuration.version}`;
-        this.IMAGE_CACHE_VERSION = `bsbi-images-${configuration.dataVersion || configuration.version}`;
+        this.IMAGE_CACHE_VERSION = `bsbi-images-${configuration.imageVersion || configuration.dataVersion || configuration.version}`;
 
         Model.bsbiAppVersion = configuration.version;
         Logger.bsbiAppVersion = configuration.version;

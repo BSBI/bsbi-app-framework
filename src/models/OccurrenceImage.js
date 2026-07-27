@@ -1,3 +1,4 @@
+
 import {Model, uuid} from "./Model";
 import {ResponseFactory} from "../serviceworker/responses/ResponseFactory.js";
 import {Logger} from "../utils/Logger.js";
@@ -409,7 +410,8 @@ export class OccurrenceImage extends Model {
         //             method: 'POST',
         //             body: this.formData(),
         //         })
-        return this._postChunked(isSync)
+        try {
+            return this._postChunked(isSync)
                 .then((response) => {
                     console.log('posting image after local db save');
 
@@ -468,6 +470,14 @@ export class OccurrenceImage extends Model {
                         })
                         .then(() => Promise.reject(errorString));
                 });
+        } catch (e) {
+            // this outer catch is intended to prevent catastrophic queue jamming if a wrapped bug
+            // prevents a promise from being returned
+
+            // noinspection JSIgnoredPromiseFromCall
+            Logger.logError(`Unexpected outer catch in image post. e=${Logger.stringifyObject(e)}`);
+            return Promise.reject(`Unexpected outer catch in image post. e=${Logger.stringifyObject(e)}`);
+        }
     }
 
     // /**
