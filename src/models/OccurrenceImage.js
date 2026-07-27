@@ -244,10 +244,7 @@ export class OccurrenceImage extends Model {
             .then((response) => {
                 // Separately, send data to the server, but the initial local save has already completed.
 
-                // fetch('/saveimagedirectly.php', {
-                //         method: 'POST',
-                //         body: this.formData(),
-                //     })
+                this._savedLocally = true;
                 this._postChunked()
                     .then((response) => {
                         console.log('posting image after local db save');

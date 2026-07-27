@@ -1,6 +1,6 @@
 import {ResponseFactory} from "./ResponseFactory";
 import {LocalResponse} from "./LocalResponse";
-import {SAVE_STATE_LOCAL} from "../../utils/constants";
+import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../utils/constants";
 
 export class TrackResponse extends LocalResponse {
     failureErrorMessage = 'Failed to store tracking data.';
@@ -42,7 +42,7 @@ export class TrackResponse extends LocalResponse {
         this.toSaveLocally.attributes = this.returnedToClient.attributes;
         this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
         this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
-        this.toSaveLocally.saveState = this.returnedToClient.saveState; //SAVE_STATE_SERVER;
+        this.toSaveLocally.saveState = this.returnedToClient.saveState || SAVE_STATE_SERVER; //SAVE_STATE_SERVER;
         this.toSaveLocally.deleted = this.returnedToClient.deleted;
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
         this.toSaveLocally.userId = this.returnedToClient.userId || '';

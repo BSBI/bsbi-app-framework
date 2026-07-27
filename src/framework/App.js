@@ -37,6 +37,9 @@ import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {schedulerYield} from "../utils/schedulerYield";
 import {SurveyDefinition} from "../models/SurveyDefinition.js";
 import {SAVE_STATE_SERVER} from "../utils/constants.js";
+import {ImageResponse} from "../serviceworker/responses/ImageResponse.js";
+import {SurveyResponse} from "../serviceworker/responses/SurveyResponse.js";
+import {OccurrenceResponse} from "../serviceworker/responses/OccurrenceResponse.js";
 
 /**
  * never retain longer than 14 days
@@ -337,6 +340,11 @@ export class App extends EventHarness {
 
     constructor() {
         super();
+
+        // register ResponseHandlers for core objects
+        ImageResponse.register();
+        SurveyResponse.register();
+        OccurrenceResponse.register();
     }
 
     /**
@@ -1173,7 +1181,9 @@ export class App extends EventHarness {
     }
 
     /**
-     * compare modified stamp of indexedDb and external objects and write the external version locally if more recent
+     * Compare modified stamp of the local and external objects and write the external version
+     * locally if more recent.
+     * This is even allowed to overwrite changes that have not yet been saved locally.
      *
      * @param {{id : string, type : string, modified : number, created : number, saveState : string, deleted : boolean}} externalVersion
      * @returns {Promise<{}>} resolves with the current version, local or external
@@ -1188,11 +1198,6 @@ export class App extends EventHarness {
             .then((localVersion) => {
                 if (localVersion) {
                     // compare stamps
-
-                    // if (externalVersion.deleted) {
-                    //     // if the external copy is deleted then remove the local copy
-                    //     return localforage.removeItem(key);
-                    // }
 
                     if (!externalVersion.deleted && localVersion.modified >= externalVersion.modified) {
                         this.isTestBuild && console.info(`Local copy of ${key} is the same or newer than the server copy. (${localVersion.modified} >= ${externalVersion.modified}) `);
