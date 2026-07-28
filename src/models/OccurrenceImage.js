@@ -2,6 +2,7 @@
 import {Model, uuid} from "./Model";
 import {ResponseFactory} from "../serviceworker/responses/ResponseFactory.js";
 import {Logger} from "../utils/Logger.js";
+import {ImageFileStore} from "../framework/ImageFileStore.js";
 
 export const IMAGE_CONTEXT_SURVEY = 'survey';
 export const IMAGE_CONTEXT_OCCURRENCE = 'occurrence';
@@ -20,9 +21,34 @@ export class OccurrenceImage extends Model {
     /**
      * raw file object retrieved from a file upload image element
      *
+     * Not populated by retrieveFromLocal(), which reads metadata only. Call loadFile() to fetch the
+     * binary from ImageFileStore when it is actually needed (i.e. immediately before a post).
+     *
      * @type {File|null}
      */
     file = null;
+
+    /**
+     * Set if a binary is held locally for this image, allowing the sync and purge passes to reason
+     * about images without loading hundreds of megabytes of photos out of IndexedDb.
+     *
+     * @type {boolean}
+     */
+    hasFile = false;
+
+    /**
+     * size in bytes of the locally held binary (0 if none)
+     *
+     * @type {number}
+     */
+    fileSize = 0;
+
+    /**
+     * mime type of the locally held binary
+     *
+     * @type {string}
+     */
+    fileType = '';
 
     /**
      *
@@ -113,7 +139,7 @@ export class OccurrenceImage extends Model {
             this.occurrenceId = params.occurrenceId;
         }
 
-        if (!this.deleted && !this.file) {
+        if (!this.deleted && !this.file && !this.hasFile) {
             return Promise.reject(`Cannot save image id '${this.id}' with no local image data.`);
         }
 
@@ -124,18 +150,23 @@ export class OccurrenceImage extends Model {
         }
 
         if (forceSave || this.unsaved()) {
-            // const formData = this.formData();
-
             if (!OccurrenceImage.imageCache.has(this.id)) {
                 OccurrenceImage.imageCache.set(this.id, this);
             }
 
             console.log(`queueing image post, image id ${this.id}`);
-            //return skipQueue ? this.postImmediately(isSync) : this.queuePost(isSync);
 
-            //skipQueue = false; // for testing of queued path
+            // The binary is fetched here rather than by retrieveFromLocal(), so that the sync and
+            // purge passes can walk every image without pulling the photos into memory.
+            // It has to happen before queuePost(), as that builds the form data.
+            return this.loadFile().then(() => {
+                if (!this.deleted && !this.file) {
+                    // metadata claimed a binary that has since gone; treat as already uploaded
+                    return Promise.reject(`Cannot save image id '${this.id}', local image data is no longer present.`);
+                }
 
-            return skipQueue ? this.directSave() : this.queuePost(isSync);
+                return skipQueue ? this.directSave() : this.queuePost(isSync);
+            });
         } else {
             return Promise.reject(`Image ${this.id} has already been saved.`);
         }
@@ -212,10 +243,20 @@ export class OccurrenceImage extends Model {
 
         if (!this.deleted) {
             if (this.file) {
+                // 'image' is a transient carrier: ImageResponse.storeLocally() diverts it to
+                // ImageFileStore and keeps it out of the record itself, leaving only enough
+                // metadata for the sync and purge passes to work without loading the photo.
                 modelData.image = this.file;
+                modelData.hasFile = true;
+                modelData.fileSize = this.file.size || 0;
+                modelData.fileType = this.file.type || '';
             } else {
                 throw new Error(`While retrieving model data, cannot save image id '${this.id}' with no local image data.`);
             }
+        } else {
+            modelData.hasFile = false;
+            modelData.fileSize = 0;
+            modelData.fileType = '';
         }
 
         return modelData;
@@ -537,13 +578,72 @@ export class OccurrenceImage extends Model {
         }
 
         if (descriptor.image) {
+            // Legacy record written before binaries were split out into ImageFileStore.
+            // Still honoured so that existing unsent photos are not orphaned, but note that reading
+            // such a record does load the whole photo — see migrateInlineFile().
             this.file = descriptor.image;
+            this.hasFile = true;
+            this.fileSize = descriptor.image.size || 0;
+            this.fileType = descriptor.image.type || '';
+            this._legacyInlineFile = true;
+        } else {
+            this.hasFile = !!descriptor.hasFile;
+            this.fileSize = descriptor.fileSize || 0;
+            this.fileType = descriptor.fileType || '';
         }
 
         if (descriptor.context) {
             this.context = descriptor.context;
         }
     }
+
+    /**
+     * Fetch the binary from ImageFileStore into this.file, if it isn't already loaded.
+     *
+     * Resolves with null when no binary is held locally, which is the normal state for an image
+     * that has already been acknowledged by the server.
+     *
+     * @returns {Promise<File|Blob|null>}
+     */
+    loadFile() {
+        if (this.file) {
+            return Promise.resolve(this.file);
+        }
+
+        if (!this.hasFile || this.deleted) {
+            // a deleted image must never resurrect its binary
+            return Promise.resolve(null);
+        }
+
+        return ImageFileStore.getFile(this.id)
+            .then((file) => {
+                if (file) {
+                    this.file = file;
+                } else {
+                    // metadata claims a binary that is no longer present
+                    this.hasFile = false;
+                    this.fileSize = 0;
+                }
+
+                return this.file;
+            });
+    }
+
+    /**
+     * True if this image was read from a legacy record that still holds its binary inline.
+     * Such records are rewritten in the split form the next time the image is saved.
+     *
+     * @returns {boolean}
+     */
+    hasLegacyInlineFile() {
+        return this._legacyInlineFile;
+    }
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _legacyInlineFile = false;
 
     // noinspection JSUnusedGlobalSymbols
     /**

@@ -15,6 +15,7 @@ export {Occurrence,
 } from './models/Occurrence';
 export {OccurrenceImage, IMAGE_CONTEXT_SURVEY, IMAGE_CONTEXT_OCCURRENCE} from './models/OccurrenceImage';
 export {ImageResponse} from './serviceworker/responses/ImageResponse';
+export {ImageFileStore} from './framework/ImageFileStore';
 export {OccurrenceResponse} from './serviceworker/responses/OccurrenceResponse';
 export {SurveyResponse} from './serviceworker/responses/SurveyResponse';
 export {TrackResponse} from './serviceworker/responses/TrackResponse';

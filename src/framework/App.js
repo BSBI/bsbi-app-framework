@@ -32,12 +32,12 @@ import {
     SURVEY_EVENT_OCCURRENCES_CHANGED, SURVEY_EVENT_DELETED,
     APP_EVENT_SERVICE_WORKER_CHANGED
 } from './AppEvents';
-import {PurgeInconsistencyError} from "../utils/exceptions/PurgeInconsistencyError";
 import {DEVICE_TYPE_IMMOBILE, DeviceType} from "../utils/DeviceType";
 import {schedulerYield} from "../utils/schedulerYield";
 import {SurveyDefinition} from "../models/SurveyDefinition.js";
 import {SAVE_STATE_SERVER} from "../utils/constants.js";
 import {ImageResponse} from "../serviceworker/responses/ImageResponse.js";
+import {ImageFileStore} from "./ImageFileStore.js";
 import {SurveyResponse} from "../serviceworker/responses/SurveyResponse.js";
 import {OccurrenceResponse} from "../serviceworker/responses/OccurrenceResponse.js";
 
@@ -640,6 +640,9 @@ export class App extends EventHarness {
         localforage.config({
             name: name
         });
+
+        // image binaries are held in a separate database, derived from the same name
+        ImageFileStore.configure(name);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -1628,10 +1631,12 @@ export class App extends EventHarness {
                     //console.log({'queueing sync': {key: objectKey, type: classLowerName}});
                     return objectClass.retrieveFromLocal(objectKey, new objectClass)
                         .then((/** Model|OccurrenceImage */ model) => {
-                            if (model.TYPE === MODEL_TYPE_IMAGE && !model.deleted && (!model.file || model.file?.size === 0)) {
+                            if (model.TYPE === MODEL_TYPE_IMAGE && !model.deleted && (!model.hasFile || model.fileSize === 0)) {
                                 // special case where image data is no longer in local storage (but not flagged as deleted)
                                 // (assume that image has already been saved)
 
+                                // Tested against the metadata rather than model.file, so that syncing
+                                // does not load every photo out of IndexedDb just to check this.
                                 return;
                             }
 
@@ -1933,14 +1938,20 @@ export class App extends EventHarness {
         for(let imageKey of storedObjectKeys.image) {
             purgePromise = purgePromise.then(() => OccurrenceImage.retrieveFromLocal(imageKey, new OccurrenceImage)
                 .then((/** OccurrenceImage */ image) => {
-                    if (image.unsaved() && (image.file || image.deleted)) {
-                        if (deletionCandidateKeys.survey.includes(image.surveyId)) {
-                            throw new PurgeInconsistencyError(`Image ${image.id} from deletable survey ${image.surveyId} is unsaved.`);
-                        } else if (deletionCandidateKeys.occurrence.includes(image.occurrenceId)) {
-                            throw new PurgeInconsistencyError(`Image ${image.id} from deletable occurrence ${image.occurrenceId} is unsaved.`);
-                        } else {
-                            preservedKeys.image.push(image.id);
-                        }
+                    // hasFile rather than image.file, so that the purge does not load every photo
+                    if (image.unsaved() && (image.hasFile || image.deleted)) {
+                        // An unsaved image is always preserved, including when its survey or
+                        // occurrence is being purged.
+                        //
+                        // That is safe because a parent only becomes a deletion candidate once it is
+                        // confirmed saved on the server (surveys require savedRemotely, occurrences
+                        // require saveState === SAVE_STATE_SERVER), so the image can still be posted
+                        // against it by the next syncAll(), which enumerates local storage rather
+                        // than the in-memory model.
+                        //
+                        // This previously threw PurgeInconsistencyError, which rejected the *entire*
+                        // purge, so one unsendable photo blocked all cleanup indefinitely.
+                        preservedKeys.image.push(image.id);
                     } else {
                         if (deletionCandidateKeys.survey.includes(image.surveyId) ||
                             deletionCandidateKeys.occurrence.includes(image.occurrenceId) ||
@@ -1971,11 +1982,9 @@ export class App extends EventHarness {
                         console.log(`Queueing purge of corrupt track id ${track.id} with no device.`);
                         deletionCandidateKeys.track.push(trackKey);
                     } else if (track.unsaved()) {
-                        if (deletionCandidateKeys.survey.includes(track.surveyId)) {
-                            throw new PurgeInconsistencyError(`Track ${trackKey} from deletable survey ${track.surveyId} is unsaved.`);
-                        } else {
-                            preservedKeys.track.push(trackKey);
-                        }
+                        // preserved even when the survey is being purged, for the reason given
+                        // against unsaved images above
+                        preservedKeys.track.push(trackKey);
                     } else {
                         if (deletionCandidateKeys.survey.includes(track.surveyId) || track.deleted) {
                             deletionCandidateKeys.track.push(trackKey);
@@ -2054,6 +2063,13 @@ export class App extends EventHarness {
         }
 
         if (deletionIds.image.length > 0) {
+            // Binaries live in their own store, so removing the image record is no longer enough.
+            for (let imageId of deletionIds.image) {
+                if (imageId) {
+                    purgePromise = purgePromise.then(() => ImageFileStore.removeFile(imageId));
+                }
+            }
+
             purgePromise = purgePromise.then(() => this._purgeCachedImages(deletionIds.image))
                 .catch((error) => {
                     console.error({'purge images error' : {imagekeys: deletionIds.image, error}});

@@ -2,6 +2,7 @@ import {ResponseFactory} from "./ResponseFactory";
 import {LocalResponse} from "./LocalResponse";
 import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../utils/constants";
 import {IMAGE_CONTEXT_OCCURRENCE, IMAGE_CONTEXT_SURVEY} from "../../models/OccurrenceImage";
+import {ImageFileStore} from "../../framework/ImageFileStore.js";
 
 export class ImageResponse extends LocalResponse {
     failureErrorMessage = 'Failed to store image.';
@@ -35,6 +36,9 @@ export class ImageResponse extends LocalResponse {
         this.returnedToClient.deleted = this.toSaveLocally.deleted;
         this.returnedToClient.projectId = parseInt(this.toSaveLocally.projectId, 10);
         this.returnedToClient.context = this.toSaveLocally.context || IMAGE_CONTEXT_OCCURRENCE;
+        this.returnedToClient.hasFile = !!this.toSaveLocally.hasFile;
+        this.returnedToClient.fileSize = this.toSaveLocally.fileSize || 0;
+        this.returnedToClient.fileType = this.toSaveLocally.fileType || '';
 
         if (this.toSaveLocally.context !== IMAGE_CONTEXT_SURVEY) {
             this.returnedToClient.occurrenceId = this.toSaveLocally.occurrenceId;
@@ -64,7 +68,40 @@ export class ImageResponse extends LocalResponse {
             this.toSaveLocally.occurrenceId = this.returnedToClient.occurrenceId;
         }
 
+        // A server acknowledgement means the binary is safely uploaded, so the local copy is dropped
+        // (this was previously implicit, as the record was overwritten without its inline image).
+        // Now that binaries live in their own store, hasFile: false drives their explicit removal
+        // in storeLocally(), otherwise they would accumulate indefinitely.
+        this.toSaveLocally.hasFile = false;
+        this.toSaveLocally.fileSize = 0;
+        this.toSaveLocally.fileType = '';
+
         return this;
+    }
+
+    /**
+     * Diverts the binary to ImageFileStore so that it never enters the image record itself.
+     *
+     * @param {boolean} remoteSuccess
+     * @returns {Promise}
+     */
+    storeLocally(remoteSuccess = true) {
+        const imageId = this.toSaveLocally.imageId || this.toSaveLocally.id;
+
+        // 'image' is only ever a transient carrier — strip it before the record is written.
+        const file = this.toSaveLocally.image;
+        delete this.toSaveLocally.image;
+
+        // hasFile is the single source of truth: false means any stored binary is now redundant,
+        // whether because the server has acknowledged it or because the image was deleted.
+        const filePromise = file ?
+            ImageFileStore.setFile(imageId, file)
+            :
+            (this.toSaveLocally.hasFile ? Promise.resolve() : ImageFileStore.removeFile(imageId));
+
+        // The binary is written first: a record claiming hasFile with no binary behind it is worse
+        // than a binary with no record, which the purge will collect as an orphan.
+        return filePromise.then(() => super.storeLocally(remoteSuccess));
     }
 
     /**

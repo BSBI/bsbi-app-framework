@@ -14,6 +14,7 @@ import {Model} from "../models/Model";
 import {TrackResponse} from "./responses/TrackResponse";
 import {Logger} from "../utils/Logger";
 import {SurveyDefinitionResponse} from "./responses/SurveyDefinitionResponse";
+import {ImageFileStore} from "../framework/ImageFileStore.js";
 
 export class BSBIServiceWorker {
 
@@ -112,6 +113,9 @@ export class BSBIServiceWorker {
         localforage.config({
             name: configuration.forageName
         });
+
+        // image binaries are held in a separate database, derived from the same name
+        ImageFileStore.configure(configuration.forageName);
 
         //self.onerror = Logger.serviceWorkerLogError;
 
@@ -736,21 +740,24 @@ export class BSBIServiceWorker {
 
         console.info('attempting retrieval of image data from local database');
 
-        return OccurrenceImage.retrieveFromLocal(imageId, image).then((image) => {
-            console.log(`Retrieved image '${imageId}' from indexeddb.`);
-            if (image.file) {
-                const headers = new Headers();
-                headers.append('Content-Type', image.file.type);
+        return OccurrenceImage.retrieveFromLocal(imageId, image)
+            // the record carries metadata only, so the binary has to be fetched explicitly
+            .then((image) => image.loadFile().then(() => image))
+            .then((image) => {
+                console.log(`Retrieved image '${imageId}' from indexeddb.`);
+                if (image.file) {
+                    const headers = new Headers();
+                    headers.append('Content-Type', image.file.type);
 
-                return new Response(image.file, {
-                    "status": 200,
-                    "statusText": "OK image response from IndexedDb"
-                });
-            } else {
-                console.error(`No local file object associated with retrieved image '${imageId}' from IndexedDB.`);
-                return Promise.reject(`No local file object associated with retrieved image '${imageId}' from IndexedDB.`);
-            }
-        });
+                    return new Response(image.file, {
+                        "status": 200,
+                        "statusText": "OK image response from IndexedDb"
+                    });
+                } else {
+                    console.error(`No local file object associated with retrieved image '${imageId}' from IndexedDB.`);
+                    return Promise.reject(`No local file object associated with retrieved image '${imageId}' from IndexedDB.`);
+                }
+            });
     }
 
     /**
