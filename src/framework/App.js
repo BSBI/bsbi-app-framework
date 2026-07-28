@@ -38,6 +38,7 @@ import {SurveyDefinition} from "../models/SurveyDefinition.js";
 import {SAVE_STATE_SERVER} from "../utils/constants.js";
 import {ImageResponse} from "../serviceworker/responses/ImageResponse.js";
 import {ImageFileStore} from "./ImageFileStore.js";
+import {PINNED_FORAGE_DRIVER, reportForageDriver} from "../utils/forageDriver.js";
 import {SurveyResponse} from "../serviceworker/responses/SurveyResponse.js";
 import {OccurrenceResponse} from "../serviceworker/responses/OccurrenceResponse.js";
 
@@ -637,12 +638,15 @@ export class App extends EventHarness {
      * @param {string} name
      */
     setLocalForageName(name) {
-        localforage.config({
-            name: name
+        const configResult = localforage.config({
+            name: name,
+            driver: PINNED_FORAGE_DRIVER, // never silently fall back — see forageDriver.js
         });
 
         // image binaries are held in a separate database, derived from the same name
         ImageFileStore.configure(name);
+
+        return reportForageDriver(localforage, configResult, 'records');
     }
 
     // noinspection JSUnusedGlobalSymbols

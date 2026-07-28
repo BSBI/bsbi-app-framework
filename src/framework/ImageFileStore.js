@@ -1,4 +1,5 @@
 import localforage from 'localforage';
+import {PINNED_FORAGE_DRIVER, reportForageDriver} from "../utils/forageDriver.js";
 
 /**
  * Store for image binaries, held separately from the structured records.
@@ -29,12 +30,17 @@ export class ImageFileStore {
      * and the service worker.
      *
      * @param {string} forageName the records store name, which this is derived from
+     * @returns {Promise<string|null>} resolves with the driver actually in use
      */
     static configure(forageName) {
         ImageFileStore._store = localforage.createInstance({
             name: `${forageName}-imagefiles`,
             storeName: 'imagefiles',
+            driver: PINNED_FORAGE_DRIVER, // never silently fall back — see forageDriver.js
         });
+
+        // createInstance() applies the driver itself, so there is no config() result to inspect
+        return reportForageDriver(ImageFileStore._store, true, 'image files');
     }
 
     /**

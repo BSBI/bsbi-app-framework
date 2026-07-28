@@ -15,6 +15,7 @@ import {TrackResponse} from "./responses/TrackResponse";
 import {Logger} from "../utils/Logger";
 import {SurveyDefinitionResponse} from "./responses/SurveyDefinitionResponse";
 import {ImageFileStore} from "../framework/ImageFileStore.js";
+import {PINNED_FORAGE_DRIVER, reportForageDriver} from "../utils/forageDriver.js";
 
 export class BSBIServiceWorker {
 
@@ -110,9 +111,13 @@ export class BSBIServiceWorker {
 
         this.URL_CACHE_SET = configuration.urlCacheSet;
 
-        localforage.config({
-            name: configuration.forageName
+        const forageConfigResult = localforage.config({
+            name: configuration.forageName,
+            driver: PINNED_FORAGE_DRIVER, // never silently fall back — see forageDriver.js
         });
+
+        // noinspection JSIgnoredPromiseFromCall
+        reportForageDriver(localforage, forageConfigResult, 'records (service worker)');
 
         // image binaries are held in a separate database, derived from the same name
         ImageFileStore.configure(configuration.forageName);
