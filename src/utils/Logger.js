@@ -1,5 +1,14 @@
+import {LogBuffer} from "./LogBuffer.js";
 
 const JS_LOG_PATH = '/jsLog.php';
+
+/**
+ * Deadline for a log post. Without one a stalled connection leaves the request hanging, which for a
+ * batch flush would block the queue behind it indefinitely.
+ *
+ * @type {number}
+ */
+const LOG_POST_TIMEOUT_MS = 30000;
 
 export class Logger {
 
@@ -158,29 +167,13 @@ export class Logger {
 
             errorDescriptor.stamp = Date.now();
 
-            if (globalThis.navigator?.onLine) {
-                return fetch(JS_LOG_PATH, {
-                    method: "POST", // *GET, POST, PUT, DELETE, etc.
-                    mode: "cors", // no-cors, *cors, same-origin
-                    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-                    credentials: "include", // include, *same-origin, omit
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    redirect: "follow", // manual, *follow, error
-                    referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                    body: JSON.stringify(doc),
-                }).catch((reason) => {
-                    console.info({'Remote error logging failed': reason});
-                    // don't reject here, as the promise chain should continue, even after a failed log
-                });
-            } else {
-                console.info({'Offline, report not sent': doc});
-
-                return Promise.resolve();
-            }
+            return Logger._deliver(doc);
         } catch (error) {
             console.error({'error in error handler' : error});
+
+            // Callers chain .then()/.finally() onto this, so a promise must be returned even when
+            // the error handler itself fails.
+            return Promise.resolve();
         }
     }
 
@@ -192,6 +185,21 @@ export class Logger {
      * @returns {Promise<void>} a fulfilled promise (even if logging fails)
      */
     static logMessage(message, url = '') {
+        try {
+            return Logger._buildAndDeliverMessage(message, url);
+        } catch (error) {
+            console.error({'error in message logger' : error});
+            return Promise.resolve();
+        }
+    }
+
+    /**
+     * @param {string|object} message
+     * @param {string|null} url
+     * @returns {Promise<void>}
+     * @private
+     */
+    static _buildAndDeliverMessage(message, url) {
         console.log(message);
 
         if (!url) {
@@ -227,14 +235,80 @@ export class Logger {
         messageDescriptor.browser = navigator?.appName;
         // noinspection JSDeprecatedSymbols
         messageDescriptor.browserv = navigator?.appVersion;
-        messageDescriptor.userAgent = navigator?.userAgent;
-        messageDescriptor.versions = Logger.bsbiAppVersion;
+        messageDescriptor.useragent = navigator?.userAgent;
+        messageDescriptor.version = Logger.bsbiAppVersion;
 
         messageDescriptor.message = message;
         messageDescriptor.stamp = Date.now();
 
-        if (globalThis.navigator?.onLine) {
-            return fetch(JS_LOG_PATH, {
+        return Logger._deliver(doc);
+    }
+
+    /**
+     * Posts an entry, buffering it for later if that isn't currently possible.
+     *
+     * Entries are buffered both when offline and when a post fails while apparently online.
+     * navigator.onLine only reports whether a network interface exists, so a captive portal, a
+     * stalled mobile connection or a server error would otherwise discard the entry silently -
+     * and those are exactly the conditions worth having a record of.
+     *
+     * @param {{}} doc
+     * @returns {Promise<void>} always resolves
+     * @private
+     */
+    static _deliver(doc) {
+        if (!globalThis.navigator?.onLine) {
+            console.info({'Offline, report buffered': doc});
+            LogBuffer.store(doc);
+
+            return Promise.resolve();
+        }
+
+        return Logger._postPayload(doc).then((accepted) => {
+            if (accepted) {
+                // The post proves the endpoint is reachable, which is a better signal than
+                // navigator.onLine, so take the opportunity to drain anything held back.
+                return Logger.flushBufferedLogs();
+            }
+
+            LogBuffer.store(doc);
+        });
+    }
+
+    /**
+     * Sends buffered entries to the server in batches.
+     *
+     * @returns {Promise<void>} always resolves
+     */
+    static flushBufferedLogs() {
+        if (!globalThis.navigator?.onLine) {
+            return Promise.resolve();
+        }
+
+        return LogBuffer.flush((entries) => Logger._postPayload(entries));
+    }
+
+    /**
+     * Posts either a single entry or an array of them; jsLog.php accepts both.
+     *
+     * Must never call Logger.logError(), or a failing log post would generate further entries.
+     *
+     * @param {{}|Array<{}>} payload
+     * @returns {Promise<boolean>} resolves true if the server accepted the payload
+     * @private
+     */
+    static _postPayload(payload) {
+        let timeoutId = null;
+
+        const clearPostTimeout = () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
+
+        try {
+            const fetchOptions = {
                 method: "POST", // *GET, POST, PUT, DELETE, etc.
                 mode: "cors", // no-cors, *cors, same-origin
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -244,18 +318,44 @@ export class Logger {
                 },
                 redirect: "follow", // manual, *follow, error
                 referrerPolicy: "no-referrer-when-downgrade", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: JSON.stringify(doc),
-            }).catch((reason) => {
-                console.info({'Remote message logging failed': reason});
-                // don't reject here, as the promise chain should continue, even after a failed log
-            });
-        } else {
-            console.info({'Offline, message report not sent': doc});
+                body: JSON.stringify(payload),
+            };
 
-            return Promise.resolve();
+            if (typeof AbortController !== 'undefined') {
+                const signalController = new AbortController();
+                fetchOptions.signal = signalController.signal;
+
+                timeoutId = setTimeout(() => {
+                    timeoutId = null;
+                    signalController.abort();
+                }, LOG_POST_TIMEOUT_MS);
+            }
+
+            return fetch(JS_LOG_PATH, fetchOptions).then(
+                (response) => {
+                    if (!response.ok) {
+                        console.info({'Remote logging rejected': response.status});
+                    }
+
+                    return response.ok;
+                },
+                (reason) => {
+                    console.info({'Remote logging failed': reason});
+                    return false;
+                }
+            ).finally(clearPostTimeout);
+        } catch (error) {
+            clearPostTimeout();
+            console.info({'Remote logging threw': error});
+
+            return Promise.resolve(false);
         }
     }
 }
+
+// LogBuffer owns the storage and scheduling; Logger owns the transport, so it supplies the means of
+// draining the buffer when connectivity returns.
+LogBuffer.onFlushRequested = () => Logger.flushBufferedLogs();
 
 /**
  * Throw this only from within logError

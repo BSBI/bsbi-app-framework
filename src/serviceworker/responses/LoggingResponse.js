@@ -4,7 +4,7 @@ import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../../utils/constants";
 import {packageClientResponse} from "../packageClientResponse";
 
 export class LoggingResponse extends LocalResponse {
-    failureErrorMessage = 'Failed to store tracking data.';
+    failureErrorMessage = 'Failed to store log data.';
     failureErrorHelp = 'Your internet connection may have failed (or there could be a problem with the server). ' +
         'It wasn\'t possible to save a temporary copy on your device. Perhaps there is insufficient space? ' +
         'Please try to re-establish a network connection and try again.';
@@ -26,8 +26,7 @@ export class LoggingResponse extends LocalResponse {
         this.returnedToClient.deleted = this.toSaveLocally.deleted || '';
         this.returnedToClient.projectId = this.toSaveLocally.projectId;
         this.returnedToClient.userId = this.toSaveLocally.userId || '';
-        this.returnedToClient.pointIndex = this.toSaveLocally.pointIndex;
-        this.returnedToClient.points = this.toSaveLocally.points;
+
         return this;
     }
 
@@ -39,7 +38,7 @@ export class LoggingResponse extends LocalResponse {
     populateLocalSave() {
         this.toSaveLocally.surveyId = this.returnedToClient.surveyId;
         this.toSaveLocally.deviceId = this.returnedToClient.deviceId;
-        this.toSaveLocally.type = 'track';
+        this.toSaveLocally.type = 'log';
         this.toSaveLocally.attributes = this.returnedToClient.attributes;
         this.toSaveLocally.created = parseInt(this.returnedToClient.created, 10); // stamps from server always take precedence
         this.toSaveLocally.modified = parseInt(this.returnedToClient.modified, 10);
@@ -47,8 +46,7 @@ export class LoggingResponse extends LocalResponse {
         this.toSaveLocally.deleted = this.returnedToClient.deleted;
         this.toSaveLocally.projectId = parseInt(this.returnedToClient.projectId, 10);
         this.toSaveLocally.userId = this.returnedToClient.userId || '';
-        this.toSaveLocally.pointIndex = parseInt(this.returnedToClient.pointIndex, 10);
-        this.toSaveLocally.points = this.returnedToClient.points; // may eventually want to truncate this to save local space
+
         return this;
     }
 

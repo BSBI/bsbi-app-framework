@@ -84,6 +84,7 @@ export {NotFoundError} from './utils/exceptions/NotFoundError';
 export {TaxonError} from './utils/exceptions/TaxonError';
 export {DEVICE_TYPE_UNKNOWN, DEVICE_TYPE_IMMOBILE, DEVICE_TYPE_MOBILE, DEVICE_TYPE_UNCHECKED, DeviceType} from './utils/DeviceType';
 export {Logger} from './utils/Logger';
+export {LogBuffer} from './utils/LogBuffer';
 export {formattedImplode} from './utils/formattedImplode'
 export {escapeHTML} from "./utils/escapeHTML";
 export {schedulerYield} from './utils/schedulerYield';

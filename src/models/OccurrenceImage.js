@@ -367,23 +367,36 @@ export class OccurrenceImage extends Model {
         // previously saved locally. That's not going to happen for images, but the same approach can't be replicated
         // for other object types that undergo rapid changes.
 
-        if (!this.file || this.file.size <= chunkSize) {
+        // The upload is taken against a snapshot of the file rather than re-reading this.file on
+        // each pass. A chunked upload awaits a fetch per chunk, and this.file can be reassigned in
+        // the meantime - deleting an image sets it to null - which previously surfaced as
+        // "Cannot read properties of null (reading 'size')" partway through a large photo.
+        const file = this.file;
+
+        if (!file || file.size <= chunkSize) {
             return await fetch(this.SAVE_ENDPOINT, {
                 method: 'POST',
                 body: this.formData(),
             });
         }
 
-        const totalChunks = Math.ceil(this.file.size / chunkSize);
+        const totalChunks = Math.ceil(file.size / chunkSize);
 
         let response;
 
         const transactionId = uuid(); // required to avoid conflict between simultaneous uploads of the same image
 
         for (let i = 0; i < totalChunks; i++) {
+            if (this.deleted) {
+                // The user discarded the image while it was uploading, so there is no point pushing
+                // the remaining chunks. The deletion is saved separately, and the server discards a
+                // part-uploaded transaction.
+                return Promise.reject(`Abandoned chunked upload of image ${this.id}, deleted while uploading.`);
+            }
+
             const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, this.file.size);
-            const chunk = this.file.slice(start, end);
+            const end = Math.min(start + chunkSize, file.size);
+            const chunk = file.slice(start, end);
 
             const formData = new FormData();
             formData.append('fileChunk', chunk);

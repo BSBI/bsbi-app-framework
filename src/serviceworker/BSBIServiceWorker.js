@@ -135,6 +135,34 @@ export class BSBIServiceWorker {
                     case 'userchange':
                         event.waitUntil(this.handleUserChangeMessage(event.data.userId));
                         break;
+
+                    case 'getVersion':
+                        // A worker that is installed but waiting can still answer messages, which is
+                        // how the client obtains the details of a pending update now that activate()
+                        // (and its versionChanged broadcast) is deferred until the user accepts.
+                        //
+                        // The reply deliberately uses the same shape as the activate broadcast, so
+                        // the existing client-side handling applies unchanged.
+                        {
+                            const versionMessage = {reason: 'versionChanged', upgrading: this.versionSpec};
+
+                            if (event.ports?.length) {
+                                event.ports[0].postMessage(versionMessage);
+                            } else if (event.source) {
+                                event.source.postMessage(versionMessage);
+                            }
+                        }
+                        break;
+
+                    case 'skipWaiting':
+                        // Sent by the client only once the user has accepted an update, so that the
+                        // takeover is always immediately followed by a reload. See the note against
+                        // the install handler for why this isn't done automatically.
+                        console.log('Service worker skipping waiting at the client\'s request.');
+
+                        // noinspection JSIgnoredPromiseFromCall
+                        self.skipWaiting();
+                        break;
                 }
             }
         );
@@ -143,8 +171,16 @@ export class BSBIServiceWorker {
         self.addEventListener('install', (evt) => {
             console.log('BSBI app service worker is being installed.');
 
-            // noinspection JSIgnoredPromiseFromCall
-            self.skipWaiting();
+            // skipWaiting() is *not* called here.
+            //
+            // Taking over a running client mid-session means the page carries on executing the
+            // previously loaded application code under a newer worker. That combination is unsafe
+            // whenever the two disagree about which side is responsible for writing to IndexedDb,
+            // and it happens silently while the user is recording.
+            //
+            // Instead the new worker waits until every client of the old worker has gone, or until
+            // the user accepts an update, which posts a 'skipWaiting' message (see below). That way
+            // a takeover is always paired with a reload.
 
             // Ask the service worker to keep installing until the returning promise
             // resolves.
@@ -164,6 +200,14 @@ export class BSBIServiceWorker {
         self.addEventListener('activate', (event) => {
             console.log({'service worker activate event' : event});
 
+            // Claiming comes first, before the caches are tidied.
+            //
+            // It used to run last, behind the deletion of the old code, data and image caches.
+            // Deleting a large image cache is slow, so the client could wait many seconds for the
+            // controllerchange that tells it the takeover succeeded - and if any deletion rejected,
+            // Promise.all rejected and clients.claim() never ran at all, leaving the takeover stuck
+            // permanently. Neither matters to the client, which reads from the new cache regardless
+            // of whether the old ones have gone yet.
             event.waitUntil(
                 self.clients.matchAll({
                     includeUncontrolled: true
@@ -172,6 +216,14 @@ export class BSBIServiceWorker {
                         return client.url;
                     });
                     console.log('[ServiceWorker] Matching clients:', urls.join(', '));
+                }).then(() => {
+                    console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
+                    return self.clients.claim();
+                }).then(() => self.clients.matchAll({type: 'all'}))
+                .then((clients) => {
+                    for (const client of clients) {
+                        client.postMessage({reason: 'versionChanged', upgrading: this.versionSpec});
+                    }
                 }).then(() => caches.keys())
                 .then((cacheNames) => {
                     return Promise.all(
@@ -192,16 +244,11 @@ export class BSBIServiceWorker {
                                 return caches.delete(cacheName);
                             }
                         })
-                    );
-                }).then(() => {
-                    console.log('[ServiceWorker] Claiming clients for version', this.CACHE_VERSION);
-                    return self.clients.claim()
-                        .then(() => self.clients.matchAll({type: 'all'}))
-                        .then(clients => {
-                            for (const client of clients) {
-                                client.postMessage({reason: 'versionChanged', upgrading: this.versionSpec});
-                            }
-                        });
+                    ).catch((error) => {
+                        // Cache tidying is housekeeping: a failure must not be allowed to look like
+                        // a failed activation.
+                        console.error({'[ServiceWorker] Failed to delete an old cache': error});
+                    });
                 })
             );
         });
