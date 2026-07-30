@@ -1405,6 +1405,55 @@ export class App extends EventHarness {
     }
 
     /**
+     * Timestamp (ms unixtime) of the last sync triggered by a connectivity change.
+     *
+     * @type {number}
+     */
+    static lastOnlineSyncAllTimestamp = 0;
+
+    /**
+     * Minimum interval between syncs triggered by regaining a connection.
+     *
+     * Deliberately far shorter than syncAllInterval. Coming back into signal is the moment a
+     * backlog most wants clearing, and a sync attempted while offline returns immediately without
+     * recording a timestamp, so the ordinary throttle would needlessly hold the first real
+     * opportunity back. This guard exists only to absorb a flapping connection - a train journey
+     * will raise online/offline repeatedly - rather than to ration syncing.
+     *
+     * 1 min in milliseconds
+     */
+    static onlineSyncAllInterval = 60 * 1000;
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Syncs as soon as a connection returns, rather than waiting for the user to look at the screen.
+     *
+     * Without this the only automatic trigger is a visibility change, so a phone carried in a pocket
+     * can walk back into signal and sync nothing until it is next unlocked.
+     */
+    registerSyncAllOnOnlineListener () {
+        globalThis.addEventListener?.('online', () => {
+            if (App._syncAllInProgress) {
+                return;
+            }
+
+            if ((App.lastOnlineSyncAllTimestamp + App.onlineSyncAllInterval) > Date.now()) {
+                // connection is flapping; the attempt already under way or just made will do
+                return;
+            }
+
+            App.lastOnlineSyncAllTimestamp = Date.now();
+
+            console.info('Sync all attempt triggered by connectivity returning.');
+
+            schedulerYield().then(() => this.syncAll().finally(() => {
+                console.info('Sync all attempt triggered by connectivity returning - finished.');
+                // @intentional end of promise chain
+            }));
+        });
+    }
+
+    /**
      * @param {boolean} fastReturn If set then the promise returns more quickly once the saves have been queued but not all effected
      * This should allow surveys to be switched etc. without disrupting the ongoing save process.
      * @returns {Promise<{savedCount : {}}|void>}
