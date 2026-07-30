@@ -2,6 +2,7 @@
   "name": "bsbi-app-framework",
   "title": "BSBI App Framework",
   "version": "0.1.1",
+  "private": true,
   "author": {
     "name": "Tom Humphrey",
     "email": "tom.humphrey@bsbi.org"
@@ -24,8 +25,7 @@
     "localforage": "^1.10.0"
   },
   "peerDependencies": {
-    "british-isles-gridrefs": "file:C:\\GitHub\\js-british-isles-gridrefs",
-    "bsbi-app-framework-view": "file:C:\\GitHub\\bsbi-app-framework-view"
+    "british-isles-gridrefs": "git+https://github.com/BSBI/js-british-isles-gridrefs.git"
   },
   "scripts": {
     "build": "rollup -c --strictDeprecations",
