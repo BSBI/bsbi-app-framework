@@ -206,6 +206,7 @@ export class LogBuffer {
         return LogBuffer._flushChunks(keys, postBatch)
             .catch((error) => {
                 console.error({'Buffered log flush failed': error});
+                // @intentional allow the chain to continue
             })
             .then(() => {
                 LogBuffer._flushInProgress = false;
@@ -282,8 +283,14 @@ export class LogBuffer {
             }
 
             return LogBuffer._flushChunks(keys, postBatch);
-        }, () => {
+        }, (reason) => {
             LogBuffer._nextFlushAllowedStamp = Date.now() + FLUSH_RETRY_INTERVAL_MS;
+
+            // postBatch is contracted to resolve with a boolean, so a rejection means the poster
+            // itself failed rather than the server declining the batch. Rejecting keeps the two
+            // apart and carries the reason up to flush(), which logs it - swallowing it here left
+            // that catch unreachable and discarded the only evidence of what went wrong.
+            return Promise.reject(reason);
         });
     }
 

@@ -274,6 +274,8 @@ export class Model extends EventHarness {
                 (reason) => {
                     // Now that local storage is written first, this is the only step that can lose
                     // the user's work outright, so it must be surfaced rather than swallowed.
+                    // @intentional continue after failure, so that server post is still tried, before the promise rejects later
+
                     this._savedLocally = false;
                     localFailure = reason;
 
@@ -286,7 +288,7 @@ export class Model extends EventHarness {
                 // is the only remaining place the record can survive.
                 this.queuePost(false)
                     .catch((reason) => {
-                        // Remote failure is routine when offline. The object keeps savedRemotely false
+                        // @intentional Remote failure is routine when offline. The object keeps savedRemotely false
                         // and will be retried by App.syncAll() from local storage.
                         console.info(`Deferred remote save pending for ${this.constructor.className} id ${this.id}: ${Logger.stringifyObject(reason)}`);
                     });
@@ -374,6 +376,7 @@ export class Model extends EventHarness {
                 try {
                     task().finally(() => {
                         Model._next();
+                        // @intentional end of immediate local promise chain
                     });
                 } catch (error) {
                     // noinspection JSIgnoredPromiseFromCall

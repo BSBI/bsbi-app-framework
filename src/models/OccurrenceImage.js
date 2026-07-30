@@ -266,6 +266,8 @@ export class OccurrenceImage extends Model {
      * Saves to IndexedDB and then to the server.
      * The promise returns after the initial IndexedDB save has completed.
      *
+     * This should not be called in the context of sync saves, which should reject if they don't go through
+     *
      * @returns {Promise<Response>}
      */
     directSave() {
@@ -311,6 +313,7 @@ export class OccurrenceImage extends Model {
                                 .catch((error) => {
                                     // for some reason, local storage failed, after a successful server save
                                     console.error({'local storage store of image failed': error});
+                                    // @intentional have a secure save so allow the catch to fall through here
                                 });
                         } else {
                             response.json().then(jsonError => {
@@ -320,11 +323,13 @@ export class OccurrenceImage extends Model {
                                 return Logger.logError(`JSON error response to image post to server after local storage: ${JSON.stringify(jsonError)}`)
                                     .then(() => {
                                         console.error({'JSON error response to image post to server after local storage': jsonError});
+                                        // @intentional have a local save so allow the catch to fall through here
                                     });
                             }, error => {
                                 return Logger.logError(`Error response to image post to server after local storage: ${Logger.stringifyObject(error)}`)
                                     .then(() => {
                                         console.error({'Error response to image post to server after local storage': error});
+                                        // @intentional have a local save so allow the catch to fall through here
                                     });
                             });
                         }
@@ -332,11 +337,12 @@ export class OccurrenceImage extends Model {
                         return Logger.logError(`Rejected image post fetch from server: ${Logger.stringifyObject(reason)}`)
                             .then(() => {
                                 console.error({'Rejected image post fetch from server - implies network is down': reason});
+                                // @intentional have a local save so allow the catch to fall through here
                             });
                     });
 
 
-                return response; // immediate return from local save before server save has gone through
+                return response;
             });
     }
 
@@ -496,6 +502,7 @@ export class OccurrenceImage extends Model {
                             .catch((error) => {
                                 // for some reason, local storage failed, after a successful server save
                                 console.error({'local post storage store of image failed': error});
+                                // @intentional have a remote save so allow the catch to fall through here
                             });
                     } else {
                         return response.json().then(jsonError => {

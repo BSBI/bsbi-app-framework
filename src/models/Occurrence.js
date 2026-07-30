@@ -224,6 +224,7 @@ export class Occurrence extends Model {
             }
 
            this.changeApplied();
+           // @intentional end of the promise chain
         })
         .catch((error) => {
             // Matches the handling in Survey and SurveyDefinition, where a rejection means the user
@@ -235,6 +236,7 @@ export class Occurrence extends Model {
             // the absence of a handler would mean changeApplied() silently never runs - so the
             // occurrence would never be touched, never fire OCCURRENCE_EVENT_MODIFIED, and never be
             // saved, with nothing reported.
+            // @intentional
             console.log({"In occurrence form handler promise rejected (probably normal cancellation of dialogue box)": error});
         });
     }

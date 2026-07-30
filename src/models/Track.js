@@ -8,6 +8,7 @@ import {
     SURVEY_EVENT_OCCURRENCES_CHANGED
 } from "../framework/AppEvents";
 import {SAVE_STATE_LOCAL, SAVE_STATE_SERVER} from "../utils/constants";
+import {Logger} from "../utils/Logger.js";
 //import {Logger} from "../utils/Logger";
 
 //import {App} from "../framework/App";
@@ -243,8 +244,10 @@ export class Track extends Model {
 
                                 oldTrack.save(true).then(() => {
                                     console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
+                                    // @intentional end of chain
                                 }, (e) => {
-                                    console.error(`Failed to save track for survey ${oldTrack.surveyId} following survey change.`);
+                                    console.error(`Failed to save track for survey ${oldTrack.surveyId} following survey change: ${Logger.stringifyObject(e)}`);
+                                    // @intentional end of chain
                                 });
                             } else {
                                 console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`)
@@ -276,7 +279,8 @@ export class Track extends Model {
                             track.endCurrentSeries(TRACK_END_REASON_WATCHING_ENDED);
 
                             track.save(true).then(() => {
-                                console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`)
+                                console.log(`Tracking for survey ${track.surveyId} saved following tracking change.`);
+                                // @intentional end of promise chain
                             });
                         }
 
@@ -692,8 +696,10 @@ export class Track extends Model {
 
                         this.save().then(() => {
                             console.log(`Tracking for survey ${this.surveyId} saved following survey date change.`)
+                            // @intentional end of chain
                         }, (e) => {
-                            console.error(`Failed to save track for survey ${this.surveyId} following survey date change.`);
+                            console.error(`Failed to save track for survey ${this.surveyId} following survey date change: ${Logger.stringifyObject(e)}`);
+                            // @intentional end of chain
                         });
 
                         Track._currentlyTrackedSurveyId = null;
@@ -712,9 +718,11 @@ export class Track extends Model {
 
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId && !this.isPristine && this.unsaved()) {
                     this.save().then(() => {
-                        console.log(`Tracking for survey ${this.surveyId} saved following occurrence change.`)
+                        console.log(`Tracking for survey ${this.surveyId} saved following occurrence change.`);
+                        // @intentional end of chain
                     }, (e) => {
-                        console.error(`Failed to save track for survey ${this.surveyId} following occurrence change.`);
+                        console.error(`Failed to save track for survey ${this.surveyId} following occurrence change: ${Logger.stringifyObject(e)}`);
+                        // @intentional end of chain
                     });
                 }
             });

@@ -458,10 +458,12 @@ export class Survey extends Model {
 
             this.touch();
             this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId: this.id});
+            // @intentional end of chain
         })
         .catch((error) => {
             // if updateModelFromContent() fails, due to user rejection of dialogue box then intentionally don't want the survey to save
             console.log({"In survey form handler promise rejected (probably normal cancellation of dialogue box)" : error});
+            // @intentional end of chain
         });
     }
 
@@ -644,6 +646,7 @@ export class Survey extends Model {
             this.deleted = true;
             this.save().finally(() => {
                 this.fireEvent(SURVEY_EVENT_DELETED, {surveyId : this.id});
+                // @intentional end of promise chain
             });
         }
     }
@@ -946,6 +949,7 @@ export class Survey extends Model {
                 this.touch();
                 this.save().then(() => {
                     console.log(`Survey definition updated for survey id: ${this.id}`);
+                    // @intentional end of promise chain
                 });
             }
         } else {

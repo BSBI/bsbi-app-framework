@@ -247,8 +247,10 @@ export class BSBIServiceWorker {
                     ).catch((error) => {
                         // Cache tidying is housekeeping: a failure must not be allowed to look like
                         // a failed activation.
+                        // @intentional don't reject here
                         console.error({'[ServiceWorker] Failed to delete an old cache': error});
                     });
+                    // @intentional end of chain
                 })
             );
         });

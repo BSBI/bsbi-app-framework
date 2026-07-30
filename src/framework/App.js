@@ -1013,6 +1013,7 @@ export class App extends EventHarness {
                     }).then(() => {
                         survey.destructor();
                         this.fireEvent(APP_EVENT_SURVEYS_CHANGED);
+                        // @intentional end of promise chain
                     });
                 }
             );
@@ -1077,6 +1078,7 @@ export class App extends EventHarness {
                     occurrence.save().then(() => {
                         // noinspection JSIgnoredPromiseFromCall
                         Logger.logError(`Saved modified occurrence ${occurrence.id} for missing survey ${occurrence.surveyId}.`);
+                        // @intentional end of promise chain
                     });
 
                     throw new Error(`Failed to look up survey id ${occurrence.surveyId} in app listener for OCCURRENCE_EVENT_MODIFIED`);
@@ -1091,19 +1093,17 @@ export class App extends EventHarness {
                         survey.save(true);
                     }
 
-                    schedulerYield().then(() => {
-                        // noinspection JSIgnoredPromiseFromCall
-                        occurrence.save().finally(() => {
+                    schedulerYield()
+                        .then(() => {
+                            return occurrence.save();
+                        })
+                        .finally(() => {
                             // Resolves once the occurrence is durable locally; the remote save
                             // continues in the background and refreshes the marker separately
                             // (see the MODEL_EVENT_SAVED_REMOTELY listener below).
                             survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
+                            // @intentional end of promise chain
                         });
-                    });
-
-                    //.finally(() => {
-                    //     survey.fireEvent(SURVEY_EVENT_OCCURRENCES_CHANGED, {occurrenceId: occurrence.id});
-                    //});
                 }
             });
 
@@ -1141,6 +1141,7 @@ export class App extends EventHarness {
         schedulerYield().then(() => {
             this._unsavedMarkerUpdateScheduled = false;
             this._updateUnsavedMarkerCss();
+            // @intentional end of promise chain
         });
     }
 
@@ -1338,15 +1339,20 @@ export class App extends EventHarness {
                         // cope with the pervasive Safari crash
                         // see https://bugs.webkit.org/show_bug.cgi?id=197050
                         if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                            // @todo before forcing a reload, should prompt the user to take remedial access, e.g. screenshotting data or transcribing results
+
                             App.indexedDbConnectionLost = true;
                             location.reload();
                         }
+
+                        // @intentional end of promise chain
                     });
 
                 //this.fireEvent(APP_EVENT_PURGE_FAILED);
                 return Promise.reject(failedResult);
             }).finally(() => {
                 App._doingPurge = false;
+                // @intentional end of promise chain
             });
 
         return fastReturn ?
@@ -1392,6 +1398,7 @@ export class App extends EventHarness {
 
                 schedulerYield().then(() => this.syncAll().finally(() => {
                     console.info('Sync all attempt triggered by visibility change - finished.');
+                    // @intentional end of promise chain
                 }));
             }
         });
@@ -1447,8 +1454,11 @@ export class App extends EventHarness {
                             // cope with a pervasive Safari crash issue
                             // see https://bugs.webkit.org/show_bug.cgi?id=197050
                             if (failedResult.toString().includes('Connection to Indexed Database server lost')) {
+                                // @todo before forcing a reload, should prompt the user to take remedial access, e.g. screenshotting data or transcribing results
+
                                 App.indexedDbConnectionLost = true;
                                 location.reload();
+                                // @intentional end of promise chain
                             }
                         })
                     ;
@@ -1457,6 +1467,7 @@ export class App extends EventHarness {
                     return Promise.reject(failedResult);
                 }).finally(() => {
                     App._syncAllInProgress = false;
+                    // @intentional end of promise chain
                 });
 
 
@@ -1465,7 +1476,7 @@ export class App extends EventHarness {
             App._syncAllInProgress = false;
         }
 
-        return fastReturn ? Promise.resolve() : promise;
+        return fastReturn ? Promise.resolve() : (promise || Promise.resolve());
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -2729,7 +2740,7 @@ export class App extends EventHarness {
             });
 
         if (setAsCurrent) {
-            promise.then( () => this.setCurrentSurvey(this.surveys.get(surveyId) || null))
+            promise = promise.then( () => this.setCurrentSurvey(this.surveys.get(surveyId) || null))
                 .then(() => {
                     if (this.currentSurvey) {
                         //console.log('Reached the image fetching part');
@@ -2747,6 +2758,7 @@ export class App extends EventHarness {
 
                                                 // image loading may be slow, so the occurrence list may already have been built
                                                 // need to refresh entries on the occurrence list, e.g. so that PlantNet buttons become available and possible image url changes take effect.
+                                                // Run this in parallel
                                                 schedulerYield().then(() => {
                                                     if (occurrenceImage.occurrenceId) {
                                                         const occurrence = this.occurrences.get(occurrenceImage.occurrenceId);
@@ -2755,6 +2767,7 @@ export class App extends EventHarness {
                                                             occurrence.fireEvent(OCCURRENCE_EVENT_NEEDS_REFRESH);
                                                         }
                                                     }
+                                                    // @intentional runs in parallel outside the main promise chain
                                                 });
                                             }
                                         }, (reason) => {

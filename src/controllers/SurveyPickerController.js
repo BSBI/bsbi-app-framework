@@ -132,7 +132,8 @@ export class SurveyPickerController extends AppController {
         if (navigator.onLine && !App._doingPurge) {
             // invoke sync of any/all unsaved data
             // show pop-ups on success and failure
-            this.app.syncAll(false).then((result) => {
+            this.app.syncAll(false)
+                .then((result) => {
                 //console.log({'In save all handler, success result': result});
 
                 this.view.showSaveAllSuccess(result);
@@ -150,8 +151,11 @@ export class SurveyPickerController extends AppController {
                 // noinspection JSIgnoredPromiseFromCall
                 Logger.logError(`Failed to sync all (line 143): ${Logger.stringifyObject(result)}`);
                 this.view.showSaveAllFailure(result);
+                return Promise.reject(result);
             }).finally(() => {
                 // stop the spinner
+
+                // @intentional end of promise chain
             });
         }
 
@@ -252,6 +256,7 @@ export class SurveyPickerController extends AppController {
                 // either the survey was not found or there was no network connection
 
                 // should switch to displaying a list of available surveys and an option to start a new survey
+                return Promise.reject(error);
             })
             .finally(() => {
                 this.view.restoreLeftPanel();

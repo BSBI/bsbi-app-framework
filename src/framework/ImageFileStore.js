@@ -83,7 +83,7 @@ export class ImageFileStore {
     static removeFile(imageId) {
         return ImageFileStore._getStore().removeItem(imageId)
             .catch(() => {
-                // A binary that cannot be removed is litter rather than a failure, and must not be
+                // @intentional A binary that cannot be removed is litter rather than a failure, and must not be
                 // allowed to fail a save or abort a purge.
             });
     }
