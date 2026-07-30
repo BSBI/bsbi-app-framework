@@ -1,0 +1,46 @@
+name: Code audits
+
+# Static gates for two classes of fault that build cleanly and only fail at runtime:
+#   - promise rejections that are swallowed or never handled  (npm run audit:rejections:ci)
+#   - imports that are missing, mismatched, or reach outside the repository  (npm run audit:imports:ci)
+#
+# Both compare against a committed baseline and fail only on new findings, so the gate can be
+# tightened over time without blocking work.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  audit:
+    name: Promise and import audits
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Deliberately not `npm ci`.
+      #
+      # This package declares its sibling projects with file: specifiers pointing at absolute
+      # Windows paths, which resolve only on a workstation where all the repositories sit side by
+      # side. A normal install therefore cannot succeed on a runner that has checked out this
+      # repository alone.
+      #
+      # The audits need nothing but acorn, so it is installed into a separate prefix - which ignores
+      # this package's manifest entirely - and then placed in node_modules so that the ESM
+      # `import('acorn')` inside the audit scripts resolves it.
+      - name: Install audit dependency
+        run: |
+          npm install acorn@^8.10.0 \
+            --prefix "${RUNNER_TEMP}/audit-tools" \
+            --no-save --no-audit --no-fund
+          mkdir -p node_modules
+          cp -R "${RUNNER_TEMP}/audit-tools/node_modules/acorn" node_modules/
+
+      - name: Run audits
+        run: npm run audit:ci

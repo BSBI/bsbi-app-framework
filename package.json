@@ -31,7 +31,10 @@
     "build": "rollup -c --strictDeprecations",
     "watch": "rollup -c -w --strictDeprecations",
     "audit:rejections": "node scripts/auditPromiseRejections.mjs src",
-    "audit:rejections:ci": "node scripts/auditPromiseRejections.mjs src --baseline --strict"
+    "audit:rejections:ci": "node scripts/auditPromiseRejections.mjs src --baseline --strict",
+    "audit:imports": "node scripts/auditImports.mjs src",
+    "audit:imports:ci": "node scripts/auditImports.mjs src --baseline --strict",
+    "audit:ci": "npm run audit:rejections:ci && npm run audit:imports:ci"
   },
   "repository": {
     "type": "git",
