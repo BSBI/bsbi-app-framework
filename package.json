@@ -30,6 +30,8 @@
   "scripts": {
     "build": "rollup -c --strictDeprecations",
     "watch": "rollup -c -w --strictDeprecations",
+    "_comment_prepare": "dist/esm is gitignored, so a git-URL install fetches source with no build output. npm runs prepare for git dependencies (after devDependencies are installed), which is what makes this package usable when consumed from GitHub rather than a local path.",
+    "prepare": "npm run build",
     "audit:rejections": "node scripts/auditPromiseRejections.mjs src",
     "audit:rejections:ci": "node scripts/auditPromiseRejections.mjs src --baseline --strict",
     "audit:imports": "node scripts/auditImports.mjs src",
