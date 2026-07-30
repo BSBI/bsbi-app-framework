@@ -243,6 +243,8 @@ export class Track extends Model {
 
                                 oldTrack.save(true).then(() => {
                                     console.log(`Tracking for survey ${oldTrack.surveyId} saved following survey change.`)
+                                }, (e) => {
+                                    console.error(`Failed to save track for survey ${oldTrack.surveyId} following survey change.`);
                                 });
                             } else {
                                 console.error(`Failed to retrieve old track for survey ${Track._currentlyTrackedSurveyId} in survey changed event handler.`)
@@ -690,6 +692,8 @@ export class Track extends Model {
 
                         this.save().then(() => {
                             console.log(`Tracking for survey ${this.surveyId} saved following survey date change.`)
+                        }, (e) => {
+                            console.error(`Failed to save track for survey ${this.surveyId} following survey date change.`);
                         });
 
                         Track._currentlyTrackedSurveyId = null;
@@ -709,6 +713,8 @@ export class Track extends Model {
                 if (Track.trackingIsActive && survey.id === Track._currentlyTrackedSurveyId && !this.isPristine && this.unsaved()) {
                     this.save().then(() => {
                         console.log(`Tracking for survey ${this.surveyId} saved following occurrence change.`)
+                    }, (e) => {
+                        console.error(`Failed to save track for survey ${this.surveyId} following occurrence change.`);
                     });
                 }
             });

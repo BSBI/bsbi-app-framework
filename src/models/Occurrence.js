@@ -215,10 +215,27 @@ export class Occurrence extends Model {
         // read new values
         // then fire its own change event (Occurrence.EVENT_MODIFIED)
         form.updateModelFromContent().then(() => {
-            // refresh the form's validation state
-            form.conditionallyValidateForm();
+
+            try {
+                // refresh the form's validation state
+                form.conditionallyValidateForm();
+            } catch (error) {
+                console.error({'error caught in Occurrence, form.conditionallyValidateForm' : error});
+            }
 
            this.changeApplied();
+        })
+        .catch((error) => {
+            // Matches the handling in Survey and SurveyDefinition, where a rejection means the user
+            // dismissed a confirmation dialogue and the change should deliberately not be applied.
+            //
+            // Only the survey forms currently override updateModelFromContent() (the occurrence
+            // form's override is commented out), so the base implementation always resolves and
+            // this cannot fire today. It is here because if an occurrence override is reintroduced,
+            // the absence of a handler would mean changeApplied() silently never runs - so the
+            // occurrence would never be touched, never fire OCCURRENCE_EVENT_MODIFIED, and never be
+            // saved, with nothing reported.
+            console.log({"In occurrence form handler promise rejected (probably normal cancellation of dialogue box)": error});
         });
     }
 

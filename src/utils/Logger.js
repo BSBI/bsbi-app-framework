@@ -68,7 +68,10 @@ export class Logger {
     }
 
     static stringifyObject(obj) {
-        if (typeof obj !== 'object') {
+        if (obj === null || obj === undefined) {
+            // reached via Promise.reject() with no reason, among others; obj.toString() would throw
+            return String(obj);
+        } else if (typeof obj !== 'object') {
             return obj.toString();
         } else if (obj instanceof Error) {
             return `Error (${obj.name}): ${obj.message}\nStack: ${obj.stack}`;

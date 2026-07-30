@@ -449,8 +449,12 @@ export class Survey extends Model {
 
             console.log('Survey calling conditional validation.');
 
-            // refresh the form's validation state
-            form.conditionallyValidateForm();
+            try {
+                // refresh the form's validation state
+                form.conditionallyValidateForm();
+            } catch (error) {
+                console.error({'error caught in Survey, form.conditionallyValidateForm' : error});
+            }
 
             this.touch();
             this.fireEvent(SURVEY_EVENT_MODIFIED, {surveyId: this.id});

@@ -108,8 +108,12 @@ export class SurveyDefinition extends Model {
 
             //console.log('Survey Definition calling conditional validation.');
 
-            // refresh the form's validation state
-            form.conditionallyValidateForm();
+            try {
+                // refresh the form's validation state
+                form.conditionallyValidateForm();
+            } catch (error) {
+                console.error({'error caught in SurveyDefinition, form.conditionallyValidateForm' : error});
+            }
 
             this.isNew = false;
             this.touch();
