@@ -2,6 +2,10 @@
 /**
  * Static audit for mishandled promise rejections.
  *
+ * This file is mirrored, byte for byte, in bsbi-app-framework, bsbi-app-framework-view and
+ * bsbi-recording-app, so that each can gate its own CI without depending on a sibling checkout.
+ * Update all three together.
+ *
  * Looks for three shapes that have each produced real faults in this codebase, all of which share a
  * symptom: a failure disappears, and the work that should have followed it silently doesn't happen.
  *
@@ -20,15 +24,23 @@
  *
  * None of these is automatically a bug. To mark a finding as reviewed and intended, put a comment
  * containing @intentional inside the handler (checks 1 and 3), or use the existing
- * `// noinspection JSIgnoredPromiseFromCall` convention on the line above (check 2). Acknowledged
- * findings are counted but not listed unless --all is given.
+ * `// noinspection JSIgnoredPromiseFromCall` convention on the line above (check 2).
  *
  * Usage:
- *   node scripts/auditPromiseRejections.mjs [path ...] [--all] [--strict]
+ *   node scripts/auditPromiseRejections.mjs [path ...] [options]
  *
- *   path      one or more directories to scan (default: src)
- *   --all     list acknowledged findings too
- *   --strict  exit non-zero if there are unacknowledged findings (for CI)
+ *   path                 directories to scan (default: src)
+ *   --all                list acknowledged findings too
+ *   --baseline[=file]    compare against a recorded baseline (default .promise-audit-baseline.json)
+ *   --update-baseline[=file]  rewrite the baseline from the current state, then exit
+ *   --strict             exit 1 on regressions against the baseline, or on any unacknowledged
+ *                        finding when no baseline is in use
+ *
+ * Exit codes: 0 clean, 1 gate failed, 2 tool or usage error.
+ *
+ * CI note: run with --baseline --strict. The baseline records per-file counts rather than line
+ * numbers, so ordinary edits don't invalidate it; the gate fires when a file gains a finding.
+ * Retiring findings is encouraged - re-run with --update-baseline to lock the improvement in.
  */
 
 import fs from 'fs';
@@ -47,14 +59,52 @@ const FUNCTION_TYPES = new Set(['FunctionExpression', 'ArrowFunctionExpression',
 const THENABLE_METHODS = new Set(['then', 'catch', 'finally']);
 const ACKNOWLEDGEMENT = /@intentional/;
 const FLOATING_ACKNOWLEDGEMENT = /noinspection JSIgnoredPromiseFromCall/;
+const DEFAULT_BASELINE_FILE = '.promise-audit-baseline.json';
+
+const CATEGORIES = [
+    ['swallowed', 'Swallowing rejection handlers'],
+    ['floating', 'Floating promise chains'],
+    ['catchUndefined', 'try/catch returning undefined'],
+];
 
 const args = process.argv.slice(2);
-const listAll = args.includes('--all');
-const strict = args.includes('--strict');
+
+/**
+ * @param {string} name
+ * @returns {string|null} the option's value, '' when given without one, or null when absent
+ */
+function option(name) {
+    const match = args.find((arg) => arg === `--${name}` || arg.startsWith(`--${name}=`));
+
+    if (!match) {
+        return null;
+    }
+
+    return match.includes('=') ? match.slice(match.indexOf('=') + 1) : '';
+}
+
+const listAll = option('all') !== null;
+const strict = option('strict') !== null;
+const baselineOption = option('baseline');
+const updateBaselineOption = option('update-baseline');
+const baselineFile = (updateBaselineOption || baselineOption) || DEFAULT_BASELINE_FILE;
+const usingBaseline = baselineOption !== null || updateBaselineOption !== null;
+
 const targets = args.filter((arg) => !arg.startsWith('--'));
 
 if (!targets.length) {
     targets.push('src');
+}
+
+/**
+ * Repo-relative, forward-slashed, so that baselines are portable between a Windows workstation and
+ * a Linux CI runner.
+ *
+ * @param {string} filePath
+ * @returns {string}
+ */
+function relativePath(filePath) {
+    return path.relative(process.cwd(), filePath).split(path.sep).join('/');
 }
 
 /**
@@ -67,7 +117,9 @@ function collectSourceFiles(dir, found) {
         const entryPath = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
-            if (entry.name !== 'node_modules' && entry.name !== 'dist') {
+            // 'public' holds built bundles in the recording app; auditing minified output would be
+            // meaningless and very slow
+            if (entry.name !== 'node_modules' && entry.name !== 'dist' && entry.name !== 'public') {
                 collectSourceFiles(entryPath, found);
             }
         } else if (/\.m?js$/.test(entry.name) && !entry.name.includes('.old.')) {
@@ -197,6 +249,7 @@ function containsReturningTry(node) {
 
 const findings = {swallowed: [], floating: [], catchUndefined: []};
 let filesScanned = 0;
+let parseFailures = 0;
 
 for (const target of targets) {
     if (!fs.existsSync(target)) {
@@ -219,7 +272,10 @@ for (const target of targets) {
                 onComment: comments,
             });
         } catch (error) {
-            console.error(`Could not parse ${file}: ${error.message}`);
+            // A file that cannot be parsed is silently unaudited, which would quietly weaken the
+            // gate, so it is treated as a failure in its own right.
+            console.error(`Could not parse ${relativePath(file)}: ${error.message}`);
+            parseFailures++;
             continue;
         }
 
@@ -256,7 +312,7 @@ for (const target of targets) {
 
                     if (!verdict.settles) {
                         findings.swallowed.push({
-                            file,
+                            file: relativePath(file),
                             line: node.loc.start.line,
                             note: `${method === 'catch' ? '.catch()' : '.then() onRejected'}, ${verdict.note}`,
                             snippet: snippetOf(handler),
@@ -278,7 +334,7 @@ for (const target of targets) {
                     const previousLine = lines[node.loc.start.line - 2] || '';
 
                     findings.floating.push({
-                        file,
+                        file: relativePath(file),
                         line: node.loc.start.line,
                         note: `chain ends in .${expression.callee.property.name}()`,
                         snippet: snippetOf(node),
@@ -299,7 +355,7 @@ for (const target of targets) {
                         body: inner.handler.body,
                     }).settles) {
                         findings.catchUndefined.push({
-                            file,
+                            file: relativePath(file),
                             line: inner.handler.loc.start.line,
                             note: 'try returns a value, catch does not',
                             snippet: snippetOf(inner.handler),
@@ -326,23 +382,50 @@ for (const target of targets) {
     }
 }
 
-const sections = [
-    ['Swallowing rejection handlers', findings.swallowed],
-    ['Floating promise chains', findings.floating],
-    ['try/catch returning undefined', findings.catchUndefined],
-];
+/**
+ * Per-file counts of unacknowledged findings. Deliberately not line numbers: those shift with every
+ * edit, which would make the baseline useless within a day.
+ *
+ * @returns {Object<string, Object<string, number>>}
+ */
+function currentCounts() {
+    const counts = {};
+
+    for (const [category] of CATEGORIES) {
+        for (const finding of findings[category]) {
+            if (finding.acknowledged) {
+                continue;
+            }
+
+            counts[finding.file] = counts[finding.file] || {};
+            counts[finding.file][category] = (counts[finding.file][category] || 0) + 1;
+        }
+    }
+
+    return counts;
+}
+
+const counts = currentCounts();
+
+if (updateBaselineOption !== null) {
+    fs.writeFileSync(baselineFile, `${JSON.stringify(counts, null, 2)}\n`, 'utf8');
+    console.log(`Baseline written to ${baselineFile} (${Object.keys(counts).length} files with findings).`);
+    process.exit(0);
+}
 
 let unacknowledgedTotal = 0;
 
-for (const [title, entries] of sections) {
-    const shown = listAll ? entries : entries.filter((entry) => !entry.acknowledged);
-    const acknowledged = entries.length - entries.filter((entry) => !entry.acknowledged).length;
+for (const [category, title] of CATEGORIES) {
+    const entries = findings[category];
+    const unacknowledged = entries.filter((entry) => !entry.acknowledged);
+    const shown = listAll ? entries : unacknowledged;
 
-    unacknowledgedTotal += entries.length - acknowledged;
+    unacknowledgedTotal += unacknowledged.length;
 
     console.log(`\n=== ${title} ===`);
 
     if (!shown.length) {
+        const acknowledged = entries.length - unacknowledged.length;
         console.log(acknowledged ? `none unacknowledged (${acknowledged} marked @intentional)` : 'none');
         continue;
     }
@@ -354,12 +437,67 @@ for (const [title, entries] of sections) {
         console.log(`    ${entry.snippet}`);
     }
 
-    console.log(`(${shown.length} shown${acknowledged ? `, ${acknowledged} acknowledged` : ''})`);
+    console.log(`(${shown.length} shown)`);
 }
 
 console.log(`\nScanned ${filesScanned} files. ${unacknowledgedTotal} unacknowledged findings.`);
-console.log('Mark a reviewed case with an @intentional comment inside the handler.');
 
-if (strict && unacknowledgedTotal) {
+let gateFailed = false;
+
+if (parseFailures) {
+    console.log(`\n${parseFailures} file(s) could not be parsed and were not audited.`);
+    gateFailed = true;
+}
+
+if (usingBaseline) {
+    let baseline = {};
+
+    if (fs.existsSync(baselineFile)) {
+        try {
+            baseline = JSON.parse(fs.readFileSync(baselineFile, 'utf8'));
+        } catch (error) {
+            console.error(`Could not read baseline ${baselineFile}: ${error.message}`);
+            process.exit(2);
+        }
+    } else {
+        console.log(`\nNo baseline at ${baselineFile}; treating every finding as new.`);
+    }
+
+    const regressions = [];
+    const improvements = [];
+
+    const files = new Set([...Object.keys(counts), ...Object.keys(baseline)]);
+
+    for (const file of [...files].sort()) {
+        for (const [category, title] of CATEGORIES) {
+            const now = counts[file]?.[category] || 0;
+            const was = baseline[file]?.[category] || 0;
+
+            if (now > was) {
+                regressions.push(`  ${file}  ${title}: ${was} -> ${now}`);
+            } else if (now < was) {
+                improvements.push(`  ${file}  ${title}: ${was} -> ${now}`);
+            }
+        }
+    }
+
+    if (improvements.length) {
+        console.log(`\nImproved since the baseline (re-run with --update-baseline to lock in):`);
+        improvements.forEach((line) => console.log(line));
+    }
+
+    if (regressions.length) {
+        console.log(`\nNew findings against ${baselineFile}:`);
+        regressions.forEach((line) => console.log(line));
+        gateFailed = true;
+    } else {
+        console.log(`\nNo new findings against ${baselineFile}.`);
+    }
+} else if (unacknowledgedTotal) {
+    console.log('Mark a reviewed case with an @intentional comment inside the handler.');
+    gateFailed = true;
+}
+
+if (strict && gateFailed) {
     process.exit(1);
 }

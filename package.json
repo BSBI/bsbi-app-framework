@@ -10,7 +10,7 @@
   "type": "module",
   "sideEffects": false,
   "devDependencies": {
-    "acorn": "^8.14.0",
+    "acorn": "^8.10.0",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
@@ -30,7 +30,8 @@
   "scripts": {
     "build": "rollup -c --strictDeprecations",
     "watch": "rollup -c -w --strictDeprecations",
-    "audit:rejections": "node scripts/auditPromiseRejections.mjs src"
+    "audit:rejections": "node scripts/auditPromiseRejections.mjs src",
+    "audit:rejections:ci": "node scripts/auditPromiseRejections.mjs src --baseline --strict"
   },
   "repository": {
     "type": "git",
