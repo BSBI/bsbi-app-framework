@@ -8,6 +8,8 @@
     "email": "tom.humphrey@bsbi.org"
   },
   "module": "dist/esm/index.js",
+  "_comment_files": "Without an explicit allowlist npm falls back to .gitignore when packing, which ignores dist/esm - so prepare would build the output and then pack would silently discard it, leaving consumers with a package whose entry point does not exist.",
+  "files": ["dist", "src"],
   "type": "module",
   "sideEffects": false,
   "devDependencies": {
